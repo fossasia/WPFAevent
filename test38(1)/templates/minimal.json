@@ -1,0 +1,32 @@
+{
+  "speakers": [
+    {
+      "title": "Alex Example",
+      "content": "Open source contributor and community speaker.",
+      "slug": "alex-example",
+      "org": "FOSSASIA",
+      "position": "Developer Advocate",
+      "photo": "https://via.placeholder.com/300x300.png?text=Alex"
+    },
+    {
+      "title": "Bao Nguyen",
+      "content": "Engineer focusing on event platforms and accessibility.",
+      "slug": "bao-nguyen",
+      "org": "Eventyay",
+      "position": "Software Engineer",
+      "photo": "https://via.placeholder.com/300x300.png?text=Bao"
+    }
+  ],
+  "events": [
+    {
+      "title": "FOSSASIA Community Meetup",
+      "content": "A casual meetup to discuss the roadmap and OSS collaboration.",
+      "slug": "fossasia-community-meetup",
+      "start_date": "2026-01-15",
+      "end_date": "2026-01-16",
+      "location": "Online",
+      "url": "https://eventyay.com/",
+      "speakers": ["alex-example", "bao-nguyen"]
+    }
+  ]
+}
