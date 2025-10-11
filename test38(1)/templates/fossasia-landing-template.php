@@ -33,6 +33,31 @@ $navigation_data = json_decode(file_get_contents($navigation_file), true);
 $theme_settings_data = json_decode(file_get_contents($event_theme_settings_file), true);
 if (empty($theme_settings_data)) { $theme_settings_data = json_decode(file_get_contents($global_theme_settings_file), true); }
 
+/**
+ * Converts a standard video URL (YouTube, Vimeo) into an embeddable URL.
+ *
+ * @param string $url The original video URL.
+ * @return string The embeddable URL.
+ */
+function get_video_embed_url($url) {
+    if (empty($url)) {
+        return '';
+    }
+
+    // Check for YouTube
+    if (preg_match('/(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|v\/|)([\w-]{11})/', $url, $matches)) {
+        return 'https://www.youtube.com/embed/' . $matches[3];
+    }
+
+    // Check for Vimeo
+    if (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $url, $matches)) {
+        return 'https://player.vimeo.com/video/' . $matches[1];
+    }
+
+    // Return the original URL if it's not a recognized format (might be a direct embed link already)
+    return $url;
+}
+
 
 /**
  * Renders custom sections for a specific position on the page.
@@ -46,7 +71,7 @@ function render_custom_sections($position, $all_sections) {
 	}
 
 	$sections_to_render = array_filter($all_sections, function($section) use ($position) {
-		return isset($section['position']) && $section['position'] === $position && !empty($section['is_active']);
+		return isset($section['position'], $section['is_active']) && $section['position'] === $position && $section['is_active'];
 	});
 
 	if (empty($sections_to_render)) {
@@ -60,6 +85,7 @@ function render_custom_sections($position, $all_sections) {
 	foreach ($sections_to_render as $section) {
 		$section_id = esc_attr($section['id']);
 		$layout = $section['layout'] ?? 'full_width';
+		$section_type = $section['type'] ?? 'content';
 		?>
 		<section class="wp-block-group custom-section-added" id="custom-section-<?php echo $section_id; ?>">
 			<div class="container reveal">
@@ -73,8 +99,40 @@ function render_custom_sections($position, $all_sections) {
 				</div>
 
 				<?php
-				// --- RENDER CONTENT BASED ON LAYOUT ---
-				if ($layout === 'full_width') {
+				if ($section_type === 'media') {
+					// --- RENDER MEDIA SECTION ---
+					if ($section['mediaType'] === 'photo' && !empty($section['photo_src'])) {
+						$image_src = $section['photo_src'];
+						echo '<figure class="wp-block-image size-full"><img src="' . $image_src . '" alt="' . esc_attr($section['title']) . '" style="border-radius: 12px; width: 100%;"></figure>';
+					} elseif ($section['mediaType'] === 'video' && !empty($section['video_embed_src'])) {
+						$embed_url = get_video_embed_url($section['video_embed_src']);
+						echo '<div style="padding:0; aspect-ratio: 16/9; overflow:hidden; border-radius: 12px;"><iframe width="100%" height="100%" src="' . esc_url($embed_url) . '" title="Embedded video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>';
+					} elseif ($section['mediaType'] === 'carousel' && !empty($section['carousel_images']) && is_array($section['carousel_images'])) {
+						$carousel_id = 'carousel-' . esc_attr($section['id']);
+						$timer = !empty($section['carousel_timer']) ? absint($section['carousel_timer']) * 1000 : 5000;
+						?>
+						<div class="media-carousel" id="<?php echo $carousel_id; ?>">
+							<?php foreach ($section['carousel_images'] as $index => $image_src) : ?>
+								<img src="<?php echo $image_src; ?>" class="carousel-slide" alt="Carousel image <?php echo $index + 1; ?>" style="opacity: <?php echo $index === 0 ? '1' : '0'; ?>;">
+							<?php endforeach; ?>
+						</div>
+						<script>
+							(function() {
+								const carousel = document.getElementById("<?php echo $carousel_id; ?>");
+								if (!carousel) return;
+								const slides = carousel.querySelectorAll(".carousel-slide");
+								if (slides.length < 2) return;
+								let current = 0;
+								setInterval(() => {
+									if (slides[current]) slides[current].style.opacity = 0;
+									current = (current + 1) % slides.length;
+									if (slides[current]) slides[current].style.opacity = 1;
+								}, <?php echo $timer; ?>);
+							})();
+						</script>
+						<?php
+					}
+				} elseif ($layout === 'full_width') {
 					// Full width layout
 					?>
 					<div class="panel">
@@ -98,12 +156,9 @@ function render_custom_sections($position, $all_sections) {
 					$media_col_html = '';
 					if ($section['mediaType'] === 'photo' && !empty($section['photo_src'])) {
 						$image_src = $section['photo_src'];
-						if (strpos(trim($image_src), 'data:image') !== 0) {
-							$image_src = esc_url($image_src);
-						}
 						$media_col_html = '<div class="wp-block-column panel reveal"><figure class="wp-block-image size-full"><img src="' . $image_src . '" alt="' . esc_attr($section['title']) . ' media" style="border-radius: 12px;"></figure></div>';
 					} elseif ($section['mediaType'] === 'map' && !empty($section['map_embed_src'])) {
-						$media_col_html = '<div class="wp-block-column map panel reveal"><iframe width="100%" height="100%" style="min-height:320px;border:0" loading="lazy" src="' . esc_url($section['map_embed_src']) . '" title="Venue map"></iframe></div>';
+						$media_col_html = '<div class="wp-block-column map panel reveal"><iframe width="100%" height="100%" style="min-height:320px;border:0;border-radius:12px;" loading="lazy" src="' . esc_url($section['map_embed_src']) . '" title="Venue map"></iframe></div>';
 					}
 
 					$content_col_html = '<aside class="wp-block-column panel reveal">';
@@ -213,6 +268,20 @@ if ( $is_dynamic_event_page ) {
   .nav-links a:hover{background:#00000006}
   .nav-links a.btn-primary { color: #fff; }
   /* Login Dropdown */
+  .nav-dropdown { position: relative; }
+  .nav-dropdown-toggle { cursor: pointer; }
+  .nav-dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #fff;
+    min-width: 200px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    z-index: 100;
+    border-radius: 8px;
+    padding: 8px 0;
+  }
   .login-dropdown {
     position: relative;
     display: inline-block;
@@ -244,6 +313,25 @@ if ( $is_dynamic_event_page ) {
   .login-dropdown-content a { color: black; padding: 12px 16px; text-decoration: none; display: block; font-weight: 500; }
   .login-dropdown-content a:hover { background-color: #f1f1f1; }
   .login-dropdown-content.show { display: block; }
+  .nav-dropdown:hover .nav-dropdown-content { display: block; }
+  .nav-dropdown-content a {
+    display: block;
+    padding: 8px 16px !important;
+  }
+  /* Carousel Styles */
+  .media-carousel {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #f0f0f0;
+  }
+  .media-carousel .carousel-slide {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0; transition: opacity 0.8s ease-in-out;
+  }
   /* Modal styles */
   .modal {
     position: fixed;
@@ -533,9 +621,23 @@ if ( $is_dynamic_event_page ) {
       <?php
         if (!empty($navigation_data) && is_array($navigation_data)) {
             foreach ($navigation_data as $nav_item) {
-                // Ensure href starts with # for on-page links
-                $href = (strpos($nav_item['href'], '#') === 0) ? $nav_item['href'] : '#' . $nav_item['href'];
-                echo '<a href="' . esc_attr($href) . '">' . esc_html($nav_item['text']) . '</a>';
+                if (isset($nav_item['type']) && $nav_item['type'] === 'dropdown') {
+                    echo '<div class="nav-dropdown">';
+                    // The main dropdown text is not a link, so we use a span or a non-href anchor
+                    echo '<a class="nav-dropdown-toggle" style="cursor: pointer;">' . esc_html($nav_item['text']) . '</a>';
+                    echo '<div class="nav-dropdown-content">';
+                    if (!empty($nav_item['items']) && is_array($nav_item['items'])) {
+                        foreach ($nav_item['items'] as $sub_item) {
+                            $href = (strpos($sub_item['href'], '#') === 0) ? $sub_item['href'] : '#' . $sub_item['href'];
+                            echo '<a href="' . esc_attr($href) . '">' . esc_html($sub_item['text']) . '</a>';
+                        }
+                    }
+                    echo '</div></div>';
+                } else {
+                    // Standard link
+                    $href = (strpos($nav_item['href'], '#') === 0) ? $nav_item['href'] : '#' . $nav_item['href'];
+                    echo '<a href="' . esc_attr($href) . '">' . esc_html($nav_item['text']) . '</a>';
+                }
             }
         }
         echo '<a href="' . esc_url( get_permalink( get_page_by_path( 'events' ) ) ) . '">View All Events</a>';

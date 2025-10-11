@@ -9,13 +9,79 @@ $upload_dir = wp_upload_dir();
 $data_dir = $upload_dir['basedir'] . '/fossasia-data';
 $navigation_file = $data_dir . '/navigation.json';
 $global_theme_settings_file = $data_dir . '/theme-settings.json'; // This page is global, so it uses the global theme.
+$sections_file = $data_dir . '/custom-sections.json';
 $settings_file = $data_dir . '/site-settings.json';
 
 if (!file_exists($navigation_file)) { file_put_contents($navigation_file, '[]'); }
+if (!file_exists($sections_file)) { file_put_contents($sections_file, '[]'); }
 $site_settings_data = file_exists($settings_file) ? json_decode(file_get_contents($settings_file), true) : [];
 if (!file_exists($global_theme_settings_file)) { file_put_contents($global_theme_settings_file, '{"brand_color": "#D51007", "background_color": "#f8f9fa", "text_color": "#0b0b0b"}'); }
 $theme_settings_data = json_decode(file_get_contents($global_theme_settings_file), true);
 $navigation_data = json_decode(file_get_contents($navigation_file), true);
+$custom_sections_data = json_decode(file_get_contents($sections_file), true);
+
+/**
+ * Renders custom sections for a specific position on the page.
+ * This is a copy of the function in fossasia-landing-template.php for use on this global page.
+ *
+ * @param string $position The identifier for the section's location (e.g., 'events_after_hero').
+ * @param array  $all_sections The array of all custom section data.
+ */
+function render_custom_sections($position, $all_sections) {
+	if (empty($all_sections) || !is_array($all_sections)) {
+		return;
+	}
+
+	$sections_to_render = array_filter($all_sections, function($section) use ($position) {
+		return isset($section['position']) && $section['position'] === $position && !empty($section['is_active']);
+	});
+
+	if (empty($sections_to_render)) {
+		return;
+	}
+
+	usort($sections_to_render, function($a, $b) {
+		return ($a['order'] ?? 10) <=> ($b['order'] ?? 10);
+	});
+
+	foreach ($sections_to_render as $section) {
+		$section_id = esc_attr($section['id']);
+		$layout = $section['layout'] ?? 'full_width';
+		?>
+		<section class="wp-block-group custom-section-added" id="custom-section-<?php echo $section_id; ?>" style="padding: 48px 0;">
+			<div class="container reveal">
+				<div class="section-head" style="display:flex;align-items:end;justify-content:space-between;gap:1rem;margin-bottom:18px">
+					<?php if (!empty($section['title'])) : ?>
+						<h2 class="h2" style="font-size:clamp(1.25rem,3vw,1.8rem);margin:0"><?php echo esc_html($section['title']); ?></h2>
+					<?php endif; ?>
+					<?php if (!empty($section['subtitle'])) : ?>
+						<p class="meta" style="color: var(--muted);font-size:.95rem;"><?php echo esc_html($section['subtitle']); ?></p>
+					<?php endif; ?>
+				</div>
+
+				<?php
+				if ($layout === 'full_width') {
+					?>
+					<div class="panel" style="background:#fff;padding:18px;border-radius:12px;box-shadow:var(--shadow)">
+						<?php if (!empty($section['contentTitle'])) : ?><h3 style="margin-top:0;color:var(--brand);"><?php echo esc_html($section['contentTitle']); ?></h3><?php endif; ?>
+						<?php if (!empty($section['contentBody'])) : ?><div><?php echo wp_kses_post($section['contentBody']); ?></div><?php endif; ?>
+						<?php if (!empty($section['buttonText']) && !empty($section['buttonLink'])) : ?>
+							<div class="wp-block-buttons hero-ctas" style="margin-top:14px;">
+								<div class="wp-block-button btn btn-primary">
+									<a class="wp-block-button__link wp-element-button" href="<?php echo esc_url($section['buttonLink']); ?>" target="_blank" rel="noopener"><?php echo esc_html($section['buttonText']); ?></a>
+								</div>
+							</div>
+						<?php endif; ?>
+					</div>
+					<?php
+				}
+				// Note: Two-column layouts are not implemented here for brevity but could be added by copying from the other template.
+				?>
+			</div>
+		</section>
+		<?php
+	}
+}
 
 $today = date('Y-m-d');
 
@@ -291,6 +357,27 @@ function render_latest_news() {
         .event-card-content p svg { width: 16px; height: 16px; flex-shrink: 0; }
 
     </style>
+    <?php if ( current_user_can( 'manage_options' ) ) : ?>
+    <style>
+        /* Styles for the embedded global dashboard */
+        #global-admin-panel { background: #fff; border-radius: var(--card-radius); box-shadow: var(--shadow); margin-top: 40px; }
+        #global-admin-header { background: var(--brand); color: #fff; padding: 15px 20px; border-radius: var(--card-radius) var(--card-radius) 0 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        #global-admin-header h2 { margin: 0; color: #fff; font-size: 1.5rem; }
+        #global-admin-header .toggle-arrow { font-size: 1.5rem; transition: transform 0.3s; }
+        #global-admin-content { padding: 20px; display: none; }
+        #global-admin-panel.open #global-admin-content { display: block; }
+        #global-admin-panel.open .toggle-arrow { transform: rotate(180deg); }
+        .dashboard-tabs { display: flex; gap: 5px; border-bottom: 1px solid #ddd; margin-bottom: 20px; }
+        .dashboard-tab { padding: 10px 15px; cursor: pointer; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; }
+        .dashboard-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+        .dashboard-panel { display: none; }
+        .dashboard-panel.active { display: block; }
+        .section-card, .nav-item { border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .section-info h3, .nav-item-info strong { margin: 0; }
+        .section-info p, .nav-item-info code { margin: 0; color: var(--muted); font-size: 14px; }
+        #addNavItemForm { margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+    </style>
+    <?php endif; ?>
     <style>
         /* Calendar Styles */
         #calendar-container { max-width: 900px; margin: 40px auto; border: 1px solid #eee; border-radius: 12px; box-shadow: var(--shadow); padding: 10px; }
@@ -334,13 +421,28 @@ function render_latest_news() {
             <img src="<?php echo plugins_url( '../images/logo.png', __FILE__ ); ?>" alt="Logo" class="site-logo">
         </a>
         <nav class="nav-links" role="navigation" aria-label="Primary">
-            <a href="<?php echo esc_url( home_url( '/fossasia-summit/#about' ) ); ?>">About</a>
-            <a href="https://blog.fossasia.org/" target="_blank" rel="noopener">Blog</a>
-            <a href="#" title="Contact Us">Contact</a>
-            <a href="<?php echo esc_url( home_url( '/fossasia-summit/#sponsors' ) ); ?>">Sponsor</a>
-            <a href="<?php echo esc_url( home_url( '/events/' ) ); ?>" style="font-weight: bold; color: var(--brand);">Upcoming Events</a>
-            <a href="<?php echo esc_url( get_permalink( get_page_by_path( 'code-of-conduct' ) ) ); ?>" title="Code of Conduct">Code of Conduct</a>
-            <a href="<?php echo esc_url( get_permalink( get_page_by_path( 'past-events' ) ) ); ?>" title="Past Events">Past Events</a>
+            <?php
+                if (!empty($navigation_data) && is_array($navigation_data)) {
+                    $main_page_url = esc_url( home_url( '/events/' ) ); // Links should be relative to the events page
+                    foreach ($navigation_data as $nav_item) {
+                        if (isset($nav_item['type']) && $nav_item['type'] === 'dropdown') {
+                            echo '<div class="nav-dropdown">';
+                            echo '<a class="nav-dropdown-toggle" style="cursor: pointer;">' . esc_html($nav_item['text']) . '</a>';
+                            echo '<div class="nav-dropdown-content">';
+                            if (!empty($nav_item['items']) && is_array($nav_item['items'])) {
+                                foreach ($nav_item['items'] as $sub_item) {
+                                    $href = (strpos($sub_item['href'], '#') === 0) ? $sub_item['href'] : '#' . $sub_item['href'];
+                                    echo '<a href="' . esc_url($main_page_url) . esc_attr($href) . '">' . esc_html($sub_item['text']) . '</a>';
+                                }
+                            }
+                            echo '</div></div>';
+                        } else {
+                            $href = (strpos($nav_item['href'], '#') === 0) ? $nav_item['href'] : '#' . $nav_item['href'];
+                            echo '<a href="' . esc_url($main_page_url) . esc_attr($href) . '">' . esc_html($nav_item['text']) . '</a>';
+                        }
+                    }
+                }
+            ?>
         </nav>
       </div>
     </header>
@@ -351,6 +453,8 @@ function render_latest_news() {
             <h1>FOSSASIA Events</h1>
             <p>Discover upcoming community events, local meetups, and partner conferences from the FOSSASIA network.</p>
         </header>
+
+        <?php render_custom_sections('events_after_hero', $custom_sections_data); ?>
 
         <div class="container">
             <div class="page-layout">
@@ -451,7 +555,118 @@ function render_latest_news() {
                 </aside>
             </div>
         </div>
+
+        <?php render_custom_sections('events_before_footer', $custom_sections_data); ?>
     </main>
+
+    <?php if ( current_user_can( 'manage_options' ) ) : ?>
+    <div class="container">
+        <section id="global-admin-panel">
+            <div id="global-admin-header">
+                <h2>Global Settings Dashboard</h2>
+                <span class="toggle-arrow">▼</span>
+            </div>
+            <div id="global-admin-content">
+                <div class="dashboard-tabs">
+                    <div class="dashboard-tab active" data-panel="sections">Custom Sections</div>
+                    <div class="dashboard-tab" data-panel="navigation">Manage Navigation</div>
+                    <div class="dashboard-tab" data-panel="coc">Code of Conduct</div>
+                </div>
+
+                <!-- Custom Sections Panel -->
+                <div id="panel-sections" class="dashboard-panel active">
+                    <div id="sections-list"></div>
+                    <div class="header-actions" style="margin-top: 20px;">
+                        <a href="<?php echo esc_url(add_query_arg('panel', 'sections', get_permalink(get_page_by_path('admin-dashboard')))); ?>" class="btn btn-primary">Add/Edit Sections</a>
+                    </div>
+                </div>
+
+                <!-- Navigation Panel -->
+                <div id="panel-navigation" class="dashboard-panel">
+                    <div id="nav-items-list"></div>
+                    <div class="header-actions" style="margin-top: 20px;">
+                         <a href="<?php echo esc_url(add_query_arg('panel', 'navigation', get_permalink(get_page_by_path('admin-dashboard')))); ?>" class="btn btn-primary">Manage Navigation</a>
+                    </div>
+                </div>
+
+                <!-- Code of Conduct Panel -->
+                <div id="panel-coc" class="dashboard-panel">
+                    <?php
+                        $coc_content_file = $data_dir . '/coc-content.json';
+                        $coc_content_data = file_exists($coc_content_file) ? json_decode(file_get_contents($coc_content_file), true) : ['content' => ''];
+                    ?>
+                    <div class="coc-preview" style="border: 1px solid #eee; padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto;"><?php echo wp_kses_post($coc_content_data['content']); ?></div>
+                    <div class="header-actions" style="margin-top: 20px;"><a href="<?php echo esc_url(add_query_arg('panel', 'coc', get_permalink(get_page_by_path('admin-dashboard')))); ?>" class="btn btn-primary">Edit Code of Conduct</a></div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <?php endif; ?>
+
+<!-- Add/Edit Section Modal -->
+<div id="sectionModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <form id="sectionForm">
+            <h2 id="sectionModalTitle">Add New Section</h2>
+            <input type="hidden" name="sectionId">
+
+            <fieldset>
+                <legend>General Settings</legend>
+                <label>Section Title (e.g., "Venue & Travel"):</label>
+                <input type="text" name="sectionTitle">
+                <label>Section Subtitle (small text next to the title):</label>
+                <input type="text" name="sectionSubtitle" placeholder="e.g., In-person & hybrid">
+                <label>Position on Page:</label>
+                <select name="sectionPosition" required></select>
+                <label>Display Order (lower numbers appear first):</label>
+                <input type="number" name="sectionOrder" value="10" required>
+                <label><input type="checkbox" name="sectionIsActive" checked> Active</label>
+            </fieldset>
+
+            <fieldset>
+                <legend>Layout & Content</legend>
+                <label>Layout Style:</label>
+                <select name="layoutStyle">
+                    <option value="two_col_media_left">Two Column - Media Left</option>
+                    <option value="two_col_media_right">Two Column - Media Right</option>
+                    <option value="full_width">Full Width Text</option>
+                </select>
+
+                <div id="content-column-fields">
+                    <label>Content Column Title (optional H3 heading):</label>
+                    <input type="text" name="contentTitle">
+                    <label for="sectionContentBody">Content Body:</label>
+                    <textarea id="sectionContentBody" name="sectionContentBody" style="height: 250px;"></textarea>
+                    <label>Button Text (optional):</label>
+                    <input type="text" name="buttonText" placeholder="e.g., Learn More">
+                    <label>Button Link (optional):</label>
+                    <input type="url" name="buttonLink" placeholder="https://example.com">
+                </div>
+            </fieldset>
+
+            <fieldset id="media-column-fields">
+                <legend>Media Insert</legend>
+                <label>Media Title (optional H3 heading):</label>
+                <input type="text" name="mediaTitle">
+                <label>Media Type: 
+                    <label><input type="radio" name="mediaType" value="photo" checked> Photo</label> 
+                    <label><input type="radio" name="mediaType" value="map"> Map</label>
+                    <label><input type="radio" name="mediaType" value="video"> Video</label>
+                    <label><input type="radio" name="mediaType" value="carousel"> Image Carousel</label>
+                </label>
+                <div id="photo-fields"><label>Photo (URL or Upload):</label><input type="text" name="photoUrl" placeholder="Enter image URL"><input type="file" name="photoUpload" accept="image/*"></div>
+                <div id="map-fields" style="display: none;">
+                    <label>Map Embed URL (the 'src' from an iframe):</label><input type="url" name="mapEmbedUrl" placeholder="https://www.google.com/maps/embed?pb=...">
+                    <p class="description">From Google Maps, click "Share", then "Embed a map", and copy the URL from the `src="..."` attribute in the iframe code. Pasting the full iframe code also works.</p>
+                </div>
+                <div id="video-fields" style="display: none;"><label>Video Embed URL (YouTube, Vimeo, etc.):</label><input type="url" name="videoEmbedUrl" placeholder="https://www.youtube.com/watch?v=..."></div><div id="carousel-fields" style="display: none;"><label>Carousel Images (Upload Multiple):</label><input type="file" name="carouselUpload[]" accept="image/*" multiple><label>Slide Duration (seconds):</label><input type="number" name="carouselTimer" value="5" min="1"></div>
+            </fieldset>
+
+            <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Save Section</button>
+        </form>
+    </div>
+</div>
 
 <!-- Create Event Modal -->
 <div id="createEventModal" class="modal">
@@ -981,7 +1196,270 @@ document.addEventListener('DOMContentLoaded', function() {
     const eventsManager = new EventsPageManager(ajaxUrl, adminNonce);
     eventsManager.init();
     eventsManager.initSearch();
+
+    <?php if ( current_user_can( 'manage_options' ) ) : ?>
+    // --- Embedded Global Dashboard Logic ---
+    class GlobalDashboardManager {
+        constructor() {
+            this.panel = document.getElementById('global-admin-panel');
+            if (!this.panel) return;
+
+            this.header = document.getElementById('global-admin-header');
+            this.content = document.getElementById('global-admin-content');
+            this.tabs = this.content.querySelectorAll('.dashboard-tab');
+            this.panels = this.content.querySelectorAll('.dashboard-panel');
+            this.sectionsList = document.getElementById('sections-list');
+            this.navItemsList = document.getElementById('nav-items-list');
+
+            this.sectionsData = <?php echo json_encode($custom_sections_data); ?>;
+            this.navData = <?php echo json_encode($navigation_data); ?>;
+
+            this.init();
+        }
+
+        init() {
+            this.header?.addEventListener('click', () => this.togglePanel());
+            this.tabs.forEach(tab => {
+                tab.addEventListener('click', () => this.switchTab(tab.dataset.panel));
+            });
+            this.renderSections();
+            this.renderNavItems();
+        }
+
+        togglePanel() {
+            this.panel.classList.toggle('open');
+        }
+
+        switchTab(panelId) {
+            this.tabs.forEach(t => t.classList.toggle('active', t.dataset.panel === panelId));
+            this.panels.forEach(p => p.classList.toggle('active', p.id === `panel-${panelId}`));
+        }
+
+        escapeHTML(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        renderSections() {
+            if (!this.sectionsList) return;
+            this.sectionsList.innerHTML = '';
+            if (!this.sectionsData || this.sectionsData.length === 0) {
+                this.sectionsList.innerHTML = '<p>No custom sections found.</p>';
+                return;
+            }
+            const sorted = [...this.sectionsData].sort((a, b) => (a.order || 10) - (b.order || 10));
+            sorted.forEach(section => {
+                const card = document.createElement('div');
+                card.className = 'section-card';
+                card.innerHTML = `
+                    <div class="section-info">
+                        <h3>${this.escapeHTML(section.title)} ${section.is_active ? '' : '(Inactive)'}</h3>
+                        <p><strong>Position:</strong> ${this.escapeHTML(section.position)} | <strong>Order:</strong> ${section.order || 10}</p>
+                    </div>
+                `;
+                this.sectionsList.appendChild(card);
+            });
+        }
+
+        renderNavItems() {
+            if (!this.navItemsList) return;
+            this.navItemsList.innerHTML = '';
+            if (!this.navData || this.navData.length === 0) {
+                this.navItemsList.innerHTML = '<p>No navigation items found.</p>';
+                return;
+            }
+            this.navData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'nav-item';
+                div.innerHTML = `
+                    <div class="nav-item-info">
+                        <strong>${this.escapeHTML(item.text)}</strong> &rarr; <code>${this.escapeHTML(item.href)}</code>
+                    </div>
+                `;
+                this.navItemsList.appendChild(div);
+            });
+        }
+    }
+
+    new GlobalDashboardManager();
+
+    // --- Custom Sections Logic (for Global Dashboard) ---
+    (() => {
+        const container = document.getElementById('sections-list');
+        if (!container) return;
+
+        const store = { sections: <?php echo json_encode($custom_sections_data); ?> };
+        const sectionPositions = [
+            { value: 'events_after_hero', label: 'Events Page - After Hero' },
+            { value: 'events_before_footer', label: 'Events Page - Before Footer' },
+            { value: 'after_hero', label: 'Single Event Page - After Hero' }, { value: 'after_about', label: 'Single Event Page - After About' },
+            { value: 'after_speakers', label: 'Single Event Page - After Speakers' }, { value: 'after_schedule', label: 'Single Event Page - After Schedule' },
+            { value: 'after_sponsors', label: 'Single Event Page - After Sponsors' }, { value: 'after_venue', label: 'Single Event Page - After Venue' }
+        ];
+
+        const render = () => {
+            container.innerHTML = ''; // Clear current list
+            if (!store.sections || store.sections.length === 0) {
+                container.innerHTML = '<p>No custom sections found.</p>';
+            } else {
+                const sorted = [...store.sections].sort((a, b) => (a.order || 10) - (b.order || 10));
+                sorted.forEach(section => {
+                    const card = document.createElement('div');
+                    card.className = 'section-card';
+                    const posLabel = sectionPositions.find(p => p.value === section.position)?.label || section.position;
+                    card.innerHTML = `
+                        <div class="section-info">
+                            <h3>${eventsManager.escapeHTML(section.title)} ${section.is_active ? '' : '(Inactive)'}</h3>
+                            <p><strong>Position:</strong> ${eventsManager.escapeHTML(posLabel)} | <strong>Order:</strong> ${section.order || 10}</p>
+                        </div>
+                        <div class="speaker-actions">
+                            <button class="btn btn-edit btn-edit-section" data-id="${section.id}">Edit</button>
+                            <button class="btn btn-reject btn-delete-section" data-id="${section.id}">Delete</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+            // Add the "Add New Section" button at the end
+            const addButtonContainer = document.createElement('div');
+            addButtonContainer.className = 'header-actions';
+            addButtonContainer.style.marginTop = '20px';
+            addButtonContainer.innerHTML = `<button id="addSectionBtn" class="btn btn-primary">Add New Section</button>`;
+            container.appendChild(addButtonContainer);
+        };
+
+        const saveSections = async () => {
+            const formData = new FormData();
+            formData.append('action', 'fossasia_manage_sections');
+            formData.append('nonce', adminNonce);
+            formData.append('task', 'save_all');
+            formData.append('sections', JSON.stringify(store.sections));
+            
+            const response = await fetch(ajaxUrl, { method: 'POST', body: formData });
+            const data = await response.json();
+            if (!data.success) alert(`Error saving sections: ${data.data}`);
+            return data;
+        };
+
+        const modal = document.getElementById('sectionModal');
+        const form = document.getElementById('sectionForm');
+        const closeBtn = modal.querySelector('.close-btn');
+        let currentlyEditingId = null;
+
+        const openSectionModal = (sectionId = null) => {
+            form.reset();
+            const positionSelect = form.querySelector('[name="sectionPosition"]');
+            positionSelect.innerHTML = sectionPositions.map(p => `<option value="${p.value}">${p.label}</option>`).join('');
+
+            if (sectionId) {
+                currentlyEditingId = sectionId;
+                const section = store.sections.find(s => s.id === sectionId);
+                document.getElementById('sectionModalTitle').textContent = 'Edit Section';
+                form.querySelector('[name="sectionId"]').value = section.id;
+                form.querySelector('[name="sectionTitle"]').value = section.title || '';
+                form.querySelector('[name="sectionSubtitle"]').value = section.subtitle || '';
+                positionSelect.value = section.position || 'after_hero';
+                form.querySelector('[name="sectionOrder"]').value = section.order || 10;
+                form.querySelector('[name="sectionIsActive"]').checked = section.is_active;
+                // ... (rest of the form population logic)
+            } else {
+                currentlyEditingId = null;
+                document.getElementById('sectionModalTitle').textContent = 'Add New Section';
+            }
+            modal.style.display = 'flex';
+        };
+
+        container.addEventListener('click', async (e) => {
+            if (e.target.matches('#addSectionBtn')) {
+                openSectionModal();
+            } else if (e.target.matches('.btn-edit-section')) {
+                openSectionModal(e.target.dataset.id);
+            } else if (e.target.matches('.btn-delete-section')) {
+                if (!confirm('Are you sure you want to delete this section?')) return;
+                store.sections = store.sections.filter(s => s.id !== e.target.dataset.id);
+                await saveSections();
+                render();
+            }
+        });
+
+        closeBtn.addEventListener('click', () => modal.style.display = 'none');
+        window.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const sectionData = {
+                id: formData.get('sectionId') || Date.now().toString(),
+                title: formData.get('sectionTitle'),
+                subtitle: formData.get('sectionSubtitle'),
+                position: formData.get('sectionPosition'),
+                order: parseInt(formData.get('sectionOrder'), 10),
+                is_active: formData.get('sectionIsActive') === 'on',
+                // ... (rest of the data gathering logic)
+            };
+
+            if (currentlyEditingId) {
+                store.sections = store.sections.map(s => s.id === currentlyEditingId ? sectionData : s);
+            } else {
+                store.sections.push(sectionData);
+            }
+            await saveSections();
+            modal.style.display = 'none';
+            render();
+        });
+
+        render(); // Initial render
+    })();
+
+    // --- Navigation Management Logic (for Global Dashboard) ---
+    (() => {
+        const container = document.getElementById('nav-items-list');
+        if (!container) return;
+
+        const store = { navigation: <?php echo json_encode($navigation_data); ?> };
+
+        const render = () => {
+            container.innerHTML = ''; // Clear current list
+            if (!store.navigation || store.navigation.length === 0) {
+                container.innerHTML = '<p>No navigation items found.</p>';
+            } else {
+                store.navigation.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'nav-item';
+                    div.innerHTML = `
+                        <div class="nav-item-info">
+                            <strong>${eventsManager.escapeHTML(item.text)}</strong> &rarr; <code>${eventsManager.escapeHTML(item.href)}</code>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+            // Add the "Manage Navigation" button that links to the full dashboard
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'header-actions';
+            buttonContainer.style.marginTop = '20px';
+            buttonContainer.innerHTML = `<a href="<?php echo esc_url(add_query_arg('panel', 'navigation', get_permalink(get_page_by_path('admin-dashboard')))); ?>" class="btn btn-primary">Manage Navigation</a>`;
+            container.appendChild(buttonContainer);
+        };
+
+        render(); // Initial render
+    })();
+
+    <?php endif; ?>
 });
 </script>
+
+<style>
+/* Styles needed for the new modals on this page */
+#sectionForm fieldset { border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+#sectionForm legend { font-weight: bold; color: var(--brand); padding: 0 5px; }
+#sectionForm label { display: block; margin-bottom: 5px; font-weight: 600; }
+#sectionForm input[type="text"],
+#sectionForm input[type="url"],
+#sectionForm input[type="number"],
+#sectionForm select,
+#sectionForm textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; }
+#sectionForm p.description { font-size: 12px; color: var(--muted); margin-top: -5px; margin-bottom: 10px; }
+</style>
+
 </body>
 </html>

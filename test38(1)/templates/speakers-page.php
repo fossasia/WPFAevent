@@ -506,17 +506,24 @@ $navigation_data = json_decode(file_get_contents($navigation_file), true);
         </a>
         <nav class="nav-links" role="navigation" aria-label="Primary">
           <?php
-            if (!empty($navigation_data) && is_array($navigation_data)) {
-                // Get the event's main page URL. Fallback to the default summit page if not found.
-                $event_page_url = $event_id ? get_permalink($event_id) : esc_url( home_url( '/fossasia-summit/' ) );
-                if (!$event_page_url) {
-                    $event_page_url = esc_url( home_url( '/fossasia-summit/' ) );
-                }
-
+            if (!empty($navigation_data) && is_array($navigation_data)) { 
+                $main_page_url = $event_id ? get_permalink($event_id) : esc_url( home_url( '/fossasia-summit/' ) );
                 foreach ($navigation_data as $nav_item) {
-                    // Ensure href starts with # for on-page links
-                    $href = (strpos($nav_item['href'], '#') === 0) ? $nav_item['href'] : '#' . $nav_item['href'];
-                    echo '<a href="' . esc_url($event_page_url) . esc_attr($href) . '">' . esc_html($nav_item['text']) . '</a>';
+                    if (isset($nav_item['type']) && $nav_item['type'] === 'dropdown') {
+                        echo '<div class="nav-dropdown">';
+                        echo '<a class="nav-dropdown-toggle" style="cursor: pointer;">' . esc_html($nav_item['text']) . '</a>';
+                        echo '<div class="nav-dropdown-content">';
+                        if (!empty($nav_item['items']) && is_array($nav_item['items'])) {
+                            foreach ($nav_item['items'] as $sub_item) {
+                                $href = (strpos($sub_item['href'], '#') === 0) ? $sub_item['href'] : '#' . $sub_item['href'];
+                                echo '<a href="' . esc_url($main_page_url) . esc_attr($href) . '">' . esc_html($sub_item['text']) . '</a>';
+                            }
+                        }
+                        echo '</div></div>';
+                    } else {
+                        $href = (strpos($nav_item['href'], '#') === 0) ? $nav_item['href'] : '#' . $nav_item['href'];
+                        echo '<a href="' . esc_url($main_page_url) . esc_attr($href) . '">' . esc_html($nav_item['text']) . '</a>';
+                    }
                 }
             }
             echo '<a href="' . esc_url( get_permalink( get_page_by_path( 'events' ) ) ) . '">View All Events</a>';

@@ -24,6 +24,7 @@ $theme_settings_file = $event_id ? $data_dir . '/theme-settings-' . $event_id . 
 $global_settings_file = $data_dir . '/site-settings.json';
 $sections_file = $data_dir . '/custom-sections.json'; // Assuming custom sections are global for now
 $navigation_file = $data_dir . '/navigation.json'; // Assuming navigation is global
+$coc_content_file = $data_dir . '/coc-content.json';
 
 // Ensure files exist
 if ($event_id) {
@@ -36,6 +37,7 @@ if ($event_id) {
 if (!file_exists($sections_file)) { file_put_contents($sections_file, '[]'); }
 if (!file_exists($navigation_file)) { file_put_contents($navigation_file, '[]'); }
 if (!file_exists($global_settings_file)) { file_put_contents($global_settings_file, '{"hero_image_url": "", "footer_text": ""}'); }
+if (!file_exists($coc_content_file)) { file_put_contents($coc_content_file, '{"content": "<p>Placeholder CoC content.</p>"}'); }
 
 // Speaker data is needed for the new "Manage Speakers" tab
 $speakers_data = $event_id && file_exists($speakers_file) ? json_decode(file_get_contents($speakers_file), true) : [];
@@ -45,6 +47,7 @@ $custom_sections_data = json_decode(file_get_contents($sections_file), true);
 $schedule_data = $event_id && file_exists($schedule_file) ? json_decode(file_get_contents($schedule_file), true) : [];
 $navigation_data = json_decode(file_get_contents($navigation_file), true);
 $theme_settings_data = $event_id && file_exists($theme_settings_file) ? json_decode(file_get_contents($theme_settings_file), true) : [];
+$coc_content_data = json_decode(file_get_contents($coc_content_file), true);
 
 // Determine the correct "View Site" URL.
 $view_site_url = esc_url( home_url( '/fossasia-summit/' ) ); // Default URL.
@@ -133,6 +136,13 @@ if ( isset( $_GET['return_to'] ) ) {
         .nav-item { display: flex; align-items: center; gap: 15px; padding: 10px; border-bottom: 1px solid #eee; }
         .nav-item:last-child { border-bottom: none; }
         .nav-item-info { flex-grow: 1; }
+        .nav-item-sub-items {
+            padding-left: 30px;
+            border-left: 2px solid #eee;
+            margin-left: 10px;
+            margin-top: 10px;
+        }
+        .nav-item-sub-items .nav-item { background-color: #f8f9fa; }
         #addNavItemForm { margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
         #editSpeakerForm .form-section-heading { font-weight: bold; font-size: 1.1em; margin-top: 20px; margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px solid #eee; color: var(--brand); }
         #sectionForm fieldset { border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
@@ -154,6 +164,12 @@ if ( isset( $_GET['return_to'] ) ) {
         .mini-editor .editor-content {
             min-height: 150px;
             padding: 8px;
+            outline: none;
+            line-height: 1.6;
+        }
+        .mini-editor .editor-content[contenteditable="true"]:focus {
+            box-shadow: 0 0 0 2px var(--brand);
+            border-radius: 2px;
             outline: none;
             line-height: 1.6;
         }
@@ -183,7 +199,9 @@ if ( isset( $_GET['return_to'] ) ) {
     <div class="dashboard-header">
         <div>
             <h1>Admin Dashboard</h1>
-            <?php if ($event_id && $event_title): ?>
+            <?php if (!$event_id): ?>
+                <h2 style="margin-top: 5px; color: var(--muted);">Editing: Global Site Content (Events Page)</h2>
+            <?php elseif ($event_id && $event_title): ?>
                 <h2 style="margin-top: 5px; color: var(--muted);">Editing: <?php echo esc_html($event_title); ?></h2>
             <?php endif; ?>
         </div>
@@ -200,21 +218,31 @@ if ( isset( $_GET['return_to'] ) ) {
     <section class="dashboard-section">
         <h2>No Event Selected</h2>
         <p>Please go to the <a href="<?php echo esc_url(home_url('/events/')); ?>">Events page</a> and click "Edit Content" on an event card to manage its specific content.</p>
+        <p>You can still manage global site settings below.</p>
     </section>
-    <?php else: ?>
-    <section class="dashboard-section">
+    <?php endif; ?>
+
+    <section class="dashboard-section" id="main-dashboard-content">
         <div class="dashboard-tabs">
-            <div class="dashboard-tab active" data-panel="sync">Data Sync</div>
-            <div class="dashboard-tab" data-panel="speakers">Manage Speakers</div>
-            <div class="dashboard-tab" data-panel="schedule">Manage Schedule</div>
-            <div class="dashboard-tab" data-panel="about">About Section</div>
-            <div class="dashboard-tab" data-panel="sponsors">Manage Sponsors</div>
-            <div class="dashboard-tab" data-panel="settings">Site Settings</div>
-            <div class="dashboard-tab" data-panel="sections">Custom Sections</div>
-            <div class="dashboard-tab" data-panel="theme">Theme</div>
+            <?php if ($event_id): ?>
+                <div class="dashboard-tab active" data-panel="sync">Data Sync</div>
+                <div class="dashboard-tab" data-panel="speakers">Manage Speakers</div>
+                <div class="dashboard-tab" data-panel="schedule">Manage Schedule</div>
+                <div class="dashboard-tab" data-panel="about">About Section</div>
+                <div class="dashboard-tab" data-panel="sponsors">Manage Sponsors</div>
+                <div class="dashboard-tab" data-panel="settings">Site Settings</div>
+                <div class="dashboard-tab" data-panel="theme">Theme</div>
+            <?php endif; ?>
+            <!-- Global tabs that are always visible -->
+            <div class="dashboard-tab <?php echo !$event_id ? 'active' : ''; ?>" data-panel="sections">Content Sections</div>
+            <div class="dashboard-tab" data-panel="media-sections">Media Sections</div>
             <div class="dashboard-tab" data-panel="navigation">Manage Navigation</div>
+            <!-- CoC is only on the global dashboard -->
+            <?php if (!$event_id): ?><div class="dashboard-tab" data-panel="coc">Code of Conduct</div><?php endif; ?>
         </div>
 
+        <?php if ($event_id): ?>
+        <!-- Event-Specific Panels -->
         <div id="panel-sync" class="dashboard-panel active">
             <h2>Sync with Eventyay</h2>
             <p>Click the button below to fetch the latest speaker and session data directly from the Eventyay API. This will overwrite the current speaker data on your site.</p>
@@ -312,16 +340,6 @@ if ( isset( $_GET['return_to'] ) ) {
                 <button type="submit" class="btn btn-accept" style="margin-top: 20px;">Save Settings</button>
             </form>
         </div>
-
-        <div id="panel-sections" class="dashboard-panel">
-            <div id="sections-list">
-                <!-- Custom sections will be rendered here -->
-            </div>
-            <div class="header-actions" style="margin-top: 20px;">
-                <button id="addSectionBtn" class="btn btn-accept">Add New Section</button>
-            </div>
-        </div>
-
         <div id="panel-theme" class="dashboard-panel">
             <h2>Theme Settings</h2>
             <p>Customize the color palette for <strong>this specific event</strong>. These settings will override the global defaults.</p>
@@ -335,24 +353,71 @@ if ( isset( $_GET['return_to'] ) ) {
                 <button type="submit" class="btn btn-accept" style="margin-top: 20px;">Save Theme</button>
             </form>
         </div>
+        <?php endif; ?>
+
+        <!-- Global Panels -->
+        <div id="panel-sections" class="dashboard-panel <?php echo !$event_id ? 'active' : ''; ?>">
+            <div id="sections-list">
+                <!-- Custom sections will be rendered here -->
+            </div>
+            <div class="header-actions" style="margin-top: 20px;">
+                <button id="addSectionBtn" class="btn btn-accept">Add New Section</button>
+            </div>
+        </div>
+
+        <div id="panel-media-sections" class="dashboard-panel">
+            <h2>Full-Width Media Sections</h2>
+            <p>Add full-width media elements like a large photo, a video embed, or an image carousel between your content sections.</p>
+            <div id="media-sections-list">
+                <!-- Media sections will be rendered here -->
+            </div>
+            <div class="header-actions" style="margin-top: 20px;">
+                <button id="addMediaSectionBtn" class="btn btn-accept">Add New Media Section</button>
+            </div>
+        </div>
 
         <div id="panel-navigation" class="dashboard-panel">
             <div id="nav-items-list">
                 <!-- Navigation items will be rendered here -->
             </div>
-            <form id="addNavItemForm">
-                <h3>Add New Nav Item</h3>
-                <input type="text" name="navText" placeholder="Link Text (e.g., About)" required>
-                <select name="navHref" required></select>
-                <button type="submit" class="btn btn-accept">Add Link</button>
+            <form id="addNavItemForm" style="display: none;">
+                <h3 id="navFormTitle">Add New Item</h3>
+                <input type="hidden" id="navParentId" name="navParentId">
+                <input type="hidden" id="navItemId" name="navItemId">
+                <div id="navItemTypeToggle" style="display: flex; gap: 20px; margin-bottom: 15px;">
+                    <label><input type="radio" name="navItemType" value="link" checked> Direct Link</label>
+                    <label><input type="radio" name="navItemType" value="dropdown"> Dropdown Menu</label>
+                </div>
+                <input type="text" id="navText" name="navText" placeholder="Item Text (e.g., About)" required style="margin-right: 10px;">
+                <select id="navHref" name="navHref" required style="margin-right: 10px;"></select>
+                <button type="submit" class="btn btn-accept">Add Item</button>
+                <button type="button" class="btn btn-secondary" id="cancelNavEditBtn" style="display: none;">Cancel Edit</button>
             </form>
         </div>
+
+        <?php if (!$event_id): ?>
+        <div id="panel-coc" class="dashboard-panel">
+            <h2>Edit Code of Conduct</h2>
+            <p>Use the editor below to change the content of the Code of Conduct page. This content is global and applies to all events.</p>
+            <form id="cocForm" style="width: 100%;">
+                <?php wp_editor( $coc_content_data['content'] ?? '', 'coc_content_editor', [
+                    'textarea_name' => 'coc_content',
+                    'media_buttons' => false,
+                    'textarea_rows' => 20,
+                    'tinymce'       => [
+                        'height' => 450,
+                    ],
+                ] ); ?>
+                <button type="submit" class="btn btn-accept" style="margin-top: 20px;">Save Code of Conduct</button>
+            </form>
+        </div>
+        <?php endif; ?>
 
     </section>
 </div>
 
 <!-- Edit Speaker Modal (for Admin Panel) -->
-<div id="editSpeakerModal" class="modal">
+<div id="editSpeakerModal" class="modal" style="display: <?php echo $event_id ? 'none' : 'none'; ?>;">
     <div class="modal-content">
         <span class="close-btn">&times;</span>
         <form id="editSpeakerForm">
@@ -385,7 +450,7 @@ if ( isset( $_GET['return_to'] ) ) {
 </div>
 
 <!-- Add Sponsor Group Modal -->
-<div id="addSponsorGroupModal" class="modal">
+<div id="addSponsorGroupModal" class="modal" style="display: <?php echo $event_id ? 'none' : 'none'; ?>;">
     <div class="modal-content">
         <span class="close-btn">&times;</span>
         <form id="addSponsorGroupForm">
@@ -406,7 +471,7 @@ if ( isset( $_GET['return_to'] ) ) {
 </div>
 
 <!-- Add/Edit Schedule Table Modal -->
-<div id="scheduleTableModal" class="modal">
+<div id="scheduleTableModal" class="modal" style="display: <?php echo $event_id ? 'none' : 'none'; ?>;">
     <div class="modal-content" style="max-width: 90vw; width: 1200px;">
         <span class="close-btn">&times;</span>
         <form id="scheduleTableForm">
@@ -431,7 +496,7 @@ if ( isset( $_GET['return_to'] ) ) {
 </div>
 
 <!-- Add New Speaker Modal -->
-<div id="newSpeakerModal" class="modal">
+<div id="newSpeakerModal" class="modal" style="display: <?php echo $event_id ? 'none' : 'none'; ?>;">
     <div class="modal-content">
         <span class="close-btn">&times;</span>
         <form id="newSpeakerForm">
@@ -463,7 +528,7 @@ if ( isset( $_GET['return_to'] ) ) {
 </div>
 
 <!-- Add Sponsor to Group Modal -->
-<div id="addSponsorModal" class="modal">
+<div id="addSponsorModal" class="modal" style="display: <?php echo $event_id ? 'none' : 'none'; ?>;">
     <div class="modal-content">
         <span class="close-btn">&times;</span>
         <form id="addSponsorForm">
@@ -491,7 +556,7 @@ if ( isset( $_GET['return_to'] ) ) {
             <fieldset>
                 <legend>General Settings</legend>
                 <label>Section Title (e.g., "Venue & Travel"):</label>
-                <input type="text" name="sectionTitle" required>
+                <input type="text" name="sectionTitle">
                 <label>Section Subtitle (small text next to the title):</label>
                 <input type="text" name="sectionSubtitle" placeholder="e.g., In-person & hybrid">
                 <label>Position on Page:</label>
@@ -522,13 +587,15 @@ if ( isset( $_GET['return_to'] ) ) {
                 </div>
             </fieldset>
 
-            <fieldset id="media-column-fields">
+            <fieldset id="media-column-fields" style="display: none;">
                 <legend>Media Column</legend>
-                <label>Media Type: <label><input type="radio" name="mediaType" value="photo" checked> Photo</label> <label><input type="radio" name="mediaType" value="map"> Map</label></label>
+                <label>Media Type: 
+                    <label><input type="radio" name="mediaType" value="photo" checked> Photo</label> 
+                    <label><input type="radio" name="mediaType" value="map"> Map</label>
+                </label>
                 <div id="photo-fields"><label>Photo (URL or Upload):</label><input type="text" name="photoUrl" placeholder="Enter image URL"><input type="file" name="photoUpload" accept="image/*"></div>
                 <div id="map-fields" style="display: none;">
                     <label>Map Embed URL (the 'src' from an iframe):</label><input type="url" name="mapEmbedUrl" placeholder="https://www.google.com/maps/embed?pb=...">
-                    <p class="description">From Google Maps, click "Share", then "Embed a map", and copy the URL from the `src="..."` attribute in the iframe code. Pasting the full iframe code also works.</p>
                 </div>
             </fieldset>
 
@@ -536,7 +603,45 @@ if ( isset( $_GET['return_to'] ) ) {
         </form>
     </div>
 </div>
-<?php endif; // End of if($event_id) check ?>
+
+<!-- Add/Edit Media Section Modal -->
+<div id="mediaSectionModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <form id="mediaSectionForm">
+            <h2 id="mediaSectionModalTitle">Add New Media Section</h2>
+            <input type="hidden" name="sectionId">
+
+            <fieldset>
+                <legend>General Settings</legend>
+                <label>Section Title (optional, e.g., "Event Highlights"):</label>
+                <input type="text" name="sectionTitle">
+                <label>Position on Page:</label>
+                <select name="sectionPosition" required></select>
+                <label>Display Order (lower numbers appear first):</label>
+                <input type="number" name="sectionOrder" value="10" required>
+                <label><input type="checkbox" name="sectionIsActive" checked> Active</label>
+            </fieldset>
+
+            <fieldset>
+                <legend>Media Content</legend>
+                <label>Media Type: 
+                    <label><input type="radio" name="mediaType" value="photo" checked> Single Photo</label> 
+                    <label><input type="radio" name="mediaType" value="video"> Video</label>
+                    <label><input type="radio" name="mediaType" value="carousel"> Image Carousel</label>
+                </label>
+                <div id="ms-photo-fields"><label>Photo (URL or Upload):</label><input type="text" name="photoUrl" placeholder="Enter image URL"><input type="file" name="photoUpload" accept="image/*"></div>
+                <div id="ms-video-fields" style="display: none;"><label>Video Embed URL (YouTube, Vimeo, etc.):</label><input type="url" name="videoEmbedUrl" placeholder="https://www.youtube.com/watch?v=..."></div>
+                <div id="ms-carousel-fields" style="display: none;">
+                    <label>Carousel Images (Upload Multiple):</label><input type="file" name="carouselUpload[]" accept="image/*" multiple>
+                    <label>Slide Duration (seconds):</label><input type="number" name="carouselTimer" value="5" min="1">
+                </div>
+            </fieldset>
+
+            <button type="submit" class="btn btn-accept" style="margin-top: 20px;">Save Media Section</button>
+        </form>
+    </div>
+</div>
 <?php wp_footer(); ?>
 
 <script>
@@ -550,6 +655,7 @@ document.addEventListener('DOMContentLoaded', function() {
         speakers: <?php echo json_encode($speakers_data); ?>,
         sponsors: <?php echo json_encode($sponsors_data); ?>,
         settings: <?php echo json_encode($site_settings_data); ?>,
+        media_sections: <?php echo json_encode(array_values(array_filter($custom_sections_data, fn($s) => $s['type'] === 'media'))); ?>,
         sections: <?php echo json_encode($custom_sections_data); ?>,
         navigation: <?php echo json_encode($navigation_data); ?>,
         schedule: <?php echo json_encode($schedule_data); ?>,
@@ -589,8 +695,6 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // --- Tab Management ---
-    // Only run JS if an event is selected
-    if (eventId > 0) {
     (() => {
         const tabs = document.querySelectorAll('.dashboard-tab');
         const panels = document.querySelectorAll('.dashboard-panel');
@@ -604,6 +708,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     })();
 
+    // --- Event-Specific Logic ---
+    if (eventId > 0) {
     // --- About Section Logic ---
     (() => {
         const form = getElement('aboutSectionForm');
@@ -652,7 +758,43 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
     })();
+    // --- Schedule Table Management, Data Sync, Speaker Management, etc. would go here inside the if(eventId > 0) block ---
+    }
 
+    <?php if (!$event_id): ?>
+    // --- Code of Conduct Logic ---
+    (() => {
+        const form = getElement('cocForm');
+        if (!form) return;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            const content = tinymce.get('coc_content_editor') ? tinymce.get('coc_content_editor').getContent() : getElement('coc_content_editor').value;
+            
+            const formData = new FormData();
+            formData.append('action', 'fossasia_manage_coc');
+            formData.append('nonce', adminNonce);
+            formData.append('coc_content', content);
+
+            const response = await fetch(ajaxUrl, { method: 'POST', body: formData });
+            const data = await response.json();
+
+            if (data.success) {
+                alert(data.data.message);
+            } else {
+                alert('Error: ' + data.data);
+            }
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Code of Conduct';
+        });
+    })();
+    <?php endif; ?>
+
+    if (eventId > 0) {
     // --- Schedule Table Management ---
     (() => {
         const controlsContainer = getElement('schedule-table-controls');
@@ -1387,9 +1529,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!container || !addBtn) return;
 
         const sectionPositions = [
-            { value: 'after_hero', label: 'After Hero Section' }, { value: 'after_about', label: 'After About Section' },
-            { value: 'after_speakers', label: 'After Speakers Section' }, { value: 'after_schedule', label: 'After Schedule Section' },
-            { value: 'after_sponsors', label: 'After Sponsors Section' }, { value: 'after_venue', label: 'After Venue Section' }
+            { value: 'events_after_hero', label: 'Events Page - After Hero' },
+            { value: 'events_before_footer', label: 'Events Page - Before Footer' },
+            { value: 'after_hero', label: 'Single Event Page - After Hero' }, { value: 'after_about', label: 'Single Event Page - After About' },
+            { value: 'after_speakers', label: 'Single Event Page - After Speakers' }, { value: 'after_schedule', label: 'Single Event Page - After Schedule' },
+            { value: 'after_sponsors', label: 'Single Event Page - After Sponsors' }, { value: 'after_venue', label: 'Single Event Page - After Venue' }
         ];
 
         const render = () => {
@@ -1431,20 +1575,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         const modal = getElement('sectionModal');
-        const form = getElement('sectionForm');
         const closeBtn = modal.querySelector('.close-btn');
         let currentlyEditingId = null;
 
         const layoutStyleSelect = form.querySelector('[name="layoutStyle"]');
         const mediaColumnFields = getElement('media-column-fields');
-        const mediaTypeRadios = form.querySelectorAll('[name="mediaType"]');
-        const photoFields = getElement('photo-fields');
-        const mapFields = getElement('map-fields');
+        const mediaTypeRadios = mediaColumnFields.querySelectorAll('[name="mediaType"]');
+        const photoFields = mediaColumnFields.querySelector('#photo-fields');
+        const mapFields = mediaColumnFields.querySelector('#map-fields');
 
         layoutStyleSelect.addEventListener('change', () => { mediaColumnFields.style.display = layoutStyleSelect.value === 'full_width' ? 'none' : 'block'; });
         mediaTypeRadios.forEach(radio => radio.addEventListener('change', () => {
-            photoFields.style.display = radio.value === 'photo' ? 'block' : 'none';
-            mapFields.style.display = radio.value === 'map' ? 'block' : 'none';
+            const selectedType = radio.value;
+            photoFields.style.display = selectedType === 'photo' ? 'block' : 'none';
+            mapFields.style.display = selectedType === 'map' ? 'block' : 'none';
         }));
 
         const openSectionModal = (sectionId = null) => {
@@ -1454,7 +1598,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (sectionId) {
                 currentlyEditingId = sectionId;
-                const section = store.sections.find(s => s.id === sectionId);
+                const section = store.sections.find(s => s.id === sectionId && s.type !== 'media');
                 getElement('sectionModalTitle').textContent = 'Edit Section';
                 form.querySelector('[name="sectionId"]').value = section.id;
                 form.querySelector('[name="sectionTitle"]').value = section.title || '';
@@ -1465,12 +1609,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 form.querySelector('[name="layoutStyle"]').value = section.layout || 'full_width';
                 form.querySelector('[name="contentTitle"]').value = section.contentTitle || '';
                 if (tinymce.get('sectionContentBody')) { tinymce.get('sectionContentBody').setContent(section.contentBody || ''); }
-                form.querySelector('[name="buttonText"]').value = section.buttonText || '';
-                form.querySelector('[name="buttonLink"]').value = section.buttonLink || '';
-                const mediaType = section.mediaType || 'photo';
-                form.querySelector(`[name="mediaType"][value="${mediaType}"]`).checked = true;
-                if (section.photo_src && !section.photo_src.startsWith('data:image')) { form.querySelector('[name="photoUrl"]').value = section.photo_src; }
-                form.querySelector('[name="mapEmbedUrl"]').value = section.map_embed_src || '';
+                form.querySelector('[name="buttonText"]').value = section.buttonText || ''; form.querySelector('[name="buttonLink"]').value = section.buttonLink || '';
+                
+                if (section.layout !== 'full_width') {
+                    const mediaType = section.mediaType || 'photo';
+                    form.querySelector(`[name="mediaType"][value="${mediaType}"]`).checked = true;
+                    if (section.photo_src && !section.photo_src.startsWith('data:image')) { form.querySelector('[name="photoUrl"]').value = section.photo_src; }
+                    form.querySelector('[name="mapEmbedUrl"]').value = section.map_embed_src || '';
+                }
             } else {
                 currentlyEditingId = null;
                 getElement('sectionModalTitle').textContent = 'Add New Section';
@@ -1488,9 +1634,11 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(form);
-            const existingSection = currentlyEditingId ? store.sections.find(s => s.id === currentlyEditingId) : null;
+            const existingSection = currentlyEditingId ? store.sections.find(s => s.id === currentlyEditingId && s.type !== 'media') : null;
+            const layout = formData.get('layoutStyle');
             let photoSrc = '';
-            if (formData.get('layoutStyle') !== 'full_width' && formData.get('mediaType') === 'photo') {
+
+            if (layout !== 'full_width' && formData.get('mediaType') === 'photo') {
                 const photoUrl = formData.get('photoUrl');
                 const photoFile = formData.get('photoUpload');
                 if (photoUrl) { photoSrc = photoUrl; } 
@@ -1499,14 +1647,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const sectionData = {
+                type: 'content', // Identify this as a content section
                 id: formData.get('sectionId') || Date.now().toString(),
                 title: formData.get('sectionTitle'), subtitle: formData.get('sectionSubtitle'), position: formData.get('sectionPosition'),
                 order: parseInt(formData.get('sectionOrder'), 10), is_active: formData.get('sectionIsActive') === 'on',
-                layout: formData.get('layoutStyle'), contentTitle: formData.get('contentTitle'),
+                layout: layout, contentTitle: formData.get('contentTitle'),
                 contentBody: tinymce.get('sectionContentBody') ? tinymce.get('sectionContentBody').getContent() : '',
                 buttonText: formData.get('buttonText'), buttonLink: formData.get('buttonLink'),
-                mediaType: formData.get('layoutStyle') !== 'full_width' ? formData.get('mediaType') : '',
-                photo_src: photoSrc, map_embed_src: formData.get('mapEmbedUrl')
+                mediaType: layout !== 'full_width' ? formData.get('mediaType') : '',
+                photo_src: photoSrc,
+                map_embed_src: layout !== 'full_width' ? formData.get('mapEmbedUrl') : '',
             };
 
             if (currentlyEditingId) {
@@ -1525,9 +1675,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Navigation Management Logic ---
     (() => {
         const container = getElement('nav-items-list');
-        const form = getElement('addNavItemForm');
-        const navHrefSelect = form.querySelector('[name="navHref"]');
-        const formTitle = form.querySelector('h3');
+        const form = getElement('addNavItemForm'); // The form for adding/editing items
+        const navHrefSelect = getElement('navHref');
+        const navText = getElement('navText');
+        const navItemIdInput = getElement('navItemId');
+        const navParentIdInput = getElement('navParentId');
+        const formTitle = getElement('navFormTitle');
         const submitBtn = form.querySelector('button[type="submit"]');
         let currentlyEditingNavIndex = -1;
         if (!container || !form) return;
@@ -1545,83 +1698,219 @@ document.addEventListener('DOMContentLoaded', function() {
             navHrefSelect.innerHTML = [...defaultTargets, ...customTargets].map(t => `<option value="${t.value}">${t.label}</option>`).join('');
         };
 
-        const resetForm = () => {
-            currentlyEditingNavIndex = -1;
+        const resetAndHideForm = () => {
             form.reset();
-            formTitle.textContent = 'Add New Nav Item';
-            submitBtn.textContent = 'Add Link';
-            const cancelButton = form.querySelector('.btn-cancel-edit');
-            if (cancelButton) cancelButton.remove();
+            form.style.display = 'none';
+            navItemIdInput.value = '';
+            navParentIdInput.value = '';
+            getElement('cancelNavEditBtn').style.display = 'none';
         };
 
-        const openEditForm = (index) => {
-            currentlyEditingNavIndex = index;
-            const item = store.navigation[index];
-            formTitle.textContent = 'Edit Nav Item';
-            form.querySelector('[name="navText"]').value = item.text;
-            navHrefSelect.value = item.href;
-            submitBtn.textContent = 'Update Link';
+        const openForm = ({ parentId = null, itemId = null } = {}) => {
+            form.reset();
+            form.style.display = 'flex';
+            navParentIdInput.value = parentId || '';
+            navItemIdInput.value = itemId || '';
 
-            if (!form.querySelector('.btn-cancel-edit')) {
-                const cancelButton = document.createElement('button');
-                cancelButton.type = 'button';
-                cancelButton.textContent = 'Cancel';
-                cancelButton.className = 'btn btn-secondary btn-cancel-edit';
-                cancelButton.addEventListener('click', resetForm);
-                submitBtn.after(cancelButton);
+            const navItemTypeToggle = getElement('navItemTypeToggle');
+            const navHref = getElement('navHref');
+
+            if (itemId) { // Editing existing item
+                const item = findNavItem(itemId);
+                if (!item) { resetAndHideForm(); return; }
+                formTitle.textContent = 'Edit Item';
+                navText.value = item.text;
+                form.querySelector(`[name="navItemType"][value="${item.type || 'link'}"]`).checked = true;
+                navHref.value = item.href || '';
+                submitBtn.textContent = 'Save Changes';
+                getElement('cancelNavEditBtn').style.display = 'inline-flex';
+            } else { // Adding new item
+                formTitle.textContent = parentId ? 'Add Sub-Item' : 'Add New Top-Level Item';
+                submitBtn.textContent = 'Add Item';
+                getElement('cancelNavEditBtn').style.display = 'inline-flex';
             }
+
+            // A sub-item cannot be a dropdown itself
+            navItemTypeToggle.style.display = parentId ? 'none' : 'flex';
+            if (parentId) form.querySelector('[name="navItemType"][value="link"]').checked = true;
+
+            // Toggle href select based on type
+            const type = form.querySelector('[name="navItemType"]:checked').value;
+            navHref.style.display = type === 'link' ? 'block' : 'none';
+            navHref.required = type === 'link' && !parentId;
+        };
+
+        const findNavItem = (itemId, navArray = store.navigation) => {
+            for (const item of navArray) {
+                if (item.id === itemId) return item;
+                if (item.items) {
+                    const found = findNavItem(itemId, item.items);
+                    if (found) return found;
+                }
+            }
+            return null;
         };
 
         const render = () => {
             container.innerHTML = '';
             populateNavTargetSelect();
+            
+            const addButton = document.createElement('button');
+            addButton.textContent = 'Add New Top-Level Item';
+            addButton.className = 'btn btn-accept';
+            addButton.style.marginBottom = '20px';
+            addButton.addEventListener('click', () => openForm());
+            container.appendChild(addButton);
+
             if (!store.navigation || store.navigation.length === 0) {
-                container.innerHTML = '<p>No navigation items found.</p>';
+                const p = document.createElement('p');
+                p.textContent = 'No navigation items found. Click the button above to add one.';
+                container.appendChild(p);
                 return;
             }
-            store.navigation.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = 'nav-item';
-                div.innerHTML = `
-                    <div class="nav-item-info">
-                        <strong>${escapeHTML(item.text)}</strong> &rarr; <code>${escapeHTML(item.href)}</code>
-                    </div>
-                    <div class="speaker-actions">
-                        <button class="btn btn-edit btn-edit-nav" data-index="${index}">Edit</button>
-                        <button class="btn btn-reject btn-delete-nav" data-index="${index}">Delete</button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
+
+            const findNavItem = (itemId, navArray = store.navigation) => {
+                for (const item of navArray) {
+                    if (item.id === itemId) return item;
+                    if (item.items) {
+                        const found = findNavItem(itemId, item.items);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            };
+
+            const renderItems = (items, parentElement, isSub = false) => {
+                items.forEach(item => {
+                    if (!item.id) item.id = `nav-${Date.now()}-${Math.random()}`; // Ensure ID exists
+
+                    const div = document.createElement('div');
+                    div.className = 'nav-item';
+
+                    let itemHTML = `
+                        <div class="nav-item-info">
+                            <strong>${escapeHTML(item.text)}</strong>
+                            ${item.type === 'link' ? `&rarr; <code>${escapeHTML(item.href)}</code>` : `<em>(Dropdown)</em>`}
+                        </div>
+                        <div class="speaker-actions">
+                            ${item.type === 'dropdown' ? `<button class="btn btn-accept btn-add-sub-item" data-id="${item.id}">Add Sub-Item</button>` : ''}
+                            <button class="btn btn-edit btn-edit-nav" data-id="${item.id}">Edit</button>
+                            <button class="btn btn-reject btn-delete-nav" data-id="${item.id}">Delete</button>
+                        </div>
+                    `;
+                    div.innerHTML = itemHTML;
+
+                    if (item.items && item.items.length > 0) {
+                        const subItemsContainer = document.createElement('div');
+                        subItemsContainer.className = 'nav-item-sub-items';
+                        renderItems(item.items, subItemsContainer, true);
+                        div.appendChild(subItemsContainer);
+                    }
+                    parentElement.appendChild(div);
+                });
+            };
+
+            renderItems(store.navigation, container);
+        };
+
+        const deleteNavItem = (itemId, navArray = store.navigation) => {
+            for (let i = 0; i < navArray.length; i++) {
+                if (navArray[i].id === itemId) {
+                    navArray.splice(i, 1);
+                    return true;
+                }
+                if (navArray[i].items) {
+                    if (deleteNavItem(itemId, navArray[i].items)) return true;
+                }
+            }
+            return false;
         };
 
         container.addEventListener('click', async (e) => {
-            if (e.target.matches('.btn-edit-nav')) {
-                openEditForm(parseInt(e.target.dataset.index, 10));
-                return;
-            }
-            if (e.target.matches('.btn-delete-nav')) {
-                if (!confirm('Are you sure you want to remove this navigation link?')) return;
-                store.navigation.splice(e.target.dataset.index, 1);
+            const btn = e.target.closest('button');
+            if (!btn) return;
+
+            const id = btn.dataset.id;
+            if (btn.matches('.btn-edit-nav')) {
+                openForm({ itemId: id });
+            } else if (btn.matches('.btn-delete-nav')) {
+                if (!confirm('Are you sure you want to remove this navigation item and all its sub-items?')) return;
+                deleteNavItem(id);
                 await saveStore('navigation', 'fossasia_manage_navigation');
                 render();
+            } else if (btn.matches('.btn-add-sub-item')) {
+                openForm({ parentId: id });
             }
+        });
+
+        getElement('cancelNavEditBtn').addEventListener('click', resetAndHideForm);
+
+        form.querySelectorAll('[name="navItemType"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const isLink = e.target.value === 'link';
+                navHrefSelect.style.display = isLink ? 'block' : 'none';
+                navHrefSelect.required = isLink;
+            });
         });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const text = form.querySelector('[name="navText"]').value;
-            const href = form.querySelector('[name="navHref"]').value;
-            if (text && href) {
-                if (currentlyEditingNavIndex > -1) {
-                    store.navigation[currentlyEditingNavIndex] = { text, href };
-                } else {
-                    store.navigation.push({ text, href });
+            const formData = new FormData(form);
+            const text = formData.get('navText');
+            const type = formData.get('navItemType');
+            const href = formData.get('navHref');
+            const parentId = formData.get('navParentId');
+            const itemId = formData.get('navItemId');
+
+            const findNavItem = (itemId, navArray = store.navigation) => {
+                for (const item of navArray) {
+                    if (item.id === itemId) return item;
+                    if (item.items) {
+                        const found = findNavItem(itemId, item.items);
+                        if (found) return found;
+                    }
                 }
-                await saveStore('navigation', 'fossasia_manage_navigation');
-                resetForm();
-                render();
+                return null;
+            };
+
+            if (!text) return;
+
+            const newItemData = {
+                id: itemId || `nav-${Date.now()}`,
+                text: text,
+                type: parentId ? 'link' : type, // Sub-items are always links
+                href: (type === 'link') ? href : '',
+            };
+            if (type === 'dropdown' && !itemId) {
+                newItemData.items = [];
             }
+
+            if (itemId) { // Editing
+                const itemToUpdate = findNavItem(itemId);
+                if (itemToUpdate) {
+                    itemToUpdate.text = newItemData.text;
+                    itemToUpdate.type = newItemData.type;
+                    itemToUpdate.href = newItemData.href;
+                    if (newItemData.type === 'dropdown' && !itemToUpdate.items) {
+                        itemToUpdate.items = [];
+                    } else if (newItemData.type === 'link') {
+                        delete itemToUpdate.items;
+                    }
+                }
+            } else if (parentId) { // Adding sub-item
+                const parentItem = findNavItem(parentId);
+                if (parentItem && parentItem.items) {
+                    parentItem.items.push(newItemData);
+                } else {
+                    console.error("Could not find parent to add sub-item to.");
+                }
+            } else { // Adding top-level item
+                store.navigation.push(newItemData);
+            }
+
+            await saveStore('navigation', 'fossasia_manage_navigation');
+            resetAndHideForm();
+            render();
         });
 
         render();
@@ -1638,7 +1927,7 @@ document.addEventListener('DOMContentLoaded', function() {
             quicktags: true
         });
     }
-    } // End of if(eventId > 0)
+    } // End of if(eventId > 0) for event-specific JS
 });
 
 </script>

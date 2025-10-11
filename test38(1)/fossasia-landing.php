@@ -54,6 +54,7 @@ class FOSSASIA_Landing_Plugin {
     const SETTINGS_FILE = 'site-settings.json';
     const SECTIONS_FILE = 'custom-sections.json';
     const NAVIGATION_FILE = 'navigation.json';
+    const COC_CONTENT_FILE = 'coc-content.json';
 
     const THEME_SETTINGS_FILE = 'theme-settings.json';
     public function __construct() {
@@ -77,6 +78,7 @@ class FOSSASIA_Landing_Plugin {
         add_action( 'wp_ajax_fossasia_manage_theme_settings', [ $this, 'ajax_manage_theme_settings' ] );
         add_action( 'wp_ajax_fossasia_import_sample_data', [ $this, 'ajax_import_sample_data' ] );
         add_action( 'wp_ajax_fossasia_add_sample_event', [ $this, 'ajax_add_sample_event' ] );
+        add_action( 'wp_ajax_fossasia_manage_coc', [ $this, 'ajax_manage_coc' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_scripts' ] );
     }
 
@@ -247,6 +249,14 @@ class FOSSASIA_Landing_Plugin {
         $theme_settings_file = $data_dir . '/' . self::THEME_SETTINGS_FILE;
         if (!file_exists($theme_settings_file)) {
             file_put_contents($theme_settings_file, json_encode($this->get_initial_theme_settings_data(), JSON_PRETTY_PRINT));
+        }
+
+        $coc_content_file = $data_dir . '/' . self::COC_CONTENT_FILE;
+        if (!file_exists($coc_content_file)) {
+            $initial_coc = [
+                'content' => '<p>This is a placeholder for the Code of Conduct. The full text will be added here later. All participants are expected to adhere to the principles of respect, inclusivity, and professional behavior to ensure a safe and welcoming environment for everyone.</p>'
+            ];
+            file_put_contents($coc_content_file, json_encode($initial_coc, JSON_PRETTY_PRINT));
         }
     }
 
@@ -514,6 +524,30 @@ class FOSSASIA_Landing_Plugin {
             }
             wp_send_json_success(['message' => 'Theme settings updated successfully.']);
         }
+        wp_send_json_error('Invalid data.', 400);
+    }
+
+    public function ajax_manage_coc() {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'fossasia_admin_nonce')) {
+            wp_send_json_error('Nonce verification failed.', 403);
+        }
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Permission denied.', 403);
+        }
+
+        $upload_dir = wp_upload_dir();
+        $data_dir = $upload_dir['basedir'] . '/fossasia-data';
+        $coc_file = $data_dir . '/' . self::COC_CONTENT_FILE;
+
+        if (isset($_POST['coc_content'])) {
+            $new_content_data = [ 'content' => wp_kses_post(stripslashes($_POST['coc_content'])) ];
+            if (file_put_contents($coc_file, json_encode($new_content_data, JSON_PRETTY_PRINT)) === false) {
+                wp_send_json_error('Failed to save Code of Conduct.', 500);
+            } else {
+                wp_send_json_success(['message' => 'Code of Conduct updated successfully.']);
+            }
+        }
+
         wp_send_json_error('Invalid data.', 400);
     }
 
