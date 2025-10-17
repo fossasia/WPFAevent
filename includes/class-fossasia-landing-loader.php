@@ -13,9 +13,9 @@ class FOSSASIA_Landing_Loader {
 	public function run() {
 		// Initialize plugin modules in future PRs
 	}
-}
 
-function run_fossasia_landing() {
-	$plugin = new FOSSASIA_Landing_Loader();
-	$plugin->run();
+	public static function run_plugin() {
+		$plugin = new self();
+		$plugin->run();
+	}
 }

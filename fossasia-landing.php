@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-fossasia-landing-loader.php';
-run_fossasia_landing();
+add_action( 'plugins_loaded', array( 'FOSSASIA_Landing_Loader', 'run_plugin' ) );
 
 /*
 // Comment out future includes for PR-1
