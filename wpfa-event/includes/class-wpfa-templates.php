@@ -1,12 +1,12 @@
-ï»¿<?php
+<?php
 class WPFA_Templates {
   private static \includes\page-landing.php includes\page-speakers.php includes\page-events.php includes\page-past-events.php includes\page-schedule.php includes\page-code-of-conduct.php = [
-    'page-landing.php'         => 'WPFA â€“ Landing',
-    'page-speakers.php'        => 'WPFA â€“ Speakers',
-    'page-events.php'          => 'WPFA â€“ Events',
-    'page-past-events.php'     => 'WPFA â€“ Past Events',
-    'page-schedule.php'        => 'WPFA â€“ Schedule',
-    'page-code-of-conduct.php' => 'WPFA â€“ Code of Conduct',
+    'page-landing.php'         => 'WPFA – Landing',
+    'page-speakers.php'        => 'WPFA – Speakers',
+    'page-events.php'          => 'WPFA – Events',
+    'page-past-events.php'     => 'WPFA – Past Events',
+    'page-schedule.php'        => 'WPFA – Schedule',
+    'page-code-of-conduct.php' => 'WPFA – Code of Conduct',
   ];
   public static function init() {
     add_filter( 'theme_page_templates', [ __CLASS__, 'register' ] );
