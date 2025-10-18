@@ -1,6 +1,6 @@
 ﻿<?php
 class WPFA_Templates {
-  private static \ = [
+  private static \includes\page-landing.php includes\page-speakers.php includes\page-events.php includes\page-past-events.php includes\page-schedule.php includes\page-code-of-conduct.php = [
     'page-landing.php'         => 'WPFA – Landing',
     'page-speakers.php'        => 'WPFA – Speakers',
     'page-events.php'          => 'WPFA – Events',
@@ -8,21 +8,18 @@ class WPFA_Templates {
     'page-schedule.php'        => 'WPFA – Schedule',
     'page-code-of-conduct.php' => 'WPFA – Code of Conduct',
   ];
-
   public static function init() {
     add_filter( 'theme_page_templates', [ __CLASS__, 'register' ] );
     add_filter( 'template_include',     [ __CLASS__, 'load' ] );
   }
-
-  public static function register( \ ) {
-    foreach ( self::\ as \ => \ ) { \[\] = \; }
-    return \;
+  public static function register( \includes\page-landing.php includes\page-speakers.php includes\page-events.php includes\page-past-events.php includes\page-schedule.php includes\page-code-of-conduct.php ) {
+    foreach ( self::\includes\page-landing.php includes\page-speakers.php includes\page-events.php includes\page-past-events.php includes\page-schedule.php includes\page-code-of-conduct.php as \ => \ ) { \includes\page-landing.php includes\page-speakers.php includes\page-events.php includes\page-past-events.php includes\page-schedule.php includes\page-code-of-conduct.php[ \ ] = \; }
+    return \includes\page-landing.php includes\page-speakers.php includes\page-events.php includes\page-past-events.php includes\page-schedule.php includes\page-code-of-conduct.php;
   }
-
   public static function load( \ ) {
     if ( is_singular( 'page' ) ) {
       \ = get_page_template_slug( get_queried_object_id() );
-      if ( isset( self::\[ \ ] ) ) {
+      if ( isset( self::\includes\page-landing.php includes\page-speakers.php includes\page-events.php includes\page-past-events.php includes\page-schedule.php includes\page-code-of-conduct.php[ \ ] ) ) {
         \ = WPFA_EVENT_PLUGIN_DIR . 'public/templates/' . \;
         if ( file_exists( \ ) ) { return \; }
       }
