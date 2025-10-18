@@ -8,6 +8,9 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+require_once WPFA_EVENT_PLUGIN_DIR . 'includes/class-wpfa-templates.php';
+WPFA_Templates::init();
+
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-fossasia-landing-loader.php';
 
 class FOSSASIA_Landing_Plugin {
