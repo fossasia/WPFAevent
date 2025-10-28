@@ -41,7 +41,7 @@ class WPFA_CLI {
 	 * Minimal hardcoded seed (2 speakers, 1 event).
 	 */
 	private static function seed_minimal() {
-		$placeholder = 'https://via.placeholder.com/300x300.png?text=Speaker';
+		$placeholder = WPFA_PLUGIN_URL . 'assets/images/placeholder-speaker.png';
 
 		$speakers = [
 			[

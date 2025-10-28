@@ -28,7 +28,7 @@ class WPFA_Public {
 	public function enqueue_styles() {
 		wp_enqueue_style(
 			'wpfa-public-css',
-			WPFA_PLUGIN_URL . 'public/css/wpfa-public.css',
+			WPFA_PLUGIN_URL . 'public/wpfa-public.css',
 			[],
 			WPFA_VERSION
 		);
