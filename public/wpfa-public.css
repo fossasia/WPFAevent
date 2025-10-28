@@ -1,0 +1,33 @@
+.wpfa-speakers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.wpfa-speaker-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    background: #fff;
+}
+
+.wpfa-speaker-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 15px;
+}
+
+.wpfa-speaker-name {
+    margin: 0 0 5px;
+    font-size: 1.2em;
+}
+
+.wpfa-speaker-meta {
+    margin: 0;
+    color: #555;
+    font-size: 0.9em;
+}
