@@ -106,7 +106,7 @@ $past_events_query = new WP_Query([
     <header class="nav" role="banner">
       <div class="container nav-inner">
         <a href="<?php echo esc_url( home_url( '/events/' ) ); ?>">
-            <img src="<?php echo plugins_url( '../images/logo.png', __FILE__ ); ?>" alt="Logo" class="site-logo">
+            <img src="<?php echo plugins_url( '../assets/images/logo.png', __FILE__ ); ?>" alt="Logo" class="site-logo">
         </a>
         <nav class="nav-links" role="navigation" aria-label="Primary">
             <a href="<?php echo esc_url( home_url( '/events/' ) ); ?>">Upcoming Events</a>

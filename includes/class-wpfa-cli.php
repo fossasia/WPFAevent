@@ -88,7 +88,7 @@ class WPFA_CLI {
 		foreach ( $speakers as $s ) {
 			$speaker_ids[] = self::upsert_post_by_slug(
 				'wpfa_speaker',
-				sanitize_title($s['slug']),
+				sanitize_title( $s['slug'] ),
 				[
 					'post_title'   => $s['post_title'],
 					'post_content' => $s['post_content'],
@@ -102,7 +102,7 @@ class WPFA_CLI {
 		// Insert event (idempotent by slug).
 		$event_id = self::upsert_post_by_slug(
 			'wpfa_event',
-			sanitize_title($event['slug']),
+			sanitize_title( $event['slug'] ),
 			[
 				'post_title'   => $event['post_title'],
 				'post_content' => $event['post_content'],
