@@ -30,7 +30,7 @@ class WPFA_Loader {
 		require_once WPFA_PLUGIN_PATH . 'includes/class-wpfa-settings.php';
 		require_once WPFA_PLUGIN_PATH . 'public/class-wpfa-public.php';
 		require_once WPFA_PLUGIN_PATH . 'admin/class-wpfa-admin.php';
-		require_once WPFA_PLUGIN_PATH . 'admin/class-wpfa-import-export.php';
+		require_once WPFA_PLUGIN_PATH . 'includes/class-wpfa-import-export.php';
 		require_once WPFA_PLUGIN_PATH . 'includes/class-wpfa-rest.php';
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {

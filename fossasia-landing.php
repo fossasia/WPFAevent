@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 define( 'WPFA_VERSION', '2.0.0' );
 define( 'WPFA_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WPFA_PLUGIN_URL', plugin_dir_url( __FILE__ ) ); 
-define( 'WPFA_DEFAULT_SPEAKER_PHOTO', WPFA_PLUGIN_URL . 'assets/images/default-speaker.png' ); // Placeholder image
+define( 'WPFA_DEFAULT_SPEAKER_PHOTO', WPFA_PLUGIN_URL . 'assets/images/default-speaker.png' );
 
 /**
  * The main plugin class.
