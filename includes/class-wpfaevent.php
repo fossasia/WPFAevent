@@ -35,8 +35,6 @@ class WPFA_Event {
 
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wpfaevent-loader.php';
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wpfaevent-i18n.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-wpfaevent-admin.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-wpfaevent-public.php';
 
 		$this->loader = new WPFA_Event_Loader();
 
@@ -52,7 +50,7 @@ class WPFA_Event {
 
 	private function define_admin_hooks() {
 
-		$plugin_admin = new WPFA_Event_Admin( $this->get_plugin_name(), $this->get_version() );
+		// $plugin_admin = new WPFA_Event_Admin( $this->get_plugin_name(), $this->get_version() );
 
 		// This is a placeholder for future admin-specific hooks.
 		// Example:
@@ -63,7 +61,7 @@ class WPFA_Event {
 
 	private function define_public_hooks() {
 
-		$plugin_public = new WPFA_Event_Public( $this->get_plugin_name(), $this->get_version() );
+		// $plugin_public = new WPFA_Event_Public( $this->get_plugin_name(), $this->get_version() );
 
 		// This is a placeholder for future public-facing hooks.
 		// Example:
