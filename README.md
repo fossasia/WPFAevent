@@ -99,11 +99,14 @@ event-plugin/
 | `[event_sessions]` | Displays event sessions with title, time, and abstract. | API endpoint or placeholder |
 | `[event_schedule]` | Displays daily schedule in a table format.              | API endpoint or placeholder |
 
-<<<<<<< Updated upstream
-Each shortcode can accept optional attributes — for example:
+The seeder command is **idempotent**, meaning it is safe to re-run. It will update existing posts based on their slugs instead of creating duplicates.
 
-```text
-[event_schedule profile="summit2026"]
+###  Minimal Demo Data
+
+To generate sample data for testing, use:
+
+```bash
+wp wpfa seed-minimal
 ```
 
 if multiple event profiles are configured in settings.

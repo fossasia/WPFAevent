@@ -1107,7 +1107,7 @@ new FOSSASIA_Landing_Plugin();
 // Register WP-CLI command if in CLI context.
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	// Note: The user requested a new, simpler seeder. The existing one is more complex.
-	// We will keep both for now, but the new one will overwrite the 'wpfa seed' command.
+	// We will keep both for now; both commands are registered under different command names or subcommands, so they can coexist without conflict.
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wpfa-cli.php';
 	WP_CLI::add_command( 'wpfa', 'WPFA_CLI' );
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wpfa-seeder.php';
