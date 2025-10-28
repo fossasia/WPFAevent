@@ -73,13 +73,21 @@ class WPFA_REST {
 			return rest_ensure_response( $cached );
 		}
 
+		$per_page = $request->get_param( 'per_page' ) ? (int) $request->get_param( 'per_page' ) : 10;
+		$page     = $request->get_param( 'page' ) ? (int) $request->get_param( 'page' ) : 1;
+
 		$query = new WP_Query(
 			[
 				'post_type'      => 'wpfa_speaker',
-				'posts_per_page' => -1,
+				'posts_per_page' => $per_page,
+				'paged'          => $page,
 				'post_status'    => 'publish',
 			]
 		);
+
+		if ( ! $query->have_posts() ) {
+			return rest_ensure_response( [] );
+		}
 
 		$speakers = array_map(
 			function( $post ) {
@@ -95,9 +103,15 @@ class WPFA_REST {
 			$query->posts
 		);
 
-		set_transient( $cache_key, $speakers, HOUR_IN_SECONDS );
+		// Only cache the first page of results to avoid storing large datasets.
+		if ( 1 === $page ) {
+			set_transient( $cache_key, $speakers, HOUR_IN_SECONDS );
+		}
 
-		return rest_ensure_response( $speakers );
+		$response = rest_ensure_response( $speakers );
+		$response->header( 'X-WP-Total', $query->found_posts );
+		$response->header( 'X-WP-TotalPages', $query->max_num_pages );
+		return $response;
 	}
 
 	/**
@@ -146,13 +160,21 @@ class WPFA_REST {
 			return rest_ensure_response( $cached );
 		}
 
+		$per_page = $request->get_param( 'per_page' ) ? (int) $request->get_param( 'per_page' ) : 10;
+		$page     = $request->get_param( 'page' ) ? (int) $request->get_param( 'page' ) : 1;
+
 		$query = new WP_Query(
 			[
 				'post_type'      => 'wpfa_event',
-				'posts_per_page' => -1,
+				'posts_per_page' => $per_page,
+				'paged'          => $page,
 				'post_status'    => 'publish',
 			]
 		);
+
+		if ( ! $query->have_posts() ) {
+			return rest_ensure_response( [] );
+		}
 
 		$events = array_map(
 			function( $post ) {
@@ -168,9 +190,15 @@ class WPFA_REST {
 			$query->posts
 		);
 
-		set_transient( $cache_key, $events, HOUR_IN_SECONDS );
+		// Only cache the first page of results to avoid storing large datasets.
+		if ( 1 === $page ) {
+			set_transient( $cache_key, $events, HOUR_IN_SECONDS );
+		}
 
-		return rest_ensure_response( $events );
+		$response = rest_ensure_response( $events );
+		$response->header( 'X-WP-Total', $query->found_posts );
+		$response->header( 'X-WP-TotalPages', $query->max_num_pages );
+		return $response;
 	}
 
 	/**
