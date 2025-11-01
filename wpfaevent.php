@@ -1,48 +1,52 @@
 <?php
 /**
- * The plugin bootstrap file
- *
- * @link              https://fossasia.org
- * @since             1.0.0
- * @package           WPFA_Event
- *
- * @wordpress-plugin
- * Plugin Name:       WPFA Event
- * Plugin URI:        https://github.com/fossasia/wp-fa-event
- * Description:       Base plugin scaffold for FOSSASIA event listings.
- * Version:           1.0.0
- * Author:            FOSSASIA
- * Author URI:        https://fossasia.org
- * License:           GPL-2.0+
- * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       wpfa-event
- * Domain Path:       /languages
+ * Plugin Name: WPFA Event (compat wrapper)
+ * Description: Compatibility wrapper / refactor of the FOSSASIA Landing plugin into WPFAevent structure.
+ * Version: 1.0.0
+ * Author: Automated Refactor
  */
 
-// If this file is called directly, abort.
-if ( ! defined( 'WPINC' ) ) {
-	die;
+if ( ! defined( 'WPINC' ) ) { die; }
+
+define( 'WPFAEVENT_VERSION', '1.0.0' );
+define( 'WPFAEVENT_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+
+// Bootstrap core
+require_once WPFAEVENT_PLUGIN_DIR . 'includes/class-wpfaevent.php';
+
+/**
+ * Activation wrapper: instantiate legacy plugin and call its on_activate method.
+ */
+function wpfaevent_activate() {
+    if ( ! class_exists( 'FOSSASIA_Landing_Plugin' ) ) {
+        require_once WPFAEVENT_PLUGIN_DIR . 'fossasia-landing.php';
+    }
+    if ( class_exists( 'FOSSASIA_Landing_Plugin' ) ) {
+        $legacy = new FOSSASIA_Landing_Plugin();
+        if ( method_exists( $legacy, 'on_activate' ) ) {
+            $legacy->on_activate();
+        }
+    }
 }
 
-define( 'WPFA_EVENT_VERSION', '1.0.0' );
-
-function activate_wpfaevent() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent-activator.php';
-	WPFA_Event_Activator::activate();
+/**
+ * Deactivation wrapper: instantiate legacy plugin and call its on_deactivate method.
+ */
+function wpfaevent_deactivate() {
+    if ( ! class_exists( 'FOSSASIA_Landing_Plugin' ) ) {
+        require_once WPFAEVENT_PLUGIN_DIR . 'fossasia-landing.php';
+    }
+    if ( class_exists( 'FOSSASIA_Landing_Plugin' ) ) {
+        $legacy = new FOSSASIA_Landing_Plugin();
+        if ( method_exists( $legacy, 'on_deactivate' ) ) {
+            $legacy->on_deactivate();
+        }
+    }
 }
 
-function deactivate_wpfaevent() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent-deactivator.php';
-	WPFA_Event_Deactivator::deactivate();
-}
+register_activation_hook( __FILE__, 'wpfaevent_activate' );
+register_deactivation_hook( __FILE__, 'wpfaevent_deactivate' );
 
-register_activation_hook( __FILE__, 'activate_wpfaevent' );
-register_deactivation_hook( __FILE__, 'deactivate_wpfaevent' );
-
-require_once plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent.php';
-
-function run_wpfaevent() {
-	$plugin = new WPFA_Event();
-	$plugin->run();
-}
-add_action( 'plugins_loaded', 'run_wpfaevent' );
+// Instantiate and run the core orchestrator
+$plugin = new Wpfaevent();
+$plugin->run();

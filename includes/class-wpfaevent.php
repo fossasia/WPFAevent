@@ -1,89 +1,84 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) { exit; }
 /**
- * The core plugin class.
- *
- * @link       https://fossasia.org
- * @since      1.0.0
- *
- * @package    WPFA_Event
- * @subpackage WPFA_Event/includes
+ * Core orchestrator that brings together loader and legacy implementation.
  */
+class Wpfaevent {
+    /** @var Wpfaevent_Loader */
+    private $loader;
 
-class WPFA_Event {
+    /** @var FOSSASIA_Landing_Plugin|null */
+    private $legacy = null;
 
-	protected $loader;
-	protected $plugin_name;
-	protected $version;
+    public function __construct() {
+        $this->load_dependencies();
+        $this->define_admin_hooks();
+        $this->define_public_hooks();
+    }
 
-	public function __construct() {
-		if ( defined( 'WPFA_EVENT_VERSION' ) ) {
-			$this->version = WPFA_EVENT_VERSION;
-		} else {
-			$this->version = '1.0.0';
-		}
-		$this->plugin_name = 'wpfa-event';
+    private function load_dependencies() {
+        // Loader
+        require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-loader.php';
 
-		$this->load_dependencies();
-		$this->set_locale();
-		$this->define_admin_hooks();
-		$this->define_public_hooks();
+        // Legacy plugin code (defines FOSSASIA_Landing_Plugin class)
+        require_once plugin_dir_path( __FILE__ ) . '../fossasia-landing.php';
 
-	}
+        // Optional utilities if present
+        if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php' ) ) {
+            require_once plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php';
+        }
+        if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-fossasia-uninstaller.php' ) ) {
+            require_once plugin_dir_path( __FILE__ ) . 'class-fossasia-uninstaller.php';
+        }
 
-	private function load_dependencies() {
+        $this->loader = new Wpfaevent_Loader();
+    }
 
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wpfaevent-loader.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wpfaevent-i18n.php';
+    private function define_admin_hooks() {
+        // Instantiate the legacy plugin and keep a reference so we can reuse its methods
+        if ( class_exists( 'FOSSASIA_Landing_Plugin' ) ) {
+            $this->legacy = new FOSSASIA_Landing_Plugin();
+        }
 
-		$this->loader = new WPFA_Event_Loader();
+        if ( ! $this->legacy ) { return; }
 
-	}
+        // Register admin-facing hooks via the loader so tests/tooling can inspect them
+        $this->loader->add_action( 'admin_enqueue_scripts', $this->legacy, 'enqueue_admin_scripts' );
 
-	private function set_locale() {
+        // Register the many AJAX handlers the legacy class provides
+        $ajax_methods = [
+            'fossasia_manage_speakers' => 'ajax_manage_speakers',
+            'fossasia_manage_sponsors' => 'ajax_manage_sponsors',
+            'fossasia_manage_site_settings' => 'ajax_manage_site_settings',
+            'fossasia_manage_sections' => 'ajax_manage_sections',
+            'fossasia_manage_schedule' => 'ajax_manage_schedule',
+            'fossasia_manage_navigation' => 'ajax_manage_navigation',
+            'fossasia_sync_eventyay' => 'ajax_sync_eventyay',
+            'fossasia_create_event_page' => 'ajax_create_event_page',
+            'fossasia_edit_event_page' => 'ajax_edit_event_page',
+            'fossasia_delete_event_page' => 'ajax_delete_event_page',
+            'fossasia_manage_theme_settings' => 'ajax_manage_theme_settings',
+            'fossasia_import_sample_data' => 'ajax_import_sample_data',
+            'fossasia_add_sample_event' => 'ajax_add_sample_event',
+            'fossasia_manage_coc' => 'ajax_manage_coc',
+        ];
 
-		$plugin_i18n = new WPFA_Event_i18n();
+        foreach ( $ajax_methods as $action => $method ) {
+            // admin ajax
+            $this->loader->add_action( 'wp_ajax_' . $action, $this->legacy, $method );
+        }
+    }
 
-		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
+    private function define_public_hooks() {
+        if ( ! $this->legacy ) { return; }
 
-	}
+        // Template registration and inclusion
+        $this->loader->add_filter( 'theme_page_templates', $this->legacy, 'register_template' );
+        $this->loader->add_filter( 'template_include', $this->legacy, 'load_template', 99 );
+        $this->loader->add_action( 'init', $this->legacy, 'setup_pages' );
+    }
 
-	private function define_admin_hooks() {
-
-		// $plugin_admin = new WPFA_Event_Admin( $this->get_plugin_name(), $this->get_version() );
-
-		// This is a placeholder for future admin-specific hooks.
-		// Example:
-		// $this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
-		// $this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
-
-	}
-
-	private function define_public_hooks() {
-
-		// $plugin_public = new WPFA_Event_Public( $this->get_plugin_name(), $this->get_version() );
-
-		// This is a placeholder for future public-facing hooks.
-		// Example:
-		// $this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
-		// $this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
-
-	}
-
-	public function run() {
-		$this->loader->run();
-	}
-
-	public function get_plugin_name() {
-		return $this->plugin_name;
-	}
-
-	public function get_loader() {
-		return $this->loader;
-	}
-
-	public function get_version() {
-		return $this->version;
-	}
-
+    public function run() {
+        $this->loader->run();
+    }
 }
