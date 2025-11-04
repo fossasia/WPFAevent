@@ -8,6 +8,12 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+// Include the core plugin classes.
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent-activator.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent-deactivator.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent-i18n.php';
+
+
 class FOSSASIA_Landing_Plugin {
     const TEMPLATE      = 'fossasia-landing-template.php';
     const TEMPLATE_KEY  = 'fossasia-landing-template.php';
@@ -60,10 +66,11 @@ class FOSSASIA_Landing_Plugin {
     public function __construct() {
         add_filter( 'theme_page_templates', [ $this, 'register_template' ] );
         add_filter( 'template_include', [ $this, 'load_template' ], 99 );
-        register_activation_hook( __FILE__, [ $this, 'on_activate' ] );
-        register_deactivation_hook( __FILE__, [ $this, 'on_deactivate' ] );
+        register_activation_hook( __FILE__, [ 'Wpfaevent_Activator', 'activate' ] );
+        register_deactivation_hook( __FILE__, [ 'Wpfaevent_Deactivator', 'deactivate' ] );
         add_action( 'init', [ $this, 'setup_pages' ] );
-
+        add_action( 'plugins_loaded', [ $this, 'load_textdomain' ] );
+ 
         // AJAX handlers for server-side data management
         add_action( 'wp_ajax_fossasia_manage_speakers', [ $this, 'ajax_manage_speakers' ] );
         add_action( 'wp_ajax_fossasia_manage_sponsors', [ $this, 'ajax_manage_sponsors' ] );
@@ -156,31 +163,9 @@ class FOSSASIA_Landing_Plugin {
         }
     }
 
-    public function on_activate() {
-        // Setup data storage directory and files
-        $upload_dir = wp_upload_dir();
-        $data_dir = $upload_dir['basedir'] . '/fossasia-data';
-        if (!file_exists($data_dir)) {
-            wp_mkdir_p($data_dir);
-        }        
-        
-        // Seed global data files.
-        $this->seed_global_data_files($data_dir);
-        
-        // Run page setup on activation as well.
-        $this->setup_pages();
-
-        // Do not seed any sample data on activation.
-        // Flush rewrite rules to ensure new page slugs are recognized immediately.
-        flush_rewrite_rules();
-    }
-
-    /**
-     * Runs on plugin deactivation. Flushes rewrite rules.
-     */
-    public function on_deactivate() {
-        // The main uninstall logic is in uninstall.php. Deactivation should be non-destructive.
-        flush_rewrite_rules();
+    public function load_textdomain() {
+        $i18n = new Wpfaevent_i18n();
+        $i18n->load_plugin_textdomain();
     }
 
     public function setup_pages() {
