@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Coding Standards">
+    <description>PHPCS configuration for the WPFAevent plugin.</description>
+
+    <file>.</file>
+    <exclude-pattern>/vendor/</exclude-pattern>
+    <exclude-pattern>/node_modules/</exclude-pattern>
+
+    <arg name="extensions" value="php"/>
+    <arg name="colors"/>
+    <arg value="p"/>
+
+    <rule ref="WordPress">
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+    </rule>
+</ruleset>
