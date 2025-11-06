@@ -27,8 +27,8 @@ class Wpfaevent {
         if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php' ) ) {
             require_once plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php';
         }
-        if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-fossasia-uninstaller.php' ) ) {
-            require_once plugin_dir_path( __FILE__ ) . 'class-fossasia-uninstaller.php';
+        if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfaevent-uninstaller.php' ) ) {
+            require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-uninstaller.php';
         }
 
         $this->loader = new Wpfaevent_Loader();

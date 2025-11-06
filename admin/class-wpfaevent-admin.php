@@ -1,25 +1,103 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
- * Admin handler stub for the WPFAevent structure.
- * For now this acts as a light wrapper; admin behaviour is implemented
- * in the legacy FOSSASIA_Landing_Plugin class. This file provides the
- * expected class file for the boilerplate.
+ * The admin-specific functionality of the plugin.
+ *
+ * @link       https://fossasia.org
+ * @since      1.0.0
+ *
+ * @package    Wpfaevent
+ * @subpackage Wpfaevent/admin
+ */
+
+/**
+ * The admin-specific functionality of the plugin.
+ *
+ * Defines the plugin name, version, and two examples hooks for how to
+ * enqueue the admin-specific stylesheet and JavaScript.
+ *
+ * @package    Wpfaevent
+ * @subpackage Wpfaevent/admin
+ * @author     FOSSASIA <contact@fossasia.org>
  */
 class Wpfaevent_Admin {
-    public function __construct() {}
 
-    public function enqueue_styles() {
-        // Example: wp_enqueue_style( 'wpfaevent-admin', plugin_dir_url( __FILE__ ) . '../assets/admin.css', [], WPFAEVENT_VERSION );
-    }
+	/**
+	 * The ID of this plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 * @var      string    $plugin_name    The ID of this plugin.
+	 */
+	private $plugin_name;
 
-    public function enqueue_scripts() {
-        // Example: wp_enqueue_script( 'wpfaevent-admin', plugin_dir_url( __FILE__ ) . '../assets/admin.js', [ 'jquery' ], WPFAEVENT_VERSION, true );
-    }
+	/**
+	 * The version of this plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 * @var      string    $version    The current version of this plugin.
+	 */
+	private $version;
 
-    public function display_admin_page() {
-        // Load admin UI partial (which currently proxies to the legacy template)
-        include_once dirname( __FILE__ ) . '/partials/wpfaevent-admin-display.php';
-    }
+	/**
+	 * Initialize the class and set its properties.
+	 *
+	 * @since    1.0.0
+	 * @param      string    $plugin_name       The name of this plugin.
+	 * @param      string    $version    The version of this plugin.
+	 */
+	public function __construct( $plugin_name, $version ) {
+
+		$this->plugin_name = $plugin_name;
+		$this->version = $version;
+
+	}
+
+	/**
+	 * Register the stylesheets for the admin area.
+	 *
+	 * @since    1.0.0
+	 */
+	public function enqueue_styles() {
+
+		/**
+		 * This function is provided for demonstration purposes only.
+		 *
+		 * An instance of this class should be passed to the run() function
+		 * defined in Wpfaevent_Loader as all of the hooks are defined
+		 * in that particular class.
+		 *
+		 * The Wpfaevent_Loader will then create the relationship
+		 * between the defined hooks and the functions defined in this
+		 * class.
+		 */
+
+		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/wpfaevent-admin.css', array(), $this->version, 'all' );
+
+	}
+
+	/**
+	 * Register the JavaScript for the admin area.
+	 *
+	 * @since    1.0.0
+	 */
+	public function enqueue_scripts() {
+
+		/**
+		 * This function is provided for demonstration purposes only.
+		 *
+		 * An instance of this class should be passed to the run() function
+		 * defined in Wpfaevent_Loader as all of the hooks are defined
+		 * in that particular class.
+		 *
+		 * The Wpfaevent_Loader will then create the relationship
+		 * between the defined hooks and the functions defined in this
+		 * class.
+		 */
+
+		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-admin.js', array( 'jquery' ), $this->version, false );
+
+	}
+
 }

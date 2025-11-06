@@ -1,16 +1,18 @@
 <?xml version="1.0"?>
-<ruleset name="WordPress Coding Standards">
-    <description>PHPCS configuration for the WPFAevent plugin.</description>
+<ruleset name="WPFA Event">
+  <description>WordPress Coding Standards for WPFA Event.</description>
+  <rule ref="WordPress"/>
+  <rule ref="WordPress-Extra"/>
+  <rule ref="WordPress-Docs"/>
+  <rule ref="WordPress-Core"/>
 
-    <file>.</file>
-    <exclude-pattern>/vendor/</exclude-pattern>
-    <exclude-pattern>/node_modules/</exclude-pattern>
+  <config name="installed_paths" value="vendor/wp-coding-standards/wpcs"/>
 
-    <arg name="extensions" value="php"/>
-    <arg name="colors"/>
-    <arg value="p"/>
+  <arg value="p"/>
+  <arg name="extensions" value="php"/>
+  <file>./</file>
 
-    <rule ref="WordPress">
-        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
-    </rule>
+  <exclude-pattern>vendor/*</exclude-pattern>
+  <exclude-pattern>node_modules/*</exclude-pattern>
 </ruleset>
+

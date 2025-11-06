@@ -1,22 +1,103 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
- * Public handler stub for WPFAevent structure. Frontend rendering remains
- * inside the legacy class; this stub satisfies the boilerplate.
+ * The public-facing functionality of the plugin.
+ *
+ * @link       https://fossasia.org
+ * @since      1.0.0
+ *
+ * @package    Wpfaevent
+ * @subpackage Wpfaevent/public
+ */
+
+/**
+ * The public-facing functionality of the plugin.
+ *
+ * Defines the plugin name, version, and two examples hooks for how to
+ * enqueue the public-facing stylesheet and JavaScript.
+ *
+ * @package    Wpfaevent
+ * @subpackage Wpfaevent/public
+ * @author     FOSSASIA <contact@fossasia.org>
  */
 class Wpfaevent_Public {
-    public function __construct() {}
 
-    public function enqueue_styles() {
-        // Example: wp_enqueue_style( 'wpfaevent-public', plugin_dir_url( __FILE__ ) . '../public/css/wpfaevent-public.css', [], WPFAEVENT_VERSION );
-    }
+	/**
+	 * The ID of this plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 * @var      string    $plugin_name    The ID of this plugin.
+	 */
+	private $plugin_name;
 
-    public function enqueue_scripts() {
-        // Example: wp_enqueue_script( 'wpfaevent-public', plugin_dir_url( __FILE__ ) . '../public/js/wpfaevent-public.js', [ 'jquery' ], WPFAEVENT_VERSION, true );
-    }
+	/**
+	 * The version of this plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 * @var      string    $version    The current version of this plugin.
+	 */
+	private $version;
 
-    public function load_template( $template_name ) {
-        // This method can be expanded to map and load templates from public/partials/
-    }
+	/**
+	 * Initialize the class and set its properties.
+	 *
+	 * @since    1.0.0
+	 * @param      string    $plugin_name       The name of the plugin.
+	 * @param      string    $version    The version of this plugin.
+	 */
+	public function __construct( $plugin_name, $version ) {
+
+		$this->plugin_name = $plugin_name;
+		$this->version = $version;
+
+	}
+
+	/**
+	 * Register the stylesheets for the public-facing side of the site.
+	 *
+	 * @since    1.0.0
+	 */
+	public function enqueue_styles() {
+
+		/**
+		 * This function is provided for demonstration purposes only.
+		 *
+		 * An instance of this class should be passed to the run() function
+		 * defined in Wpfaevent_Loader as all of the hooks are defined
+		 * in that particular class.
+		 *
+		 * The Wpfaevent_Loader will then create the relationship
+		 * between the defined hooks and the functions defined in this
+		 * class.
+		 */
+
+		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/wpfaevent-public.css', array(), $this->version, 'all' );
+
+	}
+
+	/**
+	 * Register the JavaScript for the public-facing side of the site.
+	 *
+	 * @since    1.0.0
+	 */
+	public function enqueue_scripts() {
+
+		/**
+		 * This function is provided for demonstration purposes only.
+		 *
+		 * An instance of this class should be passed to the run() function
+		 * defined in Wpfaevent_Loader as all of the hooks are defined
+		 * in that particular class.
+		 *
+		 * The Wpfaevent_Loader will then create the relationship
+		 * between the defined hooks and the functions defined in this
+		 * class.
+		 */
+
+		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-public.js', array( 'jquery' ), $this->version, false );
+
+	}
+
 }

@@ -1,29 +1,11 @@
-# WordPress
-.DS_Store
-*.log
-Thumbs.db
-wp-config.php
-wp-content/advanced-cache.php
-wp-content/backup-db/
-wp-content/backups/
-wp-content-blogs.dir/
-wp-content/cache/
-wp-content/debug.log
-wp-content/upgrade/
-wp-content/uploads/
-wp-content/wp-cache-config.php
-wp-content/plugins/hello.php
-
-# IDE files
-.idea/
-*.sublime-project
-*.sublime-workspace
-
-# Composer
-/vendor/
+# Node/Composer caches (in case added later)
+node_modules/
+vendor/
 composer.lock
+package-lock.json
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
 
-# Node
-/node_modules/
-npm-debug.log
-yarn-error.log
