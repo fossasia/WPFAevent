@@ -21,7 +21,7 @@ class Wpfaevent {
         require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-loader.php';
 
         // Legacy plugin code (defines FOSSASIA_Landing_Plugin class)
-        require_once plugin_dir_path( __FILE__ ) . '../fossasia-landing.php';
+        require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-landing.php';
 
         // Optional utilities if present
         if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php' ) ) {

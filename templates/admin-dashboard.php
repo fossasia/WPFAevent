@@ -341,7 +341,7 @@ if ( isset( $_GET['return_to'] ) ) {
                 <p>Override the global site logo for this event. If no logo is set here, the global logo will be used.</p>
                 <label for="eventLogo">Logo Image (Recommended: Transparent PNG, max height 36px)</label>
                 <p>Current Logo for this Event:</p>
-                <img id="currentEventLogo" src="<?php echo esc_url($site_settings_data['event_logo_url'] ?? ($global_settings_data['site_logo_url'] ?: plugins_url('../assets/images/logo.png', __DIR__ . '/../fossasia-landing.php'))); ?>" alt="Current Event Logo" style="max-height: 36px; height: auto; background: #eee; padding: 5px; border-radius: 4px; margin-bottom: 10px;">
+                <img id="currentEventLogo" src="<?php echo esc_url($site_settings_data['event_logo_url'] ?? ($global_settings_data['site_logo_url'] ?: plugins_url('../assets/images/logo.png', __DIR__ . '/../includes/class-wpfaevent-landing.php'))); ?>" alt="Current Event Logo" style="max-height: 36px; height: auto; background: #eee; padding: 5px; border-radius: 4px; margin-bottom: 10px;">
                 <br>
                 <label>Update Logo (URL or Upload):</label>
                 <input type="text" name="eventLogoURL" placeholder="Enter image URL to override global logo">
@@ -407,7 +407,7 @@ if ( isset( $_GET['return_to'] ) ) {
                 <h3 style="margin-top: 20px;">Site Logo</h3>
                 <label for="siteLogo">Logo Image (Recommended: Transparent PNG, max height 36px)</label>
                 <p>Current Logo:</p>
-                <img id="currentSiteLogo" src="<?php echo esc_url($global_settings_data['site_logo_url'] ?? plugins_url('../assets/images/logo.png', __DIR__ . '/../fossasia-landing.php')); ?>" alt="Current Site Logo" style="max-height: 36px; height: auto; background: #eee; padding: 5px; border-radius: 4px; margin-bottom: 10px;">
+                <img id="currentSiteLogo" src="<?php echo esc_url($global_settings_data['site_logo_url'] ?? plugins_url('../assets/images/logo.png', __DIR__ . '/../includes/class-wpfaevent-landing.php')); ?>" alt="Current Site Logo" style="max-height: 36px; height: auto; background: #eee; padding: 5px; border-radius: 4px; margin-bottom: 10px;">
                 <br>
                 <label>Update Logo (URL or Upload):</label>
                 <input type="text" name="siteLogoURL" placeholder="Enter image URL">

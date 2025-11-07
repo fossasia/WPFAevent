@@ -73,10 +73,7 @@ function run_wpfaevent() {
 	$plugin = new Wpfaevent();
 	$plugin->run();
 
-	// Initialize the FOSSASIA Landing logic.
-	if ( isset( $plugin->loader ) && method_exists( $plugin->loader, 'initialize_fossasia_landing' ) ) {
-		$plugin->loader->initialize_fossasia_landing();
-	}
+	
 }
 
 run_wpfaevent();
