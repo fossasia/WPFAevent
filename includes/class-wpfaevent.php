@@ -36,8 +36,8 @@ class Wpfaevent {
 
     private function define_admin_hooks() {
         // Instantiate the legacy plugin and keep a reference so we can reuse its methods
-        if ( class_exists( 'FOSSASIA_Landing_Plugin' ) ) {
-            $this->legacy = new FOSSASIA_Landing_Plugin();
+        if ( class_exists( 'Wpfaevent_Landing' ) ) {
+            $this->legacy = new Wpfaevent_Landing();
         }
 
         if ( ! $this->legacy ) { return; }

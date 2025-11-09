@@ -72,5 +72,4 @@ function run_wpfaevent() {
 
 	
 }
-
-run_wpfaevent();
+add_action( 'plugins_loaded', 'run_wpfaevent' );

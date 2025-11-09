@@ -169,8 +169,8 @@ $all_events_query = new WP_Query([
     'meta_query'     => [
         'relation' => 'AND',
         [
-            'key'     => '_wp_page_template',
-            'value'   => 'public/partials/fossasia-landing-template.php'
+            'key'     => '_wp_page_template', // Make sure this meta key is correct
+            'value'   => 'public/partials/wpfaevent-landing-template.php'
         ],
         [
             'relation' => 'OR',

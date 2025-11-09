@@ -874,8 +874,8 @@ document.addEventListener('DOMContentLoaded', function() {
             form.querySelector('[name="regButtonText"]').value = store.settings.reg_button_text || 'Get Tickets';
             form.querySelector('[name="regButtonLink"]').value = store.settings.reg_button_link || '';
             form.querySelector('[name="footerText"]').value = store.settings.footer_text || '';
-            // The event logo preview needs to check the event-specific setting first.
-            eventLogoPreview.src = store.settings.event_logo_url || '<?php echo esc_url($global_settings_data['site_logo_url'] ?: plugins_url('../assets/images/logo.png', __DIR__ . '/../fossasia-landing.php')); ?>';
+            // The event logo preview needs to check the event-specific setting first. The path was corrected from a non-existent fossasia-landing.php.
+            eventLogoPreview.src = store.settings.event_logo_url || '<?php echo esc_url($global_settings_data['site_logo_url'] ?: plugins_url('../assets/images/logo.png', __DIR__ . '/../includes/class-wpfaevent-landing.php')); ?>';
         };
 
         const handleSettingsSubmit = async (e) => {

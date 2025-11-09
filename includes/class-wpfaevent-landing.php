@@ -1,6 +1,8 @@
+@ -1,97 +1,106 @@
 <?php
 /**
  * Handles the landing page logic for the WPFAEvent plugin.
+ 
  *
  * @package    Wpfaevent
  * @subpackage Wpfaevent/includes
@@ -18,42 +20,33 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Wpfaevent_Landing {
 
+
 	/**
 	 * Initialize hooks and shortcodes.
 	 */
 	public function init() {
 		// Register shortcode for the landing page.
 		add_shortcode( 'wpfaevent_landing', array( $this, 'render_landing' ) );
+	
 	}
 
 	/**
 	 * Render the landing page output.
+	 
 	 *
 	 * @return string HTML output of the landing page.
 	 */
-	public function render_landing() {
-		ob_start();
-		?>
-		<!-- ===============================
-			 WPFAEvent Landing Page Template
-			 Adapted from wpfa-event-landing.php
-			 =============================== -->
 
-		<div class="wpfaevent-landing-container">
-			<h2>Welcome to the FOSSASIA Event Plugin</h2>
-			<p>
-				This plugin integrates <strong>Eventyay</strong> data with your WordPress site.
-				You can showcase sessions, speakers, and event schedules seamlessly.
-			</p>
-
-			<div class="wpfaevent-landing-content">
-				<ul>
-					<li>🎤 Display sessions and speakers dynamically</li>
-					<li>📅 Show event schedules from Eventyay API</li>
-					<li>🧩 Embed using shortcodes or custom templates</li>
-					<li>🧭 Easy setup through the WordPress dashboard</li>
-				</ul>
-			</div>
+	public function register_template( $templates ) {
+		$templates['public/partials/wpfaevent-landing-template.php'] = 'FOSSASIA Summit Landing Page (Plugin)';
+		$templates['templates/events-listing-page.php']    = 'FOSSASIA Events Listing (Plugin)';
+		$templates['templates/admin-dashboard.php']   = 'FOSSASIA Admin Dashboard (Plugin)';
+		$templates['public/partials/speakers-page.php']     = 'FOSSASIA Speakers Page (Plugin)';
+		$templates['public/partials/schedule-page.php']     = 'FOSSASIA Schedule Page (Plugin)';
+		$templates['public/partials/past-events-page.php']       = 'FOSSASIA Past Events (Plugin)';
+		$templates['templates/code-of-conduct-page.php']          = 'FOSSASIA Code of Conduct (Plugin)';
+		return $templates;
+	}
 
 			<p>
 				For documentation and setup instructions, visit the
@@ -62,6 +55,36 @@ class Wpfaevent_Landing {
 				</a>.
 			</p>
 		</div>
+	/**
+	 * Loads the custom template file when a page with that template is viewed.
+	 *
+	 * @param string $template The path of the template to include.
+	 * @return string The path of the template file.
+	 */
+	public function load_template( $template ) {
+		if ( is_page_template( 'public/partials/wpfaevent-landing-template.php' ) ) {
+			return plugin_dir_path( __DIR__ ) . 'public/partials/wpfaevent-landing-template.php';
+		}
+		if ( is_page_template( 'templates/events-listing-page.php' ) ) {
+			return plugin_dir_path( __DIR__ ) . 'templates/events-listing-page.php';
+		}
+		if ( is_page_template( 'templates/admin-dashboard.php' ) ) {
+			return plugin_dir_path( __DIR__ ) . 'templates/admin-dashboard.php';
+		}
+		if ( is_page_template( 'public/partials/speakers-page.php' ) ) {
+			return plugin_dir_path( __DIR__ ) . 'public/partials/speakers-page.php';
+		}
+		if ( is_page_template( 'public/partials/schedule-page.php' ) ) {
+			return plugin_dir_path( __DIR__ ) . 'public/partials/schedule-page.php';
+		}
+		if ( is_page_template( 'public/partials/past-events-page.php' ) ) {
+			return plugin_dir_path( __DIR__ ) . 'public/partials/past-events-page.php';
+		}
+		if ( is_page_template( 'templates/code-of-conduct-page.php' ) ) {
+			return plugin_dir_path( __DIR__ ) . 'templates/code-of-conduct-page.php';
+		}
+		return $template;
+	}
 
 		<style>
 			.wpfaevent-landing-container {
@@ -93,5 +116,16 @@ class Wpfaevent_Landing {
 		</style>
 		<?php
 		return ob_get_clean();
+	/**
+	 * Sets up the necessary pages on plugin activation.
+	 */
+	public function setup_pages() {
+		$this->create_page_if_not_exists( 'FOSSASIA Summit', 'fossasia-summit', 'public/partials/wpfaevent-landing-template.php' );
+		$this->create_page_if_not_exists( 'Speakers', 'speakers', 'public/partials/speakers-page.php' );
+		$this->create_page_if_not_exists( 'Full Schedule', 'full-schedule', 'public/partials/schedule-page.php' );
+		$this->create_page_if_not_exists( 'Admin Dashboard', 'admin-dashboard', 'templates/admin-dashboard.php', 'private' );
+		$this->create_page_if_not_exists( 'Events', 'events', 'templates/events-listing-page.php' );
+		$this->create_page_if_not_exists( 'Past Events', 'past-events', 'public/partials/past-events-page.php' );
+		$this->create_page_if_not_exists( 'Code of Conduct', 'code-of-conduct', 'templates/code-of-conduct-page.php' );
 	}
 }
