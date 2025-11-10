@@ -11,7 +11,6 @@
  *
  * @package    Wpfaevent
  * @subpackage Wpfaevent/includes
-
  *
  * @since      1.0.0
  * @package    Wpfaevent

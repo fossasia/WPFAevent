@@ -7,10 +7,37 @@ class Wpfaevent {
     /** @var Wpfaevent_Loader */
     private $loader;
 
+    /** @var Wpfaevent_Admin */
+    private $plugin_admin;
+
+    /** @var Wpfaevent_Public */
+    private $plugin_public;
+
     /** @var FOSSASIA_Landing_Plugin|null */
     private $legacy = null;
 
+    /**
+     * The ID of this plugin.
+     *
+     * @since    1.0.0
+     * @access   private
+     * @var      string    $plugin_name    The ID of this plugin.
+     */
+    private $plugin_name;
+
+    /**
+     * The version of this plugin.
+     *
+     * @since    1.0.0
+     * @access   private
+     * @var      string    $version    The current version of this plugin.
+     */
+    private $version;
+
     public function __construct() {
+        $this->plugin_name = 'wpfaevent';
+        $this->version = WPFAEVENT_VERSION;
+
         $this->load_dependencies();
         $this->define_admin_hooks();
         $this->define_public_hooks();
@@ -22,6 +49,10 @@ class Wpfaevent {
 
         // Legacy plugin code (defines FOSSASIA_Landing_Plugin class)
         require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-landing.php';
+
+        // Admin and Public classes
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-wpfaevent-admin.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-wpfaevent-public.php';
 
         // Optional utilities if present
         if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php' ) ) {
@@ -35,6 +66,12 @@ class Wpfaevent {
     }
 
     private function define_admin_hooks() {
+        // Instantiate the admin class
+        $this->plugin_admin = new Wpfaevent_Admin( $this->plugin_name, $this->version );
+
+        // Register admin-specific stylesheet
+        $this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_styles' );
+
         // Instantiate the legacy plugin and keep a reference so we can reuse its methods
         if ( class_exists( 'Wpfaevent_Landing' ) ) {
             $this->legacy = new Wpfaevent_Landing();
@@ -70,6 +107,12 @@ class Wpfaevent {
     }
 
     private function define_public_hooks() {
+        // Instantiate the public class
+        $this->plugin_public = new Wpfaevent_Public( $this->plugin_name, $this->version );
+
+        // Register public-specific stylesheet
+        $this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
+
         if ( ! $this->legacy ) { return; }
 
         // Template registration and inclusion
