@@ -34,42 +34,26 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Currently plugin version.
  */
+// Define constants
 define( 'WPFAEVENT_VERSION', '1.0.0' );
+define( 'WPFAEVENT_PATH', plugin_dir_path( __FILE__ ) );
+define( 'WPFAEVENT_URL',  plugin_dir_url( __FILE__ ) );
 
-/**
- * The code that runs during plugin activation.
- */
-function activate_wpfaevent() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent-activator.php';
-	Wpfaevent_Activator::activate();
-}
+// Requires
+require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-i18n.php';
+require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-loader.php';
+require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-activator.php';
+require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-deactivator.php';
 
-/**
- * The code that runs during plugin deactivation.
- */
-function deactivate_wpfaevent() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent-deactivator.php';
-	Wpfaevent_Deactivator::deactivate();
-}
+// Activation / Deactivation hooks
+register_activation_hook( __FILE__, [ 'Wpfaevent_Activator', 'activate' ] );
+register_deactivation_hook( __FILE__, [ 'Wpfaevent_Deactivator', 'deactivate' ] );
 
-register_activation_hook( __FILE__, 'activate_wpfaevent' );
-register_deactivation_hook( __FILE__, 'deactivate_wpfaevent' );
+// Plugin init
+add_action( 'plugins_loaded', function () {
+    WPFAEvent_I18n::load_textdomain( 'wpfaevent' );
 
-/**
- * The core plugin class that is used to define internationalization,
- * admin-specific hooks, and public-facing site hooks.
- */
-require plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent.php';
-
-/**
- * Begins execution of the plugin.
- *
- * @since    1.0.0
- */
-function run_wpfaevent() {
-	$plugin = new Wpfaevent();
-	$plugin->run();
-
-	
-}
-add_action( 'plugins_loaded', 'run_wpfaevent' );
+    if ( class_exists( 'WPFAEvent_Loader' ) ) {
+        WPFAEvent_Loader::run();
+    }
+});

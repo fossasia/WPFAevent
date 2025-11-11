@@ -39,12 +39,12 @@ class Wpfaevent_Landing {
 
 	public function register_template( $templates ) {
 		$templates['public/partials/wpfaevent-landing-template.php'] = 'FOSSASIA Summit Landing Page (Plugin)';
-		$templates['templates/events-listing-page.php']    = 'FOSSASIA Events Listing (Plugin)';
-		$templates['templates/admin-dashboard.php']   = 'FOSSASIA Admin Dashboard (Plugin)';
+		$templates['public/partials/wpfaevent-landing-template.php']    = 'FOSSASIA Events Listing (Plugin)';
+		$templates['public/partials/wpfaevent-landing-template.php']   = 'FOSSASIA Admin Dashboard (Plugin)';
 		$templates['public/partials/speakers-page.php']     = 'FOSSASIA Speakers Page (Plugin)';
 		$templates['public/partials/schedule-page.php']     = 'FOSSASIA Schedule Page (Plugin)';
 		$templates['public/partials/past-events-page.php']       = 'FOSSASIA Past Events (Plugin)';
-		$templates['templates/code-of-conduct-page.php']          = 'FOSSASIA Code of Conduct (Plugin)';
+		$templates['public/partials/wpfaevent-landing-template.php']          = 'FOSSASIA Code of Conduct (Plugin)';
 		return $templates;
 	}
 
@@ -66,10 +66,10 @@ class Wpfaevent_Landing {
 			return plugin_dir_path( __DIR__ ) . 'public/partials/wpfaevent-landing-template.php';
 		}
 		if ( is_page_template( 'templates/events-listing-page.php' ) ) {
-			return plugin_dir_path( __DIR__ ) . 'templates/events-listing-page.php';
+			return plugin_dir_path( __DIR__ ) . 'public/partials/wpfaevent-landing-template.php';
 		}
 		if ( is_page_template( 'templates/admin-dashboard.php' ) ) {
-			return plugin_dir_path( __DIR__ ) . 'templates/admin-dashboard.php';
+			return plugin_dir_path( __DIR__ ) . 'public/partials/wpfaevent-landing-template.php';
 		}
 		if ( is_page_template( 'public/partials/speakers-page.php' ) ) {
 			return plugin_dir_path( __DIR__ ) . 'public/partials/speakers-page.php';
@@ -81,7 +81,7 @@ class Wpfaevent_Landing {
 			return plugin_dir_path( __DIR__ ) . 'public/partials/past-events-page.php';
 		}
 		if ( is_page_template( 'templates/code-of-conduct-page.php' ) ) {
-			return plugin_dir_path( __DIR__ ) . 'templates/code-of-conduct-page.php';
+			return plugin_dir_path( __DIR__ ) . 'public/partials/wpfaevent-landing-template.php';
 		}
 		return $template;
 	}
@@ -123,9 +123,9 @@ class Wpfaevent_Landing {
 		$this->create_page_if_not_exists( 'FOSSASIA Summit', 'fossasia-summit', 'public/partials/wpfaevent-landing-template.php' );
 		$this->create_page_if_not_exists( 'Speakers', 'speakers', 'public/partials/speakers-page.php' );
 		$this->create_page_if_not_exists( 'Full Schedule', 'full-schedule', 'public/partials/schedule-page.php' );
-		$this->create_page_if_not_exists( 'Admin Dashboard', 'admin-dashboard', 'templates/admin-dashboard.php', 'private' );
-		$this->create_page_if_not_exists( 'Events', 'events', 'templates/events-listing-page.php' );
+		$this->create_page_if_not_exists( 'Admin Dashboard', 'admin-dashboard', 'public/partials/wpfaevent-landing-template.php', 'private' );
+		$this->create_page_if_not_exists( 'Events', 'events', 'public/partials/wpfaevent-landing-template.php' );
 		$this->create_page_if_not_exists( 'Past Events', 'past-events', 'public/partials/past-events-page.php' );
-		$this->create_page_if_not_exists( 'Code of Conduct', 'code-of-conduct', 'templates/code-of-conduct-page.php' );
+		$this->create_page_if_not_exists( 'Code of Conduct', 'code-of-conduct', 'public/partials/wpfaevent-landing-template.php' );
 	}
 }
