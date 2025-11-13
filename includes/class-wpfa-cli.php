@@ -30,7 +30,7 @@ class WPFA_CLI {
 	 */
 	public static function seed( $args, $assoc_args ) {
 		if ( isset( $assoc_args['from-json'] ) ) {
-			self::seed_from_json( $assoc_args['from-json'] );
+			self::seed_from_json(plugin_dir_path( __FILE__ ) . $assoc_args['from-json'] );
 			return;
 		}
 

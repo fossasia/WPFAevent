@@ -68,8 +68,8 @@ class Wpfaevent_Landing {
 		if ( is_page_template( 'templates/events-listing-page.php' ) ) {
 			return plugin_dir_path( __DIR__ ) . 'public/partials/wpfaevent-landing-template.php';
 		}
-		if ( is_page_template( 'templates/admin-dashboard.php' ) ) {
-			return plugin_dir_path( __DIR__ ) . 'public/partials/wpfaevent-landing-template.php';
+		if ( is_page_template( 'admin/partials/admin-dashboard.php' ) ) {
+			return plugin_dir_path( __DIR__ ) . 'admin/partials/admin-dashboard.php';
 		}
 		if ( is_page_template( 'public/partials/speakers-page.php' ) ) {
 			return plugin_dir_path( __DIR__ ) . 'public/partials/speakers-page.php';
