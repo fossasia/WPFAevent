@@ -1,16 +1,9 @@
 <?php
-
-/**
- * Provide a admin area view for the plugin
- *
- * This file is used to markup the admin-facing aspects of the plugin.
- *
- * @link       https://fossasia.org
- * @since      1.0.0
- *
- * @package    Wpfaevent
- * @subpackage Wpfaevent/admin/partials
- */
-?>
-
-<!-- This file should primarily consist of HTML with a little bit of PHP. -->
+// Admin partial shim – include the existing admin dashboard template from templates/
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+$template = plugin_dir_path( __FILE__ ) . 'admin-dashboard.php';
+if ( file_exists( $template ) ) {
+    include_once $template;
+} else {
+    echo '<div class="wrap"><h2>Admin Dashboard</h2><p>Admin template not found.</p></div>';
+}

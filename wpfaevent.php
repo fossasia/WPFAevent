@@ -16,9 +16,7 @@
  * Plugin Name:       FOSSASIA event plugin
  * Plugin URI:        https://https://github.com/fossasia/WPFAevent
  * Description:       The FOSSASIA Event Plugin provides WordPress integrations for Eventyay-based events.
-It allows you to display event sessions, speakers, and schedules directly on WordPress pages using shortcodes, manual content, or custom templates.
-
-This plugin is maintained by FOSSASIA and is compatible with the eventyay platform.
+ *
  * Version:           1.0.0
  * Author:            FOSSASIA
  * Author URI:        https://fossasia.org/
@@ -35,51 +33,27 @@ if ( ! defined( 'WPINC' ) ) {
 
 /**
  * Currently plugin version.
- * Start at version 1.0.0 and use SemVer - https://semver.org
- * Rename this for your plugin and update it as you release new versions.
  */
+// Define constants
 define( 'WPFAEVENT_VERSION', '1.0.0' );
+define( 'WPFAEVENT_PATH', plugin_dir_path( __FILE__ ) );
+define( 'WPFAEVENT_URL',  plugin_dir_url( __FILE__ ) );
 
-/**
- * The code that runs during plugin activation.
- * This action is documented in includes/class-wpfaevent-activator.php
- */
-function activate_wpfaevent() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent-activator.php';
-	Wpfaevent_Activator::activate();
-}
+// Requires
+require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-i18n.php';
+require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-loader.php';
+require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-activator.php';
+require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-deactivator.php';
 
-/**
- * The code that runs during plugin deactivation.
- * This action is documented in includes/class-wpfaevent-deactivator.php
- */
-function deactivate_wpfaevent() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent-deactivator.php';
-	Wpfaevent_Deactivator::deactivate();
-}
+// Activation / Deactivation hooks
+register_activation_hook( __FILE__, [ 'Wpfaevent_Activator', 'activate' ] );
+register_deactivation_hook( __FILE__, [ 'Wpfaevent_Deactivator', 'deactivate' ] );
 
-register_activation_hook( __FILE__, 'activate_wpfaevent' );
-register_deactivation_hook( __FILE__, 'deactivate_wpfaevent' );
+// Plugin init
+add_action( 'plugins_loaded', function () {
+    WPFAEvent_I18n::load_textdomain( 'wpfaevent' );
 
-/**
- * The core plugin class that is used to define internationalization,
- * admin-specific hooks, and public-facing site hooks.
- */
-require plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent.php';
-
-/**
- * Begins execution of the plugin.
- *
- * Since everything within the plugin is registered via hooks,
- * then kicking off the plugin from this point in the file does
- * not affect the page life cycle.
- *
- * @since    1.0.0
- */
-function run_wpfaevent() {
-
-	$plugin = new Wpfaevent();
-	$plugin->run();
-
-}
-run_wpfaevent();
+    if ( class_exists( 'WPFAEvent_Loader' ) ) {
+        WPFAEvent_Loader::run();
+    }
+});

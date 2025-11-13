@@ -1,218 +1,127 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) { exit; }
 /**
- * The file that defines the core plugin class
- *
- * A class definition that includes attributes and functions used across both the
- * public-facing side of the site and the admin area.
- *
- * @link       https://fossasia.org
- * @since      1.0.0
- *
- * @package    Wpfaevent
- * @subpackage Wpfaevent/includes
- */
-
-/**
- * The core plugin class.
- *
- * This is used to define internationalization, admin-specific hooks, and
- * public-facing site hooks.
- *
- * Also maintains the unique identifier of this plugin as well as the current
- * version of the plugin.
- *
- * @since      1.0.0
- * @package    Wpfaevent
- * @subpackage Wpfaevent/includes
- * @author     FOSSASIA <contact@fossasia.org>
+ * Core orchestrator that brings together loader and legacy implementation.
  */
 class Wpfaevent {
+    /** @var Wpfaevent_Loader */
+    private $loader;
 
-	/**
-	 * The loader that's responsible for maintaining and registering all hooks that power
-	 * the plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   protected
-	 * @var      Wpfaevent_Loader    $loader    Maintains and registers all hooks for the plugin.
-	 */
-	protected $loader;
+    /** @var Wpfaevent_Admin */
+    private $plugin_admin;
 
-	/**
-	 * The unique identifier of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   protected
-	 * @var      string    $plugin_name    The string used to uniquely identify this plugin.
-	 */
-	protected $plugin_name;
+    /** @var Wpfaevent_Public */
+    private $plugin_public;
 
-	/**
-	 * The current version of the plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   protected
-	 * @var      string    $version    The current version of the plugin.
-	 */
-	protected $version;
+    /** @var FOSSASIA_Landing_Plugin|null */
+    private $legacy = null;
 
-	/**
-	 * Define the core functionality of the plugin.
-	 *
-	 * Set the plugin name and the plugin version that can be used throughout the plugin.
-	 * Load the dependencies, define the locale, and set the hooks for the admin area and
-	 * the public-facing side of the site.
-	 *
-	 * @since    1.0.0
-	 */
-	public function __construct() {
-		if ( defined( 'WPFAEVENT_VERSION' ) ) {
-			$this->version = WPFAEVENT_VERSION;
-		} else {
-			$this->version = '1.0.0';
-		}
-		$this->plugin_name = 'wpfaevent';
+    /**
+     * The ID of this plugin.
+     *
+     * @since    1.0.0
+     * @access   private
+     * @var      string    $plugin_name    The ID of this plugin.
+     */
+    private $plugin_name;
 
-		$this->load_dependencies();
-		$this->set_locale();
-		$this->define_admin_hooks();
-		$this->define_public_hooks();
+    /**
+     * The version of this plugin.
+     *
+     * @since    1.0.0
+     * @access   private
+     * @var      string    $version    The current version of this plugin.
+     */
+    private $version;
 
-	}
+    public function __construct() {
+        $this->plugin_name = 'wpfaevent';
+        $this->version = WPFAEVENT_VERSION;
 
-	/**
-	 * Load the required dependencies for this plugin.
-	 *
-	 * Include the following files that make up the plugin:
-	 *
-	 * - Wpfaevent_Loader. Orchestrates the hooks of the plugin.
-	 * - Wpfaevent_i18n. Defines internationalization functionality.
-	 * - Wpfaevent_Admin. Defines all hooks for the admin area.
-	 * - Wpfaevent_Public. Defines all hooks for the public side of the site.
-	 *
-	 * Create an instance of the loader which will be used to register the hooks
-	 * with WordPress.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	private function load_dependencies() {
+        $this->load_dependencies();
+        $this->define_admin_hooks();
+        $this->define_public_hooks();
+    }
 
-		/**
-		 * The class responsible for orchestrating the actions and filters of the
-		 * core plugin.
-		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wpfaevent-loader.php';
+    private function load_dependencies() {
+        // Loader
+        require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-loader.php';
 
-		/**
-		 * The class responsible for defining internationalization functionality
-		 * of the plugin.
-		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wpfaevent-i18n.php';
+        // Legacy plugin code (defines FOSSASIA_Landing_Plugin class)
+        require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-landing.php';
 
-		/**
-		 * The class responsible for defining all actions that occur in the admin area.
-		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-wpfaevent-admin.php';
+        // Admin and Public classes
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-wpfaevent-admin.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-wpfaevent-public.php';
 
-		/**
-		 * The class responsible for defining all actions that occur in the public-facing
-		 * side of the site.
-		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-wpfaevent-public.php';
+        // Optional utilities if present
+        if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php' ) ) {
+            require_once plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php';
+        }
+        if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfaevent-uninstaller.php' ) ) {
+            require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-uninstaller.php';
+        }
 
-		$this->loader = new Wpfaevent_Loader();
+        $this->loader = new Wpfaevent_Loader();
+    }
 
-	}
+    private function define_admin_hooks() {
+        // Instantiate the admin class
+        $this->plugin_admin = new Wpfaevent_Admin( $this->plugin_name, $this->version );
 
-	/**
-	 * Define the locale for this plugin for internationalization.
-	 *
-	 * Uses the Wpfaevent_i18n class in order to set the domain and to register the hook
-	 * with WordPress.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	private function set_locale() {
+        // Register admin-specific stylesheet
+        $this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_styles' );
 
-		$plugin_i18n = new Wpfaevent_i18n();
+        // Instantiate the legacy plugin and keep a reference so we can reuse its methods
+        if ( class_exists( 'Wpfaevent_Landing' ) ) {
+            $this->legacy = new Wpfaevent_Landing();
+        }
 
-		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
+        if ( ! $this->legacy ) { return; }
 
-	}
+        // Register admin-facing hooks via the loader so tests/tooling can inspect them
+        $this->loader->add_action( 'admin_enqueue_scripts', $this->legacy, 'enqueue_admin_scripts' );
 
-	/**
-	 * Register all of the hooks related to the admin area functionality
-	 * of the plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	private function define_admin_hooks() {
+        // Register the many AJAX handlers the legacy class provides
+        $ajax_methods = [
+            'fossasia_manage_speakers' => 'ajax_manage_speakers',
+            'fossasia_manage_sponsors' => 'ajax_manage_sponsors',
+            'fossasia_manage_site_settings' => 'ajax_manage_site_settings',
+            'fossasia_manage_sections' => 'ajax_manage_sections',
+            'fossasia_manage_schedule' => 'ajax_manage_schedule',
+            'fossasia_manage_navigation' => 'ajax_manage_navigation',
+            'fossasia_sync_eventyay' => 'ajax_sync_eventyay',
+            'fossasia_create_event_page' => 'ajax_create_event_page',
+            'fossasia_edit_event_page' => 'ajax_edit_event_page',
+            'fossasia_delete_event_page' => 'ajax_delete_event_page',
+            'fossasia_manage_theme_settings' => 'ajax_manage_theme_settings',
+            'fossasia_import_sample_data' => 'ajax_import_sample_data',
+            'fossasia_add_sample_event' => 'ajax_add_sample_event',
+            'fossasia_manage_coc' => 'ajax_manage_coc',
+        ];
 
-		$plugin_admin = new Wpfaevent_Admin( $this->get_plugin_name(), $this->get_version() );
+        foreach ( $ajax_methods as $action => $method ) {
+            // admin ajax
+            $this->loader->add_action( 'wp_ajax_' . $action, $this->legacy, $method );
+        }
+    }
 
-		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
-		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+    private function define_public_hooks() {
+        // Instantiate the public class
+        $this->plugin_public = new Wpfaevent_Public( $this->plugin_name, $this->version );
 
-	}
+        // Register public-specific stylesheet
+        $this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
 
-	/**
-	 * Register all of the hooks related to the public-facing functionality
-	 * of the plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	private function define_public_hooks() {
+        if ( ! $this->legacy ) { return; }
 
-		$plugin_public = new Wpfaevent_Public( $this->get_plugin_name(), $this->get_version() );
+        // Template registration and inclusion
+        $this->loader->add_filter( 'theme_page_templates', $this->legacy, 'register_template' );
+        $this->loader->add_filter( 'template_include', $this->legacy, 'load_template', 99 );
+        $this->loader->add_action( 'init', $this->legacy, 'setup_pages' );
+    }
 
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
-
-	}
-
-	/**
-	 * Run the loader to execute all of the hooks with WordPress.
-	 *
-	 * @since    1.0.0
-	 */
-	public function run() {
-		$this->loader->run();
-	}
-
-	/**
-	 * The name of the plugin used to uniquely identify it within the context of
-	 * WordPress and to define internationalization functionality.
-	 *
-	 * @since     1.0.0
-	 * @return    string    The name of the plugin.
-	 */
-	public function get_plugin_name() {
-		return $this->plugin_name;
-	}
-
-	/**
-	 * The reference to the class that orchestrates the hooks with the plugin.
-	 *
-	 * @since     1.0.0
-	 * @return    Wpfaevent_Loader    Orchestrates the hooks of the plugin.
-	 */
-	public function get_loader() {
-		return $this->loader;
-	}
-
-	/**
-	 * Retrieve the version number of the plugin.
-	 *
-	 * @since     1.0.0
-	 * @return    string    The version number of the plugin.
-	 */
-	public function get_version() {
-		return $this->version;
-	}
-
+    public function run() {
+        $this->loader->run();
+    }
 }

@@ -126,4 +126,24 @@ class Wpfaevent_Loader {
 
 	}
 
+	/**
+	 * Initialize WPFA Event Landing setup.
+	 *
+	 * This method loads the logic from class-wpfaevent-landing.php and ensures
+	 * that the plugin initializes correctly without replacing the
+	 * existing boilerplate structure.
+	 *
+	 * @since    1.0.0
+	 */
+	public function initialize_wpfaevent_landing() {
+		// Include the main landing logic file.
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-landing.php';
+
+		// Initialize the landing setup if the class exists.
+		if ( class_exists( 'Wpfaevent_Landing' ) ) {
+			$landing = new Wpfaevent_Landing();
+			$landing->init();
+		}
+	}
+
 }

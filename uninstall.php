@@ -1,31 +1,33 @@
 <?php
-
 /**
- * Fired when the plugin is uninstalled.
- *
- * When populating this file, consider the following flow
- * of control:
- *
- * - This method should be static
- * - Check if the $_REQUEST content actually is the plugin name
- * - Run an admin referrer check to make sure it goes through authentication
- * - Verify the output of $_GET makes sense
- * - Repeat with other user roles. Best directly by using the links/query string parameters.
- * - Repeat things for multisite. Once for a single site in the network, once sitewide.
- *
- * This file may be updated more in future version of the Boilerplate; however, this is the
- * general skeleton and outline for how the file should work.
- *
- * For more information, see the following discussion:
- * https://github.com/tommcfarlin/WordPress-Plugin-Boilerplate/pull/123#issuecomment-28541913
- *
- * @link       https://fossasia.org
- * @since      1.0.0
- *
- * @package    Wpfaevent
+ * Uninstall handler for WPFAevent / FOSSASIA Landing plugin.
  */
 
-// If uninstall not called from WordPress, then exit.
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
-	exit;
+    exit;
+}
+
+// Delete uploaded data files in uploads/fossasia-data
+$upload_dir = wp_upload_dir();
+$data_dir = trailingslashit( $upload_dir['basedir'] ) . 'fossasia-data';
+
+if ( is_dir( $data_dir ) ) {
+    $files = glob( $data_dir . '/*' );
+    if ( is_array( $files ) ) {
+        foreach ( $files as $file ) {
+            if ( is_file( $file ) ) {
+                @unlink( $file );
+            }
+        }
+    }
+    @rmdir( $data_dir );
+}
+
+// Remove pages created by the plugin (by slug)
+$slugs = [ 'fossasia-summit', 'speakers', 'full-schedule', 'admin-dashboard', 'events', 'past-events', 'code-of-conduct' ];
+foreach ( $slugs as $slug ) {
+    $page = get_page_by_path( $slug );
+    if ( $page ) {
+        wp_delete_post( $page->ID, true );
+    }
 }

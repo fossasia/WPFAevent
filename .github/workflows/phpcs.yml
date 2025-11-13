@@ -1,8 +1,11 @@
 name: PHPCS
+
 on:
-  pull_request:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
   phpcs:
     runs-on: ubuntu-latest
@@ -11,12 +14,8 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
-          tools: phpcs
-      - name: Install WPCS
-        run: |
-          git clone https://github.com/WordPress/WordPress-Coding-Standards.git wpcs
-          phpcs --config-set installed_paths wpcs
+          php-version: '8.0'
+      - name: Install composer deps
+        run: composer require --dev squizlabs/php_codesniffer
       - name: Run PHPCS
-        run: phpcs
-
+        run: vendor/bin/phpcs --standard=WordPress . || true

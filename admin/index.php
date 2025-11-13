@@ -1,1 +1,2 @@
-<?php // Start coding
+<?php
+// Silence is golden.
