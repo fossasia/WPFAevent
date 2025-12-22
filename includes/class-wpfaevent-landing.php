@@ -79,7 +79,9 @@ class Wpfaevent_Landing {
 	}
 
 	/**
-	 * Shortcode renderer.
+	 * Shortcode renderer for landing page.
+	 *
+	 * @return string HTML output of the landing page.
 	 */
 	public function render_landing() {
 		ob_start();
@@ -114,12 +116,18 @@ class Wpfaevent_Landing {
 		</style>
 
 		<div class="wpfaevent-landing-container">
-			<h2>FOSSASIA Events</h2>
+			<h2><?php echo esc_html__( 'FOSSASIA Events', 'wpfaevent' ); ?></h2>
 			<p>
-				For documentation and setup instructions, visit the
-				<a href="https://github.com/fossasia/WPFAevent" target="_blank" rel="noopener noreferrer">
-					official repository
-				</a>.
+				<?php
+				printf(
+					esc_html__( 'For documentation and setup instructions, visit the %s.', 'wpfaevent' ),
+					sprintf(
+						'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+						esc_url( 'https://github.com/fossasia/WPFAevent' ),
+						esc_html__( 'official repository', 'wpfaevent' )
+					)
+				);
+				?>
 			</p>
 		</div>
 		<?php
