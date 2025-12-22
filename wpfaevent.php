@@ -63,8 +63,8 @@ add_action( 'plugins_loaded', function () {
         $loader = new Wpfaevent_Loader();
 
         /**
-         * OPTIONAL: initialize landing setup
-         * This keeps your boilerplate clean and explicit
+         * Initialize landing setup
+         * This sets up necessary landing page functionality
          */
         $loader->initialize_wpfaevent_landing();
 
