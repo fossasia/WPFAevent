@@ -1,4 +1,3 @@
-@ -1,97 +1,106 @@
 <?php
 /**
  * Handles the landing page logic for the WPFAEvent plugin.
@@ -48,13 +47,6 @@ class Wpfaevent_Landing {
 		return $templates;
 	}
 
-			<p>
-				For documentation and setup instructions, visit the
-				<a href="https://github.com/fossasia/WPFAevent" target="_blank" rel="noopener noreferrer">
-					official repository
-				</a>.
-			</p>
-		</div>
 	/**
 	 * Loads the custom template file when a page with that template is viewed.
 	 *
@@ -86,6 +78,14 @@ class Wpfaevent_Landing {
 		return $template;
 	}
 
+	/**
+	 * Shortcode renderer for landing page.
+	 *
+	 * @return string HTML output of the landing page.
+	 */
+	public function render_landing() {
+		ob_start();
+		?>
 		<style>
 			.wpfaevent-landing-container {
 				background: #f9f9f9;
@@ -114,8 +114,26 @@ class Wpfaevent_Landing {
 				text-decoration: underline;
 			}
 		</style>
+
+		<div class="wpfaevent-landing-container">
+			<h2><?php echo esc_html__( 'FOSSASIA Events', 'wpfaevent' ); ?></h2>
+			<p>
+				<?php
+				printf(
+					esc_html__( 'For documentation and setup instructions, visit the %s.', 'wpfaevent' ),
+					sprintf(
+						'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+						esc_url( 'https://github.com/fossasia/WPFAevent' ),
+						esc_html__( 'official repository', 'wpfaevent' )
+					)
+				);
+				?>
+			</p>
+		</div>
 		<?php
 		return ob_get_clean();
+	}
+
 	/**
 	 * Sets up the necessary pages on plugin activation.
 	 */

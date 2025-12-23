@@ -14,7 +14,7 @@
  *
  * @wordpress-plugin
  * Plugin Name:       FOSSASIA event plugin
- * Plugin URI:        https://https://github.com/fossasia/WPFAevent
+ * Plugin URI:        https://github.com/fossasia/WPFAevent
  * Description:       The FOSSASIA Event Plugin provides WordPress integrations for Eventyay-based events.
  *
  * Version:           1.0.0
@@ -51,9 +51,24 @@ register_deactivation_hook( __FILE__, [ 'Wpfaevent_Deactivator', 'deactivate' ] 
 
 // Plugin init
 add_action( 'plugins_loaded', function () {
-    WPFAEvent_I18n::load_textdomain( 'wpfaevent' );
 
-    if ( class_exists( 'WPFAEvent_Loader' ) ) {
-        WPFAEvent_Loader::run();
+    // 1. Load translations
+    if ( class_exists( 'Wpfaevent_i18n' ) ) {
+        $i18n = new Wpfaevent_i18n();
+        $i18n->load_plugin_textdomain();
+    }
+
+    // 2. Initialize loader
+    if ( class_exists( 'Wpfaevent_Loader' ) ) {
+        $loader = new Wpfaevent_Loader();
+
+        /**
+         * Initialize landing setup
+         * This sets up necessary landing page functionality
+         */
+        $loader->initialize_wpfaevent_landing();
+
+        // 3. Register all hooks
+        $loader->run();
     }
 });
