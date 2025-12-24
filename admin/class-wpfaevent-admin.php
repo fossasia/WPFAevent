@@ -100,4 +100,99 @@ class Wpfaevent_Admin {
 
 	}
 
+	/**
+	 * Add settings link to plugin action links
+	 *
+	 * @since    1.0.0
+	 * @param    array    $links    Existing plugin action links
+	 * @return   array              Modified plugin action links
+	 */
+	public function add_settings_link( $links ) {
+		$settings_link = sprintf(
+			'<a href="%s">%s</a>',
+			admin_url( 'admin.php?page=wpfaevent-settings' ),
+			esc_html__( 'Settings', 'wpfaevent' )
+		);
+		array_unshift( $links, $settings_link );
+		return $links;
+	}
+
+	/**
+	 * Register settings page in WordPress admin
+	 *
+	 * @since    1.0.0
+	 */
+	public function register_settings_page() {
+		add_menu_page(
+			esc_html__( 'FOSSASIA Event Settings', 'wpfaevent' ),  // Page title
+			esc_html__( 'FOSSASIA Event', 'wpfaevent' ),           // Menu title
+			'manage_options',                                       // Capability
+			'wpfaevent-settings',                                   // Menu slug
+			array( $this, 'render_settings_page' ),                // Callback
+			'dashicons-calendar-alt',                               // Icon
+			30                                                      // Position
+		);
+	}
+
+	/**
+	 * Render settings page placeholder
+	 *
+	 * @since    1.0.0
+	 */
+	public function render_settings_page() {
+		// Check user capabilities
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wpfaevent' ) );
+		}
+		?>
+		<div class="wrap">
+			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+			
+			<div class="notice notice-info">
+				<p>
+					<strong><?php esc_html_e( 'Plugin Skeleton Active', 'wpfaevent' ); ?></strong>
+				</p>
+				<p>
+					<?php esc_html_e( 'This is a placeholder settings page. Settings functionality will be implemented in future updates.', 'wpfaevent' ); ?>
+				</p>
+			</div>
+
+			<div class="card">
+				<h2><?php esc_html_e( 'Plugin Information', 'wpfaevent' ); ?></h2>
+				<table class="form-table">
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Version', 'wpfaevent' ); ?></th>
+						<td><?php echo esc_html( $this->version ); ?></td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Plugin Name', 'wpfaevent' ); ?></th>
+						<td><code><?php echo esc_html( $this->plugin_name ); ?></code></td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Text Domain', 'wpfaevent' ); ?></th>
+						<td><code>wpfaevent</code></td>
+					</tr>
+				</table>
+			</div>
+
+			<div class="card" style="margin-top: 20px;">
+				<h2><?php esc_html_e( 'Documentation', 'wpfaevent' ); ?></h2>
+				<p>
+					<?php
+					printf(
+						/* translators: %s: GitHub repository link */
+						esc_html__( 'For setup instructions and documentation, visit the %s.', 'wpfaevent' ),
+						sprintf(
+							'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+							esc_url( 'https://github.com/fossasia/WPFAevent' ),
+							esc_html__( 'GitHub repository', 'wpfaevent' )
+						)
+					);
+					?>
+				</p>
+			</div>
+		</div>
+		<?php
+	}
+
 }

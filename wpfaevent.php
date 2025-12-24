@@ -49,26 +49,34 @@ require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-deactivator.php';
 register_activation_hook( __FILE__, [ 'Wpfaevent_Activator', 'activate' ] );
 register_deactivation_hook( __FILE__, [ 'Wpfaevent_Deactivator', 'deactivate' ] );
 
-// Plugin init
-add_action( 'plugins_loaded', function () {
+/**
+ * The core plugin class that is used to define internationalization,
+ * admin-specific hooks, and public-facing site hooks.
+ */
+require plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent.php';
 
-    // 1. Load translations
+/**
+ * Begins execution of the plugin.
+ *
+ * Since everything within the plugin is registered via hooks,
+ * then kicking off the plugin from this point in the file does
+ * not affect the page life cycle.
+ *
+ * @since    1.0.0
+ */
+function run_wpfaevent() {
+
+    // Load translations
     if ( class_exists( 'Wpfaevent_i18n' ) ) {
         $i18n = new Wpfaevent_i18n();
         $i18n->load_plugin_textdomain();
     }
 
-    // 2. Initialize loader
-    if ( class_exists( 'Wpfaevent_Loader' ) ) {
-        $loader = new Wpfaevent_Loader();
-
-        /**
-         * Initialize landing setup
-         * This sets up necessary landing page functionality
-         */
-        $loader->initialize_wpfaevent_landing();
-
-        // 3. Register all hooks
-        $loader->run();
+    // Run the core plugin
+    if ( class_exists( 'Wpfaevent' ) ) {
+        $plugin = new Wpfaevent();
+        $plugin->run();
     }
-});
+}
+
+run_wpfaevent();
