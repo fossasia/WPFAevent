@@ -110,7 +110,7 @@ class Wpfaevent_Admin {
 	public function add_settings_link( $links ) {
 		$settings_link = sprintf(
 			'<a href="%s">%s</a>',
-			admin_url( 'admin.php?page=wpfaevent-settings' ),
+			esc_url( admin_url( 'admin.php?page=wpfaevent-settings' ) ),
 			esc_html__( 'Settings', 'wpfaevent' )
 		);
 		array_unshift( $links, $settings_link );
