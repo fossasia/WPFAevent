@@ -76,7 +76,7 @@ class Wpfaevent {
         $this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
 
         // Add settings link to plugins page
-        $plugin_basename = plugin_basename( plugin_dir_path( dirname( __FILE__ ) ) . 'wpfaevent.php' );
+        $plugin_basename = plugin_basename( dirname( __FILE__, 2 ) . '/wpfaevent.php' );
         $this->loader->add_filter( 'plugin_action_links_' . $plugin_basename, $this->plugin_admin, 'add_settings_link' );
 
         // Instantiate the legacy plugin and keep a reference so we can reuse its methods
@@ -120,7 +120,7 @@ class Wpfaevent {
         // Register public-specific stylesheet
         $this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
 
-        if ( ! $this->legacy ) { return; }
+        // if ( ! $this->legacy ) { return; }
 
         // Template registration and inclusion
         // $this->loader->add_filter( 'theme_page_templates', $this->legacy, 'register_template' );
