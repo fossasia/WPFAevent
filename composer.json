@@ -1,0 +1,29 @@
+{
+
+    "name": "fossasia/wpfaevent",
+    "description": "WPFA Event WordPress plugin",
+    "type": "wordpress-plugin",
+    "license": "Apache-2.0",
+
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.13",
+        "wp-coding-standards/wpcs": "^3.3"
+    },
+
+    "scripts": {
+        "phpcs": "phpcs",
+        "phpcbf": "phpcbf"
+    },
+
+    "scripts-descriptions": {
+        "phpcs": "Run PHP_CodeSniffer to check coding standards",
+        "phpcbf": "Run PHP Code Beautifier to fix coding standards"
+    },
+    
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}
