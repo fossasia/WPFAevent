@@ -30,7 +30,7 @@ class WPFA_CLI {
 	 */
 	public static function seed( $args, $assoc_args ) {
 		if ( isset( $assoc_args['from-json'] ) ) {
-			self::seed_from_json(plugin_dir_path( __FILE__ ) . $assoc_args['from-json'] );
+			self::seed_from_json( plugin_dir_path( __FILE__ ) . $assoc_args['from-json'] );
 			return;
 		}
 
@@ -48,53 +48,53 @@ class WPFA_CLI {
 	private static function seed_minimal() {
 		$placeholder = 'https://via.placeholder.com/300x300.png?text=Speaker';
 
-		$speakers = [
-			[
+		$speakers = array(
+			array(
 				'post_title'   => 'Alex Example',
 				'post_content' => 'Open source contributor and community speaker.',
-				'meta'         => [
+				'meta'         => array(
 					'wpfa_speaker_org'      => 'FOSSASIA',
 					'wpfa_speaker_position' => 'Developer Advocate',
 					'wpfa_speaker_photo'    => $placeholder,
-				],
+				),
 				'slug'         => 'alex-example',
-			],
-			[
+			),
+			array(
 				'post_title'   => 'Bao Nguyen',
 				'post_content' => 'Engineer focusing on event platforms and accessibility.',
-				'meta'         => [
+				'meta'         => array(
 					'wpfa_speaker_org'      => 'Eventyay',
 					'wpfa_speaker_position' => 'Software Engineer',
 					'wpfa_speaker_photo'    => $placeholder,
-				],
+				),
 				'slug'         => 'bao-nguyen',
-			],
-		];
+			),
+		);
 
-		$event = [
+		$event = array(
 			'post_title'   => 'FOSSASIA Community Meetup',
 			'post_content' => 'A casual meetup to discuss the roadmap and OSS collaboration.',
-			'meta'         => [
+			'meta'         => array(
 				'wpfa_event_start_date' => date( 'Y-m-d', strtotime( '+30 days' ) ),
 				'wpfa_event_end_date'   => date( 'Y-m-d', strtotime( '+31 days' ) ),
 				'wpfa_event_location'   => 'Online',
 				'wpfa_event_url'        => 'https://eventyay.com/',
-			],
+			),
 			'slug'         => 'fossasia-community-meetup',
-		];
+		);
 
 		// Insert speakers (idempotent by slug).
-		$speaker_ids = [];
+		$speaker_ids = array();
 		foreach ( $speakers as $s ) {
 			$speaker_ids[] = self::upsert_post_by_slug(
 				'wpfa_speaker',
 				$s['slug'],
-				[
+				array(
 					'post_title'   => $s['post_title'],
 					'post_content' => $s['post_content'],
 					'post_status'  => 'publish',
 					'post_type'    => 'wpfa_speaker',
-				],
+				),
 				$s['meta']
 			);
 		}
@@ -103,12 +103,12 @@ class WPFA_CLI {
 		$event_id = self::upsert_post_by_slug(
 			'wpfa_event',
 			$event['slug'],
-			[
+			array(
 				'post_title'   => $event['post_title'],
 				'post_content' => $event['post_content'],
 				'post_status'  => 'publish',
 				'post_type'    => 'wpfa_event',
-			],
+			),
 			$event['meta']
 		);
 
@@ -138,20 +138,30 @@ class WPFA_CLI {
 		}
 
 		// Insert speakers first.
-		$slug_to_id = [];
+		$slug_to_id = array();
 		if ( ! empty( $data['speakers'] ) && is_array( $data['speakers'] ) ) {
 			foreach ( $data['speakers'] as $s ) {
-				$slug   = sanitize_title( $s['slug'] ?? $s['title'] ?? wp_generate_uuid4() );
-				$title  = sanitize_text_field( $s['title'] ?? 'Speaker' );
+				$slug    = sanitize_title( $s['slug'] ?? $s['title'] ?? wp_generate_uuid4() );
+				$title   = sanitize_text_field( $s['title'] ?? 'Speaker' );
 				$content = wp_kses_post( $s['content'] ?? '' );
 
-				$meta = [
+				$meta = array(
 					'wpfa_speaker_org'      => isset( $s['org'] ) ? sanitize_text_field( $s['org'] ) : '',
 					'wpfa_speaker_position' => isset( $s['position'] ) ? sanitize_text_field( $s['position'] ) : '',
 					'wpfa_speaker_photo'    => isset( $s['photo'] ) ? esc_url_raw( $s['photo'] ) : 'https://via.placeholder.com/300x300.png?text=Speaker',
-				];
+				);
 
-				$id = self::upsert_post_by_slug( 'wpfa_speaker', $slug, [ 'post_title' => $title, 'post_content' => $content, 'post_status'  => 'publish', 'post_type' => 'wpfa_speaker', ], $meta );
+				$id                  = self::upsert_post_by_slug(
+					'wpfa_speaker',
+					$slug,
+					array(
+						'post_title'   => $title,
+						'post_content' => $content,
+						'post_status'  => 'publish',
+						'post_type'    => 'wpfa_speaker',
+					),
+					$meta
+				);
 				$slug_to_id[ $slug ] = $id;
 			}
 		}
@@ -163,16 +173,26 @@ class WPFA_CLI {
 				$title   = sanitize_text_field( $e['title'] ?? 'Event' );
 				$content = wp_kses_post( $e['content'] ?? '' );
 
-				$meta = [
+				$meta = array(
 					'wpfa_event_start_date' => isset( $e['start_date'] ) ? sanitize_text_field( $e['start_date'] ) : '',
 					'wpfa_event_end_date'   => isset( $e['end_date'] ) ? sanitize_text_field( $e['end_date'] ) : '',
 					'wpfa_event_location'   => isset( $e['location'] ) ? sanitize_text_field( $e['location'] ) : '',
 					'wpfa_event_url'        => isset( $e['url'] ) ? esc_url_raw( $e['url'] ) : '',
-				];
+				);
 
-				$event_id = self::upsert_post_by_slug( 'wpfa_event', $slug, [ 'post_title' => $title, 'post_content' => $content, 'post_status' => 'publish', 'post_type' => 'wpfa_event', ], $meta );
+				$event_id = self::upsert_post_by_slug(
+					'wpfa_event',
+					$slug,
+					array(
+						'post_title'   => $title,
+						'post_content' => $content,
+						'post_status'  => 'publish',
+						'post_type'    => 'wpfa_event',
+					),
+					$meta
+				);
 
-				$event_speaker_slugs = ! empty( $e['speakers'] ) && is_array( $e['speakers'] ) ? $e['speakers'] : [];
+				$event_speaker_slugs = ! empty( $e['speakers'] ) && is_array( $e['speakers'] ) ? $e['speakers'] : array();
 				$speaker_ids         = array_values( array_intersect_key( $slug_to_id, array_flip( $event_speaker_slugs ) ) );
 
 				self::sync_relationships( $event_id, $speaker_ids );
@@ -188,7 +208,7 @@ class WPFA_CLI {
 	private static function upsert_post_by_slug( $post_type, $slug, $postarr, $meta ) {
 		$existing = get_page_by_path( $slug, OBJECT, $post_type );
 		if ( $existing ) {
-			$post_id = $existing->ID;
+			$post_id       = $existing->ID;
 			$postarr['ID'] = $post_id;
 			wp_update_post( $postarr );
 		} else {

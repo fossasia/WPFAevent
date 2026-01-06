@@ -33,7 +33,7 @@ class FOSSASIA_Uninstaller {
 	 */
 	private static function delete_plugin_pages() {
 		// Slugs for the static pages created on activation.
-		$static_pages_slugs = [
+		$static_pages_slugs = array(
 			'fossasia-summit',
 			'speakers',
 			'full-schedule',
@@ -41,7 +41,7 @@ class FOSSASIA_Uninstaller {
 			'events',
 			'past-events',
 			'code-of-conduct',
-		];
+		);
 
 		foreach ( $static_pages_slugs as $slug ) {
 			$page = get_page_by_path( $slug, OBJECT, 'page' );
@@ -51,13 +51,15 @@ class FOSSASIA_Uninstaller {
 		}
 
 		// Query for and delete all dynamic event pages identified by the _event_date meta key.
-		$event_pages_query = new WP_Query( [
-			'post_type'      => 'page',
-			'posts_per_page' => -1,
-			'meta_key'       => '_wp_page_template',
-			'compare'        => 'EXISTS',
-			'fields'         => 'ids', // Only get post IDs for efficiency.
-		] );
+		$event_pages_query = new WP_Query(
+			array(
+				'post_type'      => 'page',
+				'posts_per_page' => -1,
+				'meta_key'       => '_wp_page_template',
+				'compare'        => 'EXISTS',
+				'fields'         => 'ids', // Only get post IDs for efficiency.
+			)
+		);
 
 		if ( $event_pages_query->have_posts() ) {
 			foreach ( $event_pages_query->posts as $page_id ) {

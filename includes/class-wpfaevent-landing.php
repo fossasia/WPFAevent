@@ -1,7 +1,6 @@
 <?php
 /**
  * Handles the landing page logic for the WPFAEvent plugin.
- 
  *
  * @package    Wpfaevent
  * @subpackage Wpfaevent/includes
@@ -26,24 +25,21 @@ class Wpfaevent_Landing {
 	public function init() {
 		// Register shortcode for the landing page.
 		add_shortcode( 'wpfaevent_landing', array( $this, 'render_landing' ) );
-	
 	}
 
 	/**
 	 * Render the landing page output.
-	 
 	 *
 	 * @return string HTML output of the landing page.
 	 */
-
 	public function register_template( $templates ) {
 		$templates['public/partials/wpfaevent-landing-template.php'] = 'FOSSASIA Summit Landing Page (Plugin)';
-		$templates['public/partials/wpfaevent-landing-template.php']    = 'FOSSASIA Events Listing (Plugin)';
-		$templates['public/partials/wpfaevent-landing-template.php']   = 'FOSSASIA Admin Dashboard (Plugin)';
-		$templates['public/partials/speakers-page.php']     = 'FOSSASIA Speakers Page (Plugin)';
-		$templates['public/partials/schedule-page.php']     = 'FOSSASIA Schedule Page (Plugin)';
-		$templates['public/partials/past-events-page.php']       = 'FOSSASIA Past Events (Plugin)';
-		$templates['public/partials/wpfaevent-landing-template.php']          = 'FOSSASIA Code of Conduct (Plugin)';
+		$templates['public/partials/wpfaevent-landing-template.php'] = 'FOSSASIA Events Listing (Plugin)';
+		$templates['public/partials/wpfaevent-landing-template.php'] = 'FOSSASIA Admin Dashboard (Plugin)';
+		$templates['public/partials/speakers-page.php']              = 'FOSSASIA Speakers Page (Plugin)';
+		$templates['public/partials/schedule-page.php']              = 'FOSSASIA Schedule Page (Plugin)';
+		$templates['public/partials/past-events-page.php']           = 'FOSSASIA Past Events (Plugin)';
+		$templates['public/partials/wpfaevent-landing-template.php'] = 'FOSSASIA Code of Conduct (Plugin)';
 		return $templates;
 	}
 
