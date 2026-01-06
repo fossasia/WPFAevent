@@ -44,14 +44,13 @@ class Wpfaevent_Admin {
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of this plugin.
-	 * @param      string    $version    The version of this plugin.
+	 * @param      string $plugin_name       The name of this plugin.
+	 * @param      string $version    The version of this plugin.
 	 */
 	public function __construct( $plugin_name, $version ) {
 
 		$this->plugin_name = $plugin_name;
-		$this->version = $version;
-
+		$this->version     = $version;
 	}
 
 	/**
@@ -73,8 +72,7 @@ class Wpfaevent_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( dirname( __FILE__ ) ) . 'admin/css/wpfaevent-admin.css', array(), $this->version, 'all' );
-
+		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __DIR__ ) . 'admin/css/wpfaevent-admin.css', array(), $this->version, 'all' );
 	}
 
 	/**
@@ -97,14 +95,13 @@ class Wpfaevent_Admin {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-admin.js', array( 'jquery' ), $this->version, false );
-
 	}
 
 	/**
 	 * Add settings link to plugin action links
 	 *
 	 * @since    1.0.0
-	 * @param    array    $links    Existing plugin action links
+	 * @param    array $links    Existing plugin action links
 	 * @return   array              Modified plugin action links
 	 */
 	public function add_settings_link( $links ) {
@@ -194,5 +191,4 @@ class Wpfaevent_Admin {
 		</div>
 		<?php
 	}
-
 }
