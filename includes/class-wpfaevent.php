@@ -72,15 +72,22 @@ class Wpfaevent {
         // Register admin-specific stylesheet
         $this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_styles' );
 
+        // Register settings page
+        $this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
+
+        // Add settings link to plugins page
+        $plugin_basename = plugin_basename( dirname( __FILE__, 2 ) . '/wpfaevent.php' );
+        $this->loader->add_filter( 'plugin_action_links_' . $plugin_basename, $this->plugin_admin, 'add_settings_link' );
+
         // Instantiate the legacy plugin and keep a reference so we can reuse its methods
-        if ( class_exists( 'Wpfaevent_Landing' ) ) {
-            $this->legacy = new Wpfaevent_Landing();
-        }
+        // if ( class_exists( 'Wpfaevent_Landing' ) ) {
+        //     $this->legacy = new Wpfaevent_Landing();
+        // }
 
         if ( ! $this->legacy ) { return; }
 
         // Register admin-facing hooks via the loader so tests/tooling can inspect them
-        $this->loader->add_action( 'admin_enqueue_scripts', $this->legacy, 'enqueue_admin_scripts' );
+        // $this->loader->add_action( 'admin_enqueue_scripts', $this->legacy, 'enqueue_admin_scripts' );
 
         // Register the many AJAX handlers the legacy class provides
         $ajax_methods = [
@@ -113,12 +120,12 @@ class Wpfaevent {
         // Register public-specific stylesheet
         $this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
 
-        if ( ! $this->legacy ) { return; }
+        // if ( ! $this->legacy ) { return; }
 
         // Template registration and inclusion
-        $this->loader->add_filter( 'theme_page_templates', $this->legacy, 'register_template' );
-        $this->loader->add_filter( 'template_include', $this->legacy, 'load_template', 99 );
-        $this->loader->add_action( 'init', $this->legacy, 'setup_pages' );
+        // $this->loader->add_filter( 'theme_page_templates', $this->legacy, 'register_template' );
+        // $this->loader->add_filter( 'template_include', $this->legacy, 'load_template', 99 );
+        // $this->loader->add_action( 'init', $this->legacy, 'setup_pages' );
     }
 
     public function run() {
