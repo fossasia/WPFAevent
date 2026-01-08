@@ -74,7 +74,6 @@ class Wpfaevent_Admin {
 		 */
 
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( dirname( __FILE__ ) ) . 'admin/css/wpfaevent-admin.css', array(), $this->version, 'all' );
-
 	}
 
 	/**
@@ -97,7 +96,6 @@ class Wpfaevent_Admin {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-admin.js', array( 'jquery' ), $this->version, false );
-
 	}
 
 	/**
@@ -195,4 +193,211 @@ class Wpfaevent_Admin {
 		<?php
 	}
 
+	// ========================================
+	// META BOXES
+	// ========================================
+
+	/**
+	 * Register meta boxes for Event and Speaker CPTs.
+	 *
+	 * @since 1.0.0
+	 */
+	public function add_meta_boxes() {
+		// Event meta boxes
+		add_meta_box(
+			'wpfa_event_details',
+			__( 'Event Details', 'wpfaevent' ),
+			array( $this, 'render_event_meta_box' ),
+			'wpfa_event',
+			'normal',
+			'high'
+		);
+
+		// Speaker meta boxes
+		add_meta_box(
+			'wpfa_speaker_details',
+			__( 'Speaker Details', 'wpfaevent' ),
+			array( $this, 'render_speaker_meta_box' ),
+			'wpfa_speaker',
+			'normal',
+			'high'
+		);
+	}
+
+	/**
+	 * Render Event meta box.
+	 *
+	 * @since 1.0.0
+	 * @param WP_Post $post The post object.
+	 */
+	public function render_event_meta_box( $post ) {
+		wp_nonce_field( 'wpfa_event_meta_nonce', 'wpfa_event_meta_nonce' );
+
+		$start_date = get_post_meta( $post->ID, 'wpfa_event_start_date', true );
+		$end_date   = get_post_meta( $post->ID, 'wpfa_event_end_date', true );
+		$location   = get_post_meta( $post->ID, 'wpfa_event_location', true );
+		$url        = get_post_meta( $post->ID, 'wpfa_event_url', true );
+		$speakers   = get_post_meta( $post->ID, 'wpfa_event_speakers', true );
+		?>
+		<table class="form-table">
+			<tr>
+				<th><label for="wpfa_event_start_date"><?php esc_html_e( 'Start Date', 'wpfaevent' ); ?></label></th>
+				<td><input type="date" id="wpfa_event_start_date" name="wpfa_event_start_date" value="<?php echo esc_attr( $start_date ); ?>" class="regular-text"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_end_date"><?php esc_html_e( 'End Date', 'wpfaevent' ); ?></label></th>
+				<td><input type="date" id="wpfa_event_end_date" name="wpfa_event_end_date" value="<?php echo esc_attr( $end_date ); ?>" class="regular-text"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_location"><?php esc_html_e( 'Location', 'wpfaevent' ); ?></label></th>
+				<td><input type="text" id="wpfa_event_location" name="wpfa_event_location" value="<?php echo esc_attr( $location ); ?>" class="regular-text"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
+				<td><input type="url" id="wpfa_event_url" name="wpfa_event_url" value="<?php echo esc_url( $url ); ?>" class="regular-text" placeholder="https://"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_speakers"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></label></th>
+				<td>
+					<?php
+					$speaker_posts = get_posts( array( 'post_type' => 'wpfa_speaker', 'posts_per_page' => -1, 'orderby' => 'title', 'order' => 'ASC' ) );
+					if ( $speaker_posts ) {
+						echo '<select name="wpfa_event_speakers[]" id="wpfa_event_speakers" multiple style="width:100%;height:150px;">';
+						foreach ( $speaker_posts as $speaker ) {
+							$selected = is_array( $speakers ) && in_array( $speaker->ID, $speakers ) ? 'selected' : '';
+							echo '<option value="' . esc_attr( $speaker->ID ) . '" ' . $selected . '>' . esc_html( $speaker->post_title ) . '</option>';
+						}
+						echo '</select>';
+						echo '<p class="description">' . esc_html__( 'Hold Ctrl (Cmd on Mac) to select multiple speakers.', 'wpfaevent' ) . '</p>';
+					} else {
+						echo '<p>' . esc_html__( 'No speakers found. Create speakers first.', 'wpfaevent' ) . '</p>';
+					}
+					?>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Render Speaker meta box.
+	 *
+	 * @since 1.0.0
+	 * @param WP_Post $post The post object.
+	 */
+	public function render_speaker_meta_box( $post ) {
+		wp_nonce_field( 'wpfa_speaker_meta_nonce', 'wpfa_speaker_meta_nonce' );
+
+		$position     = get_post_meta( $post->ID, 'wpfa_speaker_position', true );
+		$organization = get_post_meta( $post->ID, 'wpfa_speaker_organization', true );
+		$bio          = get_post_meta( $post->ID, 'wpfa_speaker_bio', true );
+		$headshot_url = get_post_meta( $post->ID, 'wpfa_speaker_headshot_url', true );
+		?>
+		<table class="form-table">
+			<tr>
+				<th><label for="wpfa_speaker_position"><?php esc_html_e( 'Position/Title', 'wpfaevent' ); ?></label></th>
+				<td><input type="text" id="wpfa_speaker_position" name="wpfa_speaker_position" value="<?php echo esc_attr( $position ); ?>" class="regular-text"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_speaker_organization"><?php esc_html_e( 'Organization', 'wpfaevent' ); ?></label></th>
+				<td><input type="text" id="wpfa_speaker_organization" name="wpfa_speaker_organization" value="<?php echo esc_attr( $organization ); ?>" class="regular-text"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_speaker_bio"><?php esc_html_e( 'Biography', 'wpfaevent' ); ?></label></th>
+				<td>
+					<?php
+					wp_editor( $bio, 'wpfa_speaker_bio', array(
+						'textarea_name' => 'wpfa_speaker_bio',
+						'textarea_rows' => 10,
+						'media_buttons' => false,
+					) );
+					?>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_speaker_headshot_url"><?php esc_html_e( 'Headshot URL', 'wpfaevent' ); ?></label></th>
+				<td><input type="url" id="wpfa_speaker_headshot_url" name="wpfa_speaker_headshot_url" value="<?php echo esc_url( $headshot_url ); ?>" class="regular-text" placeholder="https://"></td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Save Event meta box data.
+	 *
+	 * @since 1.0.0
+	 * @param int $post_id The post ID.
+	 */
+	public function save_event_meta( $post_id ) {
+		if ( ! isset( $_POST['wpfa_event_meta_nonce'] ) || ! wp_verify_nonce( $_POST['wpfa_event_meta_nonce'], 'wpfa_event_meta_nonce' ) ) {
+			return;
+		}
+
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+
+		if ( isset( $_POST['wpfa_event_start_date'] ) ) {
+			update_post_meta( $post_id, 'wpfa_event_start_date', sanitize_text_field( $_POST['wpfa_event_start_date'] ) );
+		}
+
+		if ( isset( $_POST['wpfa_event_end_date'] ) ) {
+			update_post_meta( $post_id, 'wpfa_event_end_date', sanitize_text_field( $_POST['wpfa_event_end_date'] ) );
+		}
+
+		if ( isset( $_POST['wpfa_event_location'] ) ) {
+			update_post_meta( $post_id, 'wpfa_event_location', sanitize_text_field( $_POST['wpfa_event_location'] ) );
+		}
+
+		if ( isset( $_POST['wpfa_event_url'] ) ) {
+			update_post_meta( $post_id, 'wpfa_event_url', esc_url_raw( $_POST['wpfa_event_url'] ) );
+		}
+
+		if ( isset( $_POST['wpfa_event_speakers'] ) && is_array( $_POST['wpfa_event_speakers'] ) ) {
+			$speakers = array_map( 'absint', $_POST['wpfa_event_speakers'] );
+			update_post_meta( $post_id, 'wpfa_event_speakers', $speakers );
+		} else {
+			delete_post_meta( $post_id, 'wpfa_event_speakers' );
+		}
+	}
+
+	/**
+	 * Save Speaker meta box data.
+	 *
+	 * @since 1.0.0
+	 * @param int $post_id The post ID.
+	 */
+	public function save_speaker_meta( $post_id ) {
+		if ( ! isset( $_POST['wpfa_speaker_meta_nonce'] ) || ! wp_verify_nonce( $_POST['wpfa_speaker_meta_nonce'], 'wpfa_speaker_meta_nonce' ) ) {
+			return;
+		}
+
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+
+		if ( isset( $_POST['wpfa_speaker_position'] ) ) {
+			update_post_meta( $post_id, 'wpfa_speaker_position', sanitize_text_field( $_POST['wpfa_speaker_position'] ) );
+		}
+
+		if ( isset( $_POST['wpfa_speaker_organization'] ) ) {
+			update_post_meta( $post_id, 'wpfa_speaker_organization', sanitize_text_field( $_POST['wpfa_speaker_organization'] ) );
+		}
+
+		if ( isset( $_POST['wpfa_speaker_bio'] ) ) {
+			update_post_meta( $post_id, 'wpfa_speaker_bio', wp_kses_post( $_POST['wpfa_speaker_bio'] ) );
+		}
+
+		if ( isset( $_POST['wpfa_speaker_headshot_url'] ) ) {
+			update_post_meta( $post_id, 'wpfa_speaker_headshot_url', esc_url_raw( $_POST['wpfa_speaker_headshot_url'] ) );
+		}
+	}
 }

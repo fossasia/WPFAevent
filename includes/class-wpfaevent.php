@@ -1,7 +1,18 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 /**
- * Core orchestrator that brings together loader and legacy implementation.
+ * The core plugin class.
+ *
+ * This is used to define internationalization, admin-specific hooks, and
+ * public-facing site hooks.
+ *
+ * Also maintains the unique identifier of this plugin as well as the current
+ * version of the plugin.
+ *
+ * @since      1.0.0
+ * @package    Wpfaevent
+ * @subpackage Wpfaevent/includes
+ * @author     FOSSASIA <contact@fossasia.org>
  */
 class Wpfaevent {
     /** @var Wpfaevent_Loader */
@@ -34,18 +45,57 @@ class Wpfaevent {
      */
     private $version;
 
+    /**
+     * Define the core functionality of the plugin.
+     *
+     * Set the plugin name and the plugin version that can be used throughout the plugin.
+     * Load the dependencies, define the locale, and set the hooks for the admin area and
+     * the public-facing side of the site.
+     *
+     * @since    1.0.0
+     */
     public function __construct() {
         $this->plugin_name = 'wpfaevent';
         $this->version = WPFAEVENT_VERSION;
 
         $this->load_dependencies();
+        $this->define_cpt_hooks();
+        $this->define_taxonomy_hooks();
+        $this->define_meta_hooks();
         $this->define_admin_hooks();
         $this->define_public_hooks();
     }
 
+    /**
+     * Load the required dependencies for this plugin.
+     *
+     * Include the following files that make up the plugin:
+     *
+     * - Wpfaevent_Loader. Orchestrates the hooks of the plugin.
+     * - Wpfaevent_i18n. Defines internationalization functionality.
+     * - Wpfaevent_Admin. Defines all hooks for the admin area.
+     * - Wpfaevent_Public. Defines all hooks for the public side of the site.
+     *
+     * Create an instance of the loader which will be used to register the hooks
+     * with WordPress.
+     *
+     * @since    1.0.0
+     * @access   private
+     */
     private function load_dependencies() {
         // Loader
         require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-loader.php';
+
+        // Data model classes - Custom Post Types
+        require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';
+        require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-speaker.php';
+
+        // Data model classes - Taxonomies
+        require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies.php';
+
+        // Data model classes - Meta Fields
+        require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-event.php';
+        require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-speaker.php';
 
         // Legacy plugin code (defines FOSSASIA_Landing_Plugin class)
         require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-landing.php';
@@ -65,6 +115,52 @@ class Wpfaevent {
         $this->loader = new Wpfaevent_Loader();
     }
 
+    /**
+     * Register all Custom Post Types.
+     *
+     * @since    1.0.0
+     * @access   private
+     */
+    private function define_cpt_hooks() {
+        // Register Event CPT
+        $this->loader->add_action( 'init', 'Wpfaevent_CPT_Event', 'register' );
+
+        // Register Speaker CPT
+        $this->loader->add_action( 'init', 'Wpfaevent_CPT_Speaker', 'register' );
+    }
+
+    /**
+     * Register all Custom Taxonomies.
+     *
+     * @since    1.0.0
+     * @access   private
+     */
+    private function define_taxonomy_hooks() {
+        // Register Event Taxonomies (Track and Tag)
+        $this->loader->add_action( 'init', 'Wpfaevent_Taxonomies', 'register' );
+    }
+
+    /**
+     * Register all Meta Fields.
+     *
+     * @since    1.0.0
+     * @access   private
+     */
+    private function define_meta_hooks() {
+        // Register Event Meta Fields
+        $this->loader->add_action( 'init', 'Wpfaevent_Meta_Event', 'register' );
+
+        // Register Speaker Meta Fields
+        $this->loader->add_action( 'init', 'Wpfaevent_Meta_Speaker', 'register' );
+    }
+
+    /**
+     * Register all of the hooks related to the admin area functionality
+     * of the plugin.
+     *
+     * @since    1.0.0
+     * @access   private
+     */
     private function define_admin_hooks() {
         // Instantiate the admin class
         $this->plugin_admin = new Wpfaevent_Admin( $this->plugin_name, $this->version );
@@ -78,6 +174,13 @@ class Wpfaevent {
         // Add settings link to plugins page
         $plugin_basename = plugin_basename( dirname( __FILE__, 2 ) . '/wpfaevent.php' );
         $this->loader->add_filter( 'plugin_action_links_' . $plugin_basename, $this->plugin_admin, 'add_settings_link' );
+
+        // Add meta boxes to CPTs
+        $this->loader->add_action( 'add_meta_boxes', $this->plugin_admin, 'add_meta_boxes' );
+
+        // Save meta box data
+        $this->loader->add_action( 'save_post_wpfa_event', $this->plugin_admin, 'save_event_meta' );
+        $this->loader->add_action( 'save_post_wpfa_speaker', $this->plugin_admin, 'save_speaker_meta' );
 
         // Instantiate the legacy plugin and keep a reference so we can reuse its methods
         // if ( class_exists( 'Wpfaevent_Landing' ) ) {
@@ -113,6 +216,13 @@ class Wpfaevent {
         }
     }
 
+    /**
+     * Register all of the hooks related to the public-facing functionality
+     * of the plugin.
+     *
+     * @since    1.0.0
+     * @access   private
+     */
     private function define_public_hooks() {
         // Instantiate the public class
         $this->plugin_public = new Wpfaevent_Public( $this->plugin_name, $this->version );
@@ -128,6 +238,11 @@ class Wpfaevent {
         // $this->loader->add_action( 'init', $this->legacy, 'setup_pages' );
     }
 
+    /**
+     * Run the loader to execute all of the hooks with WordPress.
+     *
+     * @since    1.0.0
+     */
     public function run() {
         $this->loader->run();
     }
