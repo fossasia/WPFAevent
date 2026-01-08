@@ -124,10 +124,12 @@ class Wpfaevent {
 	 */
 	private function define_cpt_hooks() {
 		// Register Event CPT
-		$this->loader->add_action( 'init', 'Wpfaevent_CPT_Event', 'register' );
+		$event_cpt = new Wpfaevent_CPT_Event();
+		$this->loader->add_action( 'init', $event_cpt, 'register' );
 
 		// Register Speaker CPT
-		$this->loader->add_action( 'init', 'Wpfaevent_CPT_Speaker', 'register' );
+		$speaker_cpt = new Wpfaevent_CPT_Speaker();
+		$this->loader->add_action( 'init', $speaker_cpt, 'register' );
 	}
 
 	/**
@@ -138,7 +140,8 @@ class Wpfaevent {
 	 */
 	private function define_taxonomy_hooks() {
 		// Register Event Taxonomies (Track and Tag)
-		$this->loader->add_action( 'init', 'Wpfaevent_Taxonomies', 'register' );
+		$taxonomies = new Wpfaevent_Taxonomies();
+		$this->loader->add_action( 'init', $taxonomies, 'register' );
 	}
 
 	/**
@@ -149,10 +152,12 @@ class Wpfaevent {
 	 */
 	private function define_meta_hooks() {
 		// Register Event Meta Fields
-		$this->loader->add_action( 'init', 'Wpfaevent_Meta_Event', 'register' );
+		$event_meta = new Wpfaevent_Meta_Event();
+		$this->loader->add_action( 'init', $event_meta, 'register' );
 
 		// Register Speaker Meta Fields
-		$this->loader->add_action( 'init', 'Wpfaevent_Meta_Speaker', 'register' );
+		$speaker_meta = new Wpfaevent_Meta_Speaker();
+		$this->loader->add_action( 'init', $speaker_meta, 'register' );
 	}
 
 	/**

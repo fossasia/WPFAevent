@@ -352,23 +352,23 @@ class Wpfaevent_Admin {
 		}
 
 		if ( isset( $_POST['wpfa_event_start_date'] ) ) {
-			update_post_meta( $post_id, 'wpfa_event_start_date', sanitize_text_field( $_POST['wpfa_event_start_date'] ) );
+			update_post_meta( $post_id, 'wpfa_event_start_date', wp_unslash( $_POST['wpfa_event_start_date'] ) );
 		}
 
 		if ( isset( $_POST['wpfa_event_end_date'] ) ) {
-			update_post_meta( $post_id, 'wpfa_event_end_date', sanitize_text_field( $_POST['wpfa_event_end_date'] ) );
+			update_post_meta( $post_id, 'wpfa_event_end_date', wp_unslash( $_POST['wpfa_event_end_date'] ) );
 		}
 
 		if ( isset( $_POST['wpfa_event_location'] ) ) {
-			update_post_meta( $post_id, 'wpfa_event_location', sanitize_text_field( $_POST['wpfa_event_location'] ) );
+			update_post_meta( $post_id, 'wpfa_event_location', wp_unslash( $_POST['wpfa_event_location'] ) );
 		}
 
 		if ( isset( $_POST['wpfa_event_url'] ) ) {
-			update_post_meta( $post_id, 'wpfa_event_url', esc_url_raw( $_POST['wpfa_event_url'] ) );
+			update_post_meta( $post_id, 'wpfa_event_url', wp_unslash( $_POST['wpfa_event_url'] ) );
 		}
 
 		if ( isset( $_POST['wpfa_event_speakers'] ) && is_array( $_POST['wpfa_event_speakers'] ) ) {
-			$speakers = array_map( 'absint', $_POST['wpfa_event_speakers'] );
+			$speakers = array_map( 'absint', wp_unslash( $_POST['wpfa_event_speakers'] ) );
 			update_post_meta( $post_id, 'wpfa_event_speakers', $speakers );
 		} else {
 			delete_post_meta( $post_id, 'wpfa_event_speakers' );
@@ -395,19 +395,19 @@ class Wpfaevent_Admin {
 		}
 
 		if ( isset( $_POST['wpfa_speaker_position'] ) ) {
-			update_post_meta( $post_id, 'wpfa_speaker_position', sanitize_text_field( $_POST['wpfa_speaker_position'] ) );
+			update_post_meta( $post_id, 'wpfa_speaker_position', wp_unslash( $_POST['wpfa_speaker_position'] ) );
 		}
 
 		if ( isset( $_POST['wpfa_speaker_organization'] ) ) {
-			update_post_meta( $post_id, 'wpfa_speaker_organization', sanitize_text_field( $_POST['wpfa_speaker_organization'] ) );
+			update_post_meta( $post_id, 'wpfa_speaker_organization', wp_unslash( $_POST['wpfa_speaker_organization'] ) );
 		}
 
 		if ( isset( $_POST['wpfa_speaker_bio'] ) ) {
-			update_post_meta( $post_id, 'wpfa_speaker_bio', wp_kses_post( $_POST['wpfa_speaker_bio'] ) );
+			update_post_meta( $post_id, 'wpfa_speaker_bio', wp_unslash( $_POST['wpfa_speaker_bio'] ) );
 		}
 
 		if ( isset( $_POST['wpfa_speaker_headshot_url'] ) ) {
-			update_post_meta( $post_id, 'wpfa_speaker_headshot_url', esc_url_raw( $_POST['wpfa_speaker_headshot_url'] ) );
+			update_post_meta( $post_id, 'wpfa_speaker_headshot_url', wp_unslash( $_POST['wpfa_speaker_headshot_url'] ) );
 		}
 	}
 }
