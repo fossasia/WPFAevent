@@ -29,7 +29,7 @@ class Wpfaevent_CPT_Event {
 	 * Registers the custom post type.
 	 */
 	public static function register() {
-		
+
 		$labels = array(
 			'name'                  => _x( 'Events', 'Post Type General Name', 'wpfaevent' ),
 			'singular_name'         => _x( 'Event', 'Post Type Singular Name', 'wpfaevent' ),

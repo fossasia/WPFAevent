@@ -44,14 +44,13 @@ class Wpfaevent_Admin {
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of this plugin.
-	 * @param      string    $version    The version of this plugin.
+	 * @param      string $plugin_name       The name of this plugin.
+	 * @param      string $version    The version of this plugin.
 	 */
 	public function __construct( $plugin_name, $version ) {
 
 		$this->plugin_name = $plugin_name;
-		$this->version = $version;
-
+		$this->version     = $version;
 	}
 
 	/**
@@ -102,7 +101,7 @@ class Wpfaevent_Admin {
 	 * Add settings link to plugin action links
 	 *
 	 * @since    1.0.0
-	 * @param    array    $links    Existing plugin action links
+	 * @param    array $links    Existing plugin action links
 	 * @return   array              Modified plugin action links
 	 */
 	public function add_settings_link( $links ) {
@@ -260,7 +259,14 @@ class Wpfaevent_Admin {
 				<th><label for="wpfa_event_speakers"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></label></th>
 				<td>
 					<?php
-					$speaker_posts = get_posts( array( 'post_type' => 'wpfa_speaker', 'posts_per_page' => -1, 'orderby' => 'title', 'order' => 'ASC' ) );
+					$speaker_posts = get_posts(
+						array(
+							'post_type'      => 'wpfa_speaker',
+							'posts_per_page' => -1,
+							'orderby'        => 'title',
+							'order'          => 'ASC',
+						)
+					);
 					if ( $speaker_posts ) {
 						echo '<select name="wpfa_event_speakers[]" id="wpfa_event_speakers" multiple style="width:100%;height:150px;">';
 						foreach ( $speaker_posts as $speaker ) {
@@ -306,11 +312,15 @@ class Wpfaevent_Admin {
 				<th><label for="wpfa_speaker_bio"><?php esc_html_e( 'Biography', 'wpfaevent' ); ?></label></th>
 				<td>
 					<?php
-					wp_editor( $bio, 'wpfa_speaker_bio', array(
-						'textarea_name' => 'wpfa_speaker_bio',
-						'textarea_rows' => 10,
-						'media_buttons' => false,
-					) );
+					wp_editor(
+						$bio,
+						'wpfa_speaker_bio',
+						array(
+							'textarea_name' => 'wpfa_speaker_bio',
+							'textarea_rows' => 10,
+							'media_buttons' => false,
+						)
+					);
 					?>
 				</td>
 			</tr>

@@ -29,7 +29,7 @@ class Wpfaevent_CPT_Speaker {
 	 * Registers the custom post type.
 	 */
 	public static function register() {
-		
+
 		$labels = array(
 			'name'                  => _x( 'Speakers', 'Post Type General Name', 'wpfaevent' ),
 			'singular_name'         => _x( 'Speaker', 'Post Type Singular Name', 'wpfaevent' ),

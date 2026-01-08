@@ -28,7 +28,7 @@ class Wpfaevent_Taxonomies {
 
 	/**
 	 * Registers the 'Track' taxonomy for events.
-	 * 
+	 *
 	 * Hierarchical taxonomy for organizing events by track
 	 * (e.g., "AI Track", "Web Development Track").
 	 */
@@ -74,7 +74,7 @@ class Wpfaevent_Taxonomies {
 
 	/**
 	 * Registers the 'Tag' taxonomy for events.
-	 * 
+	 *
 	 * Non-hierarchical taxonomy for tagging events
 	 * (e.g., "beginner-friendly", "hands-on", "keynote").
 	 */
