@@ -365,7 +365,7 @@ class Wpfaevent_Admin {
 		}
 
 		if ( isset( $_POST['wpfa_event_location'] ) ) {
-			update_post_meta( $post_id, 'wpfa_event_location', wp_unslash( $_POST['wpfa_event_location'] ) );
+			update_post_meta( $post_id, 'wpfa_event_location', sanitize_text_field( wp_unslash( $_POST['wpfa_event_location'] ) ) );
 		}
 
 		if ( isset( $_POST['wpfa_event_url'] ) ) {
