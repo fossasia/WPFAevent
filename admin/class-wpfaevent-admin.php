@@ -369,7 +369,7 @@ class Wpfaevent_Admin {
 		}
 
 		if ( isset( $_POST['wpfa_event_url'] ) ) {
-			update_post_meta( $post_id, 'wpfa_event_url', wp_unslash( $_POST['wpfa_event_url'] ) );
+			update_post_meta( $post_id, 'wpfa_event_url', esc_url_raw( wp_unslash( $_POST['wpfa_event_url'] ) ) );
 		}
 
 		if ( isset( $_POST['wpfa_event_speakers'] ) && is_array( $_POST['wpfa_event_speakers'] ) ) {
