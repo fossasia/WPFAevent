@@ -178,7 +178,7 @@ class Wpfaevent {
 		$this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
 
 		// Add settings link to plugins page
-        $plugin_basename = plugin_basename( dirname( __FILE__, 2 ) . '/wpfaevent.php' );
+		$plugin_basename = plugin_basename( dirname( __FILE__, 2 ) . '/wpfaevent.php' );
 		$this->loader->add_filter( 'plugin_action_links_' . $plugin_basename, $this->plugin_admin, 'add_settings_link' );
 
 		// Add meta boxes to CPTs
@@ -200,7 +200,7 @@ class Wpfaevent {
 		// $this->loader->add_action( 'admin_enqueue_scripts', $this->legacy, 'enqueue_admin_scripts' );
 
 		// Register the many AJAX handlers the legacy class provides
-        $ajax_methods = [
+		$ajax_methods = [
             'fossasia_manage_speakers' => 'ajax_manage_speakers',
             'fossasia_manage_sponsors' => 'ajax_manage_sponsors',
             'fossasia_manage_site_settings' => 'ajax_manage_site_settings',
