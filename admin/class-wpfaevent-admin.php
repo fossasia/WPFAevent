@@ -221,6 +221,11 @@ class Wpfaevent_Admin {
 			'normal',
 			'high'
 		);
+
+		// Remove the default Custom Fields meta box to avoid UI clutter
+		// since we have enabled 'custom-fields' support for REST API visibility.
+		remove_meta_box( 'postcustom', 'wpfa_event', 'normal' );
+		remove_meta_box( 'postcustom', 'wpfa_speaker', 'normal' );
 	}
 
 	/**

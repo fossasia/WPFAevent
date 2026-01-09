@@ -74,7 +74,7 @@ class Wpfaevent_CPT_Event {
 			'label'               => __( 'Event', 'wpfaevent' ),
 			'description'         => __( 'Event Custom Post Type', 'wpfaevent' ),
 			'labels'              => $labels,
-			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt', 'revisions' ),
+			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt', 'revisions', 'custom-fields' ),
 			'hierarchical'        => false,
 			'public'              => true,
 			'show_ui'             => true,
