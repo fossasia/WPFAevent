@@ -408,7 +408,7 @@ class Wpfaevent_Admin {
 		}
 
 		if ( isset( $_POST['wpfa_speaker_bio'] ) ) {
-			update_post_meta( $post_id, 'wpfa_speaker_bio', wp_unslash( $_POST['wpfa_speaker_bio'] ) );
+			update_post_meta( $post_id, 'wpfa_speaker_bio', wp_kses_post( wp_unslash( $_POST['wpfa_speaker_bio'] ) ) );
 		}
 
 		if ( isset( $_POST['wpfa_speaker_headshot_url'] ) ) {
