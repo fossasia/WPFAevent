@@ -81,6 +81,8 @@ class Wpfaevent_Taxonomies {
 	 *
 	 * Non-hierarchical taxonomy for tagging events
 	 * (e.g., "beginner-friendly", "hands-on", "keynote").
+	 *
+	 * @since 1.0.0
 	 */
 	private static function register_tag_taxonomy() {
 		$labels = array(
