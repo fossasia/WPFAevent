@@ -83,7 +83,15 @@ class Wpfaevent_Meta_Speaker {
 			)
 		);
 
-		// Related events (optional - for bidirectional relationship)
+		// Related events (for bidirectional relationship)
+		// TODO: Future PR - Implement bidirectional event-speaker relationship UI
+		// This meta field is registered for REST API support but has no admin UI yet.
+		// Action items for future implementation:
+		// 1. Add meta box to Speaker edit screen with event multi-select dropdown
+		// 2. Add save handler in Wpfaevent_Admin::save_speaker_meta()
+		// 3. Implement sync logic: when event assigns speakers, update speaker's events
+		// 4. Consider using post_relationships table instead of meta for better performance
+		// Related: wpfa_event_speakers in class-wpfaevent-meta-event.php
 		register_post_meta(
 			self::$post_type,
 			'wpfa_speaker_events',
