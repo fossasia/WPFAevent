@@ -190,7 +190,8 @@ class Wpfaevent {
 		// }
 
 		if ( ! $this->legacy ) {
-			return; }
+			return;
+		}
 
 		// Register admin-facing hooks via the loader so tests/tooling can inspect them
 		// $this->loader->add_action( 'admin_enqueue_scripts', $this->legacy, 'enqueue_admin_scripts' );
