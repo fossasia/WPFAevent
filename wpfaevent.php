@@ -81,7 +81,7 @@ function run_wpfaevent() {
 
 run_wpfaevent();
 
-// In wpfaevent.php (after other requires).
+// Register WP-CLI commands when running in CLI context.
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	require_once WPFAEVENT_PATH . 'includes/cli/class-wpfa-cli.php';
 	WP_CLI::add_command( 'wpfa seed', [ 'WPFA_CLI', 'seed' ] );
