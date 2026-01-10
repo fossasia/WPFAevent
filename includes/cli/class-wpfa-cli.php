@@ -4,8 +4,13 @@
  *
  * Usage:
  *   wp wpfa seed --minimal
- *   wp wpfa seed --from-json=wp-content/plugins/wpfa-event/assets/demo/minimal.json
+ *   wp wpfa seed --from-json=wp-content/plugins/WPFAevent/assets/demo/minimal.json
  */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 class WPFA_CLI {
 
 	/**
@@ -21,7 +26,7 @@ class WPFA_CLI {
 	 *
 	 * ## EXAMPLES
 	 *   wp wpfa seed --minimal
-	 *   wp wpfa seed --from-json=wp-content/plugins/wpfa-event/assets/demo/minimal.json
+	 *   wp wpfa seed --from-json=wp-content/plugins/WPFAevent/assets/demo/minimal.json
 	 *
 	 * @when after_wp_load
 	 *
@@ -30,7 +35,7 @@ class WPFA_CLI {
 	 */
 	public static function seed( $args, $assoc_args ) {
 		if ( isset( $assoc_args['from-json'] ) ) {
-			self::seed_from_json(plugin_dir_path( __FILE__ ) . $assoc_args['from-json'] );
+			self::seed_from_json( $assoc_args['from-json'] );
 			return;
 		}
 
@@ -53,9 +58,9 @@ class WPFA_CLI {
 				'post_title'   => 'Alex Example',
 				'post_content' => 'Open source contributor and community speaker.',
 				'meta'         => [
-					'wpfa_speaker_org'      => 'FOSSASIA',
-					'wpfa_speaker_position' => 'Developer Advocate',
-					'wpfa_speaker_photo'    => $placeholder,
+					'wpfa_speaker_organization' => 'FOSSASIA',
+					'wpfa_speaker_position'     => 'Developer Advocate',
+					'wpfa_speaker_headshot_url' => $placeholder,
 				],
 				'slug'         => 'alex-example',
 			],
@@ -63,9 +68,9 @@ class WPFA_CLI {
 				'post_title'   => 'Bao Nguyen',
 				'post_content' => 'Engineer focusing on event platforms and accessibility.',
 				'meta'         => [
-					'wpfa_speaker_org'      => 'Eventyay',
-					'wpfa_speaker_position' => 'Software Engineer',
-					'wpfa_speaker_photo'    => $placeholder,
+					'wpfa_speaker_organization' => 'Eventyay',
+					'wpfa_speaker_position'     => 'Software Engineer',
+					'wpfa_speaker_headshot_url' => $placeholder,
 				],
 				'slug'         => 'bao-nguyen',
 			],
@@ -120,6 +125,11 @@ class WPFA_CLI {
 
 	/**
 	 * Seed from JSON file.
+	 * JSON format example:
+	 * {
+	 *   "speakers": [{ "title":"...", "content":"...", "slug":"...", "org":"...", "position":"...", "photo":"..." }],
+	 *   "events":   [{ "title":"...", "content":"...", "slug":"...", "start_date":"YYYY-MM-DD", "end_date":"YYYY-MM-DD", "location":"...", "url":"...", "speakers":["slug-1","slug-2"] }]
+	 * }
 	 *
 	 * @param string $path
 	 */
@@ -141,17 +151,27 @@ class WPFA_CLI {
 		$slug_to_id = [];
 		if ( ! empty( $data['speakers'] ) && is_array( $data['speakers'] ) ) {
 			foreach ( $data['speakers'] as $s ) {
-				$slug   = sanitize_title( $s['slug'] ?? $s['title'] ?? wp_generate_uuid4() );
-				$title  = sanitize_text_field( $s['title'] ?? 'Speaker' );
+				$slug    = sanitize_title( $s['slug'] ?? $s['title'] ?? wp_generate_uuid4() );
+				$title   = sanitize_text_field( $s['title'] ?? 'Speaker' );
 				$content = wp_kses_post( $s['content'] ?? '' );
 
 				$meta = [
-					'wpfa_speaker_org'      => isset( $s['org'] ) ? sanitize_text_field( $s['org'] ) : '',
-					'wpfa_speaker_position' => isset( $s['position'] ) ? sanitize_text_field( $s['position'] ) : '',
-					'wpfa_speaker_photo'    => isset( $s['photo'] ) ? esc_url_raw( $s['photo'] ) : 'https://via.placeholder.com/300x300.png?text=Speaker',
+					'wpfa_speaker_organization' => isset( $s['org'] ) ? sanitize_text_field( $s['org'] ) : '',
+					'wpfa_speaker_position'     => isset( $s['position'] ) ? sanitize_text_field( $s['position'] ) : '',
+					'wpfa_speaker_headshot_url' => isset( $s['photo'] ) ? esc_url_raw( $s['photo'] ) : 'https://via.placeholder.com/300x300.png?text=Speaker',
 				];
 
-				$id = self::upsert_post_by_slug( 'wpfa_speaker', $slug, [ 'post_title' => $title, 'post_content' => $content, 'post_status'  => 'publish', 'post_type' => 'wpfa_speaker', ], $meta );
+				$id = self::upsert_post_by_slug(
+					'wpfa_speaker',
+					$slug,
+					[
+						'post_title'   => $title,
+						'post_content' => $content,
+						'post_status'  => 'publish',
+						'post_type'    => 'wpfa_speaker',
+					],
+					$meta
+				);
 				$slug_to_id[ $slug ] = $id;
 			}
 		}
@@ -170,7 +190,17 @@ class WPFA_CLI {
 					'wpfa_event_url'        => isset( $e['url'] ) ? esc_url_raw( $e['url'] ) : '',
 				];
 
-				$event_id = self::upsert_post_by_slug( 'wpfa_event', $slug, [ 'post_title' => $title, 'post_content' => $content, 'post_status' => 'publish', 'post_type' => 'wpfa_event', ], $meta );
+				$event_id = self::upsert_post_by_slug(
+					'wpfa_event',
+					$slug,
+					[
+						'post_title'   => $title,
+						'post_content' => $content,
+						'post_status'  => 'publish',
+						'post_type'    => 'wpfa_event',
+					],
+					$meta
+				);
 
 				$event_speaker_slugs = ! empty( $e['speakers'] ) && is_array( $e['speakers'] ) ? $e['speakers'] : [];
 				$speaker_ids         = array_values( array_intersect_key( $slug_to_id, array_flip( $event_speaker_slugs ) ) );
@@ -184,11 +214,18 @@ class WPFA_CLI {
 
 	/**
 	 * Upsert by slug: create the post if not found; otherwise update meta.
+	 *
+	 * @param string $post_type
+	 * @param string $slug
+	 * @param array  $postarr
+	 * @param array  $meta
+	 * @return int post ID
 	 */
 	private static function upsert_post_by_slug( $post_type, $slug, $postarr, $meta ) {
 		$existing = get_page_by_path( $slug, OBJECT, $post_type );
 		if ( $existing ) {
 			$post_id = $existing->ID;
+			// Update content/title if changed.
 			$postarr['ID'] = $post_id;
 			wp_update_post( $postarr );
 		} else {
@@ -201,6 +238,7 @@ class WPFA_CLI {
 			return 0;
 		}
 
+		// Tag as seeded and update meta fields.
 		update_post_meta( $post_id, '_wpfa_seeded', 1 );
 		if ( is_array( $meta ) ) {
 			foreach ( $meta as $k => $v ) {
@@ -212,6 +250,10 @@ class WPFA_CLI {
 
 	/**
 	 * Sync event <-> speakers relationships.
+	 *
+	 * @param int   $event_id
+	 * @param array $speaker_ids
+	 * @return void
 	 */
 	private static function sync_relationships( $event_id, $speaker_ids ) {
 		$event_id    = absint( $event_id );
@@ -221,10 +263,12 @@ class WPFA_CLI {
 			return;
 		}
 
+		// Update event side.
 		$current = (array) get_post_meta( $event_id, 'wpfa_event_speakers', true );
 		$new     = array_values( array_unique( array_merge( $current, $speaker_ids ) ) );
 		update_post_meta( $event_id, 'wpfa_event_speakers', $new );
 
+		// Update each speaker side.
 		foreach ( $speaker_ids as $sid ) {
 			$cur = (array) get_post_meta( $sid, 'wpfa_speaker_events', true );
 			if ( ! in_array( $event_id, $cur, true ) ) {
