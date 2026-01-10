@@ -105,6 +105,7 @@ class Wpfaevent_Meta_Speaker {
 	/**
 	 * Sanitizes an array of event IDs.
 	 *
+	 * @since 1.0.0
 	 * @param array $event_ids Array of event post IDs.
 	 * @return array Sanitized array of integers.
 	 */
