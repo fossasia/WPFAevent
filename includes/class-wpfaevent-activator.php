@@ -58,6 +58,12 @@ class Wpfaevent_Activator {
 		}
 
 		// Event capabilities
+		// TODO: Future PR - Review capability list alignment with CPT registration
+		// Currently granting extended capabilities (delete_*, edit_private_*, etc.)
+		// that are auto-derived by map_meta_cap. Consider either:
+		// 1. Explicitly defining all capabilities in CPT registration, OR
+		// 2. Only granting base capabilities defined in CPT
+		// Reference: https://developer.wordpress.org/plugins/users/roles-and-capabilities/
 		$event_caps = array(
 			'edit_event',
 			'read_event',
@@ -79,6 +85,7 @@ class Wpfaevent_Activator {
 		}
 
 		// Speaker capabilities
+		// TODO: Same capability review needed for speakers (see event_caps above)
 		$speaker_caps = array(
 			'edit_speaker',
 			'read_speaker',
