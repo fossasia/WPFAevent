@@ -1,6 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-	exit; }
+	exit;
+}
 /**
  * The core plugin class.
  *
