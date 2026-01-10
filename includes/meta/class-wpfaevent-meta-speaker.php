@@ -27,6 +27,8 @@ class Wpfaevent_Meta_Speaker {
 
 	/**
 	 * Registers all speaker meta fields.
+	 *
+	 * @since 1.0.0
 	 */
 	public static function register() {
 		// Speaker position/title

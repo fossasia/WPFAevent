@@ -27,6 +27,8 @@ class Wpfaevent_CPT_Speaker {
 
 	/**
 	 * Registers the custom post type.
+	 *
+	 * @since 1.0.0
 	 */
 	public static function register() {
 

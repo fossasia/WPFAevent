@@ -20,6 +20,8 @@ class Wpfaevent_Taxonomies {
 
 	/**
 	 * Registers all taxonomies.
+	 *
+	 * @since 1.0.0
 	 */
 	public static function register() {
 		self::register_track_taxonomy();
@@ -31,6 +33,8 @@ class Wpfaevent_Taxonomies {
 	 *
 	 * Hierarchical taxonomy for organizing events by track
 	 * (e.g., "AI Track", "Web Development Track").
+	 *
+	 * @since 1.0.0
 	 */
 	private static function register_track_taxonomy() {
 		$labels = array(
