@@ -72,7 +72,7 @@ class Wpfaevent_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( dirname( __FILE__ ) ) . 'admin/css/wpfaevent-admin.css', array(), $this->version, 'all' );
+		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __DIR__ ) . 'admin/css/wpfaevent-admin.css', array(), $this->version, 'all' );
 	}
 
 	/**
@@ -264,7 +264,7 @@ class Wpfaevent_Admin {
 				<th><label for="wpfa_event_speakers"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></label></th>
 				<td>
 					<?php
-					$speaker_posts = get_posts(
+					$speaker_ids = get_posts(
 						array(
 							'post_type'      => 'wpfa_speaker',
 							'posts_per_page' => -1,
@@ -274,18 +274,21 @@ class Wpfaevent_Admin {
 							'no_found_rows'  => true,
 						)
 					);
-					if ( $speaker_posts ) {
-						echo '<select name="wpfa_event_speakers[]" id="wpfa_event_speakers" multiple style="width:100%;height:150px;">';
-						foreach ( $speaker_posts as $speaker_id ) {
-							$selected = is_array( $speakers ) && in_array( $speaker_id, $speakers, true ) ? 'selected' : '';
-							echo '<option value="' . esc_attr( $speaker_id ) . '" ' . $selected . '>' . esc_html( get_the_title( $speaker_id ) ) . '</option>';
-						}
-						echo '</select>';
-						echo '<p class="description">' . esc_html__( 'Hold Ctrl (Cmd on Mac) to select multiple speakers.', 'wpfaevent' ) . '</p>';
-					} else {
-						echo '<p>' . esc_html__( 'No speakers found. Create speakers first.', 'wpfaevent' ) . '</p>';
-					}
-					?>
+					if ( $speaker_ids ) :
+						?>
+						<select name="wpfa_event_speakers[]" id="wpfa_event_speakers" multiple class="wpfaevent-speakers-select">
+							<?php foreach ( $speaker_ids as $speaker_id ) : ?>
+								<option value="<?php echo esc_attr( $speaker_id ); ?>" <?php selected( is_array( $speakers ) && in_array( $speaker_id, $speakers, true ) ); ?>>
+									<?php echo esc_html( get_the_title( $speaker_id ) ); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+						<p class="description">
+							<?php esc_html_e( 'Hold Ctrl (Cmd on Mac) to select multiple speakers.', 'wpfaevent' ); ?>
+						</p>
+					<?php else : ?>
+						<p><?php esc_html_e( 'No speakers found. Create speakers first.', 'wpfaevent' ); ?></p>
+					<?php endif; ?>
 				</td>
 			</tr>
 		</table>
