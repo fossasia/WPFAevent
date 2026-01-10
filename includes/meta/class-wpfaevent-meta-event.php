@@ -27,6 +27,8 @@ class Wpfaevent_Meta_Event {
 
 	/**
 	 * Registers all event meta fields.
+	 *
+	 * @since 1.0.0
 	 */
 	public static function register() {
 		// Event date fields
