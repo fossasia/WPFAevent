@@ -270,6 +270,8 @@ class Wpfaevent_Admin {
 							'posts_per_page' => -1,
 							'orderby'        => 'title',
 							'order'          => 'ASC',
+							'fields'         => 'ids',
+							'no_found_rows'  => true,
 						)
 					);
 					if ( $speaker_posts ) {
