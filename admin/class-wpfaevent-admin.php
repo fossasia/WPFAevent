@@ -344,7 +344,7 @@ class Wpfaevent_Admin {
 	 * @param int $post_id The post ID.
 	 */
 	public function save_event_meta( $post_id ) {
-		if ( ! isset( $_POST['wpfa_event_meta_nonce'] ) || ! wp_verify_nonce( $_POST['wpfa_event_meta_nonce'], 'wpfa_event_meta_nonce' ) ) {
+		if ( ! isset( $_POST['wpfa_event_meta_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['wpfa_event_meta_nonce'] ), 'wpfa_event_meta_nonce' ) ) {
 			return;
 		}
 
@@ -387,7 +387,7 @@ class Wpfaevent_Admin {
 	 * @param int $post_id The post ID.
 	 */
 	public function save_speaker_meta( $post_id ) {
-		if ( ! isset( $_POST['wpfa_speaker_meta_nonce'] ) || ! wp_verify_nonce( $_POST['wpfa_speaker_meta_nonce'], 'wpfa_speaker_meta_nonce' ) ) {
+		if ( ! isset( $_POST['wpfa_speaker_meta_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['wpfa_speaker_meta_nonce'] ), 'wpfa_speaker_meta_nonce' ) ) {
 			return;
 		}
 
