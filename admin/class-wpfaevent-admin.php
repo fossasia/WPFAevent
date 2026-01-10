@@ -276,9 +276,9 @@ class Wpfaevent_Admin {
 					);
 					if ( $speaker_posts ) {
 						echo '<select name="wpfa_event_speakers[]" id="wpfa_event_speakers" multiple style="width:100%;height:150px;">';
-						foreach ( $speaker_posts as $speaker ) {
-							$selected = is_array( $speakers ) && in_array( $speaker->ID, $speakers, true ) ? 'selected' : '';
-							echo '<option value="' . esc_attr( $speaker->ID ) . '" ' . $selected . '>' . esc_html( $speaker->post_title ) . '</option>';
+						foreach ( $speaker_posts as $speaker_id ) {
+							$selected = is_array( $speakers ) && in_array( $speaker_id, $speakers, true ) ? 'selected' : '';
+							echo '<option value="' . esc_attr( $speaker_id ) . '" ' . $selected . '>' . esc_html( get_the_title( $speaker_id ) ) . '</option>';
 						}
 						echo '</select>';
 						echo '<p class="description">' . esc_html__( 'Hold Ctrl (Cmd on Mac) to select multiple speakers.', 'wpfaevent' ) . '</p>';
