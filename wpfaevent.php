@@ -37,7 +37,7 @@ if ( ! defined( 'WPINC' ) ) {
 // Define constants
 define( 'WPFAEVENT_VERSION', '1.0.0' );
 define( 'WPFAEVENT_PATH', plugin_dir_path( __FILE__ ) );
-define( 'WPFAEVENT_URL',  plugin_dir_url( __FILE__ ) );
+define( 'WPFAEVENT_URL', plugin_dir_url( __FILE__ ) );
 
 // Requires
 require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-i18n.php';
@@ -66,17 +66,23 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent.php';
  */
 function run_wpfaevent() {
 
-    // Load translations
-    if ( class_exists( 'Wpfaevent_i18n' ) ) {
-        $i18n = new Wpfaevent_i18n();
-        $i18n->load_plugin_textdomain();
-    }
+	// Load translations
+	if ( class_exists( 'Wpfaevent_i18n' ) ) {
+		$i18n = new Wpfaevent_i18n();
+		$i18n->load_plugin_textdomain();
+	}
 
-    // Run the core plugin
-    if ( class_exists( 'Wpfaevent' ) ) {
-        $plugin = new Wpfaevent();
-        $plugin->run();
-    }
+	// Run the core plugin
+	if ( class_exists( 'Wpfaevent' ) ) {
+		$plugin = new Wpfaevent();
+		$plugin->run();
+	}
 }
 
 run_wpfaevent();
+
+// Register WP-CLI commands when running in CLI context.
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	require_once WPFAEVENT_PATH . 'includes/cli/class-wpfa-cli.php';
+	WP_CLI::add_command( 'wpfa seed', [ 'WPFA_CLI', 'seed' ] );
+}
