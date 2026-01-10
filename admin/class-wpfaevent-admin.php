@@ -373,7 +373,7 @@ class Wpfaevent_Admin {
 		}
 
 		if ( isset( $_POST['wpfa_event_speakers'] ) && is_array( $_POST['wpfa_event_speakers'] ) ) {
-			$speakers = array_map( 'absint', sanitize_text_field( wp_unslash( $_POST['wpfa_event_speakers'] ) ) );
+			$speakers = array_map( 'absint', wp_unslash( $_POST['wpfa_event_speakers'] ) );
 			update_post_meta( $post_id, 'wpfa_event_speakers', $speakers );
 		} else {
 			delete_post_meta( $post_id, 'wpfa_event_speakers' );
