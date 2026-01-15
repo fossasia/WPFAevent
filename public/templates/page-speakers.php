@@ -18,7 +18,7 @@ get_header();
  * @param int $per_page Number of speakers per page. Default 24.
  */
 $per_page = max( 1, (int) apply_filters( 'wpfa_speakers_per_page', 24 ) );
-$paged    = max( 1, (int) get_query_var( 'paged' ) ?: (int) wp_unslash( $_GET['wpfa_page'] ?? 1 ) );
+$paged    = max( 1, (int) get_query_var( 'paged', 1 ) );
 
 // Optional search
 $search = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
@@ -58,11 +58,29 @@ endforeach;
 		if ( $total > 1 ) :
 			echo '<nav class="wpfa-pagination" aria-label="' . esc_attr__( 'Speakers pagination', 'wpfaevent' ) . '">';
 			for ( $i = 1; $i <= $total; $i++ ) {
-			$link = esc_url( add_query_arg( ['wpfa_page' => $i], get_permalink() ) );
-				printf( '<a class="wpfa-page %s" href="%s">%d</a>', $i === $paged ? 'is-current' : '', $link, $i );
+				// Preserve search parameter in pagination
+				$args = [ 'paged' => $i ];
+				if ( $search ) {
+					$args['q'] = $search;
+				}
+				$link = esc_url( add_query_arg( $args, get_permalink() ) );
+
+				// Current page as span with aria-current, others as links
+				if ( $i === $paged ) {
+					printf(
+						'<span class="wpfa-page is-current" aria-current="page">%d</span>',
+						$i
+					);
+				} else {
+					printf(
+						'<a class="wpfa-page" href="%s">%d</a>',
+						$link,
+						$i
+					);
+				}
 			}
 			echo '</nav>';
-	endif;
+		endif;
 		?>
 
 	<?php else : ?>
