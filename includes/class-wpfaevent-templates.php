@@ -1,5 +1,12 @@
 <?php
 /**
+ * Prevent direct access to this file.
+ */
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
  * Registers plugin-provided page templates and loads them.
  */
 class WPFA_Templates {
