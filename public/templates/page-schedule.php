@@ -21,6 +21,7 @@
  * @since      1.0.0
  * @author     FOSSASIA <contact@fossasia.org>
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; }
 get_header();
@@ -41,21 +42,47 @@ $args   = array(
 $q      = new WP_Query( $args );
 $groups = array();
 foreach ( $q->posts as $eid ) {
-	$d                       = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_start_date', true ) );
-	$groups[ $d ?: 'TBD' ][] = $eid;
+	$d = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_start_date', true ) );
+
+	// Normalize date for proper chronological sorting
+	if ( $d ) {
+		// Convert to timestamp for sorting, keep original for display
+		$timestamp = strtotime( $d );
+		if ( $timestamp !== false ) {
+			$sort_key     = $timestamp;
+			$display_date = $d;
+		} else {
+			// Invalid date format - treat as TBD
+			$sort_key     = PHP_INT_MAX;
+			$display_date = 'TBD';
+		}
+	} else {
+		// No date - treat as TBD
+		$sort_key     = PHP_INT_MAX;
+		$display_date = 'TBD';
+	}
+
+	$groups[ $sort_key ] = array(
+		'date'   => $display_date,
+		'events' => isset( $groups[ $sort_key ]['events'] )
+			? array_merge( $groups[ $sort_key ]['events'], array( $eid ) )
+			: array( $eid ),
+	);
 }
-ksort( $groups );
+
+// Sort by timestamp (chronological order)
+ksort( $groups, SORT_NUMERIC );
 ?>
 <main class="wpfa-schedule">
 	<h1><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></h1>
 	<?php
 	if ( $groups ) :
-		foreach ( $groups as $date => $ids ) :
+		foreach ( $groups as $group ) :
 			?>
-		<h2 class="wpfa-schedule-date"><?php echo esc_html( $date ); ?></h2>
-		<ul class="wpfa-schedule-items">
+			<h2 class="wpfa-schedule-date"><?php echo esc_html( $group['date'] ); ?></h2>
+			<ul class="wpfa-schedule-items">
 					<?php
-					foreach ( $ids as $eid ) :
+					foreach ( $group['events'] as $eid ) :
 						$title = get_the_title( $eid );
 						$loc   = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_location', true ) );
 						$url   = get_permalink( $eid );
