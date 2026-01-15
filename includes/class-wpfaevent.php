@@ -188,6 +188,9 @@ class Wpfaevent {
 		$this->loader->add_action( 'save_post_wpfa_event', $this->plugin_admin, 'save_event_meta' );
 		$this->loader->add_action( 'save_post_wpfa_speaker', $this->plugin_admin, 'save_speaker_meta' );
 
+		// Show notice for block theme users
+		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'maybe_show_block_theme_notice' );
+
 		// Instantiate the legacy plugin and keep a reference so we can reuse its methods
 		// if ( class_exists( 'Wpfaevent_Landing' ) ) {
 		// $this->legacy = new Wpfaevent_Landing();
@@ -238,9 +241,6 @@ class Wpfaevent {
 		// Register public-specific stylesheet
 		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
 
-		// Hook the block theme notice
-		$this->loader->add_action( 'admin_notices', $this, 'maybe_show_block_theme_notice' );
-
 		// if ( ! $this->legacy ) { return; }
 
 		// Template registration and inclusion
@@ -256,23 +256,5 @@ class Wpfaevent {
 	 */
 	public function run() {
 		$this->loader->run();
-	}
-
-	/**
-	 * Show notice when block themes are active.
-	 *
-	 * @since 1.0.0
-	 */
-	public function maybe_show_block_theme_notice() {
-		if ( ! function_exists( 'wp_is_block_theme' ) || ! wp_is_block_theme() ) {
-			return;
-		}
-
-		echo '<div class="notice notice-warning"><p>';
-		echo esc_html__(
-			'WPFA Event page templates require a classic theme. Block themes (e.g., Twenty Twenty-Five) do not support PHP page templates.',
-			'wpfaevent'
-		);
-		echo '</p></div>';
 	}
 }
