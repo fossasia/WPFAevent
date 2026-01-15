@@ -62,12 +62,15 @@ $cta_label = apply_filters( 'wpfa_landing_cta_label', __( 'Explore Events', 'wpf
  * @since 1.0.0
  * @param array $logos Array of image URLs for partner logos.
  */
+$plugin_root_url = plugin_dir_url( dirname( __DIR__, 1 ) );
+$default_logo    = $plugin_root_url . 'assets/images/logo.png';
+
 $logos = (array) apply_filters(
 	'wpfa_landing_partner_logos',
 	[
-		'https://via.placeholder.com/120x60?text=Partner+1',
-		'https://via.placeholder.com/120x60?text=Partner+2',
-		'https://via.placeholder.com/120x60?text=Partner+3',
+		$default_logo,
+		$default_logo,
+		$default_logo,
 	]
 );
 ?>
@@ -78,12 +81,14 @@ $logos = (array) apply_filters(
 		<p><a class="wpfa-btn" href="<?php echo esc_url( $cta_url ); ?>"><?php echo esc_html( $cta_label ); ?></a></p>
 	</section>
 
-	<section class="wpfa-logo-strip" aria-label="<?php esc_attr_e( 'Partners', 'wpfaevent' ); ?>">
-		<ul>
-			<?php foreach ( $logos as $logo ) : ?>
-				<li><img src="<?php echo esc_url( $logo ); ?>" alt="" loading="lazy" /></li>
-			<?php endforeach; ?>
-		</ul>
-	</section>
+	<?php if ( ! empty( $logos ) ) : ?>
+		<section class="wpfa-logo-strip" aria-label="<?php esc_attr_e( 'Partners', 'wpfaevent' ); ?>">
+			<ul>
+				<?php foreach ( $logos as $logo ) : ?>
+					<li><img src="<?php echo esc_url( $logo ); ?>" alt="" loading="lazy" /></li>
+				<?php endforeach; ?>
+			</ul>
+		</section>
+	<?php endif; ?>
 </main>
 <?php get_footer(); ?>
