@@ -188,6 +188,9 @@ class Wpfaevent {
 		$this->loader->add_action( 'save_post_wpfa_event', $this->plugin_admin, 'save_event_meta' );
 		$this->loader->add_action( 'save_post_wpfa_speaker', $this->plugin_admin, 'save_speaker_meta' );
 
+		// Show notice for block theme users
+		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'maybe_show_block_theme_notice' );
+
 		// Instantiate the legacy plugin and keep a reference so we can reuse its methods
 		// if ( class_exists( 'Wpfaevent_Landing' ) ) {
 		// $this->legacy = new Wpfaevent_Landing();
@@ -202,20 +205,20 @@ class Wpfaevent {
 
 		// Register the many AJAX handlers the legacy class provides
 		$ajax_methods = [
-			'fossasia_manage_speakers' => 'ajax_manage_speakers',
-			'fossasia_manage_sponsors' => 'ajax_manage_sponsors',
-			'fossasia_manage_site_settings' => 'ajax_manage_site_settings',
-			'fossasia_manage_sections' => 'ajax_manage_sections',
-			'fossasia_manage_schedule' => 'ajax_manage_schedule',
-			'fossasia_manage_navigation' => 'ajax_manage_navigation',
-			'fossasia_sync_eventyay' => 'ajax_sync_eventyay',
-			'fossasia_create_event_page' => 'ajax_create_event_page',
-			'fossasia_edit_event_page' => 'ajax_edit_event_page',
-			'fossasia_delete_event_page' => 'ajax_delete_event_page',
+			'fossasia_manage_speakers'       => 'ajax_manage_speakers',
+			'fossasia_manage_sponsors'       => 'ajax_manage_sponsors',
+			'fossasia_manage_site_settings'  => 'ajax_manage_site_settings',
+			'fossasia_manage_sections'       => 'ajax_manage_sections',
+			'fossasia_manage_schedule'       => 'ajax_manage_schedule',
+			'fossasia_manage_navigation'     => 'ajax_manage_navigation',
+			'fossasia_sync_eventyay'         => 'ajax_sync_eventyay',
+			'fossasia_create_event_page'     => 'ajax_create_event_page',
+			'fossasia_edit_event_page'       => 'ajax_edit_event_page',
+			'fossasia_delete_event_page'     => 'ajax_delete_event_page',
 			'fossasia_manage_theme_settings' => 'ajax_manage_theme_settings',
-			'fossasia_import_sample_data' => 'ajax_import_sample_data',
-			'fossasia_add_sample_event' => 'ajax_add_sample_event',
-			'fossasia_manage_coc' => 'ajax_manage_coc',
+			'fossasia_import_sample_data'    => 'ajax_import_sample_data',
+			'fossasia_add_sample_event'      => 'ajax_add_sample_event',
+			'fossasia_manage_coc'            => 'ajax_manage_coc',
 		];
 
 		foreach ( $ajax_methods as $action => $method ) {

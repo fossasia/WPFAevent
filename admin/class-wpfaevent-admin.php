@@ -420,4 +420,22 @@ class Wpfaevent_Admin {
 			update_post_meta( $post_id, 'wpfa_speaker_headshot_url', esc_url_raw( wp_unslash( $_POST['wpfa_speaker_headshot_url'] ) ) );
 		}
 	}
+
+	/**
+	 * Show notice when block themes are active.
+	 *
+	 * @since 1.0.0
+	 */
+	public function maybe_show_block_theme_notice() {
+		if ( ! function_exists( 'wp_is_block_theme' ) || ! wp_is_block_theme() ) {
+			return;
+		}
+
+		echo '<div class="notice notice-warning is-dismissible"><p>';
+		echo esc_html__(
+			'WPFA Event page templates require a classic theme. Block themes (e.g., Twenty Twenty-Five) do not support PHP page templates.',
+			'wpfaevent'
+		);
+		echo '</p></div>';
+	}
 }
