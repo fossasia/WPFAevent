@@ -3,20 +3,20 @@
    ========================================================================== */
 
 /* Page Hero */
-.page-hero {
+.wpfaevent .page-hero {
 	text-align: center;
 	padding: 60px 20px;
 	background: #fff;
 	margin-bottom: 30px;
 }
 
-.page-hero h1 {
+.wpfaevent .page-hero h1 {
 	margin: 0 0 10px;
 	font-size: 2.5rem;
 	color: var(--brand, #D51007);
 }
 
-.page-hero p {
+.wpfaevent .page-hero p {
 	color: var(--muted, #666);
 	font-size: 1.1rem;
 	max-width: 70ch;
@@ -24,14 +24,14 @@
 }
 
 /* Main Content */
-.main-content {
+.wpfaevent .main-content {
 	background: #fff;
 	padding: 30px 40px;
 	border-radius: var(--card-radius, 8px);
 	box-shadow: var(--shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
 }
 
-.main-content h2 {
+.wpfaevent .main-content h2 {
 	font-size: 1.8rem;
 	color: var(--brand, #D51007);
 	margin-top: 2.5rem;
@@ -39,33 +39,33 @@
 	padding-bottom: 10px;
 }
 
-.main-content h2:first-of-type {
+.wpfaevent .main-content h2:first-of-type {
 	margin-top: 0;
 }
 
-.main-content h3 {
+.wpfaevent .main-content h3 {
 	font-size: 1.4rem;
 	color: #222;
 	margin-top: 2rem;
 	margin-bottom: 1rem;
 }
 
-.main-content p {
+.wpfaevent .main-content p {
 	line-height: 1.7;
 	color: #333;
 	margin-bottom: 1em;
 	margin-top: 1rem;
 }
 
-.main-content li {
+.wpfaevent .main-content li {
 	line-height: 1.7;
 	color: #333;
 }
 
-.main-content ul {
-	padding-left: 0px;
+.wpfaevent .main-content ul {
+	padding-left: 0;
 }
 
-.main-content strong {
+.wpfaevent .main-content strong {
 	color: #111;
 }

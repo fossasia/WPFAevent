@@ -1,8 +1,7 @@
 /* ==========================================================================
    Navigation
    ========================================================================== */
-
-.nav {
+.wpfaevent .nav {
 	position: sticky;
 	top: 0;
 	background: rgba(255, 255, 255, 0.9);
@@ -11,20 +10,20 @@
 	z-index: 60;
 }
 
-.nav-inner {
+.wpfaevent .nav-inner {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	padding: 14px 0;
 }
 
-.nav-links {
+.wpfaevent .nav-links {
 	display: flex;
 	gap: 0.6rem;
 	align-items: center;
 }
 
-.nav-links a {
+.wpfaevent .nav-links a {
 	padding: 0.4rem 0.6rem;
 	border-radius: 999px;
 	font-weight: 600;
@@ -32,17 +31,17 @@
 	font-size: 0.9rem;
 }
 
-.nav-links a:hover {
+.wpfaevent .nav-links a:hover {
 	background: #00000006;
 }
 
 /* Admin Bar Adjustment */
-.admin-bar .nav {
+.admin-bar .wpfaevent .nav {
 	top: 32px;
 }
 
 @media (max-width: 782px) {
-	.admin-bar .nav {
+	.admin-bar .wpfaevent .nav {
 		top: 46px;
 	}
 }
@@ -50,12 +49,11 @@
 /* ==========================================================================
    Nav Dropdown Styles (FUTURE USE)
    ========================================================================== */
-
-.nav-dropdown {
+.wpfaevent .nav-dropdown {
 	position: relative;
 }
 
-.nav-dropdown-toggle {
+.wpfaevent .nav-dropdown-toggle {
 	padding: 0.4rem 0.6rem;
 	border-radius: 999px;
 	font-weight: 600;
@@ -66,11 +64,11 @@
 	display: inline-block;
 }
 
-.nav-dropdown-toggle:hover {
+.wpfaevent .nav-dropdown-toggle:hover {
 	background: #00000006;
 }
 
-.nav-dropdown-content {
+.wpfaevent .nav-dropdown-content {
 	display: none;
 	position: absolute;
 	background-color: #f9f9f9;
@@ -82,7 +80,7 @@
 	left: 0;
 }
 
-.nav-dropdown-content a {
+.wpfaevent .nav-dropdown-content a {
 	color: black;
 	padding: 12px 16px;
 	text-decoration: none;
@@ -90,15 +88,15 @@
 	font-weight: 500;
 }
 
-.nav-dropdown-content a:hover {
+.wpfaevent .nav-dropdown-content a:hover {
 	background-color: #f1f1f1;
 }
 
-.nav-dropdown:hover .nav-dropdown-content {
+.wpfaevent .nav-dropdown:hover .nav-dropdown-content {
 	display: block;
 }
 
-.nav-links-main .nav-dropdown-content a {
+.wpfaevent .nav-links-main .nav-dropdown-content a {
 	padding: 0.4rem 0.6rem !important;
 	white-space: nowrap;
 }

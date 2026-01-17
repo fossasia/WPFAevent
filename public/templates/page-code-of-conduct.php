@@ -52,7 +52,7 @@ $content = trim( get_the_content() );
 		}
 	</style>
 </head>
-<body <?php body_class( 'wpfaevent-template' ); ?>>
+<body <?php body_class( 'wpfaevent' ); ?>>
 <?php wp_body_open(); ?>
 
 <div id="page" class="site">
