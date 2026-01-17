@@ -23,7 +23,9 @@
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit; }
+	exit;
+}
+
 get_header();
 
 /**
@@ -54,20 +56,27 @@ foreach ( $q->posts as $eid ) {
 		} else {
 			// Invalid date format - treat as TBD
 			$sort_key     = PHP_INT_MAX;
-			$display_date = 'TBD';
+			$display_date = __( 'TBD', 'wpfaevent' );
 		}
 	} else {
 		// No date - treat as TBD
 		$sort_key     = PHP_INT_MAX;
-		$display_date = 'TBD';
+		$display_date = __( 'TBD', 'wpfaevent' );
 	}
 
-	$groups[ $sort_key ] = array(
-		'date'   => $display_date,
-		'events' => isset( $groups[ $sort_key ]['events'] )
-			? array_merge( $groups[ $sort_key ]['events'], array( $eid ) )
-			: array( $eid ),
-	);
+	if ( ! isset( $groups[ $sort_key ] ) ) {
+		$groups[ $sort_key ] = [
+			'date' => $display_date,
+			'events' => [],
+		];
+	}
+	$groups[ $sort_key ]['events'][] = $eid;
+
+	// MVP note: sessions are not available yet.
+	// A future iteration may add a Session CPT and attach
+	// session IDs to each date group, e.g.:
+	// $groups[ $sort_key ]['sessions'][] = $session_id;
+
 }
 
 // Sort by timestamp (chronological order)
