@@ -1,8 +1,7 @@
 <?php
 /**
- * Code of Conduct Template - Header Partial
- *
- * Displays the navigation header for the Code of Conduct page.
+ * Shared Navigation Header Partial
+ * Displays the navigation header used across WPFA templates.
  *
  * @package    Wpfaevent
  * @subpackage Wpfaevent/public/partials
