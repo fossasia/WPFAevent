@@ -2,3 +2,44 @@
  * All of the CSS for your public-facing functionality should be
  * included in this file.
  */
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+
+/* Scope to plugin templates instead of global html/body */
+.wpfaevent-template {
+	margin: 0;
+	background: var(--bg, #f8f9fa);
+	color: var(--text, #0b0b0b);
+	font-family: Inter, system-ui, sans-serif;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+a {
+	color: var(--brand, #D51007);
+	text-decoration: none;
+}
+
+img {
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
+
+/* Logo */
+.site-logo {
+	height: 36px;
+	width: auto;
+}
+
+/* Container */
+.container {
+	width: 100%;
+	max-width: var(--container, 1200px);
+	margin: 0 auto;
+	padding: 24px;
+}

@@ -1,0 +1,104 @@
+/* ==========================================================================
+   Navigation
+   ========================================================================== */
+
+.nav {
+	position: sticky;
+	top: 0;
+	background: rgba(255, 255, 255, 0.9);
+	backdrop-filter: blur(6px) saturate(120%);
+	border-bottom: 2px solid #00000010;
+	z-index: 60;
+}
+
+.nav-inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 0;
+}
+
+.nav-links {
+	display: flex;
+	gap: 0.6rem;
+	align-items: center;
+}
+
+.nav-links a {
+	padding: 0.4rem 0.6rem;
+	border-radius: 999px;
+	font-weight: 600;
+	color: #222;
+	font-size: 0.9rem;
+}
+
+.nav-links a:hover {
+	background: #00000006;
+}
+
+/* Admin Bar Adjustment */
+.admin-bar .nav {
+	top: 32px;
+}
+
+@media (max-width: 782px) {
+	.admin-bar .nav {
+		top: 46px;
+	}
+}
+
+/* ==========================================================================
+   Nav Dropdown Styles (FUTURE USE)
+   ========================================================================== */
+
+.nav-dropdown {
+	position: relative;
+}
+
+.nav-dropdown-toggle {
+	padding: 0.4rem 0.6rem;
+	border-radius: 999px;
+	font-weight: 600;
+	color: #222;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	display: inline-block;
+}
+
+.nav-dropdown-toggle:hover {
+	background: #00000006;
+}
+
+.nav-dropdown-content {
+	display: none;
+	position: absolute;
+	background-color: #f9f9f9;
+	min-width: 160px;
+	box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+	z-index: 1;
+	border-radius: 8px;
+	overflow: hidden;
+	left: 0;
+}
+
+.nav-dropdown-content a {
+	color: black;
+	padding: 12px 16px;
+	text-decoration: none;
+	display: block;
+	font-weight: 500;
+}
+
+.nav-dropdown-content a:hover {
+	background-color: #f1f1f1;
+}
+
+.nav-dropdown:hover .nav-dropdown-content {
+	display: block;
+}
+
+.nav-links-main .nav-dropdown-content a {
+	padding: 0.4rem 0.6rem !important;
+	white-space: nowrap;
+}

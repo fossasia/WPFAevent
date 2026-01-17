@@ -44,14 +44,13 @@ class Wpfaevent_Public {
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of the plugin.
-	 * @param      string    $version    The version of this plugin.
+	 * @param      string $plugin_name       The name of the plugin.
+	 * @param      string $version    The version of this plugin.
 	 */
 	public function __construct( $plugin_name, $version ) {
 
 		$this->plugin_name = $plugin_name;
-		$this->version = $version;
-
+		$this->version     = $version;
 	}
 
 	/**
@@ -73,8 +72,63 @@ class Wpfaevent_Public {
 		 * class.
 		 */
 
+		// Base public styles (global, shared).
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/wpfaevent-public.css', array(), $this->version, 'all' );
 
+		// Navigation component (shared across templates)
+		wp_enqueue_style(
+			$this->plugin_name . '-navigation',
+			plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/components/navigation.css',
+			array( $this->plugin_name ),
+			$this->version,
+			'all'
+		);
+
+		// Template-specific styles.
+		if ( is_page_template( 'page-code-of-conduct.php' ) ) {
+			wp_enqueue_style(
+				$this->plugin_name . '-code-of-conduct',
+				plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/templates/code-of-conduct.css',
+				array(
+					$this->plugin_name,
+					$this->plugin_name . '-navigation',
+				),
+				$this->version,
+				'all'
+			);
+		}
+
+		/**
+		* ---------------------------------------------------------------------
+		* Template-specific styles (extension pattern)
+		* ---------------------------------------------------------------------
+		*
+		* When adding CSS for a new plugin-provided page template:
+		*
+		* 1. Create a template-specific stylesheet under:
+		*    public/css/templates/{template-name}.css
+		*
+		* 2. Conditionally enqueue it using is_page_template()
+		*    to avoid loading unnecessary CSS on other pages.
+		*
+		* Example:
+		*
+		* if ( is_page_template( 'page-speakers.php' ) ) {
+		*     wp_enqueue_style(
+		*         $this->plugin_name . '-speakers',
+		*         plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/templates/speakers.css',
+		*         array(
+		*             $this->plugin_name . '-public',
+		*             $this->plugin_name . '-navigation',
+		*         ),
+		*         $this->version,
+		*         'all'
+		*     );
+		* }
+		*
+		* This keeps base styles global, component styles reusable,
+		* and template styles scoped to their respective pages.
+		*/
 	}
 
 	/**
@@ -97,7 +151,5 @@ class Wpfaevent_Public {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-public.js', array( 'jquery' ), $this->version, false );
-
 	}
-
 }
