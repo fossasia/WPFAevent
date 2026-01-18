@@ -118,7 +118,7 @@ class Wpfaevent_Public {
 		*         $this->plugin_name . '-speakers',
 		*         plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/templates/speakers.css',
 		*         array(
-		*             $this->plugin_name . '-public',
+		*             $this->plugin_name,
 		*             $this->plugin_name . '-navigation',
 		*         ),
 		*         $this->version,
