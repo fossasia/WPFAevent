@@ -54,6 +54,31 @@ class Wpfaevent_Public {
 	}
 
 	/**
+	 * Check if current page is using a WPFA template.
+	 *
+	 * @since    1.0.0
+	 * @return   bool    True if WPFA template is active.
+	 */
+	private function is_wpfa_template() {
+		$wpfa_templates = array(
+			'page-code-of-conduct.php',
+			'page-events.php',
+			'page-past-events.php',
+			'page-schedule.php',
+			'page-speakers.php',
+			'page-landing.php',
+		);
+
+		foreach ( $wpfa_templates as $template ) {
+			if ( is_page_template( $template ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Register the stylesheets for the public-facing side of the site.
 	 *
 	 * @since    1.0.0
@@ -73,7 +98,18 @@ class Wpfaevent_Public {
 		 */
 
 		// Base public styles (global, shared).
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/wpfaevent-public.css', array(), $this->version, 'all' );
+		wp_enqueue_style(
+			$this->plugin_name,
+			plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/wpfaevent-public.css',
+			array(),
+			$this->version,
+			'all'
+		);
+
+		// Only load component/template styles when WPFA template is active
+		if ( ! $this->is_wpfa_template() ) {
+			return;
+		}
 
 		// Navigation component (shared across templates)
 		wp_enqueue_style(
