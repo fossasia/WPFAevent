@@ -62,7 +62,7 @@
 	color: #333;
 }
 
-.wpfaevent .main-content ul {
+.wpfaevent .main-content > ul {
 	padding-left: 0;
 }
 
