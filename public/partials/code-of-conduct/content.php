@@ -19,14 +19,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 $content = isset( $content ) ? $content : '';
 
 if ( $content ) {
-	// Remove wpautop to prevent wrapping block elements in <p> tags
-	remove_filter( 'the_content', 'wpautop' );
+	// Apply standard WordPress content filters.
+	$processed_content = apply_filters( 'the_content', $content );
 
-	// Display page content with WordPress filters
-	echo wp_kses_post( apply_filters( 'the_content', $content ) );
+	// For non-block content, ensure paragraphs are added locally without
+	// changing global filters. Block content (with <!-- wp: markers)
+	// should generally not be run through wpautop.
+	if ( false === strpos( $processed_content, '<!-- wp:' ) && false === strpos( $processed_content, '<!-- /wp:' ) ) {
+		$processed_content = wpautop( $processed_content );
+	}
 
-	// Re-add wpautop for other content
-	add_filter( 'the_content', 'wpautop' );
+	// Display page content safely.
+	echo wp_kses_post( $processed_content );
 } else {
 	// Display default content with filter for customization
 	$default_content = apply_filters(
