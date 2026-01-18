@@ -37,8 +37,12 @@ $text_color       = apply_filters( 'wpfa_text_color', $text_color );
 $site_logo_url    = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 $muted_color      = apply_filters( 'wpfa_muted_color', $muted_color );
 
-the_post();
-$content = trim( get_the_content() );
+if ( have_posts() ) {
+	the_post();
+	$content = trim( get_the_content() );
+} else {
+	$content = '';
+}
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
