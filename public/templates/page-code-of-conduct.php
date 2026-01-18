@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $brand_color      = get_option( 'wpfa_brand_color', '#D51007' );
 $background_color = get_option( 'wpfa_background_color', '#f8f9fa' );
 $text_color       = get_option( 'wpfa_text_color', '#0b0b0b' );
-$site_logo_url    = get_option( 'wpfa_site_logo_url', WPFAEVENT_URL . 'public/assets/images/logo.png' );
+$site_logo_url    = get_option( 'wpfa_site_logo_url', WPFAEVENT_URL . 'assets/images/logo.png' );
 $muted_color      = get_option( 'wpfa_muted_color', '#666666' );
 
 // Allow filtering of settings
