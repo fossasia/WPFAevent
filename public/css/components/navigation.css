@@ -96,7 +96,7 @@
 	display: block;
 }
 
-.wpfaevent .nav-links-main .nav-dropdown-content a {
-	padding: 0.4rem 0.6rem !important;
+.wpfaevent .nav-links .nav-dropdown-content a {
+	padding: 0.4rem 0.6rem;
 	white-space: nowrap;
 }
