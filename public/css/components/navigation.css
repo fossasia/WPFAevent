@@ -31,6 +31,10 @@
 	font-size: 0.9rem;
 }
 
+.wpfaevent .nav-links a.active {
+    background: #00000006;
+}
+
 .wpfaevent .nav-links a:hover {
 	background: #00000006;
 }

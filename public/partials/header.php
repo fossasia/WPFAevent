@@ -14,6 +14,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Site logo should be available from parent scope
 $site_logo_url = isset( $site_logo_url ) ? $site_logo_url : WPFAEVENT_URL . 'assets/images/logo.png';
+
+// Get Code of Conduct page ID (with caching)
+$coc_page_id = wp_cache_get( 'wpfaevent_coc_page_id', 'wpfaevent' );
+
+if ( false === $coc_page_id ) {
+	$coc_query = new WP_Query(
+		array(
+			'pagename'       => 'code-of-conduct',
+			'post_type'      => 'page',
+			'posts_per_page' => 1,
+			'no_found_rows'  => true,
+			'fields'         => 'ids',
+		)
+	);
+
+	if ( ! empty( $coc_query->posts ) ) {
+		$coc_page_id = (int) $coc_query->posts[0];
+	} else {
+		$coc_page_id = 0;
+	}
+
+	wp_cache_set( 'wpfaevent_coc_page_id', $coc_page_id, 'wpfaevent', HOUR_IN_SECONDS );
+}
+
+// Determine if current page is Code of Conduct
+$is_current = ( $coc_page_id && is_page( $coc_page_id ) ) ? 'active' : '';
 ?>
 
 <header class="nav" role="banner">
@@ -24,11 +50,8 @@ $site_logo_url = isset( $site_logo_url ) ? $site_logo_url : WPFAEVENT_URL . 'ass
 		<nav class="nav-links" role="navigation" aria-label="<?php esc_attr_e( 'Primary', 'wpfaevent' ); ?>">
 			<a href="<?php echo esc_url( home_url( '/events/' ) ); ?>"><?php esc_html_e( 'Upcoming Events', 'wpfaevent' ); ?></a>
 			<a href="<?php echo esc_url( home_url( '/past-events/' ) ); ?>"><?php esc_html_e( 'Past Events', 'wpfaevent' ); ?></a>
-			<?php
-			$coc_page = get_page_by_path( 'code-of-conduct' );
-			if ( $coc_page ) :
-				?>
-				<a href="<?php echo esc_url( get_permalink( $coc_page ) ); ?>" style="background: #00000006;"><?php esc_html_e( 'Code of Conduct', 'wpfaevent' ); ?></a>
+			<?php if ( $coc_page_id ) :	?>
+				<a href="<?php echo esc_url( get_permalink( $coc_page_id ) ); ?>" class="<?php echo esc_attr( $is_current ); ?>"><?php esc_html_e( 'Code of Conduct', 'wpfaevent' ); ?></a>
 			<?php endif; ?>
 		</nav>
 	</div>
