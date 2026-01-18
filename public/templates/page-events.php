@@ -21,6 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 get_header();
 
 $today = current_time( 'Y-m-d' );
+
+$per_page = max( 1, (int) apply_filters( 'wpfa_events_per_page', 10 ) );
+$paged    = max( 1, (int) get_query_var( 'paged', 1 ) );
+
 $args  = [
 	'post_type'   => 'wpfa_event',
 	'post_status' => 'publish',
@@ -35,10 +39,12 @@ $args  = [
 	'orderby'        => 'meta_value',
 	'meta_key'       => 'wpfa_event_start_date',
 	'order'          => 'ASC',
-	'posts_per_page' => -1,
+	'posts_per_page' => $per_page,
+	'paged'          => $paged,
 	'fields'         => 'ids',
 ];
-$q     = new WP_Query( $args );
+
+$q = new WP_Query( $args );
 ?>
 <main class="wpfa-events">
 	<h1><?php esc_html_e( 'Upcoming Events', 'wpfaevent' ); ?></h1>
@@ -64,6 +70,31 @@ $q     = new WP_Query( $args );
 			</li>
 		<?php endforeach; ?>
 		</ul>
+
+		<?php
+		// ADD PAGINATION HERE:
+		$total = max( 1, (int) ceil( $q->found_posts / $per_page ) );
+		if ( $total > 1 ) :
+			echo '<nav class="wpfa-pagination" aria-label="' . esc_attr__( 'Events pagination', 'wpfaevent' ) . '">';
+			for ( $i = 1; $i <= $total; $i++ ) {
+				$link = esc_url( add_query_arg( [ 'paged' => $i ], get_permalink() ) );
+
+				if ( $i === $paged ) {
+					printf(
+						'<span class="wpfa-page is-current" aria-current="page">%d</span>',
+						$i
+					);
+				} else {
+					printf(
+						'<a class="wpfa-page" href="%s">%d</a>',
+						$link,
+						$i
+					);
+				}
+			}
+			echo '</nav>';
+		endif;
+		?>
 	<?php else : ?>
 		<p><?php esc_html_e( 'No upcoming events.', 'wpfaevent' ); ?></p>
 	<?php endif; ?>

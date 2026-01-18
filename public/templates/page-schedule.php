@@ -32,15 +32,21 @@ get_header();
  * MVP parity: we don’t have sessions yet, so render events grouped by date.
  * Later PR can add a Session CPT. For now, show a table-like schedule of events.
  */
-$args   = array(
+
+$per_page = max( 1, (int) apply_filters( 'wpfa_schedule_events_per_page', 20 ) );
+$paged    = max( 1, (int) get_query_var( 'paged', 1 ) );
+
+$args = array(
 	'post_type'      => 'wpfa_event',
 	'post_status'    => 'publish',
 	'meta_key'       => 'wpfa_event_start_date',
 	'orderby'        => 'meta_value',
 	'order'          => 'ASC',
-	'posts_per_page' => -1,
+	'posts_per_page' => $per_page,
+	'paged'          => $paged,
 	'fields'         => 'ids',
 );
+
 $q      = new WP_Query( $args );
 $groups = array();
 foreach ( $q->posts as $eid ) {
@@ -66,7 +72,7 @@ foreach ( $q->posts as $eid ) {
 
 	if ( ! isset( $groups[ $sort_key ] ) ) {
 		$groups[ $sort_key ] = [
-			'date' => $display_date,
+			'date'   => $display_date,
 			'events' => [],
 		];
 	}
@@ -105,7 +111,34 @@ ksort( $groups, SORT_NUMERIC );
 				</li>
 			<?php endforeach; ?>
 		</ul>
-	<?php endforeach; else : ?>
+	<?php endforeach; // End foreach groups ?>
+	
+		<?php
+		// ADD PAGINATION HERE:
+		$total = max( 1, (int) ceil( $q->found_posts / $per_page ) );
+		if ( $total > 1 ) :
+			echo '<nav class="wpfa-pagination" aria-label="' . esc_attr__( 'Schedule pagination', 'wpfaevent' ) . '">';
+			for ( $i = 1; $i <= $total; $i++ ) {
+				$link = esc_url( add_query_arg( [ 'paged' => $i ], get_permalink() ) );
+
+				if ( $i === $paged ) {
+					printf(
+						'<span class="wpfa-page is-current" aria-current="page">%d</span>',
+						$i
+					);
+				} else {
+					printf(
+						'<a class="wpfa-page" href="%s">%d</a>',
+						$link,
+						$i
+					);
+				}
+			}
+			echo '</nav>';
+	endif;
+		?>
+
+	<?php else : ?>
 		<p><?php esc_html_e( 'No schedule entries yet.', 'wpfaevent' ); ?></p>
 	<?php endif; ?>
 </main>
