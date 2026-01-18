@@ -7,20 +7,27 @@
    Base Styles
    ========================================================================== */
 
-/* Scope to plugin templates */
+/* Default design tokens (safe fallbacks) */
 .wpfaevent {
+	--brand: #D51007;
+	--bg: #f8f9fa;
+	--text: #0b0b0b;
+	--muted: #666;
+	--card-radius: 8px;
+	--shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
 	margin: 0;
-	background: var(--bg, #f8f9fa);
-	color: var(--text, #0b0b0b);
+	background: var(--bg);
+	color: var(--text);
 	font-family: Inter, system-ui, sans-serif;
-}
+} 
 
 .wpfaevent * {
 	box-sizing: border-box;
 }
 
 .wpfaevent a {
-	color: var(--brand, #D51007);
+	color: var(--brand);
 	text-decoration: none;
 }
 

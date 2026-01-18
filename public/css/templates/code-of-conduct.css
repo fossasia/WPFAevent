@@ -13,11 +13,11 @@
 .wpfaevent .page-hero h1 {
 	margin: 0 0 10px;
 	font-size: 2.5rem;
-	color: var(--brand, #D51007);
+	color: var(--brand);
 }
 
 .wpfaevent .page-hero p {
-	color: var(--muted, #666);
+	color: var(--muted);
 	font-size: 1.1rem;
 	max-width: 70ch;
 	margin: 0 auto;
@@ -27,13 +27,13 @@
 .wpfaevent .main-content {
 	background: #fff;
 	padding: 30px 40px;
-	border-radius: var(--card-radius, 8px);
-	box-shadow: var(--shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
+	border-radius: var(--card-radius);
+	box-shadow: var(--shadow);
 }
 
 .wpfaevent .main-content h2 {
 	font-size: 1.8rem;
-	color: var(--brand, #D51007);
+	color: var(--brand);
 	margin-top: 2.5rem;
 	border-bottom: 2px solid #eee;
 	padding-bottom: 10px;

@@ -28,12 +28,14 @@ $brand_color      = get_option( 'wpfa_brand_color', '#D51007' );
 $background_color = get_option( 'wpfa_background_color', '#f8f9fa' );
 $text_color       = get_option( 'wpfa_text_color', '#0b0b0b' );
 $site_logo_url    = get_option( 'wpfa_site_logo_url', plugins_url( 'assets/images/logo.png', dirname( dirname( __FILE__ ) ) ) );
+$muted_color      = get_option( 'wpfa_muted_color', '#666666' );
 
 // Allow filtering of settings
 $brand_color      = apply_filters( 'wpfa_brand_color', $brand_color );
 $background_color = apply_filters( 'wpfa_background_color', $background_color );
 $text_color       = apply_filters( 'wpfa_text_color', $text_color );
 $site_logo_url    = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
+$muted_color      = apply_filters( 'wpfa_muted_color', $muted_color );
 
 the_post();
 $content = trim( get_the_content() );
@@ -49,6 +51,7 @@ $content = trim( get_the_content() );
 			--brand: <?php echo esc_attr( $brand_color ); ?>;
 			--bg: <?php echo esc_attr( $background_color ); ?>;
 			--text: <?php echo esc_attr( $text_color ); ?>;
+			--muted: <?php echo esc_attr( $muted_color ); ?>;
 		}
 	</style>
 </head>
