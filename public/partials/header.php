@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Site logo should be available from parent scope
-$site_logo_url = isset( $site_logo_url ) ? $site_logo_url : plugins_url( 'assets/images/logo.png', dirname( dirname( dirname( __FILE__ ) ) ) );
+$site_logo_url = isset( $site_logo_url ) ? $site_logo_url : WPFAEVENT_URL . 'assets/images/logo.png';
 ?>
 
 <header class="nav" role="banner">
