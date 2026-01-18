@@ -23,20 +23,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Get theme settings from WordPress Options API
-$brand_color      = get_option( 'wpfa_brand_color', '#D51007' );
-$background_color = get_option( 'wpfa_background_color', '#f8f9fa' );
-$text_color       = get_option( 'wpfa_text_color', '#0b0b0b' );
-$site_logo_url    = get_option( 'wpfa_site_logo_url', WPFAEVENT_URL . 'assets/images/logo.png' );
-$muted_color      = get_option( 'wpfa_muted_color', '#666666' );
-
-// Allow filtering of settings
-$brand_color      = apply_filters( 'wpfa_brand_color', $brand_color );
-$background_color = apply_filters( 'wpfa_background_color', $background_color );
-$text_color       = apply_filters( 'wpfa_text_color', $text_color );
-$site_logo_url    = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
-$muted_color      = apply_filters( 'wpfa_muted_color', $muted_color );
-
+$site_logo_url = get_option( 'wpfa_site_logo_url', WPFAEVENT_URL . 'assets/images/logo.png' );
+$site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 if ( have_posts() ) {
 	the_post();
 	$content = trim( get_the_content() );
@@ -50,14 +38,6 @@ if ( have_posts() ) {
 	<meta charset="<?php bloginfo( 'charset' ); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<?php wp_head(); ?>
-	<style>
-		:root {
-			--brand: <?php echo esc_attr( $brand_color ); ?>;
-			--bg: <?php echo esc_attr( $background_color ); ?>;
-			--text: <?php echo esc_attr( $text_color ); ?>;
-			--muted: <?php echo esc_attr( $muted_color ); ?>;
-		}
-	</style>
 </head>
 <body <?php body_class( 'wpfaevent' ); ?>>
 <?php wp_body_open(); ?>

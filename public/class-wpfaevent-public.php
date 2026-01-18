@@ -120,6 +120,26 @@ class Wpfaevent_Public {
 			'all'
 		);
 
+		// Dynamic CSS variables for WPFA templates
+		// Get theme settings from WordPress Options API
+		$brand_color      = get_option( 'wpfa_brand_color', '#D51007' );
+		$background_color = get_option( 'wpfa_background_color', '#f8f9fa' );
+		$text_color       = get_option( 'wpfa_text_color', '#0b0b0b' );
+
+		// Allow filtering of settings
+		$brand_color      = apply_filters( 'wpfa_brand_color', $brand_color );
+		$background_color = apply_filters( 'wpfa_background_color', $background_color );
+		$text_color       = apply_filters( 'wpfa_text_color', $text_color );
+
+		$custom_css = sprintf(
+			':root { --brand: %s; --bg: %s; --text: %s; }',
+			esc_attr( $brand_color ),
+			esc_attr( $background_color ),
+			esc_attr( $text_color )
+		);
+
+		wp_add_inline_style( $this->plugin_name, $custom_css );
+
 		// Template-specific styles.
 		if ( is_page_template( 'page-code-of-conduct.php' ) ) {
 			wp_enqueue_style(
