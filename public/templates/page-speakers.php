@@ -48,39 +48,26 @@ $query = new WP_Query( $args );
 		<?php
 		foreach ( $query->posts as $sid ) :
 			include WPFAEVENT_PATH . 'public/partials/speaker-card.php';
-endforeach;
+		endforeach;
 		?>
 	</div>
 
 		<?php
 		// Pagination
 		$total = max( 1, (int) ceil( $query->found_posts / $per_page ) );
-		if ( $total > 1 ) :
-			echo '<nav class="wpfa-pagination" aria-label="' . esc_attr__( 'Speakers pagination', 'wpfaevent' ) . '">';
-			for ( $i = 1; $i <= $total; $i++ ) {
-				// Preserve search parameter in pagination
-				$args = [ 'paged' => $i ];
-				if ( $search ) {
-					$args['q'] = $search;
-				}
-				$link = esc_url( add_query_arg( $args, get_permalink() ) );
 
-				// Current page as span with aria-current, others as links
-				if ( $i === $paged ) {
-					printf(
-						'<span class="wpfa-page is-current" aria-current="page">%d</span>',
-						$i
-					);
-				} else {
-					printf(
-						'<a class="wpfa-page" href="%s">%d</a>',
-						$link,
-						$i
-					);
-				}
-			}
-			echo '</nav>';
-		endif;
+		// Preserve search parameter if present
+		$pagination_args = array();
+		if ( $search ) {
+			$pagination_args['q'] = $search;
+		}
+
+		wpfa_render_pagination(
+			$total,
+			$paged,
+			__( 'Speakers pagination', 'wpfaevent' ),
+			$pagination_args
+		);
 		?>
 
 	<?php else : ?>

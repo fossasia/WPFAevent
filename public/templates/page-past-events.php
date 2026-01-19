@@ -73,28 +73,8 @@ $q = new WP_Query( $args );
 		</ul>
 
 		<?php
-		// ADD PAGINATION HERE:
 		$total = max( 1, (int) ceil( $q->found_posts / $per_page ) );
-		if ( $total > 1 ) :
-			echo '<nav class="wpfa-pagination" aria-label="' . esc_attr__( 'Past events pagination', 'wpfaevent' ) . '">';
-			for ( $i = 1; $i <= $total; $i++ ) {
-				$link = esc_url( add_query_arg( [ 'paged' => $i ], get_permalink() ) );
-
-				if ( $i === $paged ) {
-					printf(
-						'<span class="wpfa-page is-current" aria-current="page">%d</span>',
-						$i
-					);
-				} else {
-					printf(
-						'<a class="wpfa-page" href="%s">%d</a>',
-						$link,
-						$i
-					);
-				}
-			}
-			echo '</nav>';
-		endif;
+		wpfa_render_pagination( $total, $paged, __( 'Past events pagination', 'wpfaevent' ) );
 		?>
 
 	<?php else : ?>
