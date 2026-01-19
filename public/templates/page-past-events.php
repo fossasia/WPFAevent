@@ -38,6 +38,7 @@ $args  = [
 	],
 	'orderby'        => 'meta_value',
 	'meta_key'       => 'wpfa_event_end_date',
+	'meta_type'      => 'DATE',
 	'order'          => 'DESC',
 	'posts_per_page' => $per_page,
 	'paged'          => $paged,

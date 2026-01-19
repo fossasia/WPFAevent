@@ -40,6 +40,7 @@ $args = array(
 	'post_type'      => 'wpfa_event',
 	'post_status'    => 'publish',
 	'meta_key'       => 'wpfa_event_start_date',
+	'meta_type'      => 'DATE',
 	'orderby'        => 'meta_value',
 	'order'          => 'ASC',
 	'posts_per_page' => $per_page,
