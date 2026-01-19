@@ -86,5 +86,6 @@ endforeach;
 	<?php else : ?>
 		<p><?php esc_html_e( 'No speakers found.', 'wpfaevent' ); ?></p>
 	<?php endif; ?>
+	<?php wp_reset_postdata(); ?>
 </main>
 <?php get_footer(); ?>

@@ -99,5 +99,6 @@ $q = new WP_Query( $args );
 	<?php else : ?>
 		<p><?php esc_html_e( 'No upcoming events.', 'wpfaevent' ); ?></p>
 	<?php endif; ?>
+	<?php wp_reset_postdata(); ?>
 </main>
 <?php get_footer(); ?>
