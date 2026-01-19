@@ -31,6 +31,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Speaker post ID passed from parent template;
+// guard prevents misuse of this partial.
+if ( empty( $sid ) || ! is_numeric( $sid ) ) {
+	return;
+}
+
+$sid = (int) $sid;
+
 $name      = get_the_title( $sid );
 $org       = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
 $position  = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
