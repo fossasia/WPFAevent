@@ -55,13 +55,29 @@ foreach ( $q->posts as $eid ) {
 
 	// Normalize date for proper chronological sorting
 	if ( $d ) {
-		// Convert to timestamp for sorting, keep original for display
-		$timestamp = strtotime( $d );
-		if ( $timestamp !== false ) {
+		// Convert to timestamp for sorting, keep original for display.
+		// Use explicit formats for predictable parsing instead of relying on strtotime().
+		$timestamp = false;
+
+		// Adjust/extend this list if other canonical formats are used when storing wpfa_event_start_date.
+		$date_formats = array(
+			'Y-m-d',
+			'Y-m-d H:i:s',
+		);
+
+		foreach ( $date_formats as $date_format ) {
+			$dt = DateTimeImmutable::createFromFormat( $date_format, $d );
+			if ( $dt instanceof DateTimeInterface ) {
+				$timestamp = $dt->getTimestamp();
+				break;
+			}
+		}
+
+		if ( false !== $timestamp ) {
 			$sort_key     = $timestamp;
 			$display_date = $d;
 		} else {
-			// Invalid date format - treat as TBD
+			// Invalid or unexpected date format - treat as TBD
 			$sort_key     = PHP_INT_MAX;
 			$display_date = __( 'TBD', 'wpfaevent' );
 		}
