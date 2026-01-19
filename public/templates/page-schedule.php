@@ -112,7 +112,6 @@ ksort( $groups, SORT_NUMERIC );
 			<?php endforeach; ?>
 		</ul>
 	<?php endforeach; // End foreach groups ?>
-	
 		<?php
 		// ADD PAGINATION HERE:
 		$total = max( 1, (int) ceil( $q->found_posts / $per_page ) );
