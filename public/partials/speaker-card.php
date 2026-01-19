@@ -42,7 +42,7 @@ $sid = (int) $sid;
 $name      = get_the_title( $sid );
 $org       = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
 $position  = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
-$photo_url = esc_url_raw( get_post_meta( $sid, 'wpfa_speaker_headshot_url', true ) ); // Removed external fallback
+$photo_url = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
 $link      = get_permalink( $sid );
 ?>
 <article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person">

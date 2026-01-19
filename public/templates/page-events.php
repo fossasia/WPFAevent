@@ -57,7 +57,7 @@ $q = new WP_Query( $args );
 			$start = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_start_date', true ) );
 			$end   = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_end_date', true ) );
 			$loc   = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_location', true ) );
-			$url   = esc_url_raw( get_post_meta( $eid, 'wpfa_event_url', true ) ) ?: get_permalink( $eid );
+			$url   = get_post_meta( $eid, 'wpfa_event_url', true ) ?: get_permalink( $eid );
 			?>
 			<li class="wpfa-event">
 				<h3><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $title ); ?></a></h3>
