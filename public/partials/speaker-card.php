@@ -48,7 +48,7 @@ $link      = get_permalink( $sid );
 <article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person">
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $link ); ?>">
 		<?php if ( $photo_url ) : ?>
-			<img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( $name ); ?>" loading="lazy" itemprop="image" />
+			<img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $name ) ); ?>" loading="lazy" itemprop="image" />
 		<?php else : ?>
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" class="wpfa-placeholder-svg">
 				<rect width="100%" height="100%" fill="#eee" />
