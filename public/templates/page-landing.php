@@ -85,7 +85,7 @@ $logos = (array) apply_filters(
 		<section class="wpfa-logo-strip" aria-label="<?php esc_attr_e( 'Partners', 'wpfaevent' ); ?>">
 			<ul>
 				<?php foreach ( $logos as $logo ) : ?>
-					<li><img src="<?php echo esc_url( $logo ); ?>" alt="" loading="lazy" /></li>
+					<li><img src="<?php echo esc_url( $logo ); ?>" alt="<?php esc_attr_e( 'Partner logo', 'wpfaevent' ); ?>" loading="lazy" /></li>
 				<?php endforeach; ?>
 			</ul>
 		</section>
