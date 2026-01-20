@@ -1,0 +1,49 @@
+/* ==========================================================================
+   Pagination Component (Shared across WPFAevent templates)
+   ========================================================================== */
+
+.wpfaevent .wpfa-pagination {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+	margin: 2rem 0;
+	justify-content: center;
+}
+
+.wpfaevent .wpfa-page {
+	padding: 0.5rem 0.75rem;
+	text-decoration: none;
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	color: #333;
+	transition: all 0.2s ease;
+}
+
+.wpfaevent .wpfa-page:hover:not(.is-disabled):not(.is-current) {
+	background: #f5f5f5;
+	border-color: #999;
+}
+
+.wpfaevent .wpfa-page.is-current {
+	background: var(--brand, #0073aa);
+	color: #fff;
+	border-color: var(--brand, #0073aa);
+	font-weight: 600;
+}
+
+.wpfaevent .wpfa-page.is-disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+
+.wpfaevent .wpfa-page-prev,
+.wpfaevent .wpfa-page-next {
+	font-weight: 600;
+}
+
+.wpfaevent .wpfa-page-ellipsis {
+	border: none;
+	padding: 0.5rem;
+	cursor: default;
+}

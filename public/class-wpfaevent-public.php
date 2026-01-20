@@ -79,6 +79,29 @@ class Wpfaevent_Public {
 	}
 
 	/**
+	 * Check if current page uses pagination.
+	 *
+	 * @since    1.0.0
+	 * @return   bool    True if template uses pagination.
+	 */
+	private function is_paginated_template() {
+		$paginated_templates = array(
+			'page-events.php',
+			'page-past-events.php',
+			'page-speakers.php',
+			'page-schedule.php',
+		);
+
+		foreach ( $paginated_templates as $template ) {
+			if ( is_page_template( $template ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Register the stylesheets for the public-facing side of the site.
 	 *
 	 * @since    1.0.0
@@ -119,6 +142,17 @@ class Wpfaevent_Public {
 			$this->version,
 			'all'
 		);
+
+		// Pagination component (only templates with pagination)
+		if ( $this->is_paginated_template() ) {
+			wp_enqueue_style(
+				$this->plugin_name . '-pagination',
+				plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/components/pagination.css',
+				array( $this->plugin_name ),
+				$this->version,
+				'all'
+			);
+		}
 
 		// Dynamic CSS variables for WPFA templates
 		// Get theme settings from WordPress Options API
