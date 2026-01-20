@@ -2,3 +2,42 @@
  * All of the CSS for your public-facing functionality should be
  * included in this file.
  */
+
+/* Pagination Styles (Example) */
+/* Will be refactored in future releases */
+
+/* New CSS classes you can style */
+.wpfa-page-prev         /* Previous button */
+.wpfa-page-next         /* Next button */
+.wpfa-page-ellipsis     /* … character */
+.is-disabled            /* Disabled prev/next */
+
+.wpfa-pagination {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin: 2rem 0;
+}
+
+.wpfa-page {
+    padding: 0.5rem 0.75rem;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.wpfa-page.is-current {
+    background: #0073aa;
+    color: #fff;
+    border-color: #0073aa;
+}
+
+.wpfa-page.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.wpfa-page-ellipsis {
+    border: none;
+    padding: 0.5rem;
+}
