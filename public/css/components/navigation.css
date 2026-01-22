@@ -6,7 +6,7 @@
 	top: 0;
 	background: rgba(255, 255, 255, 0.9);
 	backdrop-filter: blur(6px) saturate(120%);
-	border-bottom: 2px solid #00000010;
+	border-bottom: 2px solid rgba(0, 0, 0, 0.06);
 	z-index: 60;
 }
 
@@ -32,11 +32,11 @@
 }
 
 .wpfaevent .nav-links a.active {
-	background: #00000006;
+	background: rgba(0, 0, 0, 0.024);
 }
 
 .wpfaevent .nav-links a:hover {
-	background: #00000006;
+	background: rgba(0, 0, 0, 0.024);
 }
 
 /* Admin Bar Adjustment */
@@ -69,7 +69,7 @@
 }
 
 .wpfaevent .nav-dropdown-toggle:hover {
-	background: #00000006;
+	background: rgba(0, 0, 0, 0.024);
 }
 
 .wpfaevent .nav-dropdown-content {
