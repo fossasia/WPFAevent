@@ -50,7 +50,7 @@ $is_current = ( $coc_page_id && is_page( $coc_page_id ) ) ? 'active' : '';
 		<nav class="nav-links" role="navigation" aria-label="<?php esc_attr_e( 'Primary', 'wpfaevent' ); ?>">
 			<a href="<?php echo esc_url( home_url( '/events/' ) ); ?>"><?php esc_html_e( 'Upcoming Events', 'wpfaevent' ); ?></a>
 			<a href="<?php echo esc_url( home_url( '/past-events/' ) ); ?>"><?php esc_html_e( 'Past Events', 'wpfaevent' ); ?></a>
-			<?php if ( $coc_page_id ) :	?>
+			<?php if ( $coc_page_id ) : ?>
 				<a href="<?php echo esc_url( get_permalink( $coc_page_id ) ); ?>" class="<?php echo esc_attr( $is_current ); ?>"><?php esc_html_e( 'Code of Conduct', 'wpfaevent' ); ?></a>
 			<?php endif; ?>
 		</nav>
