@@ -15,28 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Site logo should be available from parent scope
 $site_logo_url = isset( $site_logo_url ) ? $site_logo_url : WPFAEVENT_URL . 'assets/images/logo.png';
 
-// Get Code of Conduct page ID (with caching)
-$coc_page_id = wp_cache_get( 'wpfaevent_coc_page_id', 'wpfaevent' );
-
-if ( false === $coc_page_id ) {
-	$coc_query = new WP_Query(
-		array(
-			'pagename'       => 'code-of-conduct',
-			'post_type'      => 'page',
-			'posts_per_page' => 1,
-			'no_found_rows'  => true,
-			'fields'         => 'ids',
-		)
-	);
-
-	if ( ! empty( $coc_query->posts ) ) {
-		$coc_page_id = (int) $coc_query->posts[0];
-	} else {
-		$coc_page_id = 0;
-	}
-
-	wp_cache_set( 'wpfaevent_coc_page_id', $coc_page_id, 'wpfaevent', HOUR_IN_SECONDS );
-}
+// Get Code of Conduct page ID (with caching handled by cache class)
+$coc_page_id = Wpfaevent_Cache::get_coc_page_id();
 
 // Determine if current page is Code of Conduct
 $is_current = ( $coc_page_id && is_page( $coc_page_id ) ) ? 'active' : '';
