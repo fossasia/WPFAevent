@@ -102,6 +102,44 @@ class Wpfaevent_Public {
 	}
 
 	/**
+	 * Get WPFA theme colors with filters applied.
+	 *
+	 * @since    1.0.0
+	 * @return   array    Associative array of color values.
+	 */
+	private function get_theme_colors() {
+		$colors = array(
+			'brand'      => get_option( 'wpfa_brand_color', '#D51007' ),
+			'background' => get_option( 'wpfa_background_color', '#f8f9fa' ),
+			'text'       => get_option( 'wpfa_text_color', '#0b0b0b' ),
+		);
+
+		// Allow filtering
+		$colors['brand']      = apply_filters( 'wpfa_brand_color', $colors['brand'] );
+		$colors['background'] = apply_filters( 'wpfa_background_color', $colors['background'] );
+		$colors['text']       = apply_filters( 'wpfa_text_color', $colors['text'] );
+
+		return $colors;
+	}
+
+	/**
+	 * Generate CSS custom properties for theme colors.
+	 *
+	 * @since    1.0.0
+	 * @return   string    CSS rule with custom properties.
+	 */
+	private function generate_color_css() {
+		$colors = $this->get_theme_colors();
+
+		return sprintf(
+			'.wpfaevent { --brand: %s; --bg: %s; --text: %s; }',
+			esc_attr( $colors['brand'] ),
+			esc_attr( $colors['background'] ),
+			esc_attr( $colors['text'] )
+		);
+	}
+
+	/**
 	 * Register the stylesheets for the public-facing side of the site.
 	 *
 	 * @since    1.0.0
@@ -154,25 +192,8 @@ class Wpfaevent_Public {
 			);
 		}
 
-		// Dynamic CSS variables for WPFA templates
-		// Get theme settings from WordPress Options API
-		$brand_color      = get_option( 'wpfa_brand_color', '#D51007' );
-		$background_color = get_option( 'wpfa_background_color', '#f8f9fa' );
-		$text_color       = get_option( 'wpfa_text_color', '#0b0b0b' );
-
-		// Allow filtering of settings
-		$brand_color      = apply_filters( 'wpfa_brand_color', $brand_color );
-		$background_color = apply_filters( 'wpfa_background_color', $background_color );
-		$text_color       = apply_filters( 'wpfa_text_color', $text_color );
-
-		$custom_css = sprintf(
-			'.wpfaevent { --brand: %s; --bg: %s; --text: %s; }',
-			esc_attr( $brand_color ),
-			esc_attr( $background_color ),
-			esc_attr( $text_color )
-		);
-
-		wp_add_inline_style( $this->plugin_name, $custom_css );
+		// Add dynamic CSS variables
+		wp_add_inline_style( $this->plugin_name, $this->generate_color_css() );
 
 		// Template-specific styles.
 		if ( is_page_template( 'page-code-of-conduct.php' ) ) {
