@@ -52,7 +52,7 @@ if ( have_posts() ) {
 	}
 	?>
 
-	<main>
+	<main role="main" aria-label="Main content">
 		<header class="page-hero">
 			<h1><?php echo esc_html( get_the_title() ); ?></h1>
 			<p><?php echo esc_html( apply_filters( 'wpfa_coc_hero_text', __( 'Our commitment to a safe, respectful, and harassment-free event experience for everyone.', 'wpfaevent' ) ) ); ?></p>
