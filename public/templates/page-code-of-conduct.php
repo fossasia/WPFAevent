@@ -62,7 +62,7 @@ if ( have_posts() ) {
 		</header>
 
 		<div class="container">
-			<div class="main-content">
+			<article class="main-content">
 				<?php
 				// Load content partial
 				$content_partial = WPFAEVENT_PATH . 'public/partials/code-of-conduct/content.php';
@@ -70,7 +70,7 @@ if ( have_posts() ) {
 					include $content_partial;
 				}
 				?>
-			</div>
+			</article>
 		</div>
 	</main>
 </div>
