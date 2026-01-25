@@ -24,6 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $site_logo_url = get_option( 'wpfa_site_logo_url', WPFAEVENT_URL . 'assets/images/logo.png' );
+$site_logo_url = esc_url_raw( $site_logo_url );
 $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 if ( have_posts() ) {
 	the_post();
