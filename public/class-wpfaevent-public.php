@@ -166,7 +166,7 @@ class Wpfaevent_Public {
 		$text_color       = apply_filters( 'wpfa_text_color', $text_color );
 
 		$custom_css = sprintf(
-			':root { --brand: %s; --bg: %s; --text: %s; }',
+			'.wpfaevent { --brand: %s; --bg: %s; --text: %s; }',
 			esc_attr( $brand_color ),
 			esc_attr( $background_color ),
 			esc_attr( $text_color )
