@@ -1,0 +1,149 @@
+/* ==========================================================================
+   Navigation
+   ========================================================================== */
+.wpfaevent .nav {
+	position: sticky;
+	top: 0;
+	background: rgba(255, 255, 255, 0.9);
+	backdrop-filter: blur(6px) saturate(120%);
+	border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+	z-index: 60;
+}
+
+.wpfaevent .nav-inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 0;
+}
+
+.wpfaevent .nav-links {
+	display: flex;
+	gap: 0.6rem;
+	align-items: center;
+}
+
+.wpfaevent .nav-links a {
+	padding: 0.4rem 0.6rem;
+	border-radius: 999px;
+	font-weight: 600;
+	color: #222;
+	font-size: 0.9rem;
+}
+
+.wpfaevent .nav-links a.active {
+	background: rgba(0, 0, 0, 0.024);
+}
+
+.wpfaevent .nav-links a:hover {
+	background: rgba(0, 0, 0, 0.024);
+}
+
+/* Admin Bar Adjustment */
+.admin-bar .wpfaevent .nav {
+	top: 32px;
+}
+
+@media (max-width: 782px) {
+	.admin-bar .wpfaevent .nav {
+		top: 46px;
+	}
+}
+
+/* ==========================================================================
+   Nav Dropdown Styles (FUTURE USE)
+   ========================================================================== */
+.wpfaevent .nav-dropdown {
+	position: relative;
+}
+
+.wpfaevent .nav-dropdown-toggle {
+	padding: 0.4rem 0.6rem;
+	border-radius: 999px;
+	font-weight: 600;
+	color: #222;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	display: inline-block;
+}
+
+.wpfaevent .nav-dropdown-toggle:hover {
+	background: rgba(0, 0, 0, 0.024);
+}
+
+.wpfaevent .nav-dropdown-content {
+	display: none;
+	position: absolute;
+	background-color: #f9f9f9;
+	min-width: 160px;
+	box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+	z-index: 1;
+	border-radius: 8px;
+	overflow: hidden;
+	left: 0;
+}
+
+.wpfaevent .nav-dropdown-content a {
+	color: black;
+	padding: 12px 16px;
+	text-decoration: none;
+	display: block;
+	font-weight: 500;
+}
+
+.wpfaevent .nav-dropdown-content a:hover {
+	background-color: #f1f1f1;
+}
+
+.wpfaevent .nav-dropdown:hover .nav-dropdown-content {
+	display: block;
+}
+
+.wpfaevent .nav-links .nav-dropdown-content a {
+	padding: 0.4rem 0.6rem;
+	white-space: nowrap;
+}
+
+/* ==========================================================================
+   Buttons for Navigation
+   ========================================================================== */
+
+/* General button styles for navigation buttons */
+.wpfaevent .nav-links-secondary .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 1rem;
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+/* Register button (primary) */
+.wpfaevent .nav-links-secondary .btn-primary {
+    background: var(--brand);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(213, 16, 7, 0.14);
+    border: 2px solid transparent;
+}
+
+.wpfaevent .nav-links-secondary .btn-primary:hover {
+    background: #c00;
+    box-shadow: 0 10px 25px rgba(213, 16, 7, 0.2);
+    color: #fff; /* Keep white text on hover */
+}
+
+/* Back button (secondary) */
+.wpfaevent .nav-links-secondary .btn-secondary {
+    background: transparent;
+    color: #222;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.wpfaevent .nav-links-secondary .btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.024);
+    border-color: rgba(0, 0, 0, 0.2);
+    color: #222; /* Keep dark text on hover */
+}

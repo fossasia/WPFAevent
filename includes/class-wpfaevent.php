@@ -92,12 +92,16 @@ class Wpfaevent {
 		// Loader
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-loader.php';
 
+		// Cache management
+		require_once plugin_dir_path( __FILE__ ) . 'cache/class-wpfaevent-cache.php';
+
 		// Data model classes - Custom Post Types
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-speaker.php';
 
 		// Data model classes - Taxonomies
 		require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies.php';
+		require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies-speaker.php';
 
 		// Data model classes - Meta Fields
 		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-event.php';
@@ -142,8 +146,9 @@ class Wpfaevent {
 	 * @access   private
 	 */
 	private function define_taxonomy_hooks() {
-		// Register Event Taxonomies (Track and Tag)
+		// Register Event & Speaker Taxonomies
 		$this->loader->add_action( 'init', 'Wpfaevent_Taxonomies', 'register' );
+		$this->loader->add_action( 'init', 'Wpfaevent_Taxonomies_Speaker', 'register' );
 	}
 
 	/**
@@ -191,6 +196,12 @@ class Wpfaevent {
 		// Show notice for block theme users
 		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'maybe_show_block_theme_notice' );
 
+		// Register AJAX handlers for speakers page
+		$this->loader->add_action( 'wp_ajax_wpfa_get_speaker', $this->plugin_admin, 'ajax_get_speaker' );
+		$this->loader->add_action( 'wp_ajax_wpfa_add_speaker', $this->plugin_admin, 'ajax_add_speaker' );
+		$this->loader->add_action( 'wp_ajax_wpfa_update_speaker', $this->plugin_admin, 'ajax_update_speaker' );
+		$this->loader->add_action( 'wp_ajax_wpfa_delete_speaker', $this->plugin_admin, 'ajax_delete_speaker' );
+
 		// Instantiate the legacy plugin and keep a reference so we can reuse its methods
 		// if ( class_exists( 'Wpfaevent_Landing' ) ) {
 		// $this->legacy = new Wpfaevent_Landing();
@@ -204,7 +215,7 @@ class Wpfaevent {
 		// $this->loader->add_action( 'admin_enqueue_scripts', $this->legacy, 'enqueue_admin_scripts' );
 
 		// Register the many AJAX handlers the legacy class provides
-		$ajax_methods = [
+		$ajax_methods = array(
 			'fossasia_manage_speakers'       => 'ajax_manage_speakers',
 			'fossasia_manage_sponsors'       => 'ajax_manage_sponsors',
 			'fossasia_manage_site_settings'  => 'ajax_manage_site_settings',
@@ -219,7 +230,7 @@ class Wpfaevent {
 			'fossasia_import_sample_data'    => 'ajax_import_sample_data',
 			'fossasia_add_sample_event'      => 'ajax_add_sample_event',
 			'fossasia_manage_coc'            => 'ajax_manage_coc',
-		];
+		);
 
 		foreach ( $ajax_methods as $action => $method ) {
 			// admin ajax
@@ -240,6 +251,10 @@ class Wpfaevent {
 
 		// Register public-specific stylesheet
 		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
+
+		// Cache invalidation hooks (static method calls)
+		$this->loader->add_action( 'save_post', 'Wpfaevent_Cache', 'clear_page_cache' );
+		$this->loader->add_action( 'delete_post', 'Wpfaevent_Cache', 'clear_page_cache' );
 
 		// if ( ! $this->legacy ) { return; }
 

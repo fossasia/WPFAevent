@@ -2,42 +2,51 @@
  * All of the CSS for your public-facing functionality should be
  * included in this file.
  */
+ 
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
 
-/* Pagination Styles (Example) */
-/* Will be refactored in future releases */
+/* Default design tokens (safe fallbacks) */
+.wpfaevent {
+	--brand: #D51007;
+	--bg: #f8f9fa;
+	--text: #0b0b0b;
+	--muted: #666;
+	--card-radius: 8px;
+	--shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
-/* New CSS classes you can style */
-.wpfa-page-prev         /* Previous button */
-.wpfa-page-next         /* Next button */
-.wpfa-page-ellipsis     /* … character */
-.is-disabled            /* Disabled prev/next */
+	margin: 0;
+	background: var(--bg);
+	color: var(--text);
+	font-family: Inter, system-ui, sans-serif;
+} 
 
-.wpfa-pagination {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    margin: 2rem 0;
+.wpfaevent * {
+	box-sizing: border-box;
 }
 
-.wpfa-page {
-    padding: 0.5rem 0.75rem;
-    text-decoration: none;
-    border: 1px solid #ddd;
-    border-radius: 3px;
+.wpfaevent a {
+	color: var(--brand);
+	text-decoration: none;
 }
 
-.wpfa-page.is-current {
-    background: #0073aa;
-    color: #fff;
-    border-color: #0073aa;
+.wpfaevent img {
+	max-width: 100%;
+	height: auto;
+	display: block;
 }
 
-.wpfa-page.is-disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+/* Logo */
+.wpfaevent .site-logo {
+	height: 36px;
+	width: auto;
 }
 
-.wpfa-page-ellipsis {
-    border: none;
-    padding: 0.5rem;
+/* Container */
+.wpfaevent .container {
+	width: 100%;
+	max-width: var(--container, 1200px);
+	margin: 0 auto;
+	padding: 24px;
 }

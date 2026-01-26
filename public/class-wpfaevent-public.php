@@ -50,8 +50,93 @@ class Wpfaevent_Public {
 	public function __construct( $plugin_name, $version ) {
 
 		$this->plugin_name = $plugin_name;
-		$this->version = $version;
+		$this->version     = $version;
+	}
 
+	/**
+	 * Check if current page is using a WPFA template.
+	 *
+	 * @since    1.0.0
+	 * @return   bool    True if WPFA template is active.
+	 */
+	private function is_wpfa_template() {
+		$wpfa_templates = array(
+			'page-code-of-conduct.php',
+			'page-events.php',
+			'page-past-events.php',
+			'page-schedule.php',
+			'page-speakers.php',
+			'page-landing.php',
+		);
+
+		foreach ( $wpfa_templates as $template ) {
+			if ( is_page_template( $template ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if current page uses pagination.
+	 *
+	 * @since    1.0.0
+	 * @return   bool    True if template uses pagination.
+	 */
+	private function is_paginated_template() {
+		$paginated_templates = array(
+			'page-events.php',
+			'page-past-events.php',
+			'page-speakers.php',
+			'page-schedule.php',
+		);
+
+		foreach ( $paginated_templates as $template ) {
+			if ( is_page_template( $template ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get WPFA theme colors with filters applied.
+	 *
+	 * @since    1.0.0
+	 * @return   array    Associative array of color values.
+	 */
+	private function get_theme_colors() {
+		$colors = array(
+			'brand'      => get_option( 'wpfa_brand_color', '#D51007' ),
+			'background' => get_option( 'wpfa_background_color', '#f8f9fa' ),
+			'text'       => get_option( 'wpfa_text_color', '#0b0b0b' ),
+		);
+
+		// Allow filtering
+		$colors['brand']      = apply_filters( 'wpfa_brand_color', $colors['brand'] );
+		$colors['background'] = apply_filters( 'wpfa_background_color', $colors['background'] );
+		$colors['text']       = apply_filters( 'wpfa_text_color', $colors['text'] );
+
+		return $colors;
+	}
+
+	/**
+	 * Generate CSS custom properties for theme colors.
+	 *
+	 * @since    1.0.0
+	 * @return   string    CSS rule with custom properties.
+	 */
+	private function generate_color_css() {
+		$colors = $this->get_theme_colors();
+
+		return sprintf(
+			'.wpfaevent { --brand: %s; --bg: %s; --text: %s; }',
+			esc_attr( $colors['brand'] ),
+			esc_attr( $colors['background'] ),
+			esc_attr( $colors['text'] )
+		);
 	}
 
 	/**
@@ -73,8 +158,111 @@ class Wpfaevent_Public {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/wpfaevent-public.css', array(), $this->version, 'all' );
+		// Base public styles (global, shared).
+		wp_enqueue_style(
+			$this->plugin_name,
+			plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/wpfaevent-public.css',
+			array(),
+			$this->version,
+			'all'
+		);
 
+		// Only load component/template styles when WPFA template is active
+		if ( ! $this->is_wpfa_template() ) {
+			return;
+		}
+
+		// Navigation component (shared across templates)
+		wp_enqueue_style(
+			$this->plugin_name . '-navigation',
+			plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/components/navigation.css',
+			array( $this->plugin_name ),
+			$this->version,
+			'all'
+		);
+
+		// Pagination component (only templates with pagination)
+		if ( $this->is_paginated_template() ) {
+			wp_enqueue_style(
+				$this->plugin_name . '-pagination',
+				plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/components/pagination.css',
+				array( $this->plugin_name ),
+				$this->version,
+				'all'
+			);
+		}
+
+		// Add dynamic CSS variables
+		wp_add_inline_style( $this->plugin_name, $this->generate_color_css() );
+
+		// Template-specific styles.
+		if ( is_page_template( 'page-code-of-conduct.php' ) ) {
+			wp_enqueue_style(
+				$this->plugin_name . '-code-of-conduct',
+				plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/templates/code-of-conduct.css',
+				array(
+					$this->plugin_name,
+					$this->plugin_name . '-navigation',
+				),
+				$this->version,
+				'all'
+			);
+		}
+
+		if ( is_page_template( 'page-speakers.php' ) ) {
+			wp_enqueue_style(
+				$this->plugin_name . '-speakers',
+				plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/templates/speakers.css',
+				array(
+					$this->plugin_name,
+					$this->plugin_name . '-navigation',
+					$this->plugin_name . '-pagination',
+				),
+				$this->version,
+				'all'
+			);
+
+			// Enqueue speakers JavaScript
+			wp_enqueue_script(
+				$this->plugin_name . '-speakers',
+				plugin_dir_url( __FILE__ ) . 'js/wpfaevent-speakers.js',
+				array( 'jquery' ),
+				$this->version,
+				true
+			);
+		}
+
+		/**
+		* ---------------------------------------------------------------------
+		* Template-specific styles (extension pattern)
+		* ---------------------------------------------------------------------
+		*
+		* When adding CSS for a new plugin-provided page template:
+		*
+		* 1. Create a template-specific stylesheet under:
+		*    public/css/templates/{template-name}.css
+		*
+		* 2. Conditionally enqueue it using is_page_template()
+		*    to avoid loading unnecessary CSS on other pages.
+		*
+		* Example:
+		*
+		* if ( is_page_template( 'page-speakers.php' ) ) {
+		*     wp_enqueue_style(
+		*         $this->plugin_name . '-speakers',
+		*         plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/templates/speakers.css',
+		*         array(
+		*             $this->plugin_name,
+		*             $this->plugin_name . '-navigation',
+		*         ),
+		*         $this->version,
+		*         'all'
+		*     );
+		* }
+		*
+		* This keeps base styles global, component styles reusable,
+		* and template styles scoped to their respective pages.
+		*/
 	}
 
 	/**
@@ -97,7 +285,5 @@ class Wpfaevent_Public {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-public.js', array( 'jquery' ), $this->version, false );
-
 	}
-
 }
