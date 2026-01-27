@@ -160,23 +160,3 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 		</form>
 	</div>
 </div>
-
-<script>
-// Category dropdown toggle for custom category
-document.addEventListener('DOMContentLoaded', function() {
-	const categorySelect = document.getElementById('wpfa-speaker-category');
-	const customCategoryInput = document.getElementById('wpfa-speaker-category-custom');
-	
-	if (categorySelect && customCategoryInput) {
-		categorySelect.addEventListener('change', function() {
-			if (this.value === '_custom') {
-				customCategoryInput.style.display = 'block';
-				customCategoryInput.required = true;
-			} else {
-				customCategoryInput.style.display = 'none';
-				customCategoryInput.required = false;
-			}
-		});
-	}
-});
-</script>

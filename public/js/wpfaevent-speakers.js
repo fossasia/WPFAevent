@@ -139,6 +139,23 @@ const WPFA_Speakers = (function() {
 				}
 			});
 		}
+
+		// Category dropdown toggle for custom category
+		const categorySelect = document.getElementById('wpfa-speaker-category');
+		const customCategoryInput = document.getElementById('wpfa-speaker-category-custom');
+		
+		if (categorySelect && customCategoryInput) {
+			categorySelect.addEventListener('change', function() {
+				if (this.value === '_custom') {
+					customCategoryInput.style.display = 'block';
+					customCategoryInput.required = true;
+				} else {
+					customCategoryInput.style.display = 'none';
+					customCategoryInput.required = false;
+					customCategoryInput.value = '';
+				}
+			});
+		}
 		
 		// Form submission
 		if (elements.speakerForm) {
