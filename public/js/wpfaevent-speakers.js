@@ -95,9 +95,7 @@ const WPFA_Speakers = (function() {
 			modal: document.getElementById('wpfa-speaker-modal'),
 			modalClose: document.querySelector('.wpfa-modal-close'),
 			speakerForm: document.getElementById('wpfa-speaker-form'),
-			imageSourceToggle: document.querySelectorAll('input[name="image_source"]'),
 			imageUrlGroup: document.getElementById('wpfa-image-url-group'),
-			imageUploadGroup: document.getElementById('wpfa-image-upload-group'),
 			addSpeakerBtn: document.getElementById('wpfa-add-speaker-btn')
 		};
 		
@@ -139,13 +137,6 @@ const WPFA_Speakers = (function() {
 				if (e.target === this) {
 					closeModal();
 				}
-			});
-		}
-		
-		// Image source toggle
-		if (elements.imageSourceToggle.length > 0) {
-			elements.imageSourceToggle.forEach(radio => {
-				radio.addEventListener('change', handleImageSourceChange);
 			});
 		}
 		
@@ -220,21 +211,6 @@ const WPFA_Speakers = (function() {
 			if (card) {
 				card.classList.toggle('expanded');
 			}
-		}
-	}
-	
-	/**
-	 * Handle image source radio change
-	 */
-	function handleImageSourceChange(e) {
-		const source = e.target.value;
-		
-		if (source === 'url') {
-			elements.imageUrlGroup.style.display = 'block';
-			elements.imageUploadGroup.style.display = 'none';
-		} else {
-			elements.imageUrlGroup.style.display = 'none';
-			elements.imageUploadGroup.style.display = 'block';
 		}
 	}
 	

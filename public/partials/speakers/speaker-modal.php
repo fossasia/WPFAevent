@@ -120,26 +120,10 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 			<div class="wpfa-form-section">
 				<h3 class="wpfa-form-section-title"><?php esc_html_e( 'Speaker Image', 'wpfaevent' ); ?></h3>
 				
-				<div class="wpfa-image-source-toggle">
-					<label class="wpfa-radio-label">
-						<input type="radio" name="image_source" value="url" checked>
-						<?php esc_html_e( 'Image URL', 'wpfaevent' ); ?>
-					</label>
-					<label class="wpfa-radio-label">
-						<input type="radio" name="image_source" value="upload">
-						<?php esc_html_e( 'Upload Image', 'wpfaevent' ); ?>
-					</label>
-				</div>
-				
 				<div class="wpfa-form-group" id="wpfa-image-url-group">
 					<label for="wpfa-speaker-image-url"><?php esc_html_e( 'Image URL', 'wpfaevent' ); ?> *</label>
 					<input type="url" id="wpfa-speaker-image-url" name="image_url" 
-						placeholder="https://example.com/photo.jpg">
-				</div>
-				
-				<div class="wpfa-form-group" id="wpfa-image-upload-group" style="display:none;">
-					<label for="wpfa-speaker-image-upload"><?php esc_html_e( 'Choose Image', 'wpfaevent' ); ?> *</label>
-					<input type="file" id="wpfa-speaker-image-upload" name="image_upload" accept="image/*">
+						placeholder="https://example.com/photo.jpg" required>
 				</div>
 			</div>
 			
