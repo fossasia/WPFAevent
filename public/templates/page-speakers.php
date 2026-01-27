@@ -79,13 +79,15 @@ if ( empty( $site_logo_url ) ) {
 $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 
 // Set up header variables for the partial
-$header_vars = array(
+$register_button_url = get_option( 'wpfa_register_button_url', 'https://eventyay.com/e/4c0e0c27' );
+$register_button_url = apply_filters( 'wpfa_register_button_url', $register_button_url );
+$header_vars         = array(
 	'site_logo_url'        => $site_logo_url,
 	'event_page_url'       => home_url( '/events/' ),
 	'show_back_button'     => true,
 	'show_register_button' => true,
 	'back_button_text'     => __( 'Back to Event', 'wpfaevent' ),
-	'register_button_url'  => 'https://eventyay.com/e/4c0e0c27',
+	'register_button_url'  => $register_button_url,
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
 );
 
