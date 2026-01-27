@@ -633,6 +633,14 @@ class Wpfaevent_Admin {
 			wp_send_json_error( __( 'Cannot edit this speaker', 'wpfaevent' ) );
 		}
 
+		// Validate required fields
+		$required_fields = array( 'name', 'position', 'bio', 'talk_title', 'talk_date', 'talk_time', 'talk_end_time' );
+		foreach ( $required_fields as $field ) {
+			if ( empty( $_POST[ $field ] ) ) {
+				wp_send_json_error( sprintf( esc_html__( 'Missing required field: %s', 'wpfaevent' ), $field ) );
+			}
+		}
+
 		// Update post title if name changed
 		if ( ! empty( $_POST['name'] ) ) {
 			wp_update_post(
