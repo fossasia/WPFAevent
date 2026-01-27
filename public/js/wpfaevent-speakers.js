@@ -262,11 +262,34 @@ const WPFA_Speakers = (function() {
 	}
 	
 	/**
+	 * Get localized results count text
+	 * Falls back to English if localization is not available
+	 *
+	 * Expects PHP to provide, via wp_localize_script(), an object like:
+	 * window.wpfaeventSpeakersL10n = {
+	 *     resultsCount: "Showing %d speakers"
+	 * };
+	 *
+	 * @param {number} count
+	 * @returns {string}
+	 */
+	function getResultsCountText(count) {
+		if (typeof window !== 'undefined' &&
+			window.wpfaeventSpeakersL10n &&
+			typeof window.wpfaeventSpeakersL10n.resultsCount === 'string') {
+			return window.wpfaeventSpeakersL10n.resultsCount.replace('%d', count);
+		}
+		
+		// Fallback to English if no localized string is available
+		return 'Showing ' + count + ' speakers';
+	}
+	
+	/**
 	 * Update results count display
 	 */
 	function updateResultsCount(count) {
 		if (elements.resultsInfo) {
-			elements.resultsInfo.textContent = `Showing ${count} speakers`;
+			elements.resultsInfo.textContent = getResultsCountText(count);
 		}
 	}
 	
