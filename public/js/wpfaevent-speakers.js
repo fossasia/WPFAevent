@@ -205,12 +205,12 @@ const WPFA_Speakers = (function() {
 		return speakers.filter(speaker => {
 			// Apply category filter
 			if (currentFilter !== 'all') {
-				// Get the actual category text from active filter button
+				// Get the actual category value from active filter button using data-filter
 				const activeFilterBtn = document.querySelector('.wpfa-filter-btn.active');
-				const filterText = activeFilterBtn ? activeFilterBtn.textContent.trim().toLowerCase() : '';
+				const filterValue = activeFilterBtn ? (activeFilterBtn.getAttribute('data-filter') || '').toLowerCase() : '';
 				const speakerCategory = speaker.category ? speaker.category.toLowerCase() : '';
 				
-				if (speakerCategory !== filterText && currentFilter !== 'all') {
+				if (speakerCategory !== filterValue && currentFilter !== 'all') {
 					return false;
 				}
 			}
