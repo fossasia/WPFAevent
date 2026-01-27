@@ -22,6 +22,12 @@ const WPFA_Speakers = (function() {
 	 */
 	function init(options) {
 		config = options || {};
+		
+		// Collect speakers data from the page if not provided
+		if (!config.speakersData || config.speakersData.length === 0) {
+			config.speakersData = collectSpeakersFromPage();
+		}
+		
 		speakers = config.speakersData || [];
 		
 		// Cache DOM elements
@@ -40,6 +46,40 @@ const WPFA_Speakers = (function() {
 		
 		// Initial render with client-side filtering
 		filterAndRenderSpeakers();
+	}
+
+	/**
+	 * Collect speaker data from page DOM
+	 */
+	function collectSpeakersFromPage() {
+		const speakerCards = document.querySelectorAll('.wpfa-speaker-card');
+		return Array.from(speakerCards).map(card => {
+			const name = card.querySelector('.wpfa-speaker-name')?.textContent?.trim() || '';
+			const role = card.querySelector('.wpfa-speaker-role')?.textContent?.trim() || '';
+			const bio = card.querySelector('.wpfa-speaker-bio')?.textContent?.trim() || '';
+			const photo = card.querySelector('img')?.src || '';
+			const link = card.querySelector('.wpfa-speaker-name a')?.href || '';
+			const speakerId = card.dataset.speakerId || '';
+			
+			// Get category from pill element
+			let category = '';
+			const pillElement = card.querySelector('.pill');
+			if (pillElement) {
+				category = pillElement.textContent.trim();
+			}
+			
+			return {
+				id: speakerId,
+				name: name,
+				title: role,
+				bio: bio,
+				image: photo,
+				link: link,
+				category: category,
+				organization: role.includes('·') ? role.split('·')[1]?.trim() : '',
+				element: card
+			};
+		});
 	}
 	
 	/**
@@ -262,7 +302,7 @@ const WPFA_Speakers = (function() {
 	}
 	
 	/**
-	 * Get localized results count text
+ 	 * Get localized results count text
 	 * Falls back to English if localization is not available
 	 *
 	 * Expects PHP to provide, via wp_localize_script(), an object like:
@@ -381,7 +421,10 @@ const WPFA_Speakers = (function() {
 		fetchSpeakerData(speakerId).then(speaker => {
 			if (!speaker) {
 				closeModal();
-				alert('Error loading speaker data');
+				const errorMsg = config.i18n && config.i18n.loadError 
+					? config.i18n.loadError 
+					: 'Error loading speaker data';
+				alert(errorMsg);
 				return;
 			}
 			
@@ -438,12 +481,18 @@ const WPFA_Speakers = (function() {
 			if (data.success) {
 				return data.data;
 			} else {
-				alert('Error fetching speaker data: ' + data.data);
+				const errorMsg = config.i18n && config.i18n.fetchError 
+					? config.i18n.fetchError + ': ' + data.data
+					: 'Error fetching speaker data: ' + data.data;
+				alert(errorMsg);
 				return null;
 			}
 		})
 		.catch(error => {
-			alert('Error fetching speaker data. Please try again.');
+			const errorMsg = config.i18n && config.i18n.fetchErrorGeneric 
+				? config.i18n.fetchErrorGeneric 
+				: 'Error fetching speaker data. Please try again.';
+			alert(errorMsg);
 			return null;
 		});
 	}
@@ -598,7 +647,12 @@ const WPFA_Speakers = (function() {
 	 * Delete speaker confirmation and AJAX call
 	 */
 	function deleteSpeaker(speakerId, speakerName) {
-		if (!confirm(`Are you sure you want to delete "${speakerName}"? This action cannot be undone.`)) {
+		// Get localized confirmation message
+		const confirmMsg = config.i18n && config.i18n.confirmDelete 
+			? config.i18n.confirmDelete.replace('%s', speakerName)
+			: `Are you sure you want to delete "${speakerName}"? This action cannot be undone.`;
+		
+		if (!confirm(confirmMsg)) {
 			return;
 		}
 		
@@ -616,14 +670,23 @@ const WPFA_Speakers = (function() {
 		.then(response => response.json())
 		.then(data => {
 			if (data.success) {
-				alert('Speaker deleted successfully. The page will now reload.');
+				const successMsg = config.i18n && config.i18n.deleteSuccess 
+					? config.i18n.deleteSuccess 
+					: 'Speaker deleted successfully. The page will now reload.';
+				alert(successMsg);
 				window.location.reload();
 			} else {
-				alert('Error deleting speaker: ' + data.data);
+				const errorMsg = config.i18n && config.i18n.deleteError 
+					? config.i18n.deleteError + ': ' + data.data
+					: 'Error deleting speaker: ' + data.data;
+				alert(errorMsg);
 			}
 		})
 		.catch(error => {
-			alert('Error deleting speaker. Please try again.');
+			const errorMsg = config.i18n && config.i18n.deleteErrorGeneric 
+				? config.i18n.deleteErrorGeneric 
+				: 'Error deleting speaker. Please try again.';
+			alert(errorMsg);
 		});
 	}
 	
@@ -634,7 +697,10 @@ const WPFA_Speakers = (function() {
 		e.preventDefault();
 		
 		if (!config.isAdmin) {
-			alert('You do not have permission to perform this action.');
+			const errorMsg = config.i18n && config.i18n.noPermission 
+				? config.i18n.noPermission 
+				: 'You do not have permission to perform this action.';
+			alert(errorMsg);
 			return;
 		}
 		
@@ -688,10 +754,16 @@ const WPFA_Speakers = (function() {
 		.then(response => response.json())
 		.then(data => {
 			if (data.success) {
-				alert('Speaker added successfully. The page will now reload.');
+				const successMsg = config.i18n && config.i18n.addSuccess 
+					? config.i18n.addSuccess 
+					: 'Speaker added successfully. The page will now reload.';
+				alert(successMsg);
 				window.location.reload();
 			} else {
-				alert('Error adding speaker: ' + data.data);
+				const errorMsg = config.i18n && config.i18n.addError 
+					? config.i18n.addError + ': ' + data.data
+					: 'Error adding speaker: ' + data.data;
+				alert(errorMsg);
 				const submitBtn = elements.speakerForm?.querySelector('button[type="submit"]');
 				if (submitBtn) {
 					submitBtn.disabled = false;
@@ -700,7 +772,10 @@ const WPFA_Speakers = (function() {
 			}
 		})
 		.catch(error => {
-			alert('Error adding speaker. Please try again.');
+			const errorMsg = config.i18n && config.i18n.addErrorGeneric 
+				? config.i18n.addErrorGeneric 
+				: 'Error adding speaker. Please try again.';
+			alert(errorMsg);
 			const submitBtn = elements.speakerForm?.querySelector('button[type="submit"]');
 			if (submitBtn) {
 				submitBtn.disabled = false;
@@ -745,10 +820,16 @@ const WPFA_Speakers = (function() {
 		.then(response => response.json())
 		.then(data => {
 			if (data.success) {
-				alert('Speaker updated successfully. The page will now reload.');
+				const successMsg = config.i18n && config.i18n.updateSuccess 
+					? config.i18n.updateSuccess 
+					: 'Speaker updated successfully. The page will now reload.';
+				alert(successMsg);
 				window.location.reload();
 			} else {
-				alert('Error updating speaker: ' + data.data);
+				const errorMsg = config.i18n && config.i18n.updateError 
+					? config.i18n.updateError + ': ' + data.data
+					: 'Error updating speaker: ' + data.data;
+				alert(errorMsg);
 				const submitBtn = elements.speakerForm?.querySelector('button[type="submit"]');
 				if (submitBtn) {
 					submitBtn.disabled = false;
@@ -757,7 +838,10 @@ const WPFA_Speakers = (function() {
 			}
 		})
 		.catch(error => {
-			alert('Error updating speaker. Please try again.');
+			const errorMsg = config.i18n && config.i18n.updateErrorGeneric 
+				? config.i18n.updateErrorGeneric 
+				: 'Error updating speaker. Please try again.';
+			alert(errorMsg);
 			const submitBtn = elements.speakerForm?.querySelector('button[type="submit"]');
 			if (submitBtn) {
 				submitBtn.disabled = false;
@@ -779,4 +863,14 @@ const WPFA_Speakers = (function() {
 // Export for global use
 if (typeof window !== 'undefined') {
 	window.WPFA_Speakers = WPFA_Speakers;
+}
+
+// Initialize when page loads
+if (typeof document !== 'undefined') {
+	document.addEventListener('DOMContentLoaded', function() {
+		// Check if config exists (only on speakers page)
+		if (typeof wpfaeventSpeakersConfig !== 'undefined') {
+			WPFA_Speakers.init(wpfaeventSpeakersConfig);
+		}
+	});
 }

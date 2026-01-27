@@ -232,54 +232,5 @@ endif;
 ?>
 
 <?php wp_footer(); ?>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-	const isAdmin = <?php echo current_user_can( 'manage_options' ) ? 'true' : 'false'; ?>;
-	const ajaxUrl = '<?php echo admin_url( 'admin-ajax.php' ); ?>';
-	const adminNonce = '<?php echo wp_create_nonce( 'wpfa_speakers_ajax' ); ?>';
-	
-	// Collect all speakers data from the page for client-side filtering
-	const speakerCards = document.querySelectorAll('.wpfa-speaker-card');
-	const speakersData = Array.from(speakerCards).map(card => {
-		const name = card.querySelector('.wpfa-speaker-name')?.textContent?.trim() || '';
-		const role = card.querySelector('.wpfa-speaker-role')?.textContent?.trim() || '';
-		const bio = card.querySelector('.wpfa-speaker-bio')?.textContent?.trim() || '';
-		const photo = card.querySelector('img')?.src || '';
-		const link = card.querySelector('.wpfa-speaker-name a')?.href || '';
-		const speakerId = card.dataset.speakerId || '';
-		
-		// Get category from pill element
-		let category = '';
-		const pillElement = card.querySelector('.pill');
-		if (pillElement) {
-			category = pillElement.textContent.trim();
-		}
-		
-		return {
-			id: speakerId,
-			name: name,
-			title: role,
-			bio: bio,
-			image: photo,
-			link: link,
-			category: category,
-			organization: role.includes('·') ? role.split('·')[1]?.trim() : '',
-			element: card
-		};
-	});
-	
-	// Initialize speakers page functionality
-	if ( typeof WPFA_Speakers !== 'undefined' ) {
-		WPFA_Speakers.init({
-			speakersData: speakersData,
-			isAdmin: isAdmin,
-			ajaxUrl: ajaxUrl,
-			adminNonce: adminNonce,
-			eventId: 0
-		});
-	}
-});
-</script>
 </body>
 </html>
