@@ -458,13 +458,13 @@ class Wpfaevent_Admin {
 		$speaker_id = isset( $_POST['speaker_id'] ) ? absint( $_POST['speaker_id'] ) : 0;
 
 		if ( ! $speaker_id ) {
-			wp_send_json_error( 'Invalid speaker ID' );
+			wp_send_json_error( esc_html__( 'Invalid speaker ID', 'wpfaevent' ) );
 		}
 
 		$speaker = get_post( $speaker_id );
 
 		if ( ! $speaker || $speaker->post_type !== 'wpfa_speaker' ) {
-			wp_send_json_error( 'Speaker not found' );
+			wp_send_json_error( esc_html__( 'Speaker not found', 'wpfaevent' ) );
 		}
 
 		// Get category term
@@ -733,20 +733,20 @@ class Wpfaevent_Admin {
 		$speaker_id = isset( $_POST['speaker_id'] ) ? absint( $_POST['speaker_id'] ) : 0;
 
 		if ( ! $speaker_id ) {
-			wp_send_json_error( 'Invalid speaker ID' );
+			wp_send_json_error( __( 'Invalid speaker ID', 'wpfaevent' ) );
 		}
 
 		// Verify speaker exists and user can delete it
 		$speaker = get_post( $speaker_id );
 		if ( ! $speaker || $speaker->post_type !== 'wpfa_speaker' || ! current_user_can( 'delete_post', $speaker_id ) ) {
-			wp_send_json_error( 'Cannot delete this speaker' );
+			wp_send_json_error( __( 'Cannot delete this speaker', 'wpfaevent' ) );
 		}
 
 		// Delete the speaker
 		$result = wp_delete_post( $speaker_id, true );
 
 		if ( ! $result ) {
-			wp_send_json_error( 'Failed to delete speaker' );
+			wp_send_json_error( __( 'Failed to delete speaker', 'wpfaevent' ) );
 		}
 
 		wp_send_json_success();
