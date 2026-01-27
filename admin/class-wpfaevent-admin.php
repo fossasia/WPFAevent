@@ -519,7 +519,7 @@ class Wpfaevent_Admin {
 		$required_fields = array( 'name', 'position', 'bio' );
 		foreach ( $required_fields as $field ) {
 			if ( empty( $_POST[ $field ] ) ) {
-				wp_send_json_error( sprintf( __( 'Missing required field: %s', 'wpfaevent' ), $field ) );
+				wp_send_json_error( sprintf( esc_html__( 'Missing required field: %s', 'wpfaevent' ), $field ) );
 			}
 		}
 
@@ -624,13 +624,13 @@ class Wpfaevent_Admin {
 		$speaker_id = isset( $_POST['speaker_id'] ) ? absint( $_POST['speaker_id'] ) : 0;
 
 		if ( ! $speaker_id ) {
-			wp_send_json_error( 'Invalid speaker ID' );
+			wp_send_json_error( __( 'Invalid speaker ID', 'wpfaevent' ) );
 		}
 
 		// Verify speaker exists and user can edit it
 		$speaker = get_post( $speaker_id );
 		if ( ! $speaker || $speaker->post_type !== 'wpfa_speaker' || ! current_user_can( 'edit_post', $speaker_id ) ) {
-			wp_send_json_error( 'Cannot edit this speaker' );
+			wp_send_json_error( __( 'Cannot edit this speaker', 'wpfaevent' ) );
 		}
 
 		// Update post title if name changed
