@@ -137,7 +137,6 @@ class Wpfaevent_Public {
 			esc_attr( $colors['background'] ),
 			esc_attr( $colors['text'] )
 		);
-		$this->version     = $version;
 	}
 
 	/**
