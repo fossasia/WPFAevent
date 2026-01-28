@@ -44,8 +44,8 @@ class Wpfaevent_Public {
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of the plugin.
-	 * @param      string    $version    The version of this plugin.
+	 * @param      string $plugin_name       The name of the plugin.
+	 * @param      string $version    The version of this plugin.
 	 */
 	public function __construct( $plugin_name, $version ) {
 
@@ -137,6 +137,7 @@ class Wpfaevent_Public {
 			esc_attr( $colors['background'] ),
 			esc_attr( $colors['text'] )
 		);
+		$this->version     = $version;
 	}
 
 	/**
