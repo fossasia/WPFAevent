@@ -105,6 +105,14 @@ $header_vars         = array(
 <div id="page" class="site">
 	<?php
 	// Load shared navigation header
+	$site_logo_url        = $header_vars['site_logo_url'];
+	$event_page_url       = $header_vars['event_page_url'];
+	$show_back_button     = $header_vars['show_back_button'];
+	$show_register_button = $header_vars['show_register_button'];
+	$back_button_text     = $header_vars['back_button_text'];
+	$register_button_url  = $header_vars['register_button_url'];
+	$register_button_text = $header_vars['register_button_text'];
+	
 	$nav_partial = WPFAEVENT_PATH . 'public/partials/header.php';
 	if ( file_exists( $nav_partial ) ) {
 		include $nav_partial;
