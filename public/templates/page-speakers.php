@@ -215,7 +215,14 @@ $header_vars         = array(
 	<footer class="wpfa-footer">
 		<div class="container">
 			<small>
-				© FOSSASIA • FOSSASIA Summit — Mar 13–15, 2025 • True Digital Park West, Bangkok
+				<?php
+				echo esc_html(
+					apply_filters(
+						'wpfa_footer_text',
+						'© FOSSASIA • FOSSASIA Summit — Mar 13–15, 2025 • True Digital Park West, Bangkok'
+					)
+				);
+				?>
 			</small>
 		</div>
 	</footer>
