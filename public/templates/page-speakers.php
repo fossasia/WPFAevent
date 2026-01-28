@@ -107,8 +107,6 @@ $header_vars         = array(
 	// Load shared navigation header
 	$nav_partial = WPFAEVENT_PATH . 'public/partials/header.php';
 	if ( file_exists( $nav_partial ) ) {
-		// Extract variables for the partial
-		extract( $header_vars );
 		include $nav_partial;
 	}
 	?>
