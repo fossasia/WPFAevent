@@ -114,8 +114,8 @@ $header_vars         = array(
 	<main class="wpfa-speakers">
 		<section class="wpfa-speakers-hero">
 			<div class="container">
-				<h1><?php esc_html_e( 'FOSSASIA Summit Speakers', 'wpfaevent' ); ?></h1>
-				<p><?php esc_html_e( 'Discover all the amazing speakers joining us at FOSSASIA Summit', 'wpfaevent' ); ?></p>
+				<h1><?php echo esc_html( apply_filters( 'wpfa_speakers_title', __( 'FOSSASIA Summit Speakers', 'wpfaevent' ) ) ); ?></h1>
+				<p><?php echo esc_html( apply_filters( 'wpfa_speakers_subtitle', __( 'Discover all the amazing speakers joining us at FOSSASIA Summit', 'wpfaevent' ) ) ); ?></p>
 				
 				<form class="wpfa-speakers-search" method="get" action="<?php echo esc_url( get_permalink() ); ?>">
 					<label for="wpfa-speaker-search" class="screen-reader-text">
