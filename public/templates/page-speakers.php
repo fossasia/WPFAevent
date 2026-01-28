@@ -144,7 +144,7 @@ $header_vars         = array(
 					</a>
 					<?php
 					foreach ( $categories as $category_term ) :
-						$category_slug = sanitize_title( $category_term->name );
+						$category_slug = $category_term->slug;
 						$is_active     = $current_category === $category_slug;
 						$category_url  = add_query_arg(
 							array( 'category' => $category_slug ),
