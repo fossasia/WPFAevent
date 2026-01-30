@@ -33,7 +33,7 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 <!-- Unified Speaker Modal -->
 <div id="wpfa-speaker-modal" class="wpfa-modal">
 	<div class="wpfa-modal-content">
-		<button type="button" class="wpfa-modal-close" aria-label="<?php esc_attr_e( 'Close modal', 'wpfaevent' ); ?>">
+		<button type="button" class="wpfa-modal-close" aria-label="<?php echo esc_attr__( 'Close modal', 'wpfaevent' ); ?>">
 			&times;
 		</button>
 		
@@ -75,10 +75,10 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 							<option value="_custom"><?php esc_html_e( '+ Add New Category', 'wpfaevent' ); ?></option>
 						</select>
 						<input type="text" id="wpfa-speaker-category-custom" name="category_custom" 
-							placeholder="<?php esc_attr_e( 'Enter new category', 'wpfaevent' ); ?>" style="display:none; margin-top: 5px;">
+							placeholder="<?php echo esc_attr__( 'Enter new category', 'wpfaevent' ); ?>" style="display:none; margin-top: 5px;">
 					<?php else : ?>
-						<input type="text" id="wpfa-speaker-category" name="category" 
-							placeholder="<?php esc_attr_e( 'e.g., AI, Web Development, Cloud', 'wpfaevent' ); ?>">
+						<input type="text" id="wpfa-speaker-category-text" name="category" 
+							placeholder="<?php echo esc_attr__( 'e.g., AI, Web Development, Cloud', 'wpfaevent' ); ?>">
 					<?php endif; ?>
 				</div>
 				
@@ -120,10 +120,27 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 			<div class="wpfa-form-section">
 				<h3 class="wpfa-form-section-title"><?php esc_html_e( 'Speaker Image', 'wpfaevent' ); ?></h3>
 				
+				<div class="wpfa-image-source-toggle">
+					<label class="wpfa-radio-label">
+						<input type="radio" name="image_source" value="url" checked>
+						<?php esc_html_e( 'Image URL', 'wpfaevent' ); ?>
+					</label>
+					<label class="wpfa-radio-label">
+						<input type="radio" name="image_source" value="upload">
+						<?php esc_html_e( 'Upload Image', 'wpfaevent' ); ?>
+					</label>
+				</div>
+				
 				<div class="wpfa-form-group" id="wpfa-image-url-group">
 					<label for="wpfa-speaker-image-url"><?php esc_html_e( 'Image URL', 'wpfaevent' ); ?> *</label>
 					<input type="url" id="wpfa-speaker-image-url" name="image_url" 
-						placeholder="https://example.com/photo.jpg" required>
+						placeholder="<?php echo esc_attr__( 'https://example.com/photo.jpg', 'wpfaevent' ); ?>">
+				</div>
+				
+				<div class="wpfa-form-group" id="wpfa-image-upload-group" style="display:none;">
+					<label for="wpfa-speaker-image-upload"><?php esc_html_e( 'Choose Image', 'wpfaevent' ); ?></label>
+					<input type="file" id="wpfa-speaker-image-upload" name="image_upload" accept="image/*">
+					<p class="description"><?php esc_html_e( 'Max size: 2MB. Formats: JPG, PNG, GIF, WebP', 'wpfaevent' ); ?></p>
 				</div>
 			</div>
 			
@@ -155,7 +172,6 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 				<button type="submit" class="wpfa-btn wpfa-btn-primary">
 					<span id="wpfa-submit-text"><?php esc_html_e( 'Add Speaker', 'wpfaevent' ); ?></span>
 				</button>
-				<!-- Cancel button removed - using the close (×) button instead -->
 			</div>
 		</form>
 	</div>

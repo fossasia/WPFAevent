@@ -71,11 +71,12 @@ const WPFA_Speakers = (function() {
 			return {
 				id: speakerId,
 				name: name,
-				title: role,
+				position: role,
 				bio: bio,
 				image: photo,
 				link: link,
 				category: category,
+				// Extract organization from position string (e.g., "Developer · Company")
 				organization: role.includes('·') ? role.split('·')[1]?.trim() : '',
 				element: card
 			};
@@ -95,7 +96,9 @@ const WPFA_Speakers = (function() {
 			modal: document.getElementById('wpfa-speaker-modal'),
 			modalClose: document.querySelector('.wpfa-modal-close'),
 			speakerForm: document.getElementById('wpfa-speaker-form'),
+			imageSourceToggle: document.querySelectorAll('input[name="image_source"]'),
 			imageUrlGroup: document.getElementById('wpfa-image-url-group'),
+			imageUploadGroup: document.getElementById('wpfa-image-upload-group'),
 			addSpeakerBtn: document.getElementById('wpfa-add-speaker-btn')
 		};
 		
@@ -154,6 +157,13 @@ const WPFA_Speakers = (function() {
 					customCategoryInput.required = false;
 					customCategoryInput.value = '';
 				}
+			});
+		}
+		
+		// Image source toggle
+		if (elements.imageSourceToggle.length > 0) {
+			elements.imageSourceToggle.forEach(radio => {
+				radio.addEventListener('change', handleImageSourceChange);
 			});
 		}
 		
@@ -230,17 +240,39 @@ const WPFA_Speakers = (function() {
 			}
 		}
 	}
+
+	/**
+	 * Handle image source radio change
+	 */
+	function handleImageSourceChange(e) {
+		const source = e.target.value;
+		const imageUrlInput = document.getElementById('wpfa-speaker-image-url');
+		const imageUploadInput = document.getElementById('wpfa-speaker-image-upload');
+		
+		if (source === 'url') {
+			elements.imageUrlGroup.style.display = 'block';
+			elements.imageUploadGroup.style.display = 'none';
+			if (imageUrlInput) imageUrlInput.required = true;
+			if (imageUploadInput) imageUploadInput.required = false;
+		} else {
+			elements.imageUrlGroup.style.display = 'none';
+			elements.imageUploadGroup.style.display = 'block';
+			if (imageUrlInput) imageUrlInput.required = false;
+			if (imageUploadInput) imageUploadInput.required = true;
+		}
+	}
 	
 	/**
 	 * Filter speakers based on current filter and search term
 	 */
 	function filterSpeakers() {
+		// Cache active filter value once (optimization)
+		const activeFilterBtn = document.querySelector('.wpfa-filter-btn.active');
+		const filterValue = activeFilterBtn ? (activeFilterBtn.getAttribute('data-filter') || '').toLowerCase() : '';
+
 		return speakers.filter(speaker => {
 			// Apply category filter
 			if (currentFilter !== 'all') {
-				// Get the actual category value from active filter button using data-filter
-				const activeFilterBtn = document.querySelector('.wpfa-filter-btn.active');
-				const filterValue = activeFilterBtn ? (activeFilterBtn.getAttribute('data-filter') || '').toLowerCase() : '';
 				const speakerCategory = speaker.category ? speaker.category.toLowerCase() : '';
 				
 				if (speakerCategory !== filterValue && currentFilter !== 'all') {
@@ -252,7 +284,7 @@ const WPFA_Speakers = (function() {
 			if (searchTerm) {
 				const searchableFields = [
 					speaker.name,
-					speaker.title,
+					speaker.position,
 					speaker.category,
 					speaker.bio,
 					speaker.organization
@@ -597,10 +629,12 @@ const WPFA_Speakers = (function() {
 		}
 		
 		// Set image source to URL by default
-		const urlRadio = elements.speakerForm?.querySelector('input[value="url"]');
-		if (urlRadio) {
-			urlRadio.checked = true;
-			handleImageSourceChange({ target: urlRadio });
+		if (elements.speakerForm) {
+			const urlRadio = elements.speakerForm?.querySelector('input[value="url"]');
+			if (urlRadio) {
+				urlRadio.checked = true;
+				handleImageSourceChange({ target: urlRadio });
+			}
 		}
 		
 		// Update submit button text
@@ -696,14 +730,21 @@ const WPFA_Speakers = (function() {
 			alert(errorMsg);
 			return;
 		}
+
+		if (!elements.speakerForm) {
+			console.error('Speaker form element not found');
+			return;
+		}
 		
 		const formData = new FormData(elements.speakerForm);
 		const action = formData.get('action');
 		const submitBtn = elements.speakerForm.querySelector('button[type="submit"]');
 		
 		// Disable button during submission
-		submitBtn.disabled = true;
-		submitBtn.innerHTML = action === 'add' ? 'Adding...' : 'Saving...';
+		if (submitBtn) {
+			submitBtn.disabled = true;
+			submitBtn.innerHTML = action === 'add' ? 'Adding...' : 'Saving...';
+		}
 		
 		if (action === 'add') {
 			addSpeaker(formData);
@@ -712,37 +753,17 @@ const WPFA_Speakers = (function() {
 		}
 	}
 	
-	/**
+/**
 	 * Add new speaker via AJAX
 	 */
 	function addSpeaker(formData) {
-		const data = {
-			action: 'wpfa_add_speaker',
-			nonce: config.adminNonce,
-			name: formData.get('name'),
-			position: formData.get('position'),
-			organization: formData.get('organization'),
-			bio: formData.get('bio'),
-			image_url: formData.get('image_url'),
-			linkedin: formData.get('linkedin'),
-			twitter: formData.get('twitter'),
-			github: formData.get('github'),
-			website: formData.get('website'),
-			category: formData.get('category'),
-			category_custom: formData.get('category_custom'),
-			talk_title: formData.get('talk_title'),
-			talk_date: formData.get('talk_date'),
-			talk_time: formData.get('talk_time'),
-			talk_end_time: formData.get('talk_end_time'),
-			talk_abstract: formData.get('talk_abstract')
-		};
+		// Add nonce and action to FormData
+		formData.append('action', 'wpfa_add_speaker');
+		formData.append('nonce', config.adminNonce);
 		
 		fetch(config.ajaxUrl, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			body: new URLSearchParams(data)
+			body: formData  // Send FormData directly (supports files)
 		})
 		.then(response => response.json())
 		.then(data => {
@@ -781,34 +802,13 @@ const WPFA_Speakers = (function() {
 	 * Update existing speaker via AJAX
 	 */
 	function updateSpeaker(formData) {
-		const data = {
-			action: 'wpfa_update_speaker',
-			nonce: config.adminNonce,
-			speaker_id: formData.get('speaker_id'),
-			name: formData.get('name'),
-			position: formData.get('position'),
-			organization: formData.get('organization'),
-			bio: formData.get('bio'),
-			image_url: formData.get('image_url'),
-			linkedin: formData.get('linkedin'),
-			twitter: formData.get('twitter'),
-			github: formData.get('github'),
-			website: formData.get('website'),
-			category: formData.get('category'),
-			category_custom: formData.get('category_custom'),
-			talk_title: formData.get('talk_title'),
-			talk_date: formData.get('talk_date'),
-			talk_time: formData.get('talk_time'),
-			talk_end_time: formData.get('talk_end_time'),
-			talk_abstract: formData.get('talk_abstract')
-		};
+		// Add nonce and action to FormData
+		formData.append('action', 'wpfa_update_speaker');
+		formData.append('nonce', config.adminNonce);
 		
 		fetch(config.ajaxUrl, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			body: new URLSearchParams(data)
+			body: formData  // Send FormData directly (supports files)
 		})
 		.then(response => response.json())
 		.then(data => {
@@ -853,7 +853,7 @@ const WPFA_Speakers = (function() {
 	};
 })();
 
-// Export for global use
+// Export to global window object for browser use
 if (typeof window !== 'undefined') {
 	window.WPFA_Speakers = WPFA_Speakers;
 }
