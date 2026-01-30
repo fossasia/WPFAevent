@@ -1,0 +1,179 @@
+/* ==========================================================================
+   Past Events Template Styles
+   ========================================================================== */
+
+/* Hero Section - Using Code of Conduct pattern */
+.wpfa-past-events-hero {
+	text-align: center;
+	padding: 60px 20px;
+	background: var(--brand);
+	color: white;
+	margin-bottom: 40px;
+}
+
+.wpfa-past-events-hero h1 {
+	margin: 0 0 15px;
+	font-size: 2.5rem;
+	color: white;
+}
+
+.wpfa-past-events-hero p {
+	font-size: 1.1rem;
+	max-width: 600px;
+	margin: 0 auto 30px;
+	opacity: 0.9;
+}
+
+.wpfa-past-events-hero .btn-secondary {
+	background: rgba(255, 255, 255, 0.2);
+	color: white;
+	padding: 12px 24px;
+	border-radius: 50px;
+	font-weight: 600;
+	text-decoration: none;
+	display: inline-block;
+	border: 2px solid rgba(255, 255, 255, 0.3);
+	transition: all 0.3s ease;
+}
+
+.wpfa-past-events-hero .btn-secondary:hover {
+	background: rgba(255, 255, 255, 0.3);
+	border-color: rgba(255, 255, 255, 0.5);
+	transform: translateY(-2px);
+}
+
+/* Events Grid */
+.wpfa-past-events-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 24px;
+	margin: 40px 0;
+}
+
+.wpfa-past-event-card {
+	background: white;
+	border-radius: var(--card-radius);
+	box-shadow: var(--shadow);
+	overflow: hidden;
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	border: 1px solid #eee;
+	display: flex;
+	flex-direction: column;
+}
+
+.wpfa-past-event-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.wpfa-past-event-card-link {
+	text-decoration: none;
+	color: inherit;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+.wpfa-past-event-card-image {
+	height: 180px;
+	background-color: #f0f0f0;
+	overflow: hidden;
+}
+
+.wpfa-past-event-card-image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform 0.5s ease;
+}
+
+.wpfa-past-event-card:hover .wpfa-past-event-card-image img {
+	transform: scale(1.05);
+}
+
+.wpfa-past-event-card-content {
+	padding: 20px;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+.wpfa-past-event-card-title {
+	margin: 0 0 10px;
+	font-size: 1.25rem;
+	line-height: 1.3;
+}
+
+.wpfa-past-event-card-title a {
+	color: var(--text);
+	text-decoration: none;
+}
+
+.wpfa-past-event-card-title a:hover {
+	color: var(--brand);
+}
+
+.wpfa-past-event-card-description {
+	margin: 0 0 15px;
+	color: var(--muted);
+	font-size: 0.95rem;
+	line-height: 1.5;
+	flex: 1;
+}
+
+.wpfa-past-event-card-meta {
+	margin: 0;
+	color: var(--muted);
+	font-size: 0.9rem;
+	line-height: 1.5;
+}
+
+.wpfa-past-event-card-meta svg {
+	width: 16px;
+	height: 16px;
+	vertical-align: middle;
+	margin-right: 6px;
+	fill: currentColor;
+}
+
+.wpfa-past-event-card-meta-item {
+	display: flex;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+/* Empty State */
+.wpfa-past-events-empty {
+	text-align: center;
+	padding: 60px 20px;
+	color: var(--muted);
+}
+
+.wpfa-past-events-empty h3 {
+	margin: 0 0 15px;
+	color: var(--text);
+}
+
+/* Results Info */
+.wpfa-results-info {
+	margin: 20px 0;
+	color: var(--muted);
+	font-size: 0.9rem;
+	text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+	.wpfa-past-events-grid {
+		grid-template-columns: 1fr;
+		gap: 20px;
+	}
+	
+	.wpfa-past-events-hero {
+		padding: 40px 20px;
+	}
+	
+	.wpfa-past-events-hero h1 {
+		font-size: 2rem;
+	}
+}
