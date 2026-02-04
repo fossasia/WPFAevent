@@ -104,3 +104,46 @@
 	padding: 0.4rem 0.6rem;
 	white-space: nowrap;
 }
+
+/* ==========================================================================
+   Buttons for Navigation
+   ========================================================================== */
+
+/* General button styles for navigation buttons */
+.wpfaevent .nav-links-secondary .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 1rem;
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+/* Register button (primary) */
+.wpfaevent .nav-links-secondary .btn-primary {
+    background: var(--brand);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(213, 16, 7, 0.14);
+    border: 2px solid transparent;
+}
+
+.wpfaevent .nav-links-secondary .btn-primary:hover {
+    background: #c00;
+    box-shadow: 0 10px 25px rgba(213, 16, 7, 0.2);
+    color: #fff; /* Keep white text on hover */
+}
+
+/* Back button (secondary) */
+.wpfaevent .nav-links-secondary .btn-secondary {
+    background: transparent;
+    color: #222;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.wpfaevent .nav-links-secondary .btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.024);
+    border-color: rgba(0, 0, 0, 0.2);
+    color: #222; /* Keep dark text on hover */
+}

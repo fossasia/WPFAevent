@@ -1,0 +1,547 @@
+/* ==========================================================================
+   Speakers Template Styles
+   ========================================================================== */
+
+/* ==========================================================================
+   LAYOUT & STRUCTURE
+   ========================================================================== */
+
+/* Hero Section */
+.wpfaevent .wpfa-speakers-hero {
+	text-align: center;
+	padding: 60px 20px;
+	background: #fff;
+	border-bottom: 1px solid #eee;
+}
+
+/* Main grid container */
+.wpfaevent .wpfa-speakers-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	gap: 18px;
+	margin-bottom: 40px;
+}
+
+/* Footer */
+.wpfaevent .wpfa-footer {
+	padding: 28px 0;
+	color: var(--muted);
+	border-top: 1px solid #f3f4f6;
+	text-align: center;
+}
+
+/* ==========================================================================
+   TYPOGRAPHY & TEXT ELEMENTS
+   ========================================================================== */
+
+.wpfaevent .wpfa-speakers-hero h1 {
+	margin: 0 0 10px;
+	font-size: 2.5rem;
+	color: var(--brand);
+}
+
+.wpfaevent .wpfa-speakers-hero p {
+	color: var(--muted);
+	font-size: 1.1rem;
+	max-width: 70ch;
+	margin: 0 auto 30px;
+}
+
+.wpfaevent .wpfa-speaker-name {
+	margin: 0.5rem 0 0.25rem;
+	font-size: 20px;
+}
+
+.wpfaevent .wpfa-speaker-role {
+	color: var(--muted);
+	font-size: 14px;
+	margin: 0;
+}
+
+.wpfaevent .wpfa-results-info {
+	text-align: center;
+	margin: 30px 0;
+	font-size: 18px;
+	color: var(--muted);
+}
+
+.wpfaevent .wpfa-no-results {
+	text-align: center;
+	padding: 60px 20px;
+	color: var(--muted);
+}
+
+.wpfaevent .wpfa-no-results h3 {
+	margin-bottom: 10px;
+	font-size: 24px;
+}
+
+/* ==========================================================================
+   FILTERS & SEARCH
+   ========================================================================== */
+
+/* Search Form */
+.wpfaevent .wpfa-speakers-search {
+	position: relative;
+	max-width: 600px;
+	margin: 0 auto 30px;
+}
+
+.wpfaevent .wpfa-speakers-search input[type="search"] {
+	width: 100%;
+	padding: 12px 40px 12px 20px;
+	border: 1px solid #ddd;
+	border-radius: 30px;
+	font-size: 16px;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.wpfaevent .wpfa-speakers-search button {
+	position: absolute;
+	right: 10px;
+	top: 50%;
+	transform: translateY(-50%);
+	background: none;
+	border: none;
+	padding: 5px;
+	cursor: pointer;
+	font-size: 18px;
+	color: #888;
+}
+
+/* Filter Buttons */
+.wpfaevent .wpfa-speakers-filters {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-bottom: 20px;
+}
+
+.wpfaevent .wpfa-speakers-filters a.wpfa-filter-btn {
+	display: inline-flex;
+	align-items: center;
+	background: #e9ecef;
+	color: #333;
+	border: none;
+	padding: 8px 18px;
+	border-radius: 20px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 600;
+	transition: all 0.2s ease-in-out;
+	text-decoration: none;
+}
+
+.wpfaevent .wpfa-speakers-filters a.wpfa-filter-btn:hover {
+	background: #dde1e6;
+	text-decoration: none;
+}
+
+.wpfaevent .wpfa-speakers-filters a.wpfa-filter-btn.active {
+	background: var(--brand);
+	color: #fff;
+}
+
+.wpfaevent .wpfa-filter-count {
+	font-size: 0.85em;
+	opacity: 0.8;
+	margin-left: 4px;
+}
+
+/* ==========================================================================
+   SPEAKER CARDS
+   ========================================================================== */
+
+/* Card Container */
+.wpfaevent .wpfa-speaker-card {
+	background: #fff;
+	border-radius: var(--card-radius);
+	box-shadow: var(--shadow);
+	overflow: hidden;
+	transition: transform 0.2s, box-shadow 0.2s;
+	opacity: 0;
+	transform: translateY(14px);
+	transition: opacity 0.6s ease, transform 0.6s ease;
+	display: flex;
+	flex-direction: column;
+}
+
+.wpfaevent .wpfa-speaker-card.visible {
+	opacity: 1;
+	transform: none;
+}
+
+.wpfaevent .wpfa-speaker-card:hover {
+	transform: translateY(-6px);
+	box-shadow: 0 18px 40px rgba(11, 11, 11, 0.12);
+}
+
+/* Speaker Photo */
+.wpfaevent .wpfa-speaker-photo {
+	display: block;
+	height: 220px;
+	background: linear-gradient(135deg, #e9e9e9, #f6f6f6);
+	overflow: hidden;
+}
+
+.wpfaevent .wpfa-speaker-photo img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center top;
+	transition: transform 0.3s ease;
+}
+
+.wpfaevent .wpfa-speaker-card:hover .wpfa-speaker-photo img {
+	transform: scale(1.05);
+}
+
+.wpfaevent .wpfa-placeholder-svg {
+	width: 100%;
+	height: 100%;
+}
+
+/* Speaker Meta (Name, Role, Category) */
+.wpfaevent .wpfa-speaker-meta {
+	position: relative;
+	padding: 16px;
+	cursor: pointer;
+	flex-grow: 1;
+}
+
+/* Category Pills */
+.wpfaevent .pill {
+	display: inline-block;
+	background-color: var(--brand, #D51007);
+	color: #fff;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 600;
+	padding: 4px 10px;
+	margin-bottom: 8px;
+	line-height: 1;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
+
+.wpfaevent .wpfa-speaker-card:has(.pill) .wpfa-speaker-name {
+	margin-top: 0.25rem; /* Reduce margin when pill is present */
+}
+
+/* Optional: Different colors for different categories (can be extended) */
+.wpfaevent .pill.ai { background-color: #4CAF50; }
+.wpfaevent .pill.web { background-color: #2196F3; }
+.wpfaevent .pill.cloud { background-color: #9C27B0; }
+.wpfaevent .pill.opensource { background-color: #FF9800; }
+
+/* ==========================================================================
+   EXPANDABLE CONTENT (Bio, Session, Social)
+   ========================================================================== */
+
+/* Expand/Collapse Animation */
+.wpfaevent .wpfa-speaker-expand {
+	max-height: 0;
+	overflow: hidden;
+	opacity: 0;
+	transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+	padding: 0 16px;
+	background: #fafafa;
+}
+
+.wpfaevent .wpfa-speaker-card.expanded .wpfa-speaker-expand {
+	max-height: 9999px;
+	opacity: 1;
+	padding: 14px 16px 16px;
+}
+
+/* Biography */
+.wpfaevent .wpfa-speaker-bio {
+	margin: 15px 0;
+	font-size: 14px;
+	line-height: 1.6;
+	color: #333;
+}
+
+.wpfaevent .wpfa-speaker-bio p {
+	margin: 0 0 10px;
+}
+
+.wpfaevent .wpfa-speaker-bio p:last-child {
+	margin-bottom: 0;
+}
+
+/* Session Details */
+.wpfaevent .wpfa-speaker-session {
+	margin: 20px 0;
+	padding: 15px;
+	background: #f8f9fa;
+	border-radius: 8px;
+	border-left: 4px solid var(--brand);
+}
+
+.wpfaevent .wpfa-speaker-session h4 {
+	margin: 0 0 10px;
+	color: var(--brand);
+	font-size: 16px;
+}
+
+.wpfaevent .wpfa-speaker-session p {
+	margin: 5px 0;
+	font-size: 14px;
+}
+
+.wpfaevent .wpfa-talk-abstract {
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid #e9ecef;
+	font-size: 13px;
+	line-height: 1.5;
+	color: #666;
+}
+
+.wpfaevent .wpfa-talk-abstract p {
+	margin: 0 0 8px;
+}
+
+.wpfaevent .wpfa-talk-abstract p:last-child {
+	margin-bottom: 0;
+}
+
+/* Social Links */
+.wpfaevent .wpfa-speaker-social {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 10px 0;
+}
+
+.wpfaevent .wpfa-social-link {
+	font-size: 14px;
+	text-decoration: none;
+	color: var(--brand);
+	padding: 4px 8px;
+	border: 1px solid var(--brand);
+	border-radius: 4px;
+	transition: all 0.2s;
+}
+
+.wpfaevent .wpfa-social-link:hover {
+	background: var(--brand);
+	color: white;
+}
+
+/* ==========================================================================
+   ADMIN CONTROLS (Edit/Delete Buttons)
+   ========================================================================== */
+
+.wpfaevent .btn-edit-speaker,
+.wpfaevent .btn-delete-speaker {
+	position: absolute;
+	top: 12px;
+	background: #ffc107;
+	color: #212529;
+	border: none;
+	border-radius: 50%;
+	width: 32px;
+	height: 32px;
+	cursor: pointer;
+	font-weight: bold;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	font-size: 16px;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+	transition: all 0.2s;
+}
+
+.wpfaevent .btn-edit-speaker {
+	right: 50px;
+}
+
+.wpfaevent .btn-delete-speaker {
+	right: 12px;
+	background: #dc3545;
+	color: white;
+}
+
+.wpfaevent .btn-edit-speaker:hover,
+.wpfaevent .btn-delete-speaker:hover {
+	transform: scale(1.1);
+}
+
+.wpfaevent .btn-edit-speaker:hover {
+	background: #f5b700;
+}
+
+.wpfaevent .btn-delete-speaker:hover {
+	background: #c82333;
+}
+
+/* Add Speaker Button */
+.wpfaevent .wpfa-add-speaker-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin: 20px auto;
+	padding: 10px 20px;
+	background: var(--brand);
+	color: white;
+	border: none;
+	border-radius: 4px;
+	font-weight: 600;
+	cursor: pointer;
+	font-size: 16px;
+}
+
+.wpfaevent .wpfa-add-speaker-btn:hover {
+	background: #c00;
+}
+
+/* ==========================================================================
+   MODAL & FORM STYLES
+   ========================================================================== */
+
+/* Modal Container */
+.wpfaevent .wpfa-modal {
+	position: fixed;
+	z-index: 999999;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: none; /* Hidden by default */
+	align-items: center;
+	justify-content: center;
+}
+
+.wpfaevent .wpfa-modal.show {
+	display: flex !important;
+}
+
+.wpfaevent .wpfa-modal-content {
+	background-color: #fefefe;
+	margin: auto;
+	padding: 20px 30px 30px;
+	border: 1px solid #888;
+	width: 90%;
+	max-width: 600px;
+	border-radius: var(--card-radius);
+	position: relative;
+	max-height: 90vh;
+	overflow-y: auto;
+}
+
+.wpfaevent .wpfa-modal-close {
+	color: #aaa;
+	position: absolute;
+	top: 10px;
+	right: 20px;
+	font-size: 28px;
+	font-weight: bold;
+	background: none;
+	border: none;
+	cursor: pointer;
+}
+
+.wpfaevent .wpfa-modal-close:hover {
+	color: black;
+}
+
+/* Form Elements */
+.wpfaevent .wpfa-speaker-form {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.wpfaevent .wpfa-form-section {
+	border-top: 1px solid #eee;
+	padding-top: 20px;
+}
+
+.wpfaevent .wpfa-form-section:first-child {
+	border-top: none;
+	padding-top: 0;
+}
+
+.wpfaevent .wpfa-form-section-title {
+	font-weight: bold;
+	font-size: 1.1em;
+	margin-bottom: 15px;
+	padding-bottom: 5px;
+	border-bottom: 1px solid #eee;
+	color: var(--brand);
+}
+
+.wpfaevent .wpfa-form-group {
+	margin-bottom: 15px;
+}
+
+.wpfaevent .wpfa-form-group label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 5px;
+}
+
+.wpfaevent .wpfa-form-group input,
+.wpfaevent .wpfa-form-group textarea,
+.wpfaevent .wpfa-form-group select {
+	width: 100%;
+	padding: 8px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-family: inherit;
+	font-size: 14px;
+}
+
+.wpfaevent .wpfa-image-source-toggle {
+	display: flex;
+	gap: 15px;
+	margin-bottom: 15px;
+}
+
+.wpfaevent .wpfa-radio-label {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	font-weight: normal;
+	cursor: pointer;
+}
+
+.wpfaevent .wpfa-form-actions {
+	display: flex;
+	gap: 10px;
+	margin-top: 20px;
+	justify-content: flex-end;
+}
+
+.wpfaevent .wpfa-btn {
+	display: inline-flex;
+	align-items: center;
+	padding: 8px 16px;
+	border-radius: 4px;
+	font-weight: 600;
+	border: none;
+	cursor: pointer;
+	text-decoration: none;
+}
+
+.wpfaevent .wpfa-form-actions .wpfa-btn-primary {
+	background: var(--brand);
+	color: #fff;
+	padding: 10px 20px;
+	font-size: 16px;
+}
+
+.wpfaevent .wpfa-form-actions .wpfa-btn-primary:hover {
+	background: #c00;
+}
+
+.wpfaevent .wpfa-btn-secondary {
+	background: #e9ecef;
+	color: #333;
+}

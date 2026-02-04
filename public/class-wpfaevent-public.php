@@ -277,6 +277,59 @@ class Wpfaevent_Public {
 			);
 		}
 
+		if ( is_page_template( 'page-speakers.php' ) ) {
+			wp_enqueue_style(
+				$this->plugin_name . '-speakers',
+				plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/templates/speakers.css',
+				array(
+					$this->plugin_name,
+					$this->plugin_name . '-navigation',
+					$this->plugin_name . '-pagination',
+				),
+				$this->version,
+				'all'
+			);
+
+			// Enqueue speakers JavaScript
+			wp_enqueue_script(
+				$this->plugin_name . '-speakers',
+				plugin_dir_url( __FILE__ ) . 'js/wpfaevent-speakers.js',
+				array( 'jquery' ),
+				$this->version,
+				true
+			);
+
+			// Pass data from PHP to JavaScript
+			wp_localize_script(
+				$this->plugin_name . '-speakers',
+				'wpfaeventSpeakersConfig',      // JavaScript object name
+				array(
+					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+					'adminNonce' => wp_create_nonce( 'wpfa_speakers_ajax' ),
+					'isAdmin'    => current_user_can( 'manage_options' ),
+
+					// All translatable strings
+					'i18n'       => array(
+						'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
+						'deleteSuccess'      => __( 'Speaker deleted successfully. The page will now reload.', 'wpfaevent' ),
+						'deleteError'        => __( 'Error deleting speaker', 'wpfaevent' ),
+						'deleteErrorGeneric' => __( 'Error deleting speaker. Please try again.', 'wpfaevent' ),
+						'addSuccess'         => __( 'Speaker added successfully. The page will now reload.', 'wpfaevent' ),
+						'addError'           => __( 'Error adding speaker', 'wpfaevent' ),
+						'addErrorGeneric'    => __( 'Error adding speaker. Please try again.', 'wpfaevent' ),
+						'updateSuccess'      => __( 'Speaker updated successfully. The page will now reload.', 'wpfaevent' ),
+						'updateError'        => __( 'Error updating speaker', 'wpfaevent' ),
+						'updateErrorGeneric' => __( 'Error updating speaker. Please try again.', 'wpfaevent' ),
+						'loadError'          => __( 'Error loading speaker data', 'wpfaevent' ),
+						'fetchError'         => __( 'Error fetching speaker data', 'wpfaevent' ),
+						'fetchErrorGeneric'  => __( 'Error fetching speaker data. Please try again.', 'wpfaevent' ),
+						'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
+						'resultsCount'       => __( 'Showing %d speakers', 'wpfaevent' ),
+					),
+				)
+			);
+		}
+
 		/**
 		* ---------------------------------------------------------------------
 		* Template-specific styles (extension pattern)
