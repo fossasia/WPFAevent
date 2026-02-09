@@ -50,3 +50,221 @@
 	margin: 0 auto;
 	padding: 24px;
 }
+
+/* ==========================================================================
+   Footer Styles (MVP Design)
+   ========================================================================== */
+
+/* Footer Container */
+.wpfaevent .footer {
+	padding: 28px 0;
+	color: var(--muted);
+	border-top: 1px solid #f3f4f6;
+	text-align: center;
+	background: #fff;
+	margin-top: 40px;
+}
+
+.wpfaevent .footer .container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+}
+
+/* Footer Text - Bigger font as in MVP */
+.wpfaevent .footer-text {
+	font-size: 1rem;
+	color: var(--brand); /* Using brand color as in MVP */
+	margin: 0;
+	line-height: 1.5;
+}
+
+/* Edit Button Container - Positioned inline with text */
+.wpfaevent .footer .container {
+	position: relative;
+}
+
+/* Edit Button - Positioned to the right of text as in MVP */
+.wpfaevent #edit-footer-btn {
+	margin-left: 15px;
+	padding: 4px 10px;
+	font-size: 12px;
+	border-radius: 8px;
+	position: absolute;
+	right: 24px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+/* Social Icons */
+.wpfaevent .social-icons {
+	display: flex;
+	gap: 1rem;
+	margin-top: 1rem;
+	justify-content: center;
+}
+
+.wpfaevent .social-icons a {
+	color: var(--muted);
+	transition: color 0.2s ease;
+}
+
+.wpfaevent .social-icons svg {
+	width: 24px;
+	height: 24px;
+}
+
+.wpfaevent .social-icons a:hover {
+	color: var(--brand);
+}
+
+/* Edit Footer Modal Styles */
+.wpfaevent .modal {
+	display: none;
+	position: fixed;
+	z-index: 100;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: rgba(0,0,0,0.6);
+	align-items: center;
+	justify-content: center;
+}
+
+.wpfaevent .modal.show {
+	display: flex;
+}
+
+.wpfaevent .modal-content {
+	background-color: #fefefe;
+	margin: auto;
+	padding: 20px 30px 30px;
+	border: 1px solid #888;
+	width: 90%;
+	max-width: 500px;
+	border-radius: var(--card-radius);
+	position: relative;
+	box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+}
+
+.wpfaevent .close-btn {
+	color: #aaa;
+	position: absolute;
+	top: 10px;
+	right: 20px;
+	font-size: 28px;
+	font-weight: bold;
+	cursor: pointer;
+	transition: color 0.2s ease;
+}
+
+.wpfaevent .close-btn:hover {
+	color: var(--brand);
+}
+
+.wpfaevent #edit-footer-form {
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+}
+
+.wpfaevent #edit-footer-form h2 {
+	margin-top: 0;
+	color: var(--brand);
+}
+
+.wpfaevent #edit-footer-form label {
+	font-weight: 600;
+	margin-bottom: -10px;
+}
+
+.wpfaevent #edit-footer-form input {
+	width: 100%;
+	padding: 10px;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	font-family: inherit;
+	font-size: 1rem;
+}
+
+.wpfaevent #edit-footer-form button {
+	margin-top: 15px;
+	align-self: flex-start;
+}
+
+/* Button Styles */
+.wpfaevent .btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 8px 16px;
+	border-radius: 999px;
+	font-weight: 700;
+	border: 2px solid transparent;
+	font-size: 0.9rem;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	text-decoration: none;
+}
+
+.wpfaevent .btn-secondary {
+	background: #6c757d;
+	color: #fff;
+}
+
+.wpfaevent .btn-secondary:hover {
+	background: #5a6268;
+}
+
+.wpfaevent .btn-primary {
+	background: var(--brand);
+	color: #fff;
+	box-shadow: 0 8px 20px rgba(213, 16, 7, 0.14);
+}
+
+.wpfaevent .btn-primary:hover {
+	background: #b80c04;
+	box-shadow: 0 8px 25px rgba(213, 16, 7, 0.2);
+}
+
+/* Responsive Footer */
+@media (max-width: 768px) {
+	.wpfaevent .footer .container {
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+	}
+	
+	.wpfaevent #edit-footer-btn {
+		position: static;
+		margin: 10px 0 0 0;
+		transform: none;
+		align-self: center;
+	}
+	
+	.wpfaevent .footer-text {
+		text-align: center;
+	}
+}
+
+/* ==========================================================================
+   Character Counter Styles
+   ========================================================================== */
+
+.wpfaevent-char-counter {
+    display: block;
+    text-align: right;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+/* Visual warning when the user reaches the limit */
+.wpfaevent-char-counter.limit-reached {
+    color: var(--brand);
+    font-weight: bold;
+}

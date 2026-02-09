@@ -46,6 +46,7 @@ require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-activator.php';
 require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-deactivator.php';
 require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-templates.php';
 require_once WPFAEVENT_PATH . 'includes/helpers/wpfaevent-pagination-helper.php';
+require_once WPFAEVENT_PATH . 'includes/helpers/class-wpfaevent-news-functions.php';
 
 // Activation / Deactivation hooks
 register_activation_hook( __FILE__, [ 'Wpfaevent_Activator', 'activate' ] );
