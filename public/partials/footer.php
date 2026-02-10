@@ -18,9 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Default footer text with filter for customization
 $default_footer = '© FOSSASIA • FOSSASIA Summit — Mar 8–10, 2026 • True Digital Park West, Bangkok';
-$footer_text = get_option( 'wpfa_footer_text', '' );
+$footer_text    = get_option( 'wpfa_footer_text', '' );
 if ( empty( $footer_text ) ) {
-    $footer_text = apply_filters( 'wpfa_default_footer_text', $default_footer );
+	$footer_text = apply_filters( 'wpfa_default_footer_text', $default_footer );
 }
 
 // Check if user is admin
