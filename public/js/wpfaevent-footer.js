@@ -167,9 +167,8 @@ if (typeof window !== 'undefined') {
 if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', function() {
         // Check if config exists (footer exists on all template pages)
-        const footerElement = document.getElementById('edit-footer-btn');
-        if (footerElement && typeof wpfaeventEventsConfig !== 'undefined') {
-            WPFA_Footer.init(wpfaeventEventsConfig);
+        if ( typeof wpfaeventFooterConfig  !== 'undefined') {
+            WPFA_Footer.init(wpfaeventFooterConfig);
         }
     });
 }
