@@ -29,20 +29,20 @@ if ( ! $event_id ) {
 $today = current_time( 'Y-m-d' );
 
 // Get meta data exactly as the main template does
-$event_date         = get_post_meta( $event_id, 'wpfa_event_start_date', true );
-$event_end_date     = get_post_meta( $event_id, 'wpfa_event_end_date', true );
-$event_place        = get_post_meta( $event_id, 'wpfa_event_location', true );
-$event_description  = get_the_excerpt( $event_id );
-$featured_img_url   = get_the_post_thumbnail_url( $event_id, 'large' ) ?: '';
+$event_date        = get_post_meta( $event_id, 'wpfa_event_start_date', true );
+$event_end_date    = get_post_meta( $event_id, 'wpfa_event_end_date', true );
+$event_place       = get_post_meta( $event_id, 'wpfa_event_location', true );
+$event_description = get_the_excerpt( $event_id );
+$featured_img_url  = get_the_post_thumbnail_url( $event_id, 'large' ) ?: '';
 
 // Check if date is valid (Admin Warning Logic)
-$is_valid_date = !empty($event_date) && strtotime($event_date) !== false;
-$is_past_event = $is_valid_date && strtotime($event_date) < strtotime($today);
+$is_valid_date = ! empty( $event_date ) && strtotime( $event_date ) !== false;
+$is_past_event = $is_valid_date && strtotime( $event_date ) < strtotime( $today );
 
 // Format the date string
 $formatted_date = __( 'Date not set', 'wpfaevent' );
 if ( $is_valid_date ) {
-	if ( ! empty( $event_end_date ) && $event_end_date !== $event_date && strtotime($event_end_date) !== false ) {
+	if ( ! empty( $event_end_date ) && $event_end_date !== $event_date && strtotime( $event_end_date ) !== false ) {
 		$formatted_date = date_i18n( 'M j', strtotime( $event_date ) ) . ' - ' . date_i18n( 'M j, Y', strtotime( $event_end_date ) );
 	} else {
 		$formatted_date = date_i18n( 'F j, Y', strtotime( $event_date ) );
@@ -64,14 +64,14 @@ $is_admin = current_user_can( 'manage_options' );
 	data-cfs-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_cfs_link', true ) ); ?>"
 	data-time="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_time', true ) ); ?>">
 	
-	<?php if ( $is_admin && ( !$is_valid_date || $is_past_event ) ) : ?>
+	<?php if ( $is_admin && ( ! $is_valid_date || $is_past_event ) ) : ?>
 		<div class="wpfaevent-admin-warning">			
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="wpfaevent-warning-icon" aria-hidden="true">
 				<path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
 			</svg>
 			<span>
 				<?php
-				if ( !$is_valid_date ) {
+				if ( ! $is_valid_date ) {
 					esc_html_e( 'Invalid date format', 'wpfaevent' );
 				} elseif ( $is_past_event ) {
 					esc_html_e( 'Past event', 'wpfaevent' );
@@ -113,7 +113,7 @@ $is_admin = current_user_can( 'manage_options' );
 				</svg> 
 				<?php echo esc_html( $formatted_date ); ?>
 			</p>
-			<?php if ( !empty( $event_place ) ) : ?>
+			<?php if ( ! empty( $event_place ) ) : ?>
 			<p>
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
 					<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path>
@@ -121,7 +121,7 @@ $is_admin = current_user_can( 'manage_options' );
 				<?php echo esc_html( $event_place ); ?>
 			</p>
 			<?php endif; ?>
-			<?php if ( !empty( $event_description ) ) : ?>
+			<?php if ( ! empty( $event_description ) ) : ?>
 				<p class="event-card-description"><?php echo esc_html( $event_description ); ?></p>
 			<?php endif; ?>
 		</div>

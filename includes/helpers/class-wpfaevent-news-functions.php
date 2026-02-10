@@ -31,7 +31,7 @@ function wpfa_ensure_feed_loaded() {
 
 /**
  * Fetches and renders latest blog posts from FOSSASIA blog.
- * 
+ *
  * Features:
  * - Fetches RSS feed from https://blog.fossasia.org/rss/
  * - Caches results for performance (default: 1 hour)
@@ -47,30 +47,30 @@ function wpfa_render_latest_news() {
 
 	// Check for cached news
 	$cached_news = get_transient( 'wpfa_latest_news' );
-	
+
 	if ( false !== $cached_news ) {
 		echo $cached_news;
 		return;
 	}
-	
+
 	// Get a SimplePie feed object from the specified feed source.
 	$rss = fetch_feed( 'https://blog.fossasia.org/rss/' );
-	
+
 	if ( is_wp_error( $rss ) ) {
-		
+
 		// Show fallback news
 		wpfa_render_fallback_news();
 		return;
 	}
-	
+
 	// Figure out how many total items there are, but limit it to 5.
 	$maxitems = $rss->get_item_quantity( 5 );
-	
+
 	// Build an array of all the items, starting with element 0 (first element).
 	$rss_items = $rss->get_items( 0, $maxitems );
-	
+
 	ob_start();
-	
+
 	if ( $maxitems == 0 ) {
 		echo '<p>' . esc_html__( 'No news items found.', 'wpfaevent' ) . '</p>';
 	} else {
@@ -84,9 +84,9 @@ function wpfa_render_latest_news() {
 			?>
 			<li class="news-item">
 				<a href="<?php echo $permalink; ?>"
-				   title="<?php echo $full_date; ?>"
-				   target="_blank"
-				   rel="noopener noreferrer">
+					title="<?php echo $full_date; ?>"
+					target="_blank"
+					rel="noopener noreferrer">
 					<?php echo $title; ?>
 				</a>
 				<small class="news-date"><?php echo $date; ?></small>
@@ -94,7 +94,7 @@ function wpfa_render_latest_news() {
 			<?php
 		endforeach;
 		echo '</ul>';
-		
+
 		// Add "Visit Blog" CTA
 		echo '<div class="news-cta">';
 		echo '<a href="https://blog.fossasia.org/" target="_blank" rel="noopener noreferrer" class="btn btn-primary">';
@@ -102,12 +102,12 @@ function wpfa_render_latest_news() {
 		echo '</a>';
 		echo '</div>';
 	}
-	
+
 	$news_html = ob_get_clean();
-	
+
 	// Cache for 1 hour to reduce load
 	set_transient( 'wpfa_latest_news', $news_html, HOUR_IN_SECONDS );
-	
+
 	echo $news_html;
 }
 
@@ -158,9 +158,9 @@ function wpfa_render_fallback_news() {
 		</a>
 	</div>
 	<?php
-	
+
 	$fallback_html = ob_get_clean();
-	
+
 	/**
 	 * Filter the cache duration for fallback news.
 	 *
@@ -169,7 +169,7 @@ function wpfa_render_fallback_news() {
 	 */
 	$fallback_cache_duration = apply_filters( 'wpfa_fallback_news_cache_duration', 4 * HOUR_IN_SECONDS );
 	set_transient( 'wpfa_latest_news', $fallback_html, $fallback_cache_duration );
-	
+
 	echo $fallback_html;
 }
 
@@ -185,14 +185,14 @@ function wpfa_clear_news_cache() {
 
 /**
  * Test if RSS feed is working.
- * 
+ *
  * Primarily used for debugging and admin testing. Returns an array
  * with success status, message, and fetched items (if any).
  *
  * @since 1.0.0
  * @return array {
  *     Test results.
- *     
+ *
  *     @type bool   $success Whether the feed was fetched successfully.
  *     @type string $message Human-readable status message.
  *     @type array  $items   Array of SimplePie_Item objects (empty if $success is false).
@@ -200,25 +200,25 @@ function wpfa_clear_news_cache() {
  */
 function wpfa_test_news_feed() {
 	wpfa_ensure_feed_loaded();
-	
+
 	$rss = fetch_feed( 'https://blog.fossasia.org/rss/' );
-	
+
 	if ( is_wp_error( $rss ) ) {
 		return array(
 			'success' => false,
 			'message' => $rss->get_error_message(),
 		);
 	}
-	
+
 	$item_count = $rss->get_item_quantity( 1 );
 	$items      = $rss->get_items( 0, 1 );
-	
+
 	return array(
 		'success' => true,
 		'message' => sprintf(
-			 /* translators: %d: Number of news items fetched from the RSS feed */
+			/* translators: %d: Number of news items fetched from the RSS feed */
 			__( 'Feed loaded successfully. Found %d items.', 'wpfaevent' ),
 			$item_count
-		)
+		),
 	);
 }

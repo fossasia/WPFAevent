@@ -172,7 +172,7 @@ class Wpfaevent_Public {
 			$this->version,
 			'all'
 		);
-		
+
 		// Footer script (handles footer text updates, shared with events config)
 		wp_enqueue_script(
 			$this->plugin_name . '-footer',
@@ -332,7 +332,7 @@ class Wpfaevent_Public {
 						'editEventButton'    => __( 'Save Changes', 'wpfaevent' ),
 						'creating'           => __( 'Creating...', 'wpfaevent' ),
 						'saving'             => __( 'Saving...', 'wpfaevent' ),
-						'loading'            => __( 'Loading...', 'wpfaevent' ),						
+						'loading'            => __( 'Loading...', 'wpfaevent' ),
 						'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
 						'deleteSuccess'      => __( 'Event deleted successfully. The page will now reload.', 'wpfaevent' ),
 						'deleteError'        => __( 'Error deleting event', 'wpfaevent' ),

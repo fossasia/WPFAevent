@@ -404,14 +404,14 @@ class Wpfaevent_Admin {
 		foreach ( $meta_fields as $field ) {
 			if ( isset( $_POST[ $field ] ) ) {
 				$value = wp_unslash( $_POST[ $field ] );
-				
+
 				// Special handling for URL fields
 				if ( in_array( $field, array( 'wpfa_event_url', 'wpfa_event_registration_link', 'wpfa_event_cfs_link' ), true ) ) {
 					$value = esc_url_raw( $value );
 				} else {
 					$value = sanitize_text_field( $value );
 				}
-				
+
 				update_post_meta( $post_id, $field, $value );
 			}
 		}
