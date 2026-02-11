@@ -274,7 +274,16 @@ class Wpfaevent_Event_Handler {
 			'post_excerpt' => sanitize_text_field( wp_unslash( $_POST['excerpt'] ) ),
 		);
 
-		wp_update_post( $event_data );
+		$update_result = wp_update_post( $event_data, true );
+
+		if ( is_wp_error( $update_result ) || 0 === $update_result ) {
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'Failed to update event.', 'wpfaevent' ),
+				),
+				500
+			);
+		}
 
 		// Save meta fields
 		$meta_fields = array(
