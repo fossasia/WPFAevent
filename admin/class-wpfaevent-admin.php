@@ -264,7 +264,7 @@ class Wpfaevent_Admin {
 			</tr>
 			<tr>
 				<th><label for="wpfa_event_time"><?php esc_html_e( 'Event Time', 'wpfaevent' ); ?></label></th>
-				<td><input type="time" id="wpfa_event_time" name="wpfa_event_time" value="<?php echo esc_attr( $time ); ?>" class="regular-text" placeholder="e.g., 10:00 AM - 4:00 PM"></td>
+				<td><input type="time" id="wpfa_event_time" name="wpfa_event_time" value="<?php echo esc_attr( $time ); ?>" class="regular-text" placeholder="e.g., 10:00"></td>
 			</tr>
 			<tr>
 				<th><label for="wpfa_event_location"><?php esc_html_e( 'Location', 'wpfaevent' ); ?></label></th>
