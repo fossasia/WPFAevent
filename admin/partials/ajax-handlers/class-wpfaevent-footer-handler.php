@@ -49,20 +49,12 @@ class Wpfaevent_Footer_Handler {
 	public function ajax_update_footer_text() {
 		// Verify nonce. Third param 'false' ensures we can handle the error response manually via JSON.
 		if ( ! check_ajax_referer( 'wpfa_events_ajax', 'nonce', false ) ) {
-			wp_send_json_error(
-				array(
-					'message' => esc_html__( 'Invalid nonce', 'wpfaevent' ),
-				),
-				403
-			);
+			wp_send_json_error( esc_html__( 'Invalid nonce', 'wpfaevent' ), 403 );
 		}
 
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
-				403
-			);
+			wp_send_json_error( esc_html__( 'Unauthorized', 'wpfaevent' ), 403 );
 		}
 
 		// Check for the correct parameter name
@@ -77,18 +69,10 @@ class Wpfaevent_Footer_Handler {
 		$footer_text = sanitize_textarea_field( wp_unslash( $_POST['footer_text'] ) );
 
 		// Save to options
-		if ( update_option( 'wpfa_footer_text', $footer_text ) || get_option( 'wpfa_footer_text' ) === $footer_text ) {
-			wp_send_json_success(
-				array(
-					'message' => esc_html__( 'Footer text updated successfully', 'wpfaevent' ),
-				)
-			);
+		if ( update_option( 'wpfa_footer_text', $footer_text ) ) {
+				wp_send_json_success( esc_html__( 'Footer text updated successfully', 'wpfaevent' ) );
 		} else {
-			wp_send_json_error(
-				array(
-					'message' => esc_html__( 'Failed to update footer text', 'wpfaevent' ),
-				)
-			);
+			wp_send_json_error( esc_html__( 'Failed to update footer text', 'wpfaevent' ) );
 		}
 	}
 }
