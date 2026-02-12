@@ -74,7 +74,7 @@ class Wpfaevent_Footer_Handler {
 			);
 		}
 
-		$footer_text = sanitize_text_field( wp_unslash( $_POST['footer_text'] ) );
+		$footer_text = sanitize_textarea_field( wp_unslash( $_POST['footer_text'] ) );
 
 		// Save to options
 		if ( update_option( 'wpfa_footer_text', $footer_text ) || get_option( 'wpfa_footer_text' ) === $footer_text ) {
