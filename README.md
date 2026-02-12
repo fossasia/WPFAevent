@@ -99,10 +99,14 @@ event-plugin/
 | `[event_sessions]` | Displays event sessions with title, time, and abstract. | API endpoint or placeholder |
 | `[event_schedule]` | Displays daily schedule in a table format.              | API endpoint or placeholder |
 
-Each shortcode can accept optional attributes — for example:
+The seeder command is **idempotent**, meaning it is safe to re-run. It will update existing posts based on their slugs instead of creating duplicates.
 
-```text
-[event_schedule profile="summit2026"]
+###  Minimal Demo Data
+
+To generate sample data for testing, use:
+
+```bash
+wp wpfa seed-minimal
 ```
 
 if multiple event profiles are configured in settings.
@@ -183,3 +187,20 @@ Before submitting:
 
 Licensed under the **Apache License, Version 2.0**
 Copyright © 2025 [FOSSASIA](https://fossasia.org)
+=======
+The seeder command is **idempotent**, meaning it is safe to re-run. It will update existing posts based on their slugs instead of creating duplicates.
+
+###  Minimal Demo Data
+
+To generate sample data for testing, use:
+
+```bash
+wp wpfa seed-minimal
+```
+
+This will:
+- Create 1 demo event
+- Create 2 demo speakers with placeholder images (from via.placeholder.com)
+
+No real speaker photos or private data are included.
+>>>>>>> Stashed changes
