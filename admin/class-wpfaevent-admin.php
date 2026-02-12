@@ -239,8 +239,12 @@ class Wpfaevent_Admin {
 
 		$start_date = get_post_meta( $post->ID, 'wpfa_event_start_date', true );
 		$end_date   = get_post_meta( $post->ID, 'wpfa_event_end_date', true );
+		$time       = get_post_meta( $post->ID, 'wpfa_event_time', true );
 		$location   = get_post_meta( $post->ID, 'wpfa_event_location', true );
 		$url        = get_post_meta( $post->ID, 'wpfa_event_url', true );
+		$lead_text  = get_post_meta( $post->ID, 'wpfa_event_lead_text', true );
+		$reg_link   = get_post_meta( $post->ID, 'wpfa_event_registration_link', true );
+		$cfs_link   = get_post_meta( $post->ID, 'wpfa_event_cfs_link', true );
 		$speakers   = get_post_meta( $post->ID, 'wpfa_event_speakers', true );
 
 		// Normalize to array
@@ -259,12 +263,28 @@ class Wpfaevent_Admin {
 				<td><input type="date" id="wpfa_event_end_date" name="wpfa_event_end_date" value="<?php echo esc_attr( $end_date ); ?>" class="regular-text"></td>
 			</tr>
 			<tr>
+				<th><label for="wpfa_event_time"><?php esc_html_e( 'Event Time', 'wpfaevent' ); ?></label></th>
+				<td><input type="time" id="wpfa_event_time" name="wpfa_event_time" value="<?php echo esc_attr( $time ); ?>" class="regular-text" placeholder="e.g., 10:00"></td>
+			</tr>
+			<tr>
 				<th><label for="wpfa_event_location"><?php esc_html_e( 'Location', 'wpfaevent' ); ?></label></th>
 				<td><input type="text" id="wpfa_event_location" name="wpfa_event_location" value="<?php echo esc_attr( $location ); ?>" class="regular-text"></td>
 			</tr>
 			<tr>
+				<th><label for="wpfa_event_lead_text"><?php esc_html_e( 'Lead Text', 'wpfaevent' ); ?></label></th>
+				<td><input type="text" id="wpfa_event_lead_text" name="wpfa_event_lead_text" value="<?php echo esc_attr( $lead_text ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Short description for hero section', 'wpfaevent' ); ?>"></td>
+			</tr>
+			<tr>
 				<th><label for="wpfa_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
 				<td><input type="url" id="wpfa_event_url" name="wpfa_event_url" value="<?php echo esc_attr( $url ); ?>" class="regular-text" placeholder="https://"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_registration_link"><?php esc_html_e( 'Registration Link', 'wpfaevent' ); ?></label></th>
+				<td><input type="url" id="wpfa_event_registration_link" name="wpfa_event_registration_link" value="<?php echo esc_attr( $reg_link ); ?>" class="regular-text" placeholder="https://eventyay.com/e/..."></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_cfs_link"><?php esc_html_e( 'Call for Speakers Link', 'wpfaevent' ); ?></label></th>
+				<td><input type="url" id="wpfa_event_cfs_link" name="wpfa_event_cfs_link" value="<?php echo esc_attr( $cfs_link ); ?>" class="regular-text" placeholder="https://eventyay.com/e/.../cfs"></td>
 			</tr>
 			<tr>
 				<th><label for="wpfa_event_speakers"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></label></th>
@@ -369,22 +389,34 @@ class Wpfaevent_Admin {
 			return;
 		}
 
-		if ( isset( $_POST['wpfa_event_start_date'] ) ) {
-			update_post_meta( $post_id, 'wpfa_event_start_date', sanitize_text_field( wp_unslash( $_POST['wpfa_event_start_date'] ) ) );
+		// List of all meta fields to save
+		$meta_fields = array(
+			'wpfa_event_start_date',
+			'wpfa_event_end_date',
+			'wpfa_event_time',
+			'wpfa_event_location',
+			'wpfa_event_lead_text',
+			'wpfa_event_url',
+			'wpfa_event_registration_link',
+			'wpfa_event_cfs_link',
+		);
+
+		foreach ( $meta_fields as $field ) {
+			if ( isset( $_POST[ $field ] ) ) {
+				$value = wp_unslash( $_POST[ $field ] );
+
+				// Special handling for URL fields
+				if ( in_array( $field, array( 'wpfa_event_url', 'wpfa_event_registration_link', 'wpfa_event_cfs_link' ), true ) ) {
+					$value = esc_url_raw( $value );
+				} else {
+					$value = sanitize_text_field( $value );
+				}
+
+				update_post_meta( $post_id, $field, $value );
+			}
 		}
 
-		if ( isset( $_POST['wpfa_event_end_date'] ) ) {
-			update_post_meta( $post_id, 'wpfa_event_end_date', sanitize_text_field( wp_unslash( $_POST['wpfa_event_end_date'] ) ) );
-		}
-
-		if ( isset( $_POST['wpfa_event_location'] ) ) {
-			update_post_meta( $post_id, 'wpfa_event_location', sanitize_text_field( wp_unslash( $_POST['wpfa_event_location'] ) ) );
-		}
-
-		if ( isset( $_POST['wpfa_event_url'] ) ) {
-			update_post_meta( $post_id, 'wpfa_event_url', esc_url_raw( wp_unslash( $_POST['wpfa_event_url'] ) ) );
-		}
-
+		// Handle speakers array
 		if ( isset( $_POST['wpfa_event_speakers'] ) && is_array( $_POST['wpfa_event_speakers'] ) ) {
 			$speakers = array_map( 'absint', $_POST['wpfa_event_speakers'] );
 			update_post_meta( $post_id, 'wpfa_event_speakers', $speakers );
