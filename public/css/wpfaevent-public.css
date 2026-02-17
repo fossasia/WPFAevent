@@ -181,13 +181,19 @@
 	margin-bottom: -10px;
 }
 
-.wpfaevent #edit-footer-form input {
+.wpfaevent #edit-footer-form input,
+.wpfaevent #edit-footer-form textarea {
 	width: 100%;
 	padding: 10px;
 	border: 1px solid #ddd;
 	border-radius: 8px;
 	font-family: inherit;
 	font-size: 1rem;
+}
+
+.wpfaevent #edit-footer-form textarea {
+	min-height: 80px;
+	resize: vertical; /* Prevents breaking modal width */
 }
 
 .wpfaevent #edit-footer-form button {
