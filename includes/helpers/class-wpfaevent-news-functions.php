@@ -195,7 +195,6 @@ function wpfa_clear_news_cache() {
  *
  *     @type bool   $success Whether the feed was fetched successfully.
  *     @type string $message Human-readable status message.
- *     @type array  $items   Array of SimplePie_Item objects (empty if $success is false).
  * }
  */
 function wpfa_test_news_feed() {
