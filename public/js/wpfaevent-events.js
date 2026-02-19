@@ -10,6 +10,19 @@ const WPFA_Events = (function() {
 	// Private variables
 	let config = {};
 	let elements = {};
+
+	/**
+	 * Helper to extract error message from AJAX response
+	 */
+	function getErrorMessage(data, fallback) {
+		if (data && typeof data.data === 'object' && data.data?.message) {
+			return `${fallback}: ${data.data.message}`;
+		}
+		if (data && typeof data.data === 'string') {
+			return `${fallback}: ${data.data}`;
+		}
+		return fallback;
+	}
 	
 	/**
 	 * Initialize the events module
@@ -303,163 +316,161 @@ const WPFA_Events = (function() {
 		}
 	}
 	
-/**
- * Handle create event form submission
- */
-function handleCreateEventFormSubmit(e) {
-	e.preventDefault();
-	
-	if (!config.isAdmin) {
-		alert(config.i18n.noPermission || 'You do not have permission to perform this action.');
-		return;
-	}
-	
-	const form = e.target;
-	const formData = new FormData(form);
-	const submitBtn = form.querySelector('button[type="submit"]');
-	
-	// Validate required fields - using ACTUAL form field names
-	const requiredFields = ['title', 'excerpt', 'start_date', 'location', 'registration_link'];
-	let missingFields = [];
-	
-	requiredFields.forEach(field => {
-		if (!formData.get(field) || formData.get(field).trim() === '') {
-			missingFields.push(field);
-		}
-	});
-	
-	if (missingFields.length > 0) {
-		alert(config.i18n.missingFields || 'Missing required fields: ' + missingFields.join(', '));
+	/**
+	 * Handle create event form submission
+	 */
+	function handleCreateEventFormSubmit(e) {
+		e.preventDefault();
 		
-		// Re-enable button
-		if (submitBtn) {
-			submitBtn.disabled = false;
-			submitBtn.textContent = config.i18n.addEventButton || 'Create Card';
+		if (!config.isAdmin) {
+			alert(config.i18n.noPermission || 'You do not have permission to perform this action.');
+			return;
 		}
-		return;
-	}
-	
-	// Disable button during submission
-	if (submitBtn) {
-		submitBtn.disabled = true;
-		submitBtn.textContent = config.i18n.creating || 'Creating...';
-	}
-	
-	// Add nonce and AJAX action
-	formData.append('action', 'wpfa_add_event');
-	formData.append('nonce', config.adminNonce);
-	
-	// Send form data
-	fetch(config.ajaxUrl, {
-		method: 'POST',
-		body: formData
-	})
-	.then(response => response.json())
-	.then(data => {
-		if (data.success) {
-			alert(config.i18n.addSuccess || 'Event created successfully. The page will now reload.');
-			window.location.reload();
-		} else {
-			alert(config.i18n.addError 
-				? `${config.i18n.addError}: ${data.data}`
-				: `Error creating event: ${data.data}`);
-				
+		
+		const form = e.target;
+		const formData = new FormData(form);
+		const submitBtn = form.querySelector('button[type="submit"]');
+		
+		// Validate required fields - using ACTUAL form field names
+		const requiredFields = ['title', 'excerpt', 'start_date', 'location', 'registration_link'];
+		let missingFields = [];
+		
+		requiredFields.forEach(field => {
+			if (!formData.get(field) || formData.get(field).trim() === '') {
+				missingFields.push(field);
+			}
+		});
+		
+		if (missingFields.length > 0) {
+			alert(config.i18n.missingFields || 'Missing required fields: ' + missingFields.join(', '));
+			
 			// Re-enable button
 			if (submitBtn) {
 				submitBtn.disabled = false;
 				submitBtn.textContent = config.i18n.addEventButton || 'Create Card';
 			}
+			return;
 		}
-	})
-	.catch(error => {
-		alert(config.i18n.addErrorGeneric || 'Error creating event. Please try again.');
 		
-		// Re-enable button
+		// Disable button during submission
 		if (submitBtn) {
-			submitBtn.disabled = false;
-			submitBtn.textContent = config.i18n.addEventButton || 'Create Card';
+			submitBtn.disabled = true;
+			submitBtn.textContent = config.i18n.creating || 'Creating...';
 		}
-	});
-}
-	
-/**
- * Handle edit event form submission
- */
-function handleEditEventFormSubmit(e) {
-	e.preventDefault();
-	
-	if (!config.isAdmin) {
-		alert(config.i18n.noPermission || 'You do not have permission to perform this action.');
-		return;
-	}
-	
-	const form = e.target;
-	const formData = new FormData(form);
-	const submitBtn = form.querySelector('button[type="submit"]');
-	
-	// Validate required fields - using ACTUAL form field names
-	const requiredFields = ['title', 'excerpt', 'start_date', 'location', 'registration_link'];
-	let missingFields = [];
-	
-	requiredFields.forEach(field => {
-		if (!formData.get(field) || formData.get(field).trim() === '') {
-			missingFields.push(field);
-		}
-	});
-	
-	if (missingFields.length > 0) {
-		alert(config.i18n.missingFields || 'Missing required fields: ' + missingFields.join(', '));
 		
-		// Re-enable button
-		if (submitBtn) {
-			submitBtn.disabled = false;
-			submitBtn.textContent = config.i18n.editEventButton || 'Save Changes';
+		// Add nonce and AJAX action
+		formData.append('action', 'wpfa_add_event');
+		formData.append('nonce', config.adminNonce);
+		
+		// Send form data
+		fetch(config.ajaxUrl, {
+			method: 'POST',
+			body: formData
+		})
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				alert(config.i18n.addSuccess || 'Event created successfully. The page will now reload.');
+				window.location.reload();
+			} else {
+				const baseMsg = config.i18n.addError || 'Error creating event';
+				alert(getErrorMessage(data, baseMsg));
+					
+				// Re-enable button
+				if (submitBtn) {
+					submitBtn.disabled = false;
+					submitBtn.textContent = config.i18n.addEventButton || 'Create Card';
+				}
+			}
+		})
+		.catch(error => {
+			alert(config.i18n.addErrorGeneric || 'Error creating event. Please try again.');
+			
+			// Re-enable button
+			if (submitBtn) {
+				submitBtn.disabled = false;
+				submitBtn.textContent = config.i18n.addEventButton || 'Create Card';
+			}
+		});
+	}
+		
+	/**
+	 * Handle edit event form submission
+	 */
+	function handleEditEventFormSubmit(e) {
+		e.preventDefault();
+		
+		if (!config.isAdmin) {
+			alert(config.i18n.noPermission || 'You do not have permission to perform this action.');
+			return;
 		}
-		return;
-	}
-	
-	// Disable button during submission
-	if (submitBtn) {
-		submitBtn.disabled = true;
-		submitBtn.textContent = config.i18n.saving || 'Saving...';
-	}
-	
-	// Add nonce and AJAX action
-	formData.append('action', 'wpfa_update_event');
-	formData.append('nonce', config.adminNonce);
-	
-	// Send form data
-	fetch(config.ajaxUrl, {
-		method: 'POST',
-		body: formData
-	})
-	.then(response => response.json())
-	.then(data => {
-		if (data.success) {
-			alert(config.i18n.updateSuccess || 'Event updated successfully. The page will now reload.');
-			window.location.reload();
-		} else {
-			alert(config.i18n.updateError 
-				? `${config.i18n.updateError}: ${data.data}`
-				: `Error updating event: ${data.data}`);
-				
+		
+		const form = e.target;
+		const formData = new FormData(form);
+		const submitBtn = form.querySelector('button[type="submit"]');
+		
+		// Validate required fields - using ACTUAL form field names
+		const requiredFields = ['title', 'excerpt', 'start_date', 'location', 'registration_link'];
+		let missingFields = [];
+		
+		requiredFields.forEach(field => {
+			if (!formData.get(field) || formData.get(field).trim() === '') {
+				missingFields.push(field);
+			}
+		});
+		
+		if (missingFields.length > 0) {
+			alert(config.i18n.missingFields || 'Missing required fields: ' + missingFields.join(', '));
+			
 			// Re-enable button
 			if (submitBtn) {
 				submitBtn.disabled = false;
 				submitBtn.textContent = config.i18n.editEventButton || 'Save Changes';
 			}
+			return;
 		}
-	})
-	.catch(error => {
-		alert(config.i18n.updateErrorGeneric || 'Error updating event. Please try again.');
 		
-		// Re-enable button
+		// Disable button during submission
 		if (submitBtn) {
-			submitBtn.disabled = false;
-			submitBtn.textContent = config.i18n.editEventButton || 'Save Changes';
+			submitBtn.disabled = true;
+			submitBtn.textContent = config.i18n.saving || 'Saving...';
 		}
-	});
-}
+		
+		// Add nonce and AJAX action
+		formData.append('action', 'wpfa_update_event');
+		formData.append('nonce', config.adminNonce);
+		
+		// Send form data
+		fetch(config.ajaxUrl, {
+			method: 'POST',
+			body: formData
+		})
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				alert(config.i18n.updateSuccess || 'Event updated successfully. The page will now reload.');
+				window.location.reload();
+			} else {
+				const baseMsg = config.i18n.updateError || 'Error updating event';
+				alert(getErrorMessage(data, baseMsg));
+					
+				// Re-enable button
+				if (submitBtn) {
+					submitBtn.disabled = false;
+					submitBtn.textContent = config.i18n.editEventButton || 'Save Changes';
+				}
+			}
+		})
+		.catch(error => {
+			alert(config.i18n.updateErrorGeneric || 'Error updating event. Please try again.');
+			
+			// Re-enable button
+			if (submitBtn) {
+				submitBtn.disabled = false;
+				submitBtn.textContent = config.i18n.editEventButton || 'Save Changes';
+			}
+		});
+	}
 	
 	/**
 	 * Delete event confirmation and AJAX call
@@ -490,9 +501,8 @@ function handleEditEventFormSubmit(e) {
 				alert(config.i18n.deleteSuccess || 'Event deleted successfully. The page will now reload.');
 				window.location.reload();
 			} else {
-				alert(config.i18n.deleteError 
-					? `${config.i18n.deleteError}: ${data.data}`
-					: `Error deleting event: ${data.data}`);
+				const baseMsg = config.i18n.deleteError || 'Error deleting event';
+				alert(getErrorMessage(data, baseMsg));
 			}
 		})
 		.catch(error => {
