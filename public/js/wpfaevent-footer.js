@@ -10,6 +10,17 @@ const WPFA_Footer = (function() {
     // Private variables
     let config = {};
     let elements = {};
+
+    // Private Helper for consistency with events module
+    function getErrorMessage(data, fallback) {
+        if (data && typeof data.data === 'object' && data.data !== null && data.data.message) {
+            return `${fallback}: ${data.data.message}`;
+        }
+        if (data && typeof data.data === 'string') {
+            return `${fallback}: ${data.data}`;
+        }
+        return fallback;
+    }
     
     /**
      * Initialize the footer module
@@ -119,9 +130,8 @@ const WPFA_Footer = (function() {
                 alert(config.i18n.footerSaveSuccess || 'Footer text updated successfully.');
                 closeFooterModal();
             } else {
-                alert(config.i18n.footerSaveError 
-                    ? `${config.i18n.footerSaveError}: ${data.data}`
-                    : `Error updating footer text: ${data.data}`);
+                const baseMsg = config.i18n.footerSaveError || 'Error updating footer text';
+                alert(getErrorMessage(data, baseMsg));
             }
             
             // Re-enable button
