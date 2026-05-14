@@ -21,7 +21,11 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; }
 
-get_header();
+$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+
+if ( ! $wpfaevent_is_embed ) {
+	get_header();
+}
 // Fetch customizable pieces (later we can add an Options page; for now use filters or placeholders).
 
 /**
@@ -74,7 +78,11 @@ $logos = (array) apply_filters(
 	]
 );
 ?>
+<?php if ( $wpfaevent_is_embed ) : ?>
+<section class="wpfa-landing">
+<?php else : ?>
 <main class="wpfa-landing">
+<?php endif; ?>
 	<section class="wpfa-hero">
 		<h1><?php echo esc_html( $hero_title ); ?></h1>
 		<p class="wpfa-hero-sub"><?php echo esc_html( $hero_sub ); ?></p>
@@ -90,5 +98,9 @@ $logos = (array) apply_filters(
 			</ul>
 		</section>
 	<?php endif; ?>
+<?php if ( $wpfaevent_is_embed ) : ?>
+</section>
+<?php else : ?>
 </main>
-<?php get_footer(); ?>
+	<?php get_footer(); ?>
+<?php endif; ?>

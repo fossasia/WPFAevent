@@ -26,6 +26,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+
 /**
  * Filters the number of past events to display per page.
  *
@@ -77,6 +79,7 @@ $header_vars = [
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
 ];
 ?>
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -103,8 +106,13 @@ $header_vars = [
 		include $nav_partial;
 	}
 	?>
+<?php endif; ?>
 
+	<?php if ( $wpfaevent_is_embed ) : ?>
+	<section class="wpfa-past-events">
+	<?php else : ?>
 	<main class="wpfa-past-events">
+	<?php endif; ?>
 		<section class="wpfa-past-events-hero">
 			<div class="container">
 				<h1><?php esc_html_e( 'Past FOSSASIA Events', 'wpfaevent' ); ?></h1>
@@ -270,8 +278,13 @@ $header_vars = [
 				</div>
 			<?php endif; ?>
 		</div>
+	<?php if ( $wpfaevent_is_embed ) : ?>
+	</section>
+	<?php else : ?>
 	</main>
+	<?php endif; ?>
 
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 	<footer class="wpfa-footer">
 		<div class="container">
 			<!-- Footer copyright notice -->
@@ -296,3 +309,4 @@ $header_vars = [
 <?php wp_footer(); ?>
 </body>
 </html>
+<?php endif; ?>

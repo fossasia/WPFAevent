@@ -26,7 +26,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-get_header();
+$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+
+if ( ! $wpfaevent_is_embed ) {
+	get_header();
+}
 
 /**
  * MVP parity: we don’t have sessions yet, so render events grouped by date.
@@ -105,7 +109,11 @@ foreach ( $q->posts as $eid ) {
 // Sort by timestamp (chronological order)
 ksort( $groups, SORT_NUMERIC );
 ?>
+<?php if ( $wpfaevent_is_embed ) : ?>
+<section class="wpfa-schedule">
+<?php else : ?>
 <main class="wpfa-schedule">
+<?php endif; ?>
 	<h1><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></h1>
 	<?php
 	if ( $groups ) :
@@ -138,5 +146,9 @@ ksort( $groups, SORT_NUMERIC );
 	<?php else : ?>
 		<p><?php esc_html_e( 'No schedule entries yet.', 'wpfaevent' ); ?></p>
 	<?php endif; ?>
+<?php if ( $wpfaevent_is_embed ) : ?>
+</section>
+<?php else : ?>
 </main>
-<?php get_footer(); ?>
+	<?php get_footer(); ?>
+<?php endif; ?>

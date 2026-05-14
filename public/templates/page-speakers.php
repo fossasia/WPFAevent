@@ -13,6 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+
 /**
  * Filters the number of speakers per page.
  *
@@ -92,6 +94,7 @@ $header_vars         = array(
 );
 
 ?>
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -118,8 +121,13 @@ $header_vars         = array(
 		include $nav_partial;
 	}
 	?>
+<?php endif; ?>
 
+	<?php if ( $wpfaevent_is_embed ) : ?>
+	<section class="wpfa-speakers">
+	<?php else : ?>
 	<main class="wpfa-speakers">
+	<?php endif; ?>
 		<section class="wpfa-speakers-hero">
 			<div class="container">
 				<h1><?php echo esc_html( apply_filters( 'wpfa_speakers_title', __( 'FOSSASIA Summit Speakers', 'wpfaevent' ) ) ); ?></h1>
@@ -218,8 +226,13 @@ $header_vars         = array(
 			<?php endif; ?>
 			<?php wp_reset_postdata(); ?>
 		</div>
+	<?php if ( $wpfaevent_is_embed ) : ?>
+	</section>
+	<?php else : ?>
 	</main>
+	<?php endif; ?>
 
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 	<footer class="wpfa-footer">
 		<div class="container">
 			<small>
@@ -235,6 +248,7 @@ $header_vars         = array(
 		</div>
 	</footer>
 </div><!-- #page -->
+<?php endif; ?>
 
 <?php
 // Load admin modals if user is admin
@@ -246,6 +260,8 @@ if ( current_user_can( 'manage_options' ) ) :
 endif;
 ?>
 
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 <?php wp_footer(); ?>
 </body>
 </html>
+<?php endif; ?>

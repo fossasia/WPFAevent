@@ -18,7 +18,12 @@
  */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; }
-get_header();
+
+$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+
+if ( ! $wpfaevent_is_embed ) {
+	get_header();
+}
 
 $today = current_time( 'Y-m-d' );
 
@@ -47,7 +52,11 @@ $args  = [
 
 $q = new WP_Query( $args );
 ?>
+<?php if ( $wpfaevent_is_embed ) : ?>
+<section class="wpfa-events">
+<?php else : ?>
 <main class="wpfa-events">
+<?php endif; ?>
 	<h1><?php esc_html_e( 'Upcoming Events', 'wpfaevent' ); ?></h1>
 	<?php if ( $q->have_posts() ) : ?>
 		<ul class="wpfa-event-list">
@@ -81,5 +90,9 @@ $q = new WP_Query( $args );
 		<p><?php esc_html_e( 'No upcoming events.', 'wpfaevent' ); ?></p>
 	<?php endif; ?>
 	<?php wp_reset_postdata(); ?>
+<?php if ( $wpfaevent_is_embed ) : ?>
+</section>
+<?php else : ?>
 </main>
-<?php get_footer(); ?>
+	<?php get_footer(); ?>
+<?php endif; ?>
