@@ -390,7 +390,7 @@ class Wpfaevent_Admin {
 			return;
 		}
 
-		// List of all meta fields to save
+		// List of all meta fields to save.
 		$meta_fields = array(
 			'wpfa_event_start_date',
 			'wpfa_event_end_date',
@@ -404,20 +404,20 @@ class Wpfaevent_Admin {
 
 		foreach ( $meta_fields as $field ) {
 			if ( isset( $_POST[ $field ] ) ) {
-				$value = wp_unslash( $_POST[ $field ] );
+				$raw_value = sanitize_text_field( wp_unslash( $_POST[ $field ] ) );
 
-				// Special handling for URL fields
+				// Special handling for URL fields.
 				if ( in_array( $field, array( 'wpfa_event_url', 'wpfa_event_registration_link', 'wpfa_event_cfs_link' ), true ) ) {
-					$value = esc_url_raw( $value );
+					$value = esc_url_raw( $raw_value );
 				} else {
-					$value = sanitize_text_field( $value );
+					$value = $raw_value;
 				}
 
 				update_post_meta( $post_id, $field, $value );
 			}
 		}
 
-		// Handle speakers array
+		// Handle speakers array.
 		if ( isset( $_POST['wpfa_event_speakers'] ) && is_array( $_POST['wpfa_event_speakers'] ) ) {
 			$speakers = array_map( 'absint', $_POST['wpfa_event_speakers'] );
 			update_post_meta( $post_id, 'wpfa_event_speakers', $speakers );
