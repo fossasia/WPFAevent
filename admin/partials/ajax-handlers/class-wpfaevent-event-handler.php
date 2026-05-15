@@ -8,6 +8,14 @@
  * @since      1.0.0
  */
 
+/**
+ * Class Wpfaevent_Event_Handler
+ *
+ * Handles all event-related AJAX requests.
+ *
+ * @package    Wpfaevent
+ * @since      1.0.0
+ */
 class Wpfaevent_Event_Handler {
 
 	/**
@@ -56,7 +64,7 @@ class Wpfaevent_Event_Handler {
 			);
 		}
 
-		// Check permissions
+		// Check permissions.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
@@ -72,7 +80,7 @@ class Wpfaevent_Event_Handler {
 
 		$event = get_post( $event_id );
 
-		if ( ! $event || $event->post_type !== 'wpfa_event' ) {
+		if ( ! $event || 'wpfa_event' !== $event->post_type ) {
 			wp_send_json_error( esc_html__( 'Event not found', 'wpfaevent' ) );
 		}
 
@@ -109,7 +117,7 @@ class Wpfaevent_Event_Handler {
 			);
 		}
 
-		// Check permissions
+		// Check permissions.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				array(
@@ -125,7 +133,7 @@ class Wpfaevent_Event_Handler {
 		$location          = isset( $_POST['location'] ) ? sanitize_text_field( wp_unslash( $_POST['location'] ) ) : '';
 		$registration_link = isset( $_POST['registration_link'] ) ? esc_url_raw( wp_unslash( $_POST['registration_link'] ) ) : '';
 
-		// Validate required fields
+		// Validate required fields.
 		$required_fields = array(
 			'title'             => $title,
 			'excerpt'           => $excerpt,
@@ -136,11 +144,12 @@ class Wpfaevent_Event_Handler {
 
 		foreach ( $required_fields as $field_name => $field_value ) {
 			if ( empty( $field_value ) ) {
+				/* translators: %s: Field name */
 				wp_send_json_error( sprintf( esc_html__( 'Missing required field: %s', 'wpfaevent' ), $field_name ) );
 			}
 		}
 
-		// Create event post
+		// Create event post.
 		$event_data = array(
 			'post_title'   => $title,
 			'post_content' => isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '',
@@ -156,7 +165,7 @@ class Wpfaevent_Event_Handler {
 			wp_send_json_error( $error_message );
 		}
 
-		// Save meta fields - using CORRECT form field names
+		// Save meta fields - using CORRECT form field names.
 		$meta_fields = array(
 			'wpfa_event_start_date'        => 'start_date',
 			'wpfa_event_end_date'          => 'end_date',
@@ -171,7 +180,7 @@ class Wpfaevent_Event_Handler {
 			if ( isset( $_POST[ $post_key ] ) ) {
 				$value = sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) );
 
-				// Special handling for URL fields
+				// Special handling for URL fields.
 				if ( in_array( $post_key, array( 'registration_link', 'cfs_link' ), true ) ) {
 					$value = esc_url_raw( wp_unslash( $_POST[ $post_key ] ) );
 				}
@@ -182,20 +191,26 @@ class Wpfaevent_Event_Handler {
 			}
 		}
 
-		// Handle featured image upload - use CORRECT file field name
+		// Handle featured image upload - use CORRECT file field name.
 		if ( ! empty( $_FILES['featured_image']['name'] ) ) {
 
-			// Validate file type
+			// Validate file type.
 			$allowed_types = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
-			$file_type     = $_FILES['featured_image']['type'];
+
+			// Check if the file type is set and sanitize it.
+			$file_type = isset( $_FILES['featured_image']['type'] ) ? sanitize_text_field( wp_unslash( $_FILES['featured_image']['type'] ) ) : '';
 
 			if ( ! in_array( $file_type, $allowed_types, true ) ) {
 				wp_send_json_error( esc_html__( 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'wpfaevent' ) );
 			}
 
-			// Validate file size (2MB max)
-			$max_size = 2 * 1024 * 1024; // 2MB in bytes
-			if ( $_FILES['featured_image']['size'] > $max_size ) {
+			// Validate file size (2MB max).
+			$max_size = 2 * 1024 * 1024; // 2MB in bytes.
+
+			// Check if the file size is set.
+			$file_size = isset( $_FILES['featured_image']['size'] ) ? intval( $_FILES['featured_image']['size'] ) : 0;
+
+			if ( $file_size > $max_size ) {
 				wp_send_json_error( esc_html__( 'File size exceeds 2MB limit.', 'wpfaevent' ) );
 			}
 
@@ -203,14 +218,15 @@ class Wpfaevent_Event_Handler {
 			require_once ABSPATH . 'wp-admin/includes/image.php';
 			require_once ABSPATH . 'wp-admin/includes/media.php';
 
-			// Upload and create attachment
+			// Upload and create attachment.
 			$attachment_id = media_handle_upload( 'featured_image', $event_id );
 
 			if ( is_wp_error( $attachment_id ) ) {
+				/* translators: %s: Error message */
 				wp_send_json_error( sprintf( esc_html__( 'Image upload failed: %s', 'wpfaevent' ), $attachment_id->get_error_message() ) );
 			}
 
-			// Set as featured image
+			// Set as featured image.
 			set_post_thumbnail( $event_id, $attachment_id );
 		}
 
@@ -238,7 +254,7 @@ class Wpfaevent_Event_Handler {
 			);
 		}
 
-		// Check permissions
+		// Check permissions.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
@@ -252,26 +268,32 @@ class Wpfaevent_Event_Handler {
 			wp_send_json_error( __( 'Invalid event ID', 'wpfaevent' ) );
 		}
 
-		// Verify event exists and user can edit it
+		// Verify event exists and user can edit it.
 		$event = get_post( $event_id );
-		if ( ! $event || $event->post_type !== 'wpfa_event' || ! current_user_can( 'edit_post', $event_id ) ) {
+		if ( ! $event || 'wpfa_event' !== $event->post_type || ! current_user_can( 'edit_post', $event_id ) ) {
 			wp_send_json_error( __( 'Cannot edit this event', 'wpfaevent' ) );
 		}
 
-		// Validate required fields
+		// Validate required fields.
 		$required_fields = array( 'title', 'excerpt', 'start_date', 'location', 'registration_link' );
 		foreach ( $required_fields as $field ) {
 			if ( empty( $_POST[ $field ] ) ) {
+				/* translators: %s: Field name */
 				wp_send_json_error( sprintf( esc_html__( 'Missing required field: %s', 'wpfaevent' ), $field ) );
 			}
 		}
 
-		// Update post
+		// Check and sanitize input fields.
+		$title   = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
+		$excerpt = isset( $_POST['excerpt'] ) ? sanitize_text_field( wp_unslash( $_POST['excerpt'] ) ) : '';
+		$content = isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '';
+
+		// Update post.
 		$event_data = array(
 			'ID'           => $event_id,
-			'post_title'   => sanitize_text_field( wp_unslash( $_POST['title'] ) ),
-			'post_content' => wp_kses_post( wp_unslash( $_POST['content'] ?? '' ) ),
-			'post_excerpt' => sanitize_text_field( wp_unslash( $_POST['excerpt'] ) ),
+			'post_title'   => $title,
+			'post_content' => $content,
+			'post_excerpt' => $excerpt,
 		);
 
 		$update_result = wp_update_post( $event_data, true );
@@ -285,7 +307,7 @@ class Wpfaevent_Event_Handler {
 			);
 		}
 
-		// Save meta fields
+		// Save meta fields.
 		$meta_fields = array(
 			'wpfa_event_start_date'        => 'start_date',
 			'wpfa_event_end_date'          => 'end_date',
@@ -313,19 +335,25 @@ class Wpfaevent_Event_Handler {
 			}
 		}
 
-		// Handle featured image upload
+		// Handle featured image upload.
 		if ( ! empty( $_FILES['featured_image']['name'] ) ) {
-			// Validate file type
+			// Validate file type.
 			$allowed_types = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
-			$file_type     = $_FILES['featured_image']['type'];
+
+			// Check if the file type is set and sanitize it.
+			$file_type = isset( $_FILES['featured_image']['type'] ) ? sanitize_text_field( wp_unslash( $_FILES['featured_image']['type'] ) ) : '';
 
 			if ( ! in_array( $file_type, $allowed_types, true ) ) {
 				wp_send_json_error( esc_html__( 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'wpfaevent' ) );
 			}
 
-			// Validate file size (2MB max)
-			$max_size = 2 * 1024 * 1024; // 2MB in bytes
-			if ( $_FILES['featured_image']['size'] > $max_size ) {
+			// Validate file size (2MB max).
+			$max_size = 2 * 1024 * 1024;
+
+			// Check if the file size is set.
+			$file_size = isset( $_FILES['featured_image']['size'] ) ? intval( $_FILES['featured_image']['size'] ) : 0;
+
+			if ( $file_size > $max_size ) {
 				wp_send_json_error( esc_html__( 'File size exceeds 2MB limit.', 'wpfaevent' ) );
 			}
 
@@ -333,17 +361,18 @@ class Wpfaevent_Event_Handler {
 			require_once ABSPATH . 'wp-admin/includes/image.php';
 			require_once ABSPATH . 'wp-admin/includes/media.php';
 
-			// Upload and create attachment
+			// Upload and create attachment.
 			$attachment_id = media_handle_upload( 'featured_image', $event_id );
 
 			if ( is_wp_error( $attachment_id ) ) {
+				/* translators: %s: Error message */
 				wp_send_json_error( sprintf( esc_html__( 'Image upload failed: %s', 'wpfaevent' ), $attachment_id->get_error_message() ) );
 			}
 
-			// Set as featured image
+			// Set as featured image.
 			set_post_thumbnail( $event_id, $attachment_id );
-		} elseif ( isset( $_POST['remove_featured_image'] ) && $_POST['remove_featured_image'] === 'true' ) {
-			// Remove featured image
+		} elseif ( isset( $_POST['remove_featured_image'] ) && 'true' === $_POST['remove_featured_image'] ) {
+			// Remove featured image.
 			delete_post_thumbnail( $event_id );
 		}
 
@@ -366,7 +395,7 @@ class Wpfaevent_Event_Handler {
 			);
 		}
 
-		// Check permissions
+		// Check permissions.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
@@ -380,13 +409,13 @@ class Wpfaevent_Event_Handler {
 			wp_send_json_error( __( 'Invalid event ID', 'wpfaevent' ) );
 		}
 
-		// Verify event exists and user can delete it
+		// Verify event exists and user can delete it.
 		$event = get_post( $event_id );
-		if ( ! $event || $event->post_type !== 'wpfa_event' || ! current_user_can( 'delete_post', $event_id ) ) {
+		if ( ! $event || 'wpfa_event' !== $event->post_type || ! current_user_can( 'delete_post', $event_id ) ) {
 			wp_send_json_error( __( 'Cannot delete this event', 'wpfaevent' ) );
 		}
 
-		// Delete the event
+		// Delete the event.
 		$result = wp_delete_post( $event_id, true );
 
 		if ( ! $result ) {
