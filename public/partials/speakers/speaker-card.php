@@ -27,11 +27,12 @@
  * @since      1.0.0
  * @author     FOSSASIA <contact@fossasia.org>
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Speaker post ID passed from parent template;
+// Speaker post ID passed from the parent template;
 // guard prevents misuse of this partial.
 if ( empty( $sid ) || ! is_numeric( $sid ) ) {
 	return;
@@ -39,14 +40,14 @@ if ( empty( $sid ) || ! is_numeric( $sid ) ) {
 
 $sid = (int) $sid;
 
-$name      = get_the_title( $sid );
-$org       = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
-$position  = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
-$photo_url = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
-$link      = get_permalink( $sid );
-$is_admin  = current_user_can( 'manage_options' );
+$name         = get_the_title( $sid );
+$org          = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
+$position     = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
+$photo_url    = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
+$speaker_link = get_permalink( $sid );
+$is_admin     = current_user_can( 'manage_options' );
 
-// Get categories from taxonomy
+// Get categories from the taxonomy.
 $speaker_categories = array();
 if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 	$terms = wp_get_post_terms( $sid, 'wpfa_speaker_category' );
@@ -55,7 +56,7 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 	}
 }
 
-// Get session details
+// Get session details.
 $talk_title    = get_post_meta( $sid, 'wpfa_speaker_talk_title', true );
 $talk_date     = get_post_meta( $sid, 'wpfa_speaker_talk_date', true );
 $talk_time     = get_post_meta( $sid, 'wpfa_speaker_talk_time', true );
@@ -63,9 +64,10 @@ $talk_end_time = get_post_meta( $sid, 'wpfa_speaker_talk_end_time', true );
 $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 ?>
 <article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( $sid ); ?>">
-	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $link ); ?>">
-		<?php if ( $photo_url ) : ?>
-			<img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $name ) ); ?>" loading="lazy" itemprop="image" />
+	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
+			<?php if ( $photo_url ) : ?>
+				<?php /* translators: %s: Speaker name. */ ?>
+				<img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $name ) ); ?>" loading="lazy" itemprop="image" />
 		<?php else : ?>
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" class="wpfa-placeholder-svg">
 				<rect width="100%" height="100%" fill="#eee" />
@@ -89,7 +91,7 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 			</p>
 		<?php endif; ?>
 		
-		<h3 class="wpfa-speaker-name" itemprop="name"><a href="<?php echo esc_url( $link ); ?>"><?php echo esc_html( $name ); ?></a></h3>
+			<h3 class="wpfa-speaker-name" itemprop="name"><a href="<?php echo esc_url( $speaker_link ); ?>"><?php echo esc_html( $name ); ?></a></h3>
 		<?php if ( $position || $org ) : ?>
 			<p class="wpfa-speaker-role"><?php echo esc_html( trim( $position . ( $position && $org ? ' · ' : '' ) . $org ) ); ?></p>
 		<?php endif; ?>
@@ -136,7 +138,7 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 		<?php endif; ?>
 		
 		<?php
-		// Get social links
+			// Get social links.
 		$linkedin = get_post_meta( $sid, 'wpfa_speaker_linkedin', true );
 		$twitter  = get_post_meta( $sid, 'wpfa_speaker_twitter', true );
 		$github   = get_post_meta( $sid, 'wpfa_speaker_github', true );

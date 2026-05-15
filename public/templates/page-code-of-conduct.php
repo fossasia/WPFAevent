@@ -44,16 +44,16 @@ if ( ! $wpfaevent_is_embed && have_posts() ) {
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent' ); ?>>
-<?php wp_body_open(); ?>
+	<?php wp_body_open(); ?>
 
-<div id="page" class="site">
-	<?php
-	// Load shared navigation partial
-	$nav_partial = WPFAEVENT_PATH . 'public/partials/header.php';
-	if ( file_exists( $nav_partial ) ) {
-		include $nav_partial;
-	}
-	?>
+		<div id="page" class="site">
+		<?php
+		// Load the shared navigation partial.
+		$nav_partial = WPFAEVENT_PATH . 'public/partials/header.php';
+		if ( file_exists( $nav_partial ) ) {
+			include $nav_partial;
+		}
+		?>
 <?php endif; ?>
 
 	<?php if ( $wpfaevent_is_embed ) : ?>
@@ -78,7 +78,7 @@ if ( ! $wpfaevent_is_embed && have_posts() ) {
 		<div class="container">
 			<article class="main-content">
 				<?php
-				// Load content partial
+					// Load the content partial.
 				$content_partial = WPFAEVENT_PATH . 'public/partials/code-of-conduct/content.php';
 				if ( file_exists( $content_partial ) ) {
 					include $content_partial;
@@ -94,7 +94,7 @@ if ( ! $wpfaevent_is_embed && have_posts() ) {
 <?php if ( ! $wpfaevent_is_embed ) : ?>
 </div>
 
-<?php wp_footer(); ?>
+	<?php wp_footer(); ?>
 </body>
 </html>
 <?php endif; ?>

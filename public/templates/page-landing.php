@@ -18,6 +18,7 @@
  * @since      1.0.0
  * @author     FOSSASIA <contact@fossasia.org>
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; }
 
@@ -71,11 +72,11 @@ $default_logo    = $plugin_root_url . 'assets/images/logo.png';
 
 $logos = (array) apply_filters(
 	'wpfa_landing_partner_logos',
-	[
+	array(
 		$default_logo,
 		$default_logo,
 		$default_logo,
-	]
+	)
 );
 ?>
 <?php if ( $wpfaevent_is_embed ) : ?>
