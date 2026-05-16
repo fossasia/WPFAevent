@@ -24,7 +24,7 @@ $event_sections_file        = $data_dir . '/custom-sections-' . $event_post_id .
 $navigation_file            = $data_dir . '/navigation.json';
 $global_settings_file       = $data_dir . '/site-settings.json';
 $global_theme_settings_file = $data_dir . '/theme-settings.json';
-$event_theme_settings_file  = $data_dir . '/theme-settings-' . $post_id . '.json';
+$event_theme_settings_file  = $data_dir . '/theme-settings-' . $event_post_id . '.json';
 
 // Ensure file exists, if not, it will be created on plugin activation.
 // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
