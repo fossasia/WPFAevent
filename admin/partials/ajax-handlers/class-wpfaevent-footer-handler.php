@@ -8,6 +8,14 @@
  * @since      1.0.0
  */
 
+/**
+ * Class Wpfaevent_Footer_Handler
+ *
+ * Handles all footer-related AJAX requests.
+ *
+ * @package    Wpfaevent
+ * @since      1.0.0
+ */
 class Wpfaevent_Footer_Handler {
 
 	/**
@@ -52,12 +60,12 @@ class Wpfaevent_Footer_Handler {
 			wp_send_json_error( esc_html__( 'Invalid nonce', 'wpfaevent' ), 403 );
 		}
 
-		// Check permissions
+		// Check permissions.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( esc_html__( 'Unauthorized', 'wpfaevent' ), 403 );
 		}
 
-		// Check for the correct parameter name
+		// Check for the correct parameter name.
 		if ( ! isset( $_POST['footer_text'] ) ) {
 			wp_send_json_error(
 				array(
@@ -68,7 +76,7 @@ class Wpfaevent_Footer_Handler {
 
 		$footer_text = sanitize_textarea_field( wp_unslash( $_POST['footer_text'] ) );
 
-		// Save to options
+		// Save to options.
 		if ( update_option( 'wpfa_footer_text', $footer_text ) ) {
 				wp_send_json_success( esc_html__( 'Footer text updated successfully', 'wpfaevent' ) );
 		} else {
