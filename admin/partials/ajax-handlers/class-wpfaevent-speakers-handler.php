@@ -3,11 +3,19 @@
  * Handles all speaker-related AJAX functionality in the admin area.
  *
  * @package    Wpfaevent
- * @subpackage Wpfaevent/admin/ajax-handlers
+ * @subpackage Wpfaevent/admin/partials/ajax-handlers
  * @author     FOSSASIA <contact@fossasia.org>
  * @since      1.0.0
  */
 
+/**
+ * Class Wpfaevent_Speakers_Handler
+ *
+ * Handles all speaker-related AJAX requests.
+ *
+ * @package    Wpfaevent
+ * @since      1.0.0
+ */
 class Wpfaevent_Speakers_Handler {
 
 	/**
@@ -46,7 +54,7 @@ class Wpfaevent_Speakers_Handler {
 	 * @since    1.0.0
 	 */
 	public function ajax_get_speaker() {
-		// Verify nonce
+		// Verify nonce.
 		if ( ! check_ajax_referer( 'wpfa_speakers_ajax', 'nonce', false ) ) {
 			wp_send_json_error(
 				array(
@@ -56,7 +64,7 @@ class Wpfaevent_Speakers_Handler {
 			);
 		}
 
-		// Check permissions
+		// Check permissions.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
@@ -72,11 +80,11 @@ class Wpfaevent_Speakers_Handler {
 
 		$speaker = get_post( $speaker_id );
 
-		if ( ! $speaker || $speaker->post_type !== 'wpfa_speaker' ) {
+		if ( ! $speaker || 'wpfa_speaker' !== $speaker->post_type ) {
 			wp_send_json_error( esc_html__( 'Speaker not found', 'wpfaevent' ) );
 		}
 
-		// Get category term
+		// Get category term.
 		$category      = '';
 		$category_slug = '';
 		$terms         = wp_get_object_terms( $speaker_id, 'wpfa_speaker_category' );
@@ -114,7 +122,7 @@ class Wpfaevent_Speakers_Handler {
 	 * @since    1.0.0
 	 */
 	public function ajax_add_speaker() {
-		// Verify nonce
+		// Verify nonce.
 		if ( ! check_ajax_referer( 'wpfa_speakers_ajax', 'nonce', false ) ) {
 			wp_send_json_error(
 				array(
@@ -124,7 +132,7 @@ class Wpfaevent_Speakers_Handler {
 			);
 		}
 
-		// Check permissions
+		// Check permissions.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				array(
@@ -134,17 +142,18 @@ class Wpfaevent_Speakers_Handler {
 			);
 		}
 
-		// Validate required fields
+		// Validate required fields.
 		$required_fields = array( 'name', 'position', 'bio', 'talk_title', 'talk_date', 'talk_time', 'talk_end_time' );
 		foreach ( $required_fields as $field ) {
 			if ( empty( $_POST[ $field ] ) ) {
+				/* translators: %s: field name */
 				wp_send_json_error( sprintf( esc_html__( 'Missing required field: %s', 'wpfaevent' ), $field ) );
 			}
 		}
 
-		// Create speaker post
+		// Create speaker post.
 		$speaker_data = array(
-			'post_title'   => sanitize_text_field( wp_unslash( $_POST['name'] ) ),
+			'post_title'   => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
 			'post_type'    => 'wpfa_speaker',
 			'post_status'  => 'publish',
 			'post_content' => '',
@@ -156,20 +165,20 @@ class Wpfaevent_Speakers_Handler {
 			wp_send_json_error( $speaker_id->get_error_message() );
 		}
 
-		// Handle image upload
+		// Handle image upload.
 		$image_url = '';
 		if ( ! empty( $_FILES['image_upload']['name'] ) ) {
-			// Validate file type
+			// Validate file type.
 			$allowed_types = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
-			$file_type     = $_FILES['image_upload']['type'];
+			$file_type     = isset( $_FILES['image_upload']['type'] ) ? sanitize_text_field( $_FILES['image_upload']['type'] ) : '';
 
 			if ( ! in_array( $file_type, $allowed_types, true ) ) {
 				wp_send_json_error( esc_html__( 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'wpfaevent' ) );
 			}
 
-			// Validate file size (2MB max)
-			$max_size = 2 * 1024 * 1024; // 2MB in bytes
-			if ( $_FILES['image_upload']['size'] > $max_size ) {
+			// Validate file size (2MB max).
+			$max_size = 2 * 1024 * 1024;
+			if ( isset( $_FILES['image_upload']['size'] ) && $_FILES['image_upload']['size'] > $max_size ) {
 				wp_send_json_error( esc_html__( 'File size exceeds 2MB limit.', 'wpfaevent' ) );
 			}
 
@@ -177,10 +186,11 @@ class Wpfaevent_Speakers_Handler {
 			require_once ABSPATH . 'wp-admin/includes/image.php';
 			require_once ABSPATH . 'wp-admin/includes/media.php';
 
-			// Upload and create attachment
+			// Upload and create attachment.
 			$attachment_id = media_handle_upload( 'image_upload', 0 );
 
 			if ( is_wp_error( $attachment_id ) ) {
+				/* translators: %s: error message */
 				wp_send_json_error( sprintf( esc_html__( 'Image upload failed: %s', 'wpfaevent' ), $attachment_id->get_error_message() ) );
 			}
 
@@ -189,7 +199,7 @@ class Wpfaevent_Speakers_Handler {
 			$image_url = esc_url_raw( wp_unslash( $_POST['image_url'] ) );
 		}
 
-		// Save meta fields
+		// Save meta fields.
 		$meta_fields = array(
 			'wpfa_speaker_position'     => 'position',
 			'wpfa_speaker_organization' => 'organization',
@@ -202,13 +212,13 @@ class Wpfaevent_Speakers_Handler {
 		);
 
 		foreach ( $meta_fields as $meta_key => $post_key ) {
-			if ( $post_key === 'image_url' && ! empty( $image_url ) ) {
-				// Use uploaded image URL or provided URL
+			if ( 'image_url' === $post_key && ! empty( $image_url ) ) {
+				// Use uploaded image URL or provided URL.
 				update_post_meta( $speaker_id, $meta_key, $image_url );
 			} elseif ( isset( $_POST[ $post_key ] ) ) {
 				$value = sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) );
 
-				if ( $post_key === 'bio' ) {
+				if ( 'bio' === $post_key ) {
 					$value = wp_kses_post( wp_unslash( $_POST[ $post_key ] ) );
 				} elseif ( in_array( $post_key, array( 'linkedin', 'twitter', 'github', 'website' ), true ) ) {
 					$value = esc_url_raw( wp_unslash( $_POST[ $post_key ] ) );
@@ -234,8 +244,7 @@ class Wpfaevent_Speakers_Handler {
 
 		foreach ( $session_fields as $meta_key => $post_key ) {
 			if ( isset( $_POST[ $post_key ] ) ) {
-
-				if ( $post_key === 'talk_abstract' ) {
+				if ( 'talk_abstract' === $post_key ) {
 					$value = wp_kses_post( wp_unslash( $_POST[ $post_key ] ) );
 				} else {
 					$value = sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) );
@@ -252,22 +261,19 @@ class Wpfaevent_Speakers_Handler {
 		if ( isset( $_POST['category'] ) ) {
 			$category = sanitize_text_field( wp_unslash( $_POST['category'] ) );
 
-			// If it's numeric, it's a term ID
+			// If it's numeric, it's a term ID.
 			if ( is_numeric( $category ) ) {
 				$term_id = (int) $category;
 				wp_set_object_terms( $speaker_id, $term_id, 'wpfa_speaker_category' );
-			}
-			// If it's "_custom" with custom value
-			elseif ( $category === '_custom' && isset( $_POST['category_custom'] ) && ! empty( $_POST['category_custom'] ) ) {
+			} elseif ( '_custom' === $category && isset( $_POST['category_custom'] ) && ! empty( $_POST['category_custom'] ) ) {
+				// If it's "_custom" with custom value.
 				$category_name = sanitize_text_field( wp_unslash( $_POST['category_custom'] ) );
 				wp_set_object_terms( $speaker_id, $category_name, 'wpfa_speaker_category' );
-			}
-			// If it's a slug/name
-			elseif ( ! empty( $category ) && $category !== '_custom' ) {
+			} elseif ( ! empty( $category ) && '_custom' !== $category ) {
+				// If it's a slug/name.
 				wp_set_object_terms( $speaker_id, $category, 'wpfa_speaker_category' );
-			}
-			// Empty
-			else {
+			} else {
+				// Empty.
 				wp_set_object_terms( $speaker_id, array(), 'wpfa_speaker_category' );
 			}
 		}
@@ -281,7 +287,7 @@ class Wpfaevent_Speakers_Handler {
 	 * @since    1.0.0
 	 */
 	public function ajax_update_speaker() {
-		// Verify nonce
+		// Verify nonce.
 		if ( ! check_ajax_referer( 'wpfa_speakers_ajax', 'nonce', false ) ) {
 			wp_send_json_error(
 				array(
@@ -291,7 +297,7 @@ class Wpfaevent_Speakers_Handler {
 			);
 		}
 
-		// Check permissions
+		// Check permissions.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
@@ -305,21 +311,22 @@ class Wpfaevent_Speakers_Handler {
 			wp_send_json_error( __( 'Invalid speaker ID', 'wpfaevent' ) );
 		}
 
-		// Verify speaker exists and user can edit it
+		// Verify speaker exists and user can edit it.
 		$speaker = get_post( $speaker_id );
-		if ( ! $speaker || $speaker->post_type !== 'wpfa_speaker' || ! current_user_can( 'edit_post', $speaker_id ) ) {
+		if ( ! $speaker || 'wpfa_speaker' !== $speaker->post_type || ! current_user_can( 'edit_post', $speaker_id ) ) {
 			wp_send_json_error( __( 'Cannot edit this speaker', 'wpfaevent' ) );
 		}
 
-		// Validate required fields
+		// Validate required fields.
 		$required_fields = array( 'name', 'position', 'bio', 'talk_title', 'talk_date', 'talk_time', 'talk_end_time' );
 		foreach ( $required_fields as $field ) {
 			if ( empty( $_POST[ $field ] ) ) {
+				/* translators: %s: field name */
 				wp_send_json_error( sprintf( esc_html__( 'Missing required field: %s', 'wpfaevent' ), $field ) );
 			}
 		}
 
-		// Update post title if name changed
+		// Update post title if name changed.
 		if ( ! empty( $_POST['name'] ) ) {
 			wp_update_post(
 				array(
@@ -329,20 +336,20 @@ class Wpfaevent_Speakers_Handler {
 			);
 		}
 
-		// Handle image upload
+		// Handle image upload.
 		$image_url = '';
 		if ( ! empty( $_FILES['image_upload']['name'] ) ) {
-			// Validate file type
+			// Validate file type.
 			$allowed_types = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
-			$file_type     = $_FILES['image_upload']['type'];
+			$file_type     = isset( $_FILES['image_upload']['type'] ) ? sanitize_text_field( $_FILES['image_upload']['type'] ) : '';
 
 			if ( ! in_array( $file_type, $allowed_types, true ) ) {
 				wp_send_json_error( esc_html__( 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'wpfaevent' ) );
 			}
 
-			// Validate file size (2MB max)
-			$max_size = 2 * 1024 * 1024; // 2MB in bytes
-			if ( $_FILES['image_upload']['size'] > $max_size ) {
+			// Validate file size (2MB max).
+			$max_size = 2 * 1024 * 1024;
+			if ( isset( $_FILES['image_upload']['size'] ) && $_FILES['image_upload']['size'] > $max_size ) {
 				wp_send_json_error( esc_html__( 'File size exceeds 2MB limit.', 'wpfaevent' ) );
 			}
 
@@ -350,10 +357,11 @@ class Wpfaevent_Speakers_Handler {
 			require_once ABSPATH . 'wp-admin/includes/image.php';
 			require_once ABSPATH . 'wp-admin/includes/media.php';
 
-			// Upload and create attachment
+			// Upload and create attachment.
 			$attachment_id = media_handle_upload( 'image_upload', $speaker_id );
 
 			if ( is_wp_error( $attachment_id ) ) {
+				/* translators: %s: error message */
 				wp_send_json_error( sprintf( esc_html__( 'Image upload failed: %s', 'wpfaevent' ), $attachment_id->get_error_message() ) );
 			}
 
@@ -362,7 +370,7 @@ class Wpfaevent_Speakers_Handler {
 			$image_url = esc_url_raw( wp_unslash( $_POST['image_url'] ) );
 		}
 
-		// Save meta fields
+		// Save meta fields.
 		$meta_fields = array(
 			'wpfa_speaker_position'     => 'position',
 			'wpfa_speaker_organization' => 'organization',
@@ -375,12 +383,11 @@ class Wpfaevent_Speakers_Handler {
 		);
 
 		foreach ( $meta_fields as $meta_key => $post_key ) {
-			if ( $post_key === 'image_url' && ! empty( $image_url ) ) {
-				// Use uploaded image URL or provided URL
+			if ( 'image_url' === $post_key && ! empty( $image_url ) ) {
+				// Use uploaded image URL or provided URL.
 				update_post_meta( $speaker_id, $meta_key, $image_url );
 			} elseif ( isset( $_POST[ $post_key ] ) ) {
-
-				if ( $post_key === 'bio' ) {
+				if ( 'bio' === $post_key ) {
 					$value = wp_kses_post( wp_unslash( $_POST[ $post_key ] ) );
 				} elseif ( in_array( $post_key, array( 'linkedin', 'twitter', 'github', 'website' ), true ) ) {
 					$value = esc_url_raw( wp_unslash( $_POST[ $post_key ] ) );
@@ -388,7 +395,7 @@ class Wpfaevent_Speakers_Handler {
 					$value = sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) );
 				}
 
-				// Delete meta when field is intentionally cleared to avoid storing empty values
+				// Delete meta when field is intentionally cleared to avoid storing empty values.
 				if ( strlen( $value ) === 0 ) {
 					delete_post_meta( $speaker_id, $meta_key );
 				} else {
@@ -407,8 +414,7 @@ class Wpfaevent_Speakers_Handler {
 
 		foreach ( $session_fields as $meta_key => $post_key ) {
 			if ( isset( $_POST[ $post_key ] ) ) {
-
-				if ( $post_key === 'talk_abstract' ) {
+				if ( 'talk_abstract' === $post_key ) {
 					$value = wp_kses_post( wp_unslash( $_POST[ $post_key ] ) );
 				} else {
 					$value = sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) );
@@ -425,22 +431,19 @@ class Wpfaevent_Speakers_Handler {
 		if ( isset( $_POST['category'] ) ) {
 			$category = sanitize_text_field( wp_unslash( $_POST['category'] ) );
 
-			// If it's numeric, it's a term ID
+			// If it's numeric, it's a term ID.
 			if ( is_numeric( $category ) ) {
 				$term_id = (int) $category;
 				wp_set_object_terms( $speaker_id, $term_id, 'wpfa_speaker_category' );
-			}
-			// If it's "_custom" with custom value
-			elseif ( $category === '_custom' && isset( $_POST['category_custom'] ) && ! empty( $_POST['category_custom'] ) ) {
+			} elseif ( '_custom' === $category && isset( $_POST['category_custom'] ) && ! empty( $_POST['category_custom'] ) ) {
+				// If it's "_custom" with custom value.
 				$category_name = sanitize_text_field( wp_unslash( $_POST['category_custom'] ) );
 				wp_set_object_terms( $speaker_id, $category_name, 'wpfa_speaker_category' );
-			}
-			// If it's a slug/name
-			elseif ( ! empty( $category ) && $category !== '_custom' ) {
+			} elseif ( ! empty( $category ) && '_custom' !== $category ) {
+				// If it's a slug/name.
 				wp_set_object_terms( $speaker_id, $category, 'wpfa_speaker_category' );
-			}
-			// Empty
-			else {
+			} else {
+				// Empty.
 				wp_set_object_terms( $speaker_id, array(), 'wpfa_speaker_category' );
 			}
 		}
@@ -454,7 +457,7 @@ class Wpfaevent_Speakers_Handler {
 	 * @since    1.0.0
 	 */
 	public function ajax_delete_speaker() {
-		// Verify nonce
+		// Verify nonce.
 		if ( ! check_ajax_referer( 'wpfa_speakers_ajax', 'nonce', false ) ) {
 			wp_send_json_error(
 				array(
@@ -464,7 +467,7 @@ class Wpfaevent_Speakers_Handler {
 			);
 		}
 
-		// Check permissions
+		// Check permissions.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error(
 				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
@@ -478,13 +481,13 @@ class Wpfaevent_Speakers_Handler {
 			wp_send_json_error( __( 'Invalid speaker ID', 'wpfaevent' ) );
 		}
 
-		// Verify speaker exists and user can delete it
+		// Verify speaker exists and user can delete it.
 		$speaker = get_post( $speaker_id );
-		if ( ! $speaker || $speaker->post_type !== 'wpfa_speaker' || ! current_user_can( 'delete_post', $speaker_id ) ) {
+		if ( ! $speaker || 'wpfa_speaker' !== $speaker->post_type || ! current_user_can( 'delete_post', $speaker_id ) ) {
 			wp_send_json_error( __( 'Cannot delete this speaker', 'wpfaevent' ) );
 		}
 
-		// Delete the speaker
+		// Delete the speaker.
 		$result = wp_delete_post( $speaker_id, true );
 
 		if ( ! $result ) {

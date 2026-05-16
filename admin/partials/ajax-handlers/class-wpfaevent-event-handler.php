@@ -3,7 +3,7 @@
  * Handles all event-related AJAX functionality in the admin area.
  *
  * @package    Wpfaevent
- * @subpackage Wpfaevent/admin/ajax-handlers
+ * @subpackage Wpfaevent/admin/partials/ajax-handlers
  * @author     FOSSASIA <contact@fossasia.org>
  * @since      1.0.0
  */
