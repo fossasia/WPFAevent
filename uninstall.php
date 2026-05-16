@@ -1,44 +1,30 @@
 <?php
 /**
- * Uninstall handler for WPFAevent / FOSSASIA Landing plugin.
+ * Fired when the plugin is uninstalled.
  *
- * @package Wpfaevent
+ * When populating this file, consider the following flow
+ * of control:
+ *
+ * - This method should be static
+ * - Check if the $_REQUEST content actually is the plugin name
+ * - Run an admin referrer check to make sure it goes through authentication
+ * - Verify the output of $_GET makes sense
+ * - Repeat with other user roles. Best directly by using the links/query string parameters.
+ * - Repeat things for multisite. Once for a single site in the network, once sitewide.
+ *
+ * This file may be updated more in future version of the Boilerplate; however, this is the
+ * general skeleton and outline for how the file should work.
+ *
+ * For more information, see the following discussion:
+ * https://github.com/tommcfarlin/WordPress-Plugin-Boilerplate/pull/123#issuecomment-28541913
+ *
+ * @link       https://fossasia.org
+ * @since      1.0.0
+ *
+ * @package    Wpfaevent
  */
 
+// If uninstall not called from WordPress, then exit.
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
-}
-
-// Delete uploaded data files in uploads/fossasia-data.
-$upload_dir = wp_upload_dir();
-$data_dir   = trailingslashit( $upload_dir['basedir'] ) . 'fossasia-data';
-
-if ( is_dir( $data_dir ) ) {
-	global $wp_filesystem;
-
-	if ( empty( $wp_filesystem ) ) {
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-		WP_Filesystem();
-	}
-
-	$files = glob( $data_dir . '/*' );
-	if ( is_array( $files ) ) {
-		foreach ( $files as $file ) {
-			if ( is_file( $file ) ) {
-				wp_delete_file( $file );
-			}
-		}
-	}
-	if ( $wp_filesystem && $wp_filesystem->is_dir( $data_dir ) ) {
-		$wp_filesystem->rmdir( $data_dir, true );
-	}
-}
-
-// Remove pages created by the plugin by slug.
-$slugs = array( 'fossasia-summit', 'speakers', 'full-schedule', 'admin-dashboard', 'events', 'past-events', 'code-of-conduct' );
-foreach ( $slugs as $slug ) {
-	$page_object = get_page_by_path( $slug );
-	if ( $page_object ) {
-		wp_delete_post( $page_object->ID, true );
-	}
 }
