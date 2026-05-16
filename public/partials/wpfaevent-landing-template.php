@@ -191,7 +191,18 @@ function render_custom_sections( $position, $all_sections ) {
 					</div>
 					<?php
 				} else {
-						// Two-column layouts.
+						// Two-column layouts (iframe map embeds are not allowed in wp_kses_post).
+						$landing_columns_allowed_html = wp_kses_allowed_html( 'post' );
+						$landing_columns_allowed_html['iframe'] = array(
+							'src'             => true,
+							'width'           => true,
+							'height'          => true,
+							'style'           => true,
+							'loading'         => true,
+							'title'           => true,
+							'allowfullscreen' => true,
+							'referrerpolicy'  => true,
+						);
 						$media_col_html = '';
 					if ( 'photo' === $section['mediaType'] && ! empty( $section['photo_src'] ) ) {
 						$image_src      = $section['photo_src'];
@@ -217,13 +228,13 @@ function render_custom_sections( $position, $all_sections ) {
 						<?php
 						if ( 'two_col_media_left' === $layout ) {
 							if ( ! empty( $media_col_html ) ) {
-								echo wp_kses_post( $media_col_html );
+								echo wp_kses( $media_col_html, $landing_columns_allowed_html );
 							}
 							echo wp_kses_post( $content_col_html );
 						} else { // two_col_media_right.
 							echo wp_kses_post( $content_col_html );
 							if ( ! empty( $media_col_html ) ) {
-								echo wp_kses_post( $media_col_html );
+								echo wp_kses( $media_col_html, $landing_columns_allowed_html );
 							}
 						}
 						?>
