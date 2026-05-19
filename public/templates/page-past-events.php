@@ -26,19 +26,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+
 /**
  * Filters the number of past events to display per page.
  *
  * @since 1.0.0
  *
- * @param int $per_page Number of past events per page. Default 6.
+ * @param int $posts_per_page Number of past events per page. Default 6.
  */
-$per_page = max( 1, (int) apply_filters( 'wpfa_past_events_per_page', 6 ) );
-$paged    = max( 1, (int) get_query_var( 'paged', 1 ) );
+$wpfa_past_events_per_page = max( 1, (int) apply_filters( 'wpfa_past_events_per_page', 6 ) );
+$wpfa_past_events_paged    = max( 1, (int) get_query_var( 'paged', 1 ) );
 
-// Query past events (end date before today)
+// Query past events (end date before today).
 $today = current_time( 'Y-m-d' );
-$args  = [
+// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_query,WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Required for date-based past events query.
+$args = [
 	'post_type'      => 'wpfa_event',
 	'post_status'    => 'publish',
 	'meta_query'     => [
@@ -53,20 +56,21 @@ $args  = [
 	'meta_key'       => 'wpfa_event_end_date',
 	'meta_type'      => 'DATE',
 	'order'          => 'DESC',
-	'posts_per_page' => $per_page,
-	'paged'          => $paged,
+	'posts_per_page' => $wpfa_past_events_per_page,
+	'paged'          => $wpfa_past_events_paged,
 ];
 
 $query = new WP_Query( $args );
+// phpcs:enable
 
-// Get site logo
+// Get site logo.
 $site_logo_url = get_option( 'wpfa_site_logo_url', '' );
 if ( empty( $site_logo_url ) ) {
 	$site_logo_url = WPFAEVENT_URL . 'assets/images/logo.png';
 }
 $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 
-// Set up header variables for the partial
+// Set up header variables for the partial.
 $header_vars = [
 	'site_logo_url'        => $site_logo_url,
 	'event_page_url'       => home_url( '/events/' ),
@@ -77,6 +81,7 @@ $header_vars = [
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
 ];
 ?>
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -85,11 +90,11 @@ $header_vars = [
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent' ); ?>>
-<?php wp_body_open(); ?>
+	<?php wp_body_open(); ?>
 
 <div id="page" class="site">
 	<?php
-	// Load shared navigation header
+	// Load shared navigation header.
 	$site_logo_url        = $header_vars['site_logo_url'];
 	$event_page_url       = $header_vars['event_page_url'];
 	$show_back_button     = $header_vars['show_back_button'];
@@ -103,8 +108,13 @@ $header_vars = [
 		include $nav_partial;
 	}
 	?>
+<?php endif; ?>
 
+	<?php if ( $wpfaevent_is_embed ) : ?>
+	<section class="wpfa-past-events">
+	<?php else : ?>
 	<main class="wpfa-past-events">
+	<?php endif; ?>
 		<section class="wpfa-past-events-hero">
 			<div class="container">
 				<h1><?php esc_html_e( 'Past FOSSASIA Events', 'wpfaevent' ); ?></h1>
@@ -121,11 +131,13 @@ $header_vars = [
 			<?php if ( $query->have_posts() ) : ?>
 				<div class="wpfa-results-info">
 					<?php
+					$wpfa_past_events_showing = count( $query->posts );
+					$wpfa_past_events_total   = (int) $query->found_posts;
 					printf(
 						/* translators: %1$d: number of events showing, %2$d: total events found */
 						esc_html__( 'Showing %1$d of %2$d past events', 'wpfaevent' ),
-						count( $query->posts ),
-						$query->found_posts
+						absint( $wpfa_past_events_showing ),
+						absint( $wpfa_past_events_total )
 					);
 					?>
 				</div>
@@ -137,7 +149,7 @@ $header_vars = [
 						?>
 						<?php
 						$event_id      = get_the_ID();
-						$title         = get_the_title();
+						$event_title   = get_the_title();
 						$excerpt       = get_the_excerpt();
 						$start_date    = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
 						$end_date      = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
@@ -147,7 +159,7 @@ $header_vars = [
 
 						$image_url = get_the_post_thumbnail_url( $event_id, 'medium' );
 
-						// Format date for display
+						// Format date for display.
 						$display_date = '';
 
 						if ( ! empty( $start_date ) ) {
@@ -155,13 +167,13 @@ $header_vars = [
 
 							if ( $start_datetime instanceof DateTime ) {
 
-								// Default: single-day event
+								// Default: single-day event.
 								$display_date = date_i18n(
 									get_option( 'date_format' ),
 									$start_datetime->getTimestamp()
 								);
 
-								// Multi-day event
+								// Multi-day event.
 								if ( ! empty( $end_date ) && $end_date !== $start_date ) {
 									$end_datetime = date_create( $end_date );
 
@@ -175,7 +187,7 @@ $header_vars = [
 							}
 						}
 
-						// If no excerpt, strip tags and get a trimmed version of content
+						// If no excerpt, strip tags and get a trimmed version of content.
 						if ( empty( $excerpt ) ) {
 							$content = get_post_field( 'post_content', $event_id );
 							$excerpt = wp_trim_words( $content, 20, '...' );
@@ -185,7 +197,7 @@ $header_vars = [
 							<a href="<?php echo esc_url( $event_url ); ?>" class="wpfa-past-event-card-link">
 								<?php if ( $image_url ) : ?>
 									<div class="wpfa-past-event-card-image">
-										<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy" />
+										<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $event_title ); ?>" loading="lazy" />
 									</div>
 								<?php else : ?>
 									<div class="wpfa-past-event-card-image">
@@ -199,7 +211,7 @@ $header_vars = [
 								<?php endif; ?>
 								<div class="wpfa-past-event-card-content">
 									<h3 class="wpfa-past-event-card-title">
-										<?php echo esc_html( $title ); ?>
+										<?php echo esc_html( $event_title ); ?>
 									</h3>
 									
 									<?php if ( ! empty( $excerpt ) ) : ?>
@@ -235,31 +247,30 @@ $header_vars = [
 				<?php wp_reset_postdata(); ?>
 
 				<?php
-				// Pagination
-				$total = max( 1, (int) ceil( $query->found_posts / $per_page ) );
+				// Pagination.
+				$total = max( 1, (int) ceil( $query->found_posts / $wpfa_past_events_per_page ) );
 				if ( function_exists( 'wpfa_render_pagination' ) ) {
 					wpfa_render_pagination(
 						$total,
-						$paged,
+						$wpfa_past_events_paged,
 						__( 'Past events pagination', 'wpfaevent' )
 					);
-				} else {
-					// Manual pagination similar to page-speakers.php
-					if ( $total > 1 ) :
-						echo '<nav class="wpfa-pagination" aria-label="' . esc_attr__( 'Past events pagination', 'wpfaevent' ) . '">';
-						for ( $i = 1; $i <= $total; $i++ ) {
-							$link       = esc_url( get_pagenum_link( $i ) );
-							$is_current = ( $i === $paged );
-							printf(
-								'<a class="wpfa-page %s" href="%s"%s>%d</a>',
-								$is_current ? 'is-current' : '',
-								$link,
-								$is_current ? ' aria-current="page"' : '',
-								$i
-							);
-						}
-						echo '</nav>';
-					endif;
+				} elseif ( $total > 1 ) {
+					// Manual pagination similar to page-speakers.php.
+					echo '<nav class="wpfa-pagination" aria-label="' . esc_attr__( 'Past events pagination', 'wpfaevent' ) . '">';
+					for ( $page_num = 1; $page_num <= $total; $page_num++ ) {
+						$pagination_url = get_pagenum_link( $page_num );
+						$is_current     = ( $page_num === $wpfa_past_events_paged );
+						$page_classes   = trim( 'wpfa-page' . ( $is_current ? ' is-current' : '' ) );
+						printf(
+							'<a class="%1$s" href="%2$s"%3$s>%4$s</a>',
+							esc_attr( $page_classes ),
+							esc_url( $pagination_url ),
+							$is_current ? ' aria-current="page"' : '',
+							esc_html( (string) $page_num )
+						);
+					}
+					echo '</nav>';
 				}
 				?>
 
@@ -270,8 +281,13 @@ $header_vars = [
 				</div>
 			<?php endif; ?>
 		</div>
+	<?php if ( $wpfaevent_is_embed ) : ?>
+	</section>
+	<?php else : ?>
 	</main>
+	<?php endif; ?>
 
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 	<footer class="wpfa-footer">
 		<div class="container">
 			<!-- Footer copyright notice -->
@@ -293,6 +309,7 @@ $header_vars = [
 	</footer>
 </div><!-- #page -->
 
-<?php wp_footer(); ?>
+	<?php wp_footer(); ?>
 </body>
 </html>
+<?php endif; ?>

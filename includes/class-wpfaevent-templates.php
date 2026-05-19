@@ -1,10 +1,16 @@
 <?php
 /**
- * Prevent direct access to this file.
+ * Registers and loads plugin-provided page templates.
+ *
+ * @package    Wpfaevent
+ * @subpackage Wpfaevent/includes
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+// phpcs:ignoreFile WordPress.Files.FileName.InvalidClassFileName -- Legacy class/file naming retained for this release.
 
 /**
  * Registers and loads plugin-provided page templates.
@@ -57,6 +63,24 @@ class WPFA_Templates {
 	}
 
 	/**
+	 * Returns localized template labels keyed by template filename.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<string, string>
+	 */
+	private static function get_localized_template_labels() {
+		return array(
+			'page-landing.php'         => __( 'WPFA - Landing', 'wpfaevent' ),
+			'page-speakers.php'        => __( 'WPFA - Speakers', 'wpfaevent' ),
+			'page-events.php'          => __( 'WPFA - Events', 'wpfaevent' ),
+			'page-past-events.php'     => __( 'WPFA - Past Events', 'wpfaevent' ),
+			'page-schedule.php'        => __( 'WPFA - Schedule', 'wpfaevent' ),
+			'page-code-of-conduct.php' => __( 'WPFA - Code of Conduct', 'wpfaevent' ),
+		);
+	}
+
+	/**
 	 * Registers plugin page templates with WordPress.
 	 *
 	 * Skips registration for block themes, which rely exclusively
@@ -68,13 +92,13 @@ class WPFA_Templates {
 	 * @return array<string, string> Modified templates array including plugin templates.
 	 */
 	public static function register( $templates ) {
-		// Don't register templates for block themes - they use block-based templates only
+		// Don't register templates for block themes; they use block-based templates only.
 		if ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ) {
 			return $templates;
 		}
 
-		foreach ( self::$templates as $file => $label ) {
-			$templates[ $file ] = __( $label, 'wpfaevent' );
+		foreach ( self::get_localized_template_labels() as $file => $label ) {
+			$templates[ $file ] = $label;
 		}
 
 		return $templates;

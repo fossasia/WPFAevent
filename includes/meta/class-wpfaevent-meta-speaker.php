@@ -31,7 +31,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @since 1.0.0
 	 */
 	public static function register() {
-		// Speaker position/title
+			// Speaker position or title.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_speaker_position',
@@ -44,7 +44,7 @@ class Wpfaevent_Meta_Speaker {
 			)
 		);
 
-		// Speaker organization
+			// Speaker organization.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_speaker_organization',
@@ -57,7 +57,7 @@ class Wpfaevent_Meta_Speaker {
 			)
 		);
 
-		// Speaker bio
+			// Speaker biography.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_speaker_bio',
@@ -70,7 +70,7 @@ class Wpfaevent_Meta_Speaker {
 			)
 		);
 
-		// Speaker headshot URL
+			// Speaker headshot URL.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_speaker_headshot_url',
@@ -83,7 +83,7 @@ class Wpfaevent_Meta_Speaker {
 			)
 		);
 
-		// Related events (for bidirectional relationship)
+			// Related events for a bidirectional relationship.
 		// TODO: Future PR - Implement bidirectional event-speaker relationship UI
 		// This meta field is registered for REST API support but has no admin UI yet.
 		// Action items for future implementation:
@@ -91,7 +91,7 @@ class Wpfaevent_Meta_Speaker {
 		// 2. Add save handler in Wpfaevent_Admin::save_speaker_meta()
 		// 3. Implement sync logic: when event assigns speakers, update speaker's events
 		// 4. Consider using post_relationships table instead of meta for better performance
-		// Related: wpfa_event_speakers in class-wpfaevent-meta-event.php
+			// Related: wpfa_event_speakers in class-wpfaevent-meta-event.php.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_speaker_events',

@@ -23,16 +23,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+
 $site_logo_url = get_option( 'wpfa_site_logo_url', WPFAEVENT_URL . 'assets/images/logo.png' );
 $site_logo_url = esc_url_raw( $site_logo_url );
 $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
-if ( have_posts() ) {
+if ( ! $wpfaevent_is_embed && have_posts() ) {
 	the_post();
 	$content = trim( get_the_content() );
 } else {
 	$content = '';
 }
 ?>
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -41,20 +44,31 @@ if ( have_posts() ) {
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent' ); ?>>
-<?php wp_body_open(); ?>
+	<?php wp_body_open(); ?>
 
-<div id="page" class="site">
-	<?php
-	// Load shared navigation partial
-	$nav_partial = WPFAEVENT_PATH . 'public/partials/header.php';
-	if ( file_exists( $nav_partial ) ) {
-		include $nav_partial;
-	}
-	?>
+		<div id="page" class="site">
+		<?php
+		// Load the shared navigation partial.
+		$nav_partial = WPFAEVENT_PATH . 'public/partials/header.php';
+		if ( file_exists( $nav_partial ) ) {
+			include $nav_partial;
+		}
+		?>
+<?php endif; ?>
 
+	<?php if ( $wpfaevent_is_embed ) : ?>
+	<section role="region" aria-label="<?php esc_attr_e( 'Code of Conduct', 'wpfaevent' ); ?>">
+	<?php else : ?>
 	<main role="main" aria-label="Main content">
+	<?php endif; ?>
 		<header class="page-hero">
-			<h1><?php echo esc_html( get_the_title() ); ?></h1>
+			<h1>
+				<?php
+				echo esc_html(
+					$wpfaevent_is_embed ? __( 'Code of Conduct', 'wpfaevent' ) : get_the_title()
+				);
+				?>
+			</h1>
 			<?php
 			// Note: "coc" is the established abbreviation for "code_of_conduct" in filter names.
 			?>
@@ -64,7 +78,7 @@ if ( have_posts() ) {
 		<div class="container">
 			<article class="main-content">
 				<?php
-				// Load content partial
+					// Load the content partial.
 				$content_partial = WPFAEVENT_PATH . 'public/partials/code-of-conduct/content.php';
 				if ( file_exists( $content_partial ) ) {
 					include $content_partial;
@@ -72,9 +86,15 @@ if ( have_posts() ) {
 				?>
 			</article>
 		</div>
+	<?php if ( $wpfaevent_is_embed ) : ?>
+	</section>
+	<?php else : ?>
 	</main>
+	<?php endif; ?>
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 </div>
 
-<?php wp_footer(); ?>
+	<?php wp_footer(); ?>
 </body>
 </html>
+<?php endif; ?>
