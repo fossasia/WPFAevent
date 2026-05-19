@@ -88,10 +88,10 @@ foreach ( $q->posts as $eid ) {
 	}
 
 	if ( ! isset( $groups[ $sort_key ] ) ) {
-		$groups[ $sort_key ] = [
+		$groups[ $sort_key ] = array(
 			'date'   => $display_date,
-			'events' => [],
-		];
+			'events' => array(),
+		);
 	}
 	$groups[ $sort_key ]['events'][] = $eid;
 

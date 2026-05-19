@@ -48,8 +48,8 @@ require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-templates.php';
 require_once WPFAEVENT_PATH . 'includes/helpers/wpfaevent-pagination-helper.php';
 
 // Activation / Deactivation hooks
-register_activation_hook( __FILE__, [ 'Wpfaevent_Activator', 'activate' ] );
-register_deactivation_hook( __FILE__, [ 'Wpfaevent_Deactivator', 'deactivate' ] );
+register_activation_hook( __FILE__, array( 'Wpfaevent_Activator', 'activate' ) );
+register_deactivation_hook( __FILE__, array( 'Wpfaevent_Deactivator', 'deactivate' ) );
 
 /**
  * The core plugin class that is used to define internationalization,
@@ -91,5 +91,5 @@ run_wpfaevent();
 // Register WP-CLI commands when running in CLI context.
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	require_once WPFAEVENT_PATH . 'includes/cli/class-wpfa-cli.php';
-	WP_CLI::add_command( 'wpfa seed', [ 'WPFA_CLI', 'seed' ] );
+	WP_CLI::add_command( 'wpfa seed', array( 'WPFA_CLI', 'seed' ) );
 }

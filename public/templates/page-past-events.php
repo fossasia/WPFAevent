@@ -38,24 +38,24 @@ $paged    = max( 1, (int) get_query_var( 'paged', 1 ) );
 
 // Query past events (end date before today)
 $today = current_time( 'Y-m-d' );
-$args  = [
+$args  = array(
 	'post_type'      => 'wpfa_event',
 	'post_status'    => 'publish',
-	'meta_query'     => [
-		[
+	'meta_query'     => array(
+		array(
 			'key'     => 'wpfa_event_end_date',
 			'value'   => $today,
 			'compare' => '<',
 			'type'    => 'DATE',
-		],
-	],
+		),
+	),
 	'orderby'        => 'meta_value',
 	'meta_key'       => 'wpfa_event_end_date',
 	'meta_type'      => 'DATE',
 	'order'          => 'DESC',
 	'posts_per_page' => $per_page,
 	'paged'          => $paged,
-];
+);
 
 $query = new WP_Query( $args );
 
@@ -67,7 +67,7 @@ if ( empty( $site_logo_url ) ) {
 $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 
 // Set up header variables for the partial
-$header_vars = [
+$header_vars = array(
 	'site_logo_url'        => $site_logo_url,
 	'event_page_url'       => home_url( '/events/' ),
 	'show_back_button'     => false,
@@ -75,7 +75,7 @@ $header_vars = [
 	'back_button_text'     => __( 'Back to Event', 'wpfaevent' ),
 	'register_button_url'  => '',
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
-];
+);
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>

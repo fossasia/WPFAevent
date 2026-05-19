@@ -25,17 +25,17 @@ $today = current_time( 'Y-m-d' );
 $per_page = max( 1, (int) apply_filters( 'wpfa_events_per_page', 10 ) );
 $paged    = max( 1, (int) get_query_var( 'paged', 1 ) );
 
-$args  = [
+$args  = array(
 	'post_type'   => 'wpfa_event',
 	'post_status' => 'publish',
-	'meta_query'  => [
-		[
+	'meta_query'  => array(
+		array(
 			'key'     => 'wpfa_event_start_date',
 			'value'   => $today,
 			'compare' => '>=',
 			'type'    => 'DATE',
-		],
-	],
+		),
+	),
 	'orderby'        => 'meta_value',
 	'meta_key'       => 'wpfa_event_start_date',
 	'meta_type'      => 'DATE',
@@ -43,7 +43,7 @@ $args  = [
 	'posts_per_page' => $per_page,
 	'paged'          => $paged,
 	'fields'         => 'ids',
-];
+);
 
 $q = new WP_Query( $args );
 ?>

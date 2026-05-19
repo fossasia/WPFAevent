@@ -67,11 +67,11 @@ $default_logo    = $plugin_root_url . 'assets/images/logo.png';
 
 $logos = (array) apply_filters(
 	'wpfa_landing_partner_logos',
-	[
+	array(
 		$default_logo,
 		$default_logo,
 		$default_logo,
-	]
+	)
 );
 ?>
 <main class="wpfa-landing">
