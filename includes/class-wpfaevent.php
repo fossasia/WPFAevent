@@ -108,32 +108,32 @@ class Wpfaevent {
 	 * @access   private
 	 */
 	private function load_dependencies() {
-			// Loader.
-			require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-loader.php';
+		// Loader.
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-loader.php';
 
-			// Cache management.
-			require_once plugin_dir_path( __FILE__ ) . 'cache/class-wpfaevent-cache.php';
+		// Cache management.
+		require_once plugin_dir_path( __FILE__ ) . 'cache/class-wpfaevent-cache.php';
 
-			// Data model classes - Custom Post Types.
-			require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';
-			require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-speaker.php';
+		// Data model classes - Custom Post Types.
+		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';
+		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-speaker.php';
 
-			// Data model classes - Taxonomies.
-			require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies.php';
-			require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies-speaker.php';
+		// Data model classes - Taxonomies.
+		require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies.php';
+		require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies-speaker.php';
 
-			// Data model classes - Meta Fields.
-			require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-event.php';
-			require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-speaker.php';
+		// Data model classes - Meta Fields.
+		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-event.php';
+		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-speaker.php';
 
-			// Legacy plugin code (defines the FOSSASIA_Landing_Plugin class).
-			require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-landing.php';
+		// Legacy plugin code (defines the FOSSASIA_Landing_Plugin class).
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-landing.php';
 
-			// Admin and Public classes.
-			require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-wpfaevent-admin.php';
-			require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-wpfaevent-public.php';
+		// Admin and Public classes.
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-wpfaevent-admin.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-wpfaevent-public.php';
 
-			// Optional utilities if present.
+		// Optional utilities if present.
 		if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php' ) ) {
 			require_once plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php';
 		}
@@ -151,11 +151,11 @@ class Wpfaevent {
 	 * @access   private
 	 */
 	private function define_cpt_hooks() {
-			// Register Event CPT (static method call).
-			$this->loader->add_action( 'init', 'Wpfaevent_CPT_Event', 'register' );
+		// Register Event CPT (static method call).
+		$this->loader->add_action( 'init', 'Wpfaevent_CPT_Event', 'register' );
 
-			// Register Speaker CPT (static method call).
-			$this->loader->add_action( 'init', 'Wpfaevent_CPT_Speaker', 'register' );
+		// Register Speaker CPT (static method call).
+		$this->loader->add_action( 'init', 'Wpfaevent_CPT_Speaker', 'register' );
 	}
 
 	/**
@@ -165,8 +165,8 @@ class Wpfaevent {
 	 * @access   private
 	 */
 	private function define_taxonomy_hooks() {
-			// Register Event and Speaker taxonomies.
-			$this->loader->add_action( 'init', 'Wpfaevent_Taxonomies', 'register' );
+		// Register Event and Speaker taxonomies.
+		$this->loader->add_action( 'init', 'Wpfaevent_Taxonomies', 'register' );
 		$this->loader->add_action( 'init', 'Wpfaevent_Taxonomies_Speaker', 'register' );
 	}
 
@@ -177,11 +177,11 @@ class Wpfaevent {
 	 * @access   private
 	 */
 	private function define_meta_hooks() {
-			// Register Event meta fields.
-			$this->loader->add_action( 'init', 'Wpfaevent_Meta_Event', 'register' );
+		// Register Event meta fields.
+		$this->loader->add_action( 'init', 'Wpfaevent_Meta_Event', 'register' );
 
-			// Register Speaker meta fields.
-			$this->loader->add_action( 'init', 'Wpfaevent_Meta_Speaker', 'register' );
+		// Register Speaker meta fields.
+		$this->loader->add_action( 'init', 'Wpfaevent_Meta_Speaker', 'register' );
 	}
 
 	/**
@@ -192,62 +192,62 @@ class Wpfaevent {
 	 * @access   private
 	 */
 	private function define_admin_hooks() {
-			// Instantiate the admin class.
-			$this->plugin_admin = new Wpfaevent_Admin( $this->plugin_name, $this->version );
+		// Instantiate the admin class.
+		$this->plugin_admin = new Wpfaevent_Admin( $this->plugin_name, $this->version );
 
-			// Register admin-specific stylesheet.
-			$this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_styles' );
+		// Register admin-specific stylesheet.
+		$this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_styles' );
 
-			// Register settings page.
-			$this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
+		// Register settings page.
+		$this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
 
-			// Add settings link to the plugins page.
-			$plugin_basename = plugin_basename( dirname( __FILE__, 2 ) . '/wpfaevent.php' );
-			$this->loader->add_filter( 'plugin_action_links_' . $plugin_basename, $this->plugin_admin, 'add_settings_link' );
+		// Add settings link to the plugins page.
+		$plugin_basename = plugin_basename( dirname( __FILE__, 2 ) . '/wpfaevent.php' );
+		$this->loader->add_filter( 'plugin_action_links_' . $plugin_basename, $this->plugin_admin, 'add_settings_link' );
 
-			// Add meta boxes to CPTs.
-			$this->loader->add_action( 'add_meta_boxes', $this->plugin_admin, 'add_meta_boxes' );
+		// Add meta boxes to CPTs.
+		$this->loader->add_action( 'add_meta_boxes', $this->plugin_admin, 'add_meta_boxes' );
 
-			// Save meta box data.
-			$this->loader->add_action( 'save_post_wpfa_event', $this->plugin_admin, 'save_event_meta' );
-			$this->loader->add_action( 'save_post_wpfa_speaker', $this->plugin_admin, 'save_speaker_meta' );
+		// Save meta box data.
+		$this->loader->add_action( 'save_post_wpfa_event', $this->plugin_admin, 'save_event_meta' );
+		$this->loader->add_action( 'save_post_wpfa_speaker', $this->plugin_admin, 'save_speaker_meta' );
 
-			// Register AJAX handlers for the speakers page.
-			$this->loader->add_action( 'wp_ajax_wpfa_get_speaker', $this->plugin_admin, 'ajax_get_speaker' );
+		// Register AJAX handlers for the speakers page.
+		$this->loader->add_action( 'wp_ajax_wpfa_get_speaker', $this->plugin_admin, 'ajax_get_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_add_speaker', $this->plugin_admin, 'ajax_add_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_update_speaker', $this->plugin_admin, 'ajax_update_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_delete_speaker', $this->plugin_admin, 'ajax_delete_speaker' );
 
-			// Legacy bridge intentionally disabled until those hooks are reintroduced.
+		// Legacy bridge intentionally disabled until those hooks are reintroduced.
 
 		if ( ! $this->legacy ) {
 			return;
 		}
 
-			// Register admin-facing hooks via the loader so tests/tooling can inspect them.
+		// Register admin-facing hooks via the loader so tests/tooling can inspect them.
 
-			// Register the many AJAX handlers the legacy class provides.
-			$ajax_methods = array(
-				'fossasia_manage_speakers'       => 'ajax_manage_speakers',
-				'fossasia_manage_sponsors'       => 'ajax_manage_sponsors',
-				'fossasia_manage_site_settings'  => 'ajax_manage_site_settings',
-				'fossasia_manage_sections'       => 'ajax_manage_sections',
-				'fossasia_manage_schedule'       => 'ajax_manage_schedule',
-				'fossasia_manage_navigation'     => 'ajax_manage_navigation',
-				'fossasia_sync_eventyay'         => 'ajax_sync_eventyay',
-				'fossasia_create_event_page'     => 'ajax_create_event_page',
-				'fossasia_edit_event_page'       => 'ajax_edit_event_page',
-				'fossasia_delete_event_page'     => 'ajax_delete_event_page',
-				'fossasia_manage_theme_settings' => 'ajax_manage_theme_settings',
-				'fossasia_import_sample_data'    => 'ajax_import_sample_data',
-				'fossasia_add_sample_event'      => 'ajax_add_sample_event',
-				'fossasia_manage_coc'            => 'ajax_manage_coc',
-			);
+		// Register the many AJAX handlers the legacy class provides.
+		$ajax_methods = array(
+			'fossasia_manage_speakers'       => 'ajax_manage_speakers',
+			'fossasia_manage_sponsors'       => 'ajax_manage_sponsors',
+			'fossasia_manage_site_settings'  => 'ajax_manage_site_settings',
+			'fossasia_manage_sections'       => 'ajax_manage_sections',
+			'fossasia_manage_schedule'       => 'ajax_manage_schedule',
+			'fossasia_manage_navigation'     => 'ajax_manage_navigation',
+			'fossasia_sync_eventyay'         => 'ajax_sync_eventyay',
+			'fossasia_create_event_page'     => 'ajax_create_event_page',
+			'fossasia_edit_event_page'       => 'ajax_edit_event_page',
+			'fossasia_delete_event_page'     => 'ajax_delete_event_page',
+			'fossasia_manage_theme_settings' => 'ajax_manage_theme_settings',
+			'fossasia_import_sample_data'    => 'ajax_import_sample_data',
+			'fossasia_add_sample_event'      => 'ajax_add_sample_event',
+			'fossasia_manage_coc'            => 'ajax_manage_coc',
+		);
 
-			foreach ( $ajax_methods as $action => $method ) {
-				// Register admin AJAX action.
-				$this->loader->add_action( 'wp_ajax_' . $action, $this->legacy, $method );
-			}
+		foreach ( $ajax_methods as $action => $method ) {
+			// Register admin AJAX action.
+			$this->loader->add_action( 'wp_ajax_' . $action, $this->legacy, $method );
+		}
 	}
 
 	/**
@@ -258,17 +258,17 @@ class Wpfaevent {
 	 * @access   private
 	 */
 	private function define_public_hooks() {
-			// Instantiate the public class.
-			$this->plugin_public = new Wpfaevent_Public( $this->plugin_name, $this->version );
+		// Instantiate the public class.
+		$this->plugin_public = new Wpfaevent_Public( $this->plugin_name, $this->version );
 
-			// Register public-specific stylesheet.
-			$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
+		// Register public-specific stylesheet.
+		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
 
-			// Cache invalidation hooks (static method calls).
-			$this->loader->add_action( 'save_post', 'Wpfaevent_Cache', 'clear_page_cache' );
-			$this->loader->add_action( 'delete_post', 'Wpfaevent_Cache', 'clear_page_cache' );
+		// Cache invalidation hooks (static method calls).
+		$this->loader->add_action( 'save_post', 'Wpfaevent_Cache', 'clear_page_cache' );
+		$this->loader->add_action( 'delete_post', 'Wpfaevent_Cache', 'clear_page_cache' );
 
-			// Legacy public template hooks remain disabled for now.
+		// Legacy public template hooks remain disabled for now.
 	}
 
 	/**

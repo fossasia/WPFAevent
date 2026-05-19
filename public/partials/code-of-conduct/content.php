@@ -25,7 +25,7 @@ if ( $content ) {
 	// Display page content safely.
 	echo wp_kses_post( $processed_content );
 } else {
-		// Display the default content with a filter for customization.
+	// Display the default content with a filter for customization.
 	$default_content = apply_filters(
 		'wpfa_coc_default_content',
 		__( 'We are committed to a welcoming, inclusive community. Be respectful.', 'wpfaevent' )

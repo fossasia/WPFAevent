@@ -27,20 +27,20 @@ class Wpfaevent_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
-			// Load CPT classes to register them before flushing.
+		// Load CPT classes to register them before flushing.
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-speaker.php';
 		require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies.php';
 
-			// Register CPTs and taxonomies.
+		// Register CPTs and taxonomies.
 		Wpfaevent_CPT_Event::register();
 		Wpfaevent_CPT_Speaker::register();
 		Wpfaevent_Taxonomies::register();
 
-			// Flush rewrite rules so CPT permalinks work.
+		// Flush rewrite rules so CPT permalinks work.
 		flush_rewrite_rules();
 
-			// Grant custom capabilities to administrators.
+		// Grant custom capabilities to administrators.
 		self::add_capabilities();
 	}
 
@@ -56,12 +56,12 @@ class Wpfaevent_Activator {
 			return;
 		}
 
-			// Event capabilities.
+		// Event capabilities.
 		// TODO: Future PR - Review capability list alignment with CPT registration.
 		// Currently granting extended capabilities (delete_*, edit_private_*, etc.).
 		// These are auto-derived by map_meta_cap. Consider either:
 		// 1. Explicitly defining all capabilities in CPT registration, OR
-			// 2. Only granting base capabilities defined in the CPT.
+		// 2. Only granting base capabilities defined in the CPT.
 		// Reference: https://developer.wordpress.org/plugins/users/roles-and-capabilities/.
 		$event_caps = array(
 			'edit_event',
@@ -83,8 +83,8 @@ class Wpfaevent_Activator {
 			$role->add_cap( $cap );
 		}
 
-			// Speaker capabilities.
-			// TODO: Same capability review needed for speakers (see event_caps above).
+		// Speaker capabilities.
+		// TODO: Same capability review needed for speakers (see event_caps above).
 		$speaker_caps = array(
 			'edit_speaker',
 			'read_speaker',

@@ -138,7 +138,7 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 		<?php endif; ?>
 		
 		<?php
-			// Get social links.
+		// Get social links.
 		$linkedin = get_post_meta( $sid, 'wpfa_speaker_linkedin', true );
 		$twitter  = get_post_meta( $sid, 'wpfa_speaker_twitter', true );
 		$github   = get_post_meta( $sid, 'wpfa_speaker_github', true );
