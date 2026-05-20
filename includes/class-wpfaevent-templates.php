@@ -6,11 +6,13 @@
  * @subpackage Wpfaevent/includes
  */
 
+/**
+ * Prevent direct access to this file.
+ */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-
-// phpcs:ignoreFile WordPress.Files.FileName.InvalidClassFileName -- Legacy class/file naming retained for this release.
 
 /**
  * Registers and loads plugin-provided page templates.
@@ -27,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @subpackage Wpfaevent/includes
  * @author     FOSSASIA <contact@fossasia.org>
  */
-class WPFA_Templates {
+class WPFAevent_Templates {
 
 	/**
 	 * List of plugin-provided page templates.
@@ -37,14 +39,14 @@ class WPFA_Templates {
 	 * @since 1.0.0
 	 * @var   array<string, string>
 	 */
-	private static $templates = [
+	private static $templates = array(
 		'page-landing.php'         => 'WPFA - Landing',
 		'page-speakers.php'        => 'WPFA - Speakers',
 		'page-events.php'          => 'WPFA - Events',
 		'page-past-events.php'     => 'WPFA - Past Events',
 		'page-schedule.php'        => 'WPFA - Schedule',
 		'page-code-of-conduct.php' => 'WPFA - Code of Conduct',
-	];
+	);
 
 	/**
 	 * Registers WordPress hooks for template registration and loading.
@@ -58,8 +60,8 @@ class WPFA_Templates {
 	 * @return void
 	 */
 	public static function init() {
-		add_filter( 'theme_page_templates', [ __CLASS__, 'register' ] );
-		add_filter( 'template_include', [ __CLASS__, 'load' ] );
+		add_filter( 'theme_page_templates', array( __CLASS__, 'register' ) );
+		add_filter( 'template_include', array( __CLASS__, 'load' ) );
 	}
 
 	/**

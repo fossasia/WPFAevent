@@ -22,11 +22,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; }
 
-$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
-
-if ( ! $wpfaevent_is_embed ) {
-	get_header();
-}
+get_header();
 // Fetch customizable pieces (later we can add an Options page; for now use filters or placeholders).
 
 /**
@@ -72,18 +68,14 @@ $default_logo    = $plugin_root_url . 'assets/images/logo.png';
 
 $logos = (array) apply_filters(
 	'wpfa_landing_partner_logos',
-	[
+	array(
 		$default_logo,
 		$default_logo,
 		$default_logo,
-	]
+	)
 );
 ?>
-<?php if ( $wpfaevent_is_embed ) : ?>
-<section class="wpfa-landing">
-<?php else : ?>
 <main class="wpfa-landing">
-<?php endif; ?>
 	<section class="wpfa-hero">
 		<h1><?php echo esc_html( $hero_title ); ?></h1>
 		<p class="wpfa-hero-sub"><?php echo esc_html( $hero_sub ); ?></p>
@@ -99,9 +91,5 @@ $logos = (array) apply_filters(
 			</ul>
 		</section>
 	<?php endif; ?>
-<?php if ( $wpfaevent_is_embed ) : ?>
-</section>
-<?php else : ?>
 </main>
-	<?php get_footer(); ?>
-<?php endif; ?>
+<?php get_footer(); ?>
