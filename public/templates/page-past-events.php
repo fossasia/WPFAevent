@@ -38,28 +38,50 @@ $wpfa_past_events_paged    = max( 1, (int) get_query_var( 'paged', 1 ) );
 
 // Query past events (end date before today).
 $today = current_time( 'Y-m-d' );
-// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_query,WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Required for date-based past events query.
-$args = array(
+$args  = array(
 	'post_type'      => 'wpfa_event',
 	'post_status'    => 'publish',
-	'meta_query'     => array(
-		array(
-			'key'     => 'wpfa_event_end_date',
-			'value'   => $today,
-			'compare' => '<',
-			'type'    => 'DATE',
-		),
-	),
-	'orderby'        => 'meta_value',
-	'meta_key'       => 'wpfa_event_end_date',
-	'meta_type'      => 'DATE',
-	'order'          => 'DESC',
-	'posts_per_page' => $wpfa_past_events_per_page,
-	'paged'          => $wpfa_past_events_paged,
+	'posts_per_page' => -1,
+	'fields'         => 'ids',
+	'no_found_rows'  => true,
 );
 
-$query = new WP_Query( $args );
-// phpcs:enable
+$event_ids         = get_posts( $args );
+$past_events       = array();
+$past_event_offset = ( $wpfa_past_events_paged - 1 ) * $wpfa_past_events_per_page;
+
+foreach ( $event_ids as $event_id ) {
+	$end_date = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
+
+	if ( empty( $end_date ) || $end_date >= $today ) {
+		continue;
+	}
+
+	$past_events[] = array(
+		'id'       => (int) $event_id,
+		'end_date' => $end_date,
+	);
+}
+
+usort(
+	$past_events,
+	static function ( $event_a, $event_b ) {
+		$date_compare = strcmp( $event_b['end_date'], $event_a['end_date'] );
+
+		if ( 0 !== $date_compare ) {
+			return $date_compare;
+		}
+
+		if ( $event_a['id'] === $event_b['id'] ) {
+			return 0;
+		}
+
+		return ( $event_a['id'] < $event_b['id'] ) ? -1 : 1;
+	}
+);
+
+$total_past_events = count( $past_events );
+$paged_past_events = array_slice( $past_events, $past_event_offset, $wpfa_past_events_per_page );
 
 // Get site logo.
 $site_logo_url = get_option( 'wpfa_site_logo_url', '' );
@@ -120,11 +142,11 @@ $header_vars = array(
 		</section>
 
 		<div class="container">
-			<?php if ( $query->have_posts() ) : ?>
+			<?php if ( $paged_past_events ) : ?>
 				<div class="wpfa-results-info">
 					<?php
-					$wpfa_past_events_showing = count( $query->posts );
-					$wpfa_past_events_total   = (int) $query->found_posts;
+					$wpfa_past_events_showing = count( $paged_past_events );
+					$wpfa_past_events_total   = $total_past_events;
 					printf(
 						/* translators: %1$d: number of events showing, %2$d: total events found */
 						esc_html__( 'Showing %1$d of %2$d past events', 'wpfaevent' ),
@@ -136,18 +158,17 @@ $header_vars = array(
 
 				<div class="wpfa-past-events-grid" id="wpfa-past-events-grid">
 					<?php
-					while ( $query->have_posts() ) :
-						$query->the_post();
+					foreach ( $paged_past_events as $past_event ) :
 						?>
 						<?php
-						$event_id      = get_the_ID();
-						$event_title   = get_the_title();
-						$excerpt       = get_the_excerpt();
+						$event_id      = $past_event['id'];
+						$event_title   = get_the_title( $event_id );
+						$excerpt       = get_the_excerpt( $event_id );
 						$start_date    = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
 						$end_date      = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
 						$location      = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
 						$event_url_raw = get_post_meta( $event_id, 'wpfa_event_url', true );
-						$event_url     = $event_url_raw ? esc_url( $event_url_raw ) : get_permalink();
+						$event_url     = $event_url_raw ? esc_url( $event_url_raw ) : get_permalink( $event_id );
 
 						$image_url = get_the_post_thumbnail_url( $event_id, 'medium' );
 
@@ -233,14 +254,12 @@ $header_vars = array(
 								</div>
 							</a>
 						</article>
-					<?php endwhile; ?>
+					<?php endforeach; ?>
 				</div>
-
-				<?php wp_reset_postdata(); ?>
 
 				<?php
 				// Pagination.
-				$total = max( 1, (int) ceil( $query->found_posts / $wpfa_past_events_per_page ) );
+				$total = max( 1, (int) ceil( $total_past_events / $wpfa_past_events_per_page ) );
 				if ( function_exists( 'wpfa_render_pagination' ) ) {
 					wpfa_render_pagination(
 						$total,

@@ -74,8 +74,8 @@ function run_wpfaevent() {
 	}
 
 	// Initialize page templates.
-	if ( class_exists( 'WPFAevent_Templates' ) ) {
-		WPFAevent_Templates::init();
+	if ( class_exists( 'Wpfaevent_Templates' ) ) {
+		Wpfaevent_Templates::init();
 	}
 
 	// Run the core plugin.

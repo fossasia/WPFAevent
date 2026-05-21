@@ -39,19 +39,15 @@ $current_page    = max( 1, (int) get_query_var( 'paged', 1 ) );
 $args = array(
 	'post_type'      => 'wpfa_event',
 	'post_status'    => 'publish',
-		// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Required to sort schedule output by stored event start date.
-	'meta_key'       => 'wpfa_event_start_date',
-	'meta_type'      => 'DATE',
-	'orderby'        => 'meta_value',
-	'order'          => 'ASC',
-	'posts_per_page' => $events_per_page,
-	'paged'          => $current_page,
+	'posts_per_page' => -1,
 	'fields'         => 'ids',
+	'no_found_rows'  => true,
 );
 
-$q      = new WP_Query( $args );
-$groups = array();
-foreach ( $q->posts as $eid ) {
+$event_ids       = get_posts( $args );
+$schedule_events = array();
+
+foreach ( $event_ids as $eid ) {
 	$d = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_start_date', true ) );
 
 	// Normalize the date for proper chronological sorting.
@@ -88,6 +84,38 @@ foreach ( $q->posts as $eid ) {
 		$display_date = __( 'TBD', 'wpfaevent' );
 	}
 
+	$schedule_events[] = array(
+		'id'       => (int) $eid,
+		'sort_key' => $sort_key,
+		'date'     => $display_date,
+	);
+}
+
+usort(
+	$schedule_events,
+	static function ( $event_a, $event_b ) {
+		if ( $event_a['sort_key'] === $event_b['sort_key'] ) {
+			if ( $event_a['id'] === $event_b['id'] ) {
+				return 0;
+			}
+
+			return ( $event_a['id'] < $event_b['id'] ) ? -1 : 1;
+		}
+
+		return ( $event_a['sort_key'] < $event_b['sort_key'] ) ? -1 : 1;
+	}
+);
+
+$total_events          = count( $schedule_events );
+$offset                = ( $current_page - 1 ) * $events_per_page;
+$paged_schedule_events = array_slice( $schedule_events, $offset, $events_per_page );
+$groups                = array();
+
+foreach ( $paged_schedule_events as $schedule_event ) {
+	$eid          = $schedule_event['id'];
+	$sort_key     = $schedule_event['sort_key'];
+	$display_date = $schedule_event['date'];
+
 	if ( ! isset( $groups[ $sort_key ] ) ) {
 		$groups[ $sort_key ] = array(
 			'date'   => $display_date,
@@ -101,9 +129,6 @@ foreach ( $q->posts as $eid ) {
 	// session IDs to each date group in a future release.
 
 }
-
-// Sort by timestamp in chronological order.
-ksort( $groups, SORT_NUMERIC );
 ?>
 <main class="wpfa-schedule">
 	<h1><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></h1>
@@ -131,7 +156,7 @@ ksort( $groups, SORT_NUMERIC );
 	<?php endforeach; // End foreach groups. ?>
 		<?php
 		// Pagination.
-		$total = max( 1, (int) ceil( $q->found_posts / $events_per_page ) );
+		$total = max( 1, (int) ceil( $total_events / $events_per_page ) );
 		wpfa_render_pagination( $total, $current_page, __( 'Schedule pagination', 'wpfaevent' ) );
 		?>
 

@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @subpackage Wpfaevent/includes
  * @author     FOSSASIA <contact@fossasia.org>
  */
-class WPFAevent_Templates {
+class Wpfaevent_Templates {
 
 	/**
 	 * List of plugin-provided page templates.
