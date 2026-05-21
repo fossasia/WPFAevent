@@ -1,10 +1,8 @@
 <?php
 /**
- * Prevent direct access to this file.
- *
  * @package Wpfaevent
+ * Prevent direct access to this file.
  */
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -224,8 +222,6 @@ class Wpfaevent {
 			return;
 		}
 
-		// Register admin-facing hooks via the loader so tests/tooling can inspect them.
-
 		// Register the many AJAX handlers the legacy class provides.
 		$ajax_methods = array(
 			'fossasia_manage_speakers'       => 'ajax_manage_speakers',
@@ -268,7 +264,6 @@ class Wpfaevent {
 		$this->loader->add_action( 'save_post', 'Wpfaevent_Cache', 'clear_page_cache' );
 		$this->loader->add_action( 'delete_post', 'Wpfaevent_Cache', 'clear_page_cache' );
 
-		// Legacy public template hooks remain disabled for now.
 	}
 
 	/**

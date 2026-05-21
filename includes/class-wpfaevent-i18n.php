@@ -2,8 +2,8 @@
 /**
  * Define the internationalization functionality.
  *
- * Loads and defines the internationalization files for this plugin so that it
- * is ready for translation.
+ * Loads and defines the internationalization files for this plugin
+ * so that it is ready for translation.
  *
  * @link       https://fossasia.org
  * @since      1.0.0

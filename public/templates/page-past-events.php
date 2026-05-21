@@ -309,7 +309,7 @@ $header_vars = [
 	</footer>
 </div><!-- #page -->
 
-	<?php wp_footer(); ?>
+<?php wp_footer(); ?>
 </body>
 </html>
 <?php endif; ?>
