@@ -26,8 +26,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
-
 /**
  * Filters the number of past events to display per page.
  *
@@ -41,24 +39,24 @@ $wpfa_past_events_paged    = max( 1, (int) get_query_var( 'paged', 1 ) );
 // Query past events (end date before today).
 $today = current_time( 'Y-m-d' );
 // phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_query,WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Required for date-based past events query.
-$args = [
+$args = array(
 	'post_type'      => 'wpfa_event',
 	'post_status'    => 'publish',
-	'meta_query'     => [
-		[
+	'meta_query'     => array(
+		array(
 			'key'     => 'wpfa_event_end_date',
 			'value'   => $today,
 			'compare' => '<',
 			'type'    => 'DATE',
-		],
-	],
+		),
+	),
 	'orderby'        => 'meta_value',
 	'meta_key'       => 'wpfa_event_end_date',
 	'meta_type'      => 'DATE',
 	'order'          => 'DESC',
 	'posts_per_page' => $wpfa_past_events_per_page,
 	'paged'          => $wpfa_past_events_paged,
-];
+);
 
 $query = new WP_Query( $args );
 // phpcs:enable
@@ -71,7 +69,7 @@ if ( empty( $site_logo_url ) ) {
 $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 
 // Set up header variables for the partial.
-$header_vars = [
+$header_vars = array(
 	'site_logo_url'        => $site_logo_url,
 	'event_page_url'       => home_url( '/events/' ),
 	'show_back_button'     => false,
@@ -79,9 +77,8 @@ $header_vars = [
 	'back_button_text'     => __( 'Back to Event', 'wpfaevent' ),
 	'register_button_url'  => '',
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
-];
+);
 ?>
-<?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -108,13 +105,8 @@ $header_vars = [
 		include $nav_partial;
 	}
 	?>
-<?php endif; ?>
 
-	<?php if ( $wpfaevent_is_embed ) : ?>
-	<section class="wpfa-past-events">
-	<?php else : ?>
 	<main class="wpfa-past-events">
-	<?php endif; ?>
 		<section class="wpfa-past-events-hero">
 			<div class="container">
 				<h1><?php esc_html_e( 'Past FOSSASIA Events', 'wpfaevent' ); ?></h1>
@@ -281,13 +273,8 @@ $header_vars = [
 				</div>
 			<?php endif; ?>
 		</div>
-	<?php if ( $wpfaevent_is_embed ) : ?>
-	</section>
-	<?php else : ?>
 	</main>
-	<?php endif; ?>
 
-<?php if ( ! $wpfaevent_is_embed ) : ?>
 	<footer class="wpfa-footer">
 		<div class="container">
 			<!-- Footer copyright notice -->
@@ -312,4 +299,3 @@ $header_vars = [
 <?php wp_footer(); ?>
 </body>
 </html>
-<?php endif; ?>

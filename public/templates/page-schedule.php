@@ -26,11 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
-
-if ( ! $wpfaevent_is_embed ) {
-	get_header();
-}
+get_header();
 
 /**
  * MVP parity: we don’t have sessions yet, so render events grouped by date.
@@ -93,10 +89,10 @@ foreach ( $q->posts as $eid ) {
 	}
 
 	if ( ! isset( $groups[ $sort_key ] ) ) {
-		$groups[ $sort_key ] = [
+		$groups[ $sort_key ] = array(
 			'date'   => $display_date,
-			'events' => [],
-		];
+			'events' => array(),
+		);
 	}
 	$groups[ $sort_key ]['events'][] = $eid;
 
@@ -109,11 +105,7 @@ foreach ( $q->posts as $eid ) {
 // Sort by timestamp in chronological order.
 ksort( $groups, SORT_NUMERIC );
 ?>
-<?php if ( $wpfaevent_is_embed ) : ?>
-<section class="wpfa-schedule">
-<?php else : ?>
 <main class="wpfa-schedule">
-<?php endif; ?>
 	<h1><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></h1>
 	<?php
 	if ( $groups ) :
@@ -126,29 +118,25 @@ ksort( $groups, SORT_NUMERIC );
 							$event_title = get_the_title( $eid );
 							$loc         = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_location', true ) );
 							$url         = get_permalink( $eid );
-					?>
+						?>
 				<li>
 					<strong><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $event_title ); ?></a></strong>
 						<?php
-							if ( $loc ) :
-						?>
+						if ( $loc ) :
+							?>
 							— <span><?php echo esc_html( $loc ); ?></span><?php endif; ?>
 				</li>
 			<?php endforeach; ?>
 		</ul>
 	<?php endforeach; // End foreach groups. ?>
-	<?php
-	// Pagination.
-	$total = max( 1, (int) ceil( $q->found_posts / $events_per_page ) );
-	wpfa_render_pagination( $total, $current_page, __( 'Schedule pagination', 'wpfaevent' ) );
-	?>
+		<?php
+		// Pagination.
+		$total = max( 1, (int) ceil( $q->found_posts / $events_per_page ) );
+		wpfa_render_pagination( $total, $current_page, __( 'Schedule pagination', 'wpfaevent' ) );
+		?>
 
 	<?php else : ?>
 		<p><?php esc_html_e( 'No schedule entries yet.', 'wpfaevent' ); ?></p>
 	<?php endif; ?>
-<?php if ( $wpfaevent_is_embed ) : ?>
-</section>
-<?php else : ?>
 </main>
-	<?php get_footer(); ?>
-<?php endif; ?>
+<?php get_footer(); ?>
