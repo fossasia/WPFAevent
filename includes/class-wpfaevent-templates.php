@@ -38,14 +38,14 @@ class WPFAevent_Templates {
 	 * @since 1.0.0
 	 * @var   array<string, string>
 	 */
-	private static $templates = array(
+	private static $templates = [
 		'page-landing.php'         => 'WPFA - Landing',
 		'page-speakers.php'        => 'WPFA - Speakers',
 		'page-events.php'          => 'WPFA - Events',
 		'page-past-events.php'     => 'WPFA - Past Events',
 		'page-schedule.php'        => 'WPFA - Schedule',
 		'page-code-of-conduct.php' => 'WPFA - Code of Conduct',
-	);
+	];
 
 	/**
 	 * Registers WordPress hooks for template registration and loading.
@@ -59,8 +59,8 @@ class WPFAevent_Templates {
 	 * @return void
 	 */
 	public static function init() {
-		add_filter( 'theme_page_templates', array( __CLASS__, 'register' ) );
-		add_filter( 'template_include', array( __CLASS__, 'load' ) );
+		add_filter( 'theme_page_templates', [ __CLASS__, 'register' ] );
+		add_filter( 'template_include', [ __CLASS__, 'load' ] );
 	}
 
 	/**
