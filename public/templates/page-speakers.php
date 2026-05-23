@@ -146,7 +146,7 @@ $header_vars         = array(
 						type="search" 
 						id="wpfa-speaker-search" 
 						name="q" 
-							value="<?php echo esc_attr( $search_term ); ?>"
+						value="<?php echo esc_attr( $search_term ); ?>"
 						placeholder="<?php esc_attr_e( 'Search speakers...', 'wpfaevent' ); ?>"
 					/>
 					<button type="submit">
@@ -159,14 +159,14 @@ $header_vars         = array(
 				<?php if ( ! empty( $categories ) ) : ?>
 				<div class="wpfa-speakers-filters">
 					<a href="<?php echo esc_url( add_query_arg( array( 'category' => 'all' ), remove_query_arg( 'category' ) ) ); ?>" 
-							class="wpfa-filter-btn <?php echo esc_attr( 'all' === $current_category ? 'active' : '' ); ?>"
+						class="wpfa-filter-btn <?php echo esc_attr( 'all' === $current_category ? 'active' : '' ); ?>"
 						data-filter="all">
 						<?php esc_html_e( 'All Speakers', 'wpfaevent' ); ?>
 					</a>
 					<?php
 					foreach ( $categories as $category_term ) :
 						$category_slug = $category_term->slug;
-							$is_active = $current_category === $category_slug;
+						$is_active = $current_category === $category_slug;
 						$category_url  = add_query_arg(
 							array( 'category' => $category_slug ),
 							remove_query_arg( array( 'paged', 'category' ) )
@@ -190,7 +190,7 @@ $header_vars         = array(
 			<div class="wpfa-results-info">
 				<?php
 				printf(
-						/* translators: 1: number of speakers shown, 2: total number of speakers. */
+					/* translators: 1: number of speakers shown, 2: total number of speakers. */
 					esc_html__( 'Showing %1$d of %2$d speakers', 'wpfaevent' ),
 					count( $speakers_query->posts ),
 					absint( $speakers_query->found_posts )
@@ -198,22 +198,22 @@ $header_vars         = array(
 				?>
 			</div>
 
-				<?php if ( ! $speakers_query->have_posts() ) : ?>
+			<?php if ( ! $speakers_query->have_posts() ) : ?>
 				<div class="wpfa-no-results">
 					<h3><?php esc_html_e( 'No speakers found', 'wpfaevent' ); ?></h3>
 					<p><?php esc_html_e( 'Try adjusting your search or filters', 'wpfaevent' ); ?></p>
 				</div>
 			<?php else : ?>
 				<div class="wpfa-speakers-grid" id="wpfa-speakers-grid">
-						<?php foreach ( $speakers_query->posts as $sid ) : ?>
-							<?php include WPFAEVENT_PATH . 'public/partials/speakers/speaker-card.php'; ?>
+					<?php foreach ( $speakers_query->posts as $sid ) : ?>
+						<?php include WPFAEVENT_PATH . 'public/partials/speakers/speaker-card.php'; ?>
 					<?php endforeach; ?>
 				</div>
 
 				<?php
-					// Pagination.
-					$total           = max( 1, (int) ceil( $speakers_query->found_posts / $speakers_per_page ) );
-					$pagination_args = array();
+				// Pagination
+				$total = max( 1, (int) ceil( $speakers_query->found_posts / $speakers_per_page ) );
+				$pagination_args = array();
 				if ( $search_term ) {
 					$pagination_args['q'] = $search_term;
 				}
