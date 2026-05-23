@@ -91,7 +91,7 @@ if ( empty( $site_logo_url ) ) {
 $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 
 // Set up header variables for the partial.
-$header_vars = array(
+$header_vars = [
 	'site_logo_url'        => $site_logo_url,
 	'event_page_url'       => home_url( '/events/' ),
 	'show_back_button'     => false,
@@ -99,7 +99,7 @@ $header_vars = array(
 	'back_button_text'     => __( 'Back to Event', 'wpfaevent' ),
 	'register_button_url'  => '',
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
-);
+];
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>

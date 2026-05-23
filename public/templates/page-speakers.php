@@ -13,8 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
-
 /**
  * Filters the number of speakers per page.
  *
@@ -24,38 +22,38 @@ $wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
 $current_page = max( 1, (int) get_query_var( 'paged', 1 ) );
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only front-end search filtering via query args.
 $search_term = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only front-end category filtering via query args.
+$current_category = isset( $_GET['category'] ) ? sanitize_title( wp_unslash( $_GET['category'] ) ) : 'all';
 
-// Query speakers from the CPT.
+// Query speakers from the CPT, then filter taxonomy in PHP to avoid slow taxonomy query warnings.
 $speakers_per_page = max( 1, (int) apply_filters( 'wpfa_speakers_per_page', 24 ) );
 $args              = array(
 	'post_type'      => 'wpfa_speaker',
 	'post_status'    => 'publish',
-	'posts_per_page' => $speakers_per_page,
-	'paged'          => $current_page,
+	'posts_per_page' => -1,
 	'orderby'        => 'title',
 	'order'          => 'ASC',
 	's'              => $search_term,
 	'fields'         => 'ids',
+	'no_found_rows'  => true,
 );
 
-// Add the category filter if it is set.
-// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only front-end category filtering via query args.
-if ( isset( $_GET['category'] ) && ! empty( $_GET['category'] ) ) {
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only front-end category filtering via query args.
-	$category = sanitize_text_field( wp_unslash( $_GET['category'] ) );
-	if ( 'all' !== $category ) {
-		// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Required to filter speakers by selected taxonomy term.
-		$args['tax_query'] = array(
-			array(
-				'taxonomy' => 'wpfa_speaker_category',
-				'field'    => 'slug',
-				'terms'    => sanitize_title( $category ),
-			),
-		);
-	}
+$speaker_ids = get_posts( $args );
+
+if ( 'all' !== $current_category && taxonomy_exists( 'wpfa_speaker_category' ) ) {
+	$speaker_ids = array_values(
+		array_filter(
+			$speaker_ids,
+			static function ( $speaker_id ) use ( $current_category ) {
+				return has_term( $current_category, 'wpfa_speaker_category', $speaker_id );
+			}
+		)
+	);
 }
 
-$speakers_query = new WP_Query( $args );
+$total_speakers    = count( $speaker_ids );
+$speaker_offset    = ( $current_page - 1 ) * $speakers_per_page;
+$paged_speaker_ids = array_slice( $speaker_ids, $speaker_offset, $speakers_per_page );
 
 // Get all categories, including empty ones for admin filtering.
 $categories = array();
@@ -73,10 +71,6 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 		$categories = $terms;
 	}
 }
-
-// Get the current category from the URL.
-// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only front-end category filtering via query args.
-$current_category = isset( $_GET['category'] ) ? sanitize_title( wp_unslash( $_GET['category'] ) ) : 'all';
 
 // Get the site logo.
 $site_logo_url = get_option( 'wpfa_site_logo_url', '' );
@@ -99,7 +93,6 @@ $header_vars         = array(
 );
 
 ?>
-<?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -108,31 +101,26 @@ $header_vars         = array(
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent' ); ?>>
-	<?php wp_body_open(); ?>
+<?php wp_body_open(); ?>
 
-		<div id="page" class="site">
-		<?php
-		// Load the shared navigation header.
-		$site_logo_url        = $header_vars['site_logo_url'];
-		$event_page_url       = $header_vars['event_page_url'];
-		$show_back_button     = $header_vars['show_back_button'];
-		$show_register_button = $header_vars['show_register_button'];
-		$back_button_text     = $header_vars['back_button_text'];
-		$register_button_url  = $header_vars['register_button_url'];
-		$register_button_text = $header_vars['register_button_text'];
+<div id="page" class="site">
+	<?php
+	// Load the shared navigation header.
+	$site_logo_url        = $header_vars['site_logo_url'];
+	$event_page_url       = $header_vars['event_page_url'];
+	$show_back_button     = $header_vars['show_back_button'];
+	$show_register_button = $header_vars['show_register_button'];
+	$back_button_text     = $header_vars['back_button_text'];
+	$register_button_url  = $header_vars['register_button_url'];
+	$register_button_text = $header_vars['register_button_text'];
 
-		$nav_partial = WPFAEVENT_PATH . 'public/partials/header.php';
-		if ( file_exists( $nav_partial ) ) {
-			include $nav_partial;
-		}
-		?>
-<?php endif; ?>
+	$nav_partial = WPFAEVENT_PATH . 'public/partials/header.php';
+	if ( file_exists( $nav_partial ) ) {
+		include $nav_partial;
+	}
+	?>
 
-	<?php if ( $wpfaevent_is_embed ) : ?>
-	<section class="wpfa-speakers">
-	<?php else : ?>
 	<main class="wpfa-speakers">
-	<?php endif; ?>
 		<section class="wpfa-speakers-hero">
 			<div class="container">
 				<h1><?php echo esc_html( apply_filters( 'wpfa_speakers_title', __( 'FOSSASIA Summit Speakers', 'wpfaevent' ) ) ); ?></h1>
@@ -166,7 +154,7 @@ $header_vars         = array(
 					<?php
 					foreach ( $categories as $category_term ) :
 						$category_slug = $category_term->slug;
-						$is_active = $current_category === $category_slug;
+						$is_active     = $current_category === $category_slug;
 						$category_url  = add_query_arg(
 							array( 'category' => $category_slug ),
 							remove_query_arg( array( 'paged', 'category' ) )
@@ -189,55 +177,50 @@ $header_vars         = array(
 		<div class="container">
 			<div class="wpfa-results-info">
 				<?php
-				printf(
-					/* translators: 1: number of speakers shown, 2: total number of speakers. */
-					esc_html__( 'Showing %1$d of %2$d speakers', 'wpfaevent' ),
-					count( $speakers_query->posts ),
-					absint( $speakers_query->found_posts )
-				);
-				?>
-			</div>
-
-			<?php if ( ! $speakers_query->have_posts() ) : ?>
-				<div class="wpfa-no-results">
-					<h3><?php esc_html_e( 'No speakers found', 'wpfaevent' ); ?></h3>
-					<p><?php esc_html_e( 'Try adjusting your search or filters', 'wpfaevent' ); ?></p>
-				</div>
-			<?php else : ?>
-				<div class="wpfa-speakers-grid" id="wpfa-speakers-grid">
-					<?php foreach ( $speakers_query->posts as $sid ) : ?>
-						<?php include WPFAEVENT_PATH . 'public/partials/speakers/speaker-card.php'; ?>
-					<?php endforeach; ?>
+					printf(
+						/* translators: 1: number of speakers shown, 2: total number of speakers. */
+						esc_html__( 'Showing %1$d of %2$d speakers', 'wpfaevent' ),
+						count( $paged_speaker_ids ),
+						absint( $total_speakers )
+					);
+					?>
 				</div>
 
-				<?php
-				// Pagination
-				$total = max( 1, (int) ceil( $speakers_query->found_posts / $speakers_per_page ) );
-				$pagination_args = array();
-				if ( $search_term ) {
-					$pagination_args['q'] = $search_term;
-				}
-				if ( 'all' !== $current_category ) {
-					$pagination_args['category'] = $current_category;
-				}
+				<?php if ( empty( $paged_speaker_ids ) ) : ?>
+					<div class="wpfa-no-results">
+						<h3><?php esc_html_e( 'No speakers found', 'wpfaevent' ); ?></h3>
+						<p><?php esc_html_e( 'Try adjusting your search or filters', 'wpfaevent' ); ?></p>
+					</div>
+				<?php else : ?>
+					<div class="wpfa-speakers-grid" id="wpfa-speakers-grid">
+						<?php foreach ( $paged_speaker_ids as $sid ) : ?>
+							<?php include WPFAEVENT_PATH . 'public/partials/speakers/speaker-card.php'; ?>
+						<?php endforeach; ?>
+					</div>
 
-				wpfa_render_pagination(
-					$total,
-					$current_page,
-					__( 'Speakers pagination', 'wpfaevent' ),
-					$pagination_args
-				);
-				?>
+					<?php
+					// Pagination.
+					$total           = max( 1, (int) ceil( $total_speakers / $speakers_per_page ) );
+					$pagination_args = array();
+					if ( $search_term ) {
+						$pagination_args['q'] = $search_term;
+					}
+					if ( 'all' !== $current_category ) {
+						$pagination_args['category'] = $current_category;
+					}
+
+					wpfa_render_pagination(
+						$total,
+						$current_page,
+						__( 'Speakers pagination', 'wpfaevent' ),
+						$pagination_args
+					);
+					?>
 			<?php endif; ?>
 			<?php wp_reset_postdata(); ?>
 		</div>
-	<?php if ( $wpfaevent_is_embed ) : ?>
-	</section>
-	<?php else : ?>
 	</main>
-	<?php endif; ?>
 
-<?php if ( ! $wpfaevent_is_embed ) : ?>
 	<footer class="wpfa-footer">
 		<div class="container">
 			<small>
@@ -253,7 +236,6 @@ $header_vars         = array(
 		</div>
 	</footer>
 </div><!-- #page -->
-<?php endif; ?>
 
 <?php
 // Load admin modals if the user is an admin.
@@ -265,8 +247,6 @@ if ( current_user_can( 'manage_options' ) ) :
 endif;
 ?>
 
-<?php if ( ! $wpfaevent_is_embed ) : ?>
-	<?php wp_footer(); ?>
+<?php wp_footer(); ?>
 </body>
 </html>
-<?php endif; ?>
