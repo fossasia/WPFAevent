@@ -109,7 +109,7 @@ $header_vars = [
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent' ); ?>>
-	<?php wp_body_open(); ?>
+<?php wp_body_open(); ?>
 
 <div id="page" class="site">
 	<?php
@@ -315,6 +315,6 @@ $header_vars = [
 	</footer>
 </div><!-- #page -->
 
-	<?php wp_footer(); ?>
+<?php wp_footer(); ?>
 </body>
 </html>
