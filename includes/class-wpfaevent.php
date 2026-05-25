@@ -1,9 +1,11 @@
 <?php
 /**
+ * Core plugin class bootstrap.
+ *
  * @package Wpfaevent
  */
- 
-/** 
+
+/**
  * Prevent direct access to this file
  */
 if ( ! defined( 'ABSPATH' ) ) {
@@ -233,7 +235,6 @@ class Wpfaevent {
 		// Cache invalidation hooks (static method calls).
 		$this->loader->add_action( 'save_post', 'Wpfaevent_Cache', 'clear_page_cache' );
 		$this->loader->add_action( 'delete_post', 'Wpfaevent_Cache', 'clear_page_cache' );
-
 	}
 
 	/**

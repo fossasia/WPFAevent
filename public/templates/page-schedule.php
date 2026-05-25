@@ -140,17 +140,17 @@ foreach ( $paged_schedule_events as $schedule_event ) {
 			<ul class="wpfa-schedule-items">
 					<?php
 					foreach ( $group['events'] as $eid ) :
-						$event_title = get_the_title( $eid );
-						$loc = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_location', true ) );
-						$url = get_permalink( $eid );
-					?>
-				<li>
-				<strong><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $event_title ); ?></a></strong>
-					<?php
+							$event_title = get_the_title( $eid );
+							$loc         = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_location', true ) );
+							$url         = get_permalink( $eid );
+						?>
+					<li>
+					<strong><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $event_title ); ?></a></strong>
+						<?php
 						if ( $loc ) :
-					?>
-					— <span><?php echo esc_html( $loc ); ?></span><?php endif; ?>
-				</li>
+							?>
+						— <span><?php echo esc_html( $loc ); ?></span><?php endif; ?>
+					</li>
 			<?php endforeach; ?>
 		</ul>
 	<?php endforeach; // End foreach groups. ?>
