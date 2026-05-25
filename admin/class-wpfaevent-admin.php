@@ -357,7 +357,9 @@ class Wpfaevent_Admin {
 	 * @param int $post_id The post ID.
 	 */
 	public function save_event_meta( $post_id ) {
-		if ( ! isset( $_POST['wpfa_event_meta_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['wpfa_event_meta_nonce'] ), 'wpfa_event_meta_nonce' ) ) {
+		$event_nonce = isset( $_POST['wpfa_event_meta_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_meta_nonce'] ) ) : '';
+
+		if ( ! $event_nonce || ! wp_verify_nonce( $event_nonce, 'wpfa_event_meta_nonce' ) ) {
 			return;
 		}
 
@@ -385,12 +387,214 @@ class Wpfaevent_Admin {
 			update_post_meta( $post_id, 'wpfa_event_url', esc_url_raw( wp_unslash( $_POST['wpfa_event_url'] ) ) );
 		}
 
+		$previous_speakers = $this->get_event_speaker_ids( $post_id );
+		$speakers          = array();
+
 		if ( isset( $_POST['wpfa_event_speakers'] ) && is_array( $_POST['wpfa_event_speakers'] ) ) {
-			$speakers = array_map( 'absint', $_POST['wpfa_event_speakers'] );
+			$speakers = $this->sanitize_post_id_list(
+				array_map(
+					'sanitize_text_field',
+					wp_unslash( $_POST['wpfa_event_speakers'] )
+				)
+			);
+		}
+
+		if ( ! empty( $speakers ) ) {
 			update_post_meta( $post_id, 'wpfa_event_speakers', $speakers );
 		} else {
 			delete_post_meta( $post_id, 'wpfa_event_speakers' );
 		}
+
+		$this->sync_event_speaker_relationships( $post_id, $previous_speakers, $speakers );
+	}
+
+	/**
+	 * Get normalized speaker IDs assigned to an event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int> Speaker post IDs.
+	 */
+	private function get_event_speaker_ids( $event_id ) {
+		$speaker_ids = get_post_meta( $event_id, 'wpfa_event_speakers', true );
+
+		return $this->sanitize_post_id_list( $speaker_ids );
+	}
+
+	/**
+	 * Get normalized event IDs assigned to a speaker.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $speaker_id Speaker post ID.
+	 * @return array<int> Event post IDs.
+	 */
+	private function get_speaker_event_ids( $speaker_id ) {
+		$event_ids = get_post_meta( $speaker_id, 'wpfa_speaker_events', true );
+
+		return $this->sanitize_post_id_list( $event_ids );
+	}
+
+	/**
+	 * Sanitize, deduplicate, and reindex a list of post IDs.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $post_ids Raw post IDs.
+	 * @return array<int> Sanitized post IDs.
+	 */
+	private function sanitize_post_id_list( $post_ids ) {
+		if ( ! is_array( $post_ids ) ) {
+			return array();
+		}
+
+		$post_ids = array_map( 'absint', $post_ids );
+		$post_ids = array_filter( $post_ids );
+
+		return array_values( array_unique( $post_ids ) );
+	}
+
+	/**
+	 * Sync speaker-side event relationship meta after an event is saved.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int        $event_id          Event post ID.
+	 * @param array<int> $previous_speakers Speaker IDs before save.
+	 * @param array<int> $current_speakers  Speaker IDs after save.
+	 * @return void
+	 */
+	private function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
+		$event_id          = absint( $event_id );
+		$previous_speakers = $this->sanitize_post_id_list( $previous_speakers );
+		$current_speakers  = $this->sanitize_post_id_list( $current_speakers );
+
+		if ( ! $event_id ) {
+			return;
+		}
+
+		$previous_speakers = array_values(
+			array_unique(
+				array_merge(
+					$previous_speakers,
+					$this->get_speakers_linked_to_event( $event_id )
+				)
+			)
+		);
+
+		$removed_speakers = array_diff( $previous_speakers, $current_speakers );
+
+		foreach ( $removed_speakers as $speaker_id ) {
+			$this->remove_event_from_speaker( $speaker_id, $event_id );
+		}
+
+		foreach ( $current_speakers as $speaker_id ) {
+			$this->add_event_to_speaker( $speaker_id, $event_id );
+		}
+	}
+
+	/**
+	 * Find speakers whose speaker-side event meta includes an event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int> Speaker post IDs.
+	 */
+	private function get_speakers_linked_to_event( $event_id ) {
+		$event_id = absint( $event_id );
+
+		if ( ! $event_id ) {
+			return array();
+		}
+
+		$speaker_ids = get_posts(
+			array(
+				'post_type'      => 'wpfa_speaker',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Speaker-event links are stored in post meta.
+				'meta_query'     => array(
+					'relation' => 'OR',
+					array(
+						'key'     => 'wpfa_speaker_events',
+						'value'   => 'i:' . $event_id . ';',
+						'compare' => 'LIKE',
+					),
+					array(
+						'key'     => 'wpfa_speaker_events',
+						'value'   => '"' . $event_id . '"',
+						'compare' => 'LIKE',
+					),
+					array(
+						'key'     => 'wpfa_speaker_events',
+						'value'   => (string) $event_id,
+						'compare' => '=',
+					),
+				),
+			)
+		);
+
+		return $this->sanitize_post_id_list( $speaker_ids );
+	}
+
+	/**
+	 * Add an event ID to a speaker's related events.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $speaker_id Speaker post ID.
+	 * @param int $event_id Event post ID.
+	 * @return void
+	 */
+	private function add_event_to_speaker( $speaker_id, $event_id ) {
+		$speaker_id = absint( $speaker_id );
+		$event_id   = absint( $event_id );
+
+		if ( ! $speaker_id || ! $event_id ) {
+			return;
+		}
+
+		if ( 'wpfa_speaker' !== get_post_type( $speaker_id ) ) {
+			return;
+		}
+
+		$event_ids   = $this->get_speaker_event_ids( $speaker_id );
+		$event_ids[] = $event_id;
+		$event_ids   = $this->sanitize_post_id_list( $event_ids );
+
+		update_post_meta( $speaker_id, 'wpfa_speaker_events', $event_ids );
+	}
+
+	/**
+	 * Remove an event ID from a speaker's related events.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $speaker_id Speaker post ID.
+	 * @param int $event_id Event post ID.
+	 * @return void
+	 */
+	private function remove_event_from_speaker( $speaker_id, $event_id ) {
+		$speaker_id = absint( $speaker_id );
+		$event_id   = absint( $event_id );
+
+		if ( ! $speaker_id || ! $event_id ) {
+			return;
+		}
+
+		$event_ids = array_diff( $this->get_speaker_event_ids( $speaker_id ), array( $event_id ) );
+		$event_ids = $this->sanitize_post_id_list( $event_ids );
+
+		if ( empty( $event_ids ) ) {
+			delete_post_meta( $speaker_id, 'wpfa_speaker_events' );
+			return;
+		}
+
+		update_post_meta( $speaker_id, 'wpfa_speaker_events', $event_ids );
 	}
 
 	/**
