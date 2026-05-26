@@ -31,67 +31,66 @@ class Wpfaevent_Meta_Speaker {
 	 * @since 1.0.0
 	 */
 	public static function register() {
-		// Speaker position/title
-		register_post_meta(
-			self::$post_type,
-			'wpfa_speaker_position',
-			array(
-				'type'              => 'string',
-				'single'            => true,
-				'show_in_rest'      => true,
-				'sanitize_callback' => 'sanitize_text_field',
+		$string_meta_fields = array(
+			'wpfa_speaker_position'      => array(
 				'description'       => __( 'Speaker position/title', 'wpfaevent' ),
-			)
-		);
-
-		// Speaker organization
-		register_post_meta(
-			self::$post_type,
-			'wpfa_speaker_organization',
-			array(
-				'type'              => 'string',
-				'single'            => true,
-				'show_in_rest'      => true,
 				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'wpfa_speaker_organization'  => array(
 				'description'       => __( 'Speaker organization', 'wpfaevent' ),
-			)
-		);
-
-		// Speaker bio
-		register_post_meta(
-			self::$post_type,
-			'wpfa_speaker_bio',
-			array(
-				'type'              => 'string',
-				'single'            => true,
-				'show_in_rest'      => true,
-				'sanitize_callback' => 'wp_kses_post',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'wpfa_speaker_bio'           => array(
 				'description'       => __( 'Speaker biography', 'wpfaevent' ),
-			)
-		);
-
-		// Speaker headshot URL
-		register_post_meta(
-			self::$post_type,
-			'wpfa_speaker_headshot_url',
-			array(
-				'type'              => 'string',
-				'single'            => true,
-				'show_in_rest'      => true,
-				'sanitize_callback' => 'esc_url_raw',
+				'sanitize_callback' => 'wp_kses_post',
+			),
+			'wpfa_speaker_headshot_url'  => array(
 				'description'       => __( 'Speaker headshot image URL', 'wpfaevent' ),
-			)
+				'sanitize_callback' => 'esc_url_raw',
+			),
+			'wpfa_speaker_linkedin'      => array(
+				'description'       => __( 'Speaker LinkedIn URL', 'wpfaevent' ),
+				'sanitize_callback' => 'esc_url_raw',
+			),
+			'wpfa_speaker_twitter'       => array(
+				'description'       => __( 'Speaker Twitter URL', 'wpfaevent' ),
+				'sanitize_callback' => 'esc_url_raw',
+			),
+			'wpfa_speaker_github'        => array(
+				'description'       => __( 'Speaker GitHub URL', 'wpfaevent' ),
+				'sanitize_callback' => 'esc_url_raw',
+			),
+			'wpfa_speaker_website'       => array(
+				'description'       => __( 'Speaker website URL', 'wpfaevent' ),
+				'sanitize_callback' => 'esc_url_raw',
+			),
+			'wpfa_speaker_talk_title'    => array(
+				'description'       => __( 'Speaker session title', 'wpfaevent' ),
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'wpfa_speaker_talk_date'     => array(
+				'description'       => __( 'Speaker session date', 'wpfaevent' ),
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'wpfa_speaker_talk_time'     => array(
+				'description'       => __( 'Speaker session start time', 'wpfaevent' ),
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'wpfa_speaker_talk_end_time' => array(
+				'description'       => __( 'Speaker session end time', 'wpfaevent' ),
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'wpfa_speaker_talk_abstract' => array(
+				'description'       => __( 'Speaker session abstract', 'wpfaevent' ),
+				'sanitize_callback' => 'wp_kses_post',
+			),
 		);
 
-		// Related events (for bidirectional relationship)
-		// TODO: Future PR - Implement bidirectional event-speaker relationship UI
-		// This meta field is registered for REST API support but has no admin UI yet.
-		// Action items for future implementation:
-		// 1. Add meta box to Speaker edit screen with event multi-select dropdown
-		// 2. Add save handler in Wpfaevent_Admin::save_speaker_meta()
-		// 3. Implement sync logic: when event assigns speakers, update speaker's events
-		// 4. Consider using post_relationships table instead of meta for better performance
-		// Related: wpfa_event_speakers in class-wpfaevent-meta-event.php
+		foreach ( $string_meta_fields as $meta_key => $args ) {
+			self::register_string_meta( $meta_key, $args['description'], $args['sanitize_callback'] );
+		}
+
+		// Related events for the bidirectional event-speaker relationship.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_speaker_events',
@@ -113,6 +112,30 @@ class Wpfaevent_Meta_Speaker {
 	}
 
 	/**
+	 * Registers a single speaker string meta field.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string          $meta_key          Meta key to register.
+	 * @param string          $description       REST/API field description.
+	 * @param callable|string $sanitize_callback Sanitization callback.
+	 * @return void
+	 */
+	private static function register_string_meta( $meta_key, $description, $sanitize_callback ) {
+		register_post_meta(
+			self::$post_type,
+			$meta_key,
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => $sanitize_callback,
+				'description'       => $description,
+			)
+		);
+	}
+
+	/**
 	 * Sanitizes an array of event IDs.
 	 *
 	 * @since 1.0.0
@@ -124,6 +147,9 @@ class Wpfaevent_Meta_Speaker {
 			return array();
 		}
 
-		return array_map( 'absint', $event_ids );
+		$event_ids = array_map( 'absint', $event_ids );
+		$event_ids = array_filter( $event_ids );
+
+		return array_values( array_unique( $event_ids ) );
 	}
 }

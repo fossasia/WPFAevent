@@ -20,16 +20,21 @@ if ( ! $speaker_id || 'wpfa_speaker' !== get_post_type( $speaker_id ) ) {
 	return;
 }
 
-$speaker_name = get_the_title( $speaker_id );
-$position     = sanitize_text_field( get_post_meta( $speaker_id, 'wpfa_speaker_position', true ) );
-$organization = sanitize_text_field( get_post_meta( $speaker_id, 'wpfa_speaker_organization', true ) );
-$bio          = get_post_meta( $speaker_id, 'wpfa_speaker_bio', true );
-$photo_url    = get_post_meta( $speaker_id, 'wpfa_speaker_headshot_url', true );
-$linkedin     = get_post_meta( $speaker_id, 'wpfa_speaker_linkedin', true );
-$twitter      = get_post_meta( $speaker_id, 'wpfa_speaker_twitter', true );
-$github       = get_post_meta( $speaker_id, 'wpfa_speaker_github', true );
-$website      = get_post_meta( $speaker_id, 'wpfa_speaker_website', true );
-$photo_alt    = sprintf(
+$speaker_name  = get_the_title( $speaker_id );
+$position      = sanitize_text_field( get_post_meta( $speaker_id, 'wpfa_speaker_position', true ) );
+$organization  = sanitize_text_field( get_post_meta( $speaker_id, 'wpfa_speaker_organization', true ) );
+$bio           = get_post_meta( $speaker_id, 'wpfa_speaker_bio', true );
+$photo_url     = get_post_meta( $speaker_id, 'wpfa_speaker_headshot_url', true );
+$linkedin      = get_post_meta( $speaker_id, 'wpfa_speaker_linkedin', true );
+$twitter       = get_post_meta( $speaker_id, 'wpfa_speaker_twitter', true );
+$github        = get_post_meta( $speaker_id, 'wpfa_speaker_github', true );
+$website       = get_post_meta( $speaker_id, 'wpfa_speaker_website', true );
+$talk_title    = sanitize_text_field( get_post_meta( $speaker_id, 'wpfa_speaker_talk_title', true ) );
+$talk_date     = sanitize_text_field( get_post_meta( $speaker_id, 'wpfa_speaker_talk_date', true ) );
+$talk_start    = sanitize_text_field( get_post_meta( $speaker_id, 'wpfa_speaker_talk_time', true ) );
+$talk_end      = sanitize_text_field( get_post_meta( $speaker_id, 'wpfa_speaker_talk_end_time', true ) );
+$talk_abstract = get_post_meta( $speaker_id, 'wpfa_speaker_talk_abstract', true );
+$photo_alt     = sprintf(
 	/* translators: %s: Speaker name. */
 	__( 'Photo of %s', 'wpfaevent' ),
 	$speaker_name
@@ -51,6 +56,17 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 		$speaker_categories = wp_list_pluck( $terms, 'name' );
 	}
 }
+
+$session_meta = array();
+if ( $talk_date ) {
+	$session_meta[] = $talk_date;
+}
+
+if ( $talk_start || $talk_end ) {
+	$session_meta[] = trim( $talk_start . ( $talk_start && $talk_end ? ' - ' : '' ) . $talk_end );
+}
+
+$has_session_details = $talk_title || $talk_date || $talk_start || $talk_end || $talk_abstract;
 
 $stored_event_ids = get_post_meta( $speaker_id, 'wpfa_speaker_events', true );
 $stored_event_ids = is_array( $stored_event_ids ) ? array_map( 'absint', $stored_event_ids ) : array();
@@ -268,16 +284,40 @@ $header_vars = array(
 								</a>
 							<?php endif; ?>
 						</div>
-					<?php endif; ?>
+						<?php endif; ?>
+					</div>
 				</div>
-			</div>
-		</section>
+			</section>
 
-		<section class="wpfa-linked-events" aria-labelledby="wpfa-linked-events-title">
-			<div class="container">
-				<h2 id="wpfa-linked-events-title"><?php esc_html_e( 'Linked Events', 'wpfaevent' ); ?></h2>
+			<?php if ( $has_session_details ) : ?>
+				<section class="wpfa-speaker-sessions" aria-labelledby="wpfa-speaker-sessions-title">
+					<div class="container">
+						<h2 id="wpfa-speaker-sessions-title"><?php esc_html_e( 'Sessions by this speaker', 'wpfaevent' ); ?></h2>
 
-				<?php if ( ! empty( $linked_event_ids ) ) : ?>
+						<article class="wpfa-speaker-session-card" itemprop="performerIn" itemscope itemtype="https://schema.org/Event">
+							<?php if ( $talk_title ) : ?>
+								<h3 itemprop="name"><?php echo esc_html( $talk_title ); ?></h3>
+							<?php endif; ?>
+
+							<?php if ( ! empty( $session_meta ) ) : ?>
+								<p class="wpfa-speaker-session-meta"><?php echo esc_html( implode( ' | ', $session_meta ) ); ?></p>
+							<?php endif; ?>
+
+							<?php if ( $talk_abstract ) : ?>
+								<div class="wpfa-speaker-session-abstract" itemprop="description">
+									<?php echo wp_kses_post( wpautop( $talk_abstract ) ); ?>
+								</div>
+							<?php endif; ?>
+						</article>
+					</div>
+				</section>
+			<?php endif; ?>
+
+			<section class="wpfa-linked-events" aria-labelledby="wpfa-linked-events-title">
+				<div class="container">
+					<h2 id="wpfa-linked-events-title"><?php esc_html_e( 'Linked Events', 'wpfaevent' ); ?></h2>
+
+					<?php if ( ! empty( $linked_event_ids ) ) : ?>
 					<div class="wpfa-linked-events-grid">
 						<?php foreach ( $linked_event_ids as $event_id ) : ?>
 							<?php
