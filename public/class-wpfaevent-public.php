@@ -1,5 +1,4 @@
 <?php
-
 /**
  * The public-facing functionality of the plugin.
  *
@@ -114,7 +113,7 @@ class Wpfaevent_Public {
 			'text'       => get_option( 'wpfa_text_color', '#0b0b0b' ),
 		);
 
-		// Allow filtering
+		// Allow filtering.
 		$colors['brand']      = apply_filters( 'wpfa_brand_color', $colors['brand'] );
 		$colors['background'] = apply_filters( 'wpfa_background_color', $colors['background'] );
 		$colors['text']       = apply_filters( 'wpfa_text_color', $colors['text'] );
@@ -167,12 +166,12 @@ class Wpfaevent_Public {
 			'all'
 		);
 
-		// Only load component/template styles when WPFA template is active
+		// Only load component/template styles when WPFA template is active.
 		if ( ! $this->is_wpfa_template() ) {
 			return;
 		}
 
-		// Navigation component (shared across templates)
+		// Navigation component (shared across templates).
 		wp_enqueue_style(
 			$this->plugin_name . '-navigation',
 			plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/components/navigation.css',
@@ -181,7 +180,7 @@ class Wpfaevent_Public {
 			'all'
 		);
 
-		// Pagination component (only templates with pagination)
+		// Pagination component (only templates with pagination).
 		if ( $this->is_paginated_template() ) {
 			wp_enqueue_style(
 				$this->plugin_name . '-pagination',
@@ -192,7 +191,7 @@ class Wpfaevent_Public {
 			);
 		}
 
-		// Add dynamic CSS variables
+		// Add dynamic CSS variables.
 		wp_add_inline_style( $this->plugin_name, $this->generate_color_css() );
 
 		// Template-specific styles.
@@ -222,7 +221,7 @@ class Wpfaevent_Public {
 				'all'
 			);
 
-			// Enqueue speakers JavaScript
+			// Enqueue speakers JavaScript.
 			wp_enqueue_script(
 				$this->plugin_name . '-speakers',
 				plugin_dir_url( __FILE__ ) . 'js/wpfaevent-speakers.js',
@@ -231,17 +230,17 @@ class Wpfaevent_Public {
 				true
 			);
 
-			// Pass data from PHP to JavaScript
+			// Pass data from PHP to JavaScript.
 			wp_localize_script(
 				$this->plugin_name . '-speakers',
-				'wpfaeventSpeakersConfig',      // JavaScript object name
+				'wpfaeventSpeakersConfig',
 				array(
 					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 					'adminNonce' => wp_create_nonce( 'wpfa_speakers_ajax' ),
 					'isAdmin'    => current_user_can( 'manage_options' ),
 
-					// All translatable strings
 					'i18n'       => array(
+						/* translators: %s: speaker name. */
 						'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
 						'deleteSuccess'      => __( 'Speaker deleted successfully. The page will now reload.', 'wpfaevent' ),
 						'deleteError'        => __( 'Error deleting speaker', 'wpfaevent' ),
@@ -256,13 +255,14 @@ class Wpfaevent_Public {
 						'fetchError'         => __( 'Error fetching speaker data', 'wpfaevent' ),
 						'fetchErrorGeneric'  => __( 'Error fetching speaker data. Please try again.', 'wpfaevent' ),
 						'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
+						/* translators: %d: number of speakers shown. */
 						'resultsCount'       => __( 'Showing %d speakers', 'wpfaevent' ),
 					),
 				)
 			);
 		}
 
-		// Past Events template
+		// Past Events template.
 		if ( is_page_template( 'page-past-events.php' ) ) {
 			wp_enqueue_style(
 				$this->plugin_name . '-past-events',
@@ -290,7 +290,7 @@ class Wpfaevent_Public {
 				'all'
 			);
 
-			// Enqueue speakers JavaScript
+			// Enqueue speakers JavaScript.
 			wp_enqueue_script(
 				$this->plugin_name . '-speakers',
 				plugin_dir_url( __FILE__ ) . 'js/wpfaevent-speakers.js',
@@ -299,17 +299,17 @@ class Wpfaevent_Public {
 				true
 			);
 
-			// Pass data from PHP to JavaScript
+			// Pass data from PHP to JavaScript.
 			wp_localize_script(
 				$this->plugin_name . '-speakers',
-				'wpfaeventSpeakersConfig',      // JavaScript object name
+				'wpfaeventSpeakersConfig',
 				array(
 					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 					'adminNonce' => wp_create_nonce( 'wpfa_speakers_ajax' ),
 					'isAdmin'    => current_user_can( 'manage_options' ),
 
-					// All translatable strings
 					'i18n'       => array(
+						/* translators: %s: speaker name. */
 						'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
 						'deleteSuccess'      => __( 'Speaker deleted successfully. The page will now reload.', 'wpfaevent' ),
 						'deleteError'        => __( 'Error deleting speaker', 'wpfaevent' ),
@@ -324,6 +324,7 @@ class Wpfaevent_Public {
 						'fetchError'         => __( 'Error fetching speaker data', 'wpfaevent' ),
 						'fetchErrorGeneric'  => __( 'Error fetching speaker data. Please try again.', 'wpfaevent' ),
 						'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
+						/* translators: %d: number of speakers shown. */
 						'resultsCount'       => __( 'Showing %d speakers', 'wpfaevent' ),
 					),
 				)
