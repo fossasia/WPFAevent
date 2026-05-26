@@ -18,6 +18,7 @@
  * @since      1.0.0
  * @author     FOSSASIA <contact@fossasia.org>
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; }
 
