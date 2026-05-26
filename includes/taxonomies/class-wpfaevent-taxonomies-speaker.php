@@ -59,7 +59,7 @@ class Wpfaevent_Taxonomies_Speaker {
 
 		$args = array(
 			'labels'            => $labels,
-			'hierarchical'      => false, // Like tags, not categories
+			'hierarchical'      => false, // Like tags, not categories.
 			'public'            => true,
 			'show_ui'           => true,
 			'show_admin_column' => true,
