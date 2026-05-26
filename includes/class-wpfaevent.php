@@ -126,8 +126,8 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-landing.php';
 
 		// Admin and Public classes.
-		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
-		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-wpfaevent-admin.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-wpfaevent-public.php';
 
 		// Optional utilities if present.
 		if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php' ) ) {
@@ -198,7 +198,7 @@ class Wpfaevent {
 		$this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
 
 		// Add settings link to the plugins page.
-		$plugin_basename = plugin_basename( dirname( __DIR__ ) . '/wpfaevent.php' );
+		$plugin_basename = plugin_basename( dirname( __FILE__, 2 ) . '/wpfaevent.php' );
 		$this->loader->add_filter( 'plugin_action_links_' . $plugin_basename, $this->plugin_admin, 'add_settings_link' );
 
 		// Add meta boxes to CPTs.
@@ -216,9 +216,6 @@ class Wpfaevent {
 		$this->loader->add_action( 'wp_ajax_wpfa_add_speaker', $this->plugin_admin, 'ajax_add_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_update_speaker', $this->plugin_admin, 'ajax_update_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_delete_speaker', $this->plugin_admin, 'ajax_delete_speaker' );
-
-		// Register Eventyay sync on the maintained admin path.
-		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $this->plugin_admin, 'ajax_sync_eventyay' );
 	}
 
 	/**

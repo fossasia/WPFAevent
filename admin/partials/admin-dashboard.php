@@ -1262,9 +1262,8 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('action', 'fossasia_sync_eventyay');
             formData.append('nonce', adminNonce);
             formData.append('event_id', eventId);
-            formData.append('eventyay_api_url', apiUrlInput.value.trim());
 
-            // Send the current URL so sync does not depend on the legacy settings AJAX bridge.
+            // The PHP backend will now read the saved URL
             try {
                 const response = await fetch(ajaxUrl, { method: 'POST', body: formData });
                 const data = await response.json();
@@ -1295,17 +1294,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         syncBtn.addEventListener('click', async () => {
-            if (!apiUrlInput.value.trim()) {
-                customAlert.alert('Please enter an Eventyay API URL before syncing.', 'Error');
-                return;
+            if (await saveUrl()) {
+                runSync();
+            } else {
+                customAlert.alert('Could not save the URL. Please try again.', 'Error');
             }
-
-            const saved = await saveUrl();
-            if (saved) {
-                store.settings.eventyay_api_url = apiUrlInput.value.trim();
-            }
-
-            runSync();
         });
     })();
 
