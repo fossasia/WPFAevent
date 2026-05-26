@@ -509,34 +509,52 @@ class Wpfaevent_Admin {
 			return array();
 		}
 
-		$speaker_ids = get_posts(
-			array(
-				'post_type'      => 'wpfa_speaker',
-				'post_status'    => 'any',
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Speaker-event links are stored in post meta.
-				'meta_query'     => array(
-					'relation' => 'OR',
-					array(
-						'key'     => 'wpfa_speaker_events',
-						'value'   => 'i:' . $event_id . ';',
-						'compare' => 'LIKE',
+		$batch_size  = 100;
+		$current_page = 1;
+		$speaker_ids = array();
+
+		do {
+			$batch_ids = get_posts(
+				array(
+					'post_type'              => 'wpfa_speaker',
+					'post_status'            => 'any',
+					'posts_per_page'         => $batch_size,
+					'paged'                  => $current_page,
+					'fields'                 => 'ids',
+					'no_found_rows'          => true,
+					'orderby'                => 'ID',
+					'order'                  => 'ASC',
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
+					// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Speaker-event links are stored in post meta.
+					'meta_query'             => array(
+						'relation' => 'OR',
+						array(
+							'key'     => 'wpfa_speaker_events',
+							'value'   => 'i:' . $event_id . ';',
+							'compare' => 'LIKE',
+						),
+						array(
+							'key'     => 'wpfa_speaker_events',
+							'value'   => '"' . $event_id . '"',
+							'compare' => 'LIKE',
+						),
+						array(
+							'key'     => 'wpfa_speaker_events',
+							'value'   => (string) $event_id,
+							'compare' => '=',
+						),
 					),
-					array(
-						'key'     => 'wpfa_speaker_events',
-						'value'   => '"' . $event_id . '"',
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => 'wpfa_speaker_events',
-						'value'   => (string) $event_id,
-						'compare' => '=',
-					),
-				),
-			)
-		);
+				)
+			);
+
+			if ( empty( $batch_ids ) ) {
+				break;
+			}
+
+			$speaker_ids = array_merge( $speaker_ids, $batch_ids );
+			$current_page++;
+		} while ( count( $batch_ids ) === $batch_size );
 
 		return $this->sanitize_post_id_list( $speaker_ids );
 	}
