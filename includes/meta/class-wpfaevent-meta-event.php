@@ -31,7 +31,7 @@ class Wpfaevent_Meta_Event {
 	 * @since 1.0.0
 	 */
 	public static function register() {
-		// Event date fields
+		// Event date fields.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_event_start_date',
@@ -56,7 +56,7 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
-		// Event location
+		// Event location.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_event_location',
@@ -69,7 +69,7 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
-		// Event external URL
+		// Event external URL.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_event_url',
@@ -82,7 +82,7 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
-		// Event speakers (array of speaker IDs)
+		// Event speakers as an array of speaker IDs.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_event_speakers',

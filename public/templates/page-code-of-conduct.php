@@ -45,7 +45,7 @@ if ( have_posts() ) {
 
 <div id="page" class="site">
 	<?php
-	// Load shared navigation partial
+	// Load shared navigation partial.
 	$nav_partial = WPFAEVENT_PATH . 'public/partials/header.php';
 	if ( file_exists( $nav_partial ) ) {
 		include $nav_partial;
@@ -64,7 +64,7 @@ if ( have_posts() ) {
 		<div class="container">
 			<article class="main-content">
 				<?php
-				// Load content partial
+				// Load content partial.
 				$content_partial = WPFAEVENT_PATH . 'public/partials/code-of-conduct/content.php';
 				if ( file_exists( $content_partial ) ) {
 					include $content_partial;

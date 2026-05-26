@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Get existing categories for dropdown if taxonomy exists
+// Get existing categories for the dropdown if the taxonomy exists.
 $category_terms = array();
 if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 	$terms = get_terms(
@@ -67,21 +67,21 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 					<?php if ( ! empty( $category_terms ) ) : ?>
 						<select id="wpfa-speaker-category" name="category">
 							<option value=""><?php esc_html_e( 'Select a category', 'wpfaevent' ); ?></option>
-							<?php foreach ( $category_terms as $term ) : ?>
-								<option value="<?php echo esc_attr( $term->slug ); ?>">
-									<?php echo esc_html( $term->name ); ?>
+							<?php foreach ( $category_terms as $category_term ) : ?>
+								<option value="<?php echo esc_attr( $category_term->slug ); ?>">
+									<?php echo esc_html( $category_term->name ); ?>
 								</option>
 							<?php endforeach; ?>
 							<option value="_custom"><?php esc_html_e( '+ Add New Category', 'wpfaevent' ); ?></option>
 						</select>
-						<input type="text" id="wpfa-speaker-category-custom" name="category_custom" 
+						<input type="text" id="wpfa-speaker-category-custom" name="category_custom"
 							placeholder="<?php echo esc_attr__( 'Enter new category', 'wpfaevent' ); ?>" style="display:none; margin-top: 5px;">
 					<?php else : ?>
-						<input type="text" id="wpfa-speaker-category-text" name="category" 
+						<input type="text" id="wpfa-speaker-category-text" name="category"
 							placeholder="<?php echo esc_attr__( 'e.g., AI, Web Development, Cloud', 'wpfaevent' ); ?>">
 					<?php endif; ?>
 				</div>
-				
+
 				<div class="wpfa-form-group">
 					<label for="wpfa-speaker-bio"><?php esc_html_e( 'Biography', 'wpfaevent' ); ?> *</label>
 					<textarea id="wpfa-speaker-bio" name="bio" rows="4" required></textarea>
