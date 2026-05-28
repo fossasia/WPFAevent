@@ -446,7 +446,7 @@ class Wpfaevent_Admin {
 	 */
 	private function sanitize_post_id_list( $post_ids ) {
 		if ( ! is_array( $post_ids ) ) {
-			return array();
+			$post_ids = array( $post_ids );
 		}
 
 		$post_ids = array_map( 'absint', $post_ids );
@@ -509,9 +509,9 @@ class Wpfaevent_Admin {
 			return array();
 		}
 
-		$batch_size  = 100;
+		$batch_size   = 100;
 		$current_page = 1;
-		$speaker_ids = array();
+		$speaker_ids  = array();
 
 		do {
 			$batch_ids = get_posts(
@@ -553,8 +553,9 @@ class Wpfaevent_Admin {
 			}
 
 			$speaker_ids = array_merge( $speaker_ids, $batch_ids );
-			$current_page++;
-		} while ( count( $batch_ids ) === $batch_size );
+			$batch_count = count( $batch_ids );
+			++$current_page;
+		} while ( $batch_count === $batch_size );
 
 		return $this->sanitize_post_id_list( $speaker_ids );
 	}
@@ -580,6 +581,10 @@ class Wpfaevent_Admin {
 			return;
 		}
 
+		if ( ! current_user_can( 'edit_post', $speaker_id ) ) {
+			return;
+		}
+
 		$event_ids   = $this->get_speaker_event_ids( $speaker_id );
 		$event_ids[] = $event_id;
 		$event_ids   = $this->sanitize_post_id_list( $event_ids );
@@ -601,6 +606,14 @@ class Wpfaevent_Admin {
 		$event_id   = absint( $event_id );
 
 		if ( ! $speaker_id || ! $event_id ) {
+			return;
+		}
+
+		if ( 'wpfa_speaker' !== get_post_type( $speaker_id ) ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'edit_post', $speaker_id ) ) {
 			return;
 		}
 
