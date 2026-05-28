@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 // Proxy to existing events listing template.
-$template = __DIR__ . '/../../templates/events-listing-page.php';
+$template = __DIR__ . '/../templates/page-events.php';
 if ( file_exists( $template ) ) {
 	include_once $template;
 } else {

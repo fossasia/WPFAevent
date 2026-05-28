@@ -342,9 +342,7 @@ class Wpfaevent_Templates {
 				}
 			}
 
-			if ( has_shortcode( $post->post_content, 'wpfaevent_template' ) ) {
-				$active = array_merge( $active, array_keys( self::$templates ) );
-			}
+			$active = array_merge( $active, self::get_generic_shortcode_template_keys( $post->post_content ) );
 		}
 
 		return array_values( array_unique( $active ) );
@@ -417,6 +415,45 @@ class Wpfaevent_Templates {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Gets template keys from generic template shortcode instances.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $content Post content.
+	 * @return array<int, string> Template keys used by generic shortcodes.
+	 */
+	private static function get_generic_shortcode_template_keys( $content ) {
+		$active = array();
+
+		if ( false === strpos( $content, '[wpfaevent_template' ) ) {
+			return $active;
+		}
+
+		$pattern = get_shortcode_regex( array( 'wpfaevent_template' ) );
+		if ( ! preg_match_all( '/' . $pattern . '/s', $content, $matches, PREG_SET_ORDER ) ) {
+			return $active;
+		}
+
+		foreach ( $matches as $shortcode_match ) {
+			$attributes = shortcode_parse_atts( $shortcode_match[3] );
+			$attributes = shortcode_atts(
+				array(
+					'template' => 'events',
+				),
+				is_array( $attributes ) ? $attributes : array(),
+				'wpfaevent_template'
+			);
+			$key        = self::normalize_template_key( $attributes['template'] );
+
+			if ( $key ) {
+				$active[] = $key;
+			}
+		}
+
+		return $active;
 	}
 
 	/**

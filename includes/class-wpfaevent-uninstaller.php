@@ -56,8 +56,8 @@ class FOSSASIA_Uninstaller {
 			array(
 				'post_type'      => 'page',
 				'posts_per_page' => -1,
-				'meta_key'       => '_wp_page_template',
-				'compare'        => 'EXISTS',
+				'meta_key'       => '_event_date',
+				'meta_compare'   => 'EXISTS',
 				'fields'         => 'ids', // Only get post IDs for efficiency.
 			)
 		);
