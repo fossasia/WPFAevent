@@ -68,8 +68,8 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent.php';
 function run_wpfaevent() {
 
 	// Load translations.
-	if ( class_exists( 'Wpfaevent_i18n' ) ) {
-		$i18n = new Wpfaevent_i18n();
+	if ( class_exists( 'Wpfaevent_I18n' ) ) {
+		$i18n = new Wpfaevent_I18n();
 		$i18n->load_plugin_textdomain();
 	}
 

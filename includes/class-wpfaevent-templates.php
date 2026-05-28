@@ -31,23 +31,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Wpfaevent_Templates {
 
 	/**
-	 * List of plugin-provided page templates.
-	 *
-	 * Keys are template filenames, values are human-readable labels.
-	 *
-	 * @since 1.0.0
-	 * @var   array<string, string>
-	 */
-	private static $templates = array(
-		'page-landing.php'         => 'WPFA - Landing',
-		'page-speakers.php'        => 'WPFA - Speakers',
-		'page-events.php'          => 'WPFA - Events',
-		'page-past-events.php'     => 'WPFA - Past Events',
-		'page-schedule.php'        => 'WPFA - Schedule',
-		'page-code-of-conduct.php' => 'WPFA - Code of Conduct',
-	);
-
-	/**
 	 * Registers WordPress hooks for template registration and loading.
 	 *
 	 * Hooks into:
@@ -64,13 +47,13 @@ class Wpfaevent_Templates {
 	}
 
 	/**
-	 * Returns localized template labels keyed by template filename.
+	 * Returns plugin-provided page templates with localized labels.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @return array<string, string>
 	 */
-	private static function get_localized_template_labels() {
+	private static function get_templates() {
 		return array(
 			'page-landing.php'         => __( 'WPFA - Landing', 'wpfaevent' ),
 			'page-speakers.php'        => __( 'WPFA - Speakers', 'wpfaevent' ),
@@ -98,7 +81,7 @@ class Wpfaevent_Templates {
 			return $templates;
 		}
 
-		foreach ( self::get_localized_template_labels() as $file => $label ) {
+		foreach ( self::get_templates() as $file => $label ) {
 			$templates[ $file ] = $label;
 		}
 
@@ -119,11 +102,6 @@ class Wpfaevent_Templates {
 	 * @return string Absolute path to the template to load.
 	 */
 	public static function load( $template ) {
-		// Don't load templates for block themes.
-		if ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ) {
-			return $template;
-		}
-
 		if ( is_singular( 'wpfa_speaker' ) ) {
 			$candidate = WPFAEVENT_PATH . 'public/templates/single-wpfa-speaker.php';
 
@@ -132,10 +110,15 @@ class Wpfaevent_Templates {
 			}
 		}
 
+		// Don't load page templates for block themes.
+		if ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ) {
+			return $template;
+		}
+
 		if ( is_singular( 'page' ) ) {
 			$chosen = get_page_template_slug( get_queried_object_id() );
 
-			if ( isset( self::$templates[ $chosen ] ) ) {
+			if ( isset( self::get_templates()[ $chosen ] ) ) {
 				$candidate = WPFAEVENT_PATH . 'public/templates/' . $chosen;
 
 				if ( file_exists( $candidate ) ) {

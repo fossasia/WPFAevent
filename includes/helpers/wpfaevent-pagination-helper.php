@@ -34,7 +34,7 @@ if ( ! function_exists( 'wpfa_render_pagination' ) ) {
 	 * @return void Outputs HTML directly.
 	 */
 	function wpfa_render_pagination( $total_pages, $current_page, $aria_label = 'Pagination', $query_args = array() ) {
-		// Bail if only one page
+		// Bail if there is only one page.
 		if ( $total_pages <= 1 ) {
 			return;
 		}
@@ -43,13 +43,12 @@ if ( ! function_exists( 'wpfa_render_pagination' ) ) {
 
 		echo '<nav class="wpfa-pagination" aria-label="' . esc_attr( $aria_label ) . '">';
 
-		// Previous page link
+		// Previous page link.
 		if ( $current_page > 1 ) {
 			$prev_args = array_merge( $query_args, array( 'paged' => $current_page - 1 ) );
-			$prev_link = esc_url( add_query_arg( $prev_args, $base_url ) );
 			printf(
 				'<a class="wpfa-page wpfa-page-prev" href="%s" rel="prev" aria-label="%s">%s</a>',
-				$prev_link,
+				esc_url( add_query_arg( $prev_args, $base_url ) ),
 				esc_attr__( 'Previous page', 'wpfaevent' ),
 				esc_html__( 'Previous', 'wpfaevent' )
 			);
@@ -60,51 +59,48 @@ if ( ! function_exists( 'wpfa_render_pagination' ) ) {
 			);
 		}
 
-		// Page number links with ellipsis for large ranges
-		$range                = 2; // Number of pages to show on each side of current
+		// Page number links with ellipses for large ranges.
+		$range                = 2; // Number of pages to show on each side of the current page.
 		$ellipsis_shown_left  = false;
 		$ellipsis_shown_right = false;
 
 		for ( $i = 1; $i <= $total_pages; $i++ ) {
-			// Always show first page, last page, and pages within range of current
+			// Always show the first page, last page, and pages within range of the current page.
 			$in_range = ( $i >= ( $current_page - $range ) && $i <= ( $current_page + $range ) );
 			$is_edge  = ( 1 === $i || $total_pages === $i );
 
 			if ( $is_edge || $in_range ) {
 				$args = array_merge( $query_args, array( 'paged' => $i ) );
-				$link = esc_url( add_query_arg( $args, $base_url ) );
-
-				// Current page as span with aria-current, others as links
+				// Current page as a span with aria-current, others as links.
 				if ( $i === $current_page ) {
 					printf(
 						'<span class="wpfa-page is-current" aria-current="page">%d</span>',
-						$i
+						absint( $i )
 					);
 				} else {
 					printf(
 						'<a class="wpfa-page" href="%s">%d</a>',
-						$link,
-						$i
+						esc_url( add_query_arg( $args, $base_url ) ),
+						absint( $i )
 					);
 				}
 			} elseif ( $i < $current_page && ! $ellipsis_shown_left ) {
-				// Left-side ellipsis (between first page and current range)
+				// Left-side ellipsis between the first page and the current range.
 				echo '<span class="wpfa-page wpfa-page-ellipsis" aria-hidden="true">…</span>';
 				$ellipsis_shown_left = true;
 			} elseif ( $i > $current_page && ! $ellipsis_shown_right ) {
-				// Right-side ellipsis (between current range and last page)
+				// Right-side ellipsis between the current range and the last page.
 				echo '<span class="wpfa-page wpfa-page-ellipsis" aria-hidden="true">…</span>';
 				$ellipsis_shown_right = true;
 			}
 		}
 
-		// Next page link
+		// Next page link.
 		if ( $current_page < $total_pages ) {
 			$next_args = array_merge( $query_args, array( 'paged' => $current_page + 1 ) );
-			$next_link = esc_url( add_query_arg( $next_args, $base_url ) );
 			printf(
 				'<a class="wpfa-page wpfa-page-next" href="%s" rel="next" aria-label="%s">%s</a>',
-				$next_link,
+				esc_url( add_query_arg( $next_args, $base_url ) ),
 				esc_attr__( 'Next page', 'wpfaevent' ),
 				esc_html__( 'Next', 'wpfaevent' )
 			);
