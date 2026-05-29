@@ -11,7 +11,7 @@ permissions:
   pull-requests: read
 
 jobs:
-  changes:
+  file-filter:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     outputs:
@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -27,10 +27,10 @@ jobs:
               - '**/*.php'
 
   phpcs:
-    needs: changes
+    needs: file-filter
     if: |
       always() &&
-      (github.event_name == 'push' || needs.changes.outputs.php == 'true')
+      (github.event_name == 'push' || needs.file-filter.outputs.php == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

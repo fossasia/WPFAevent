@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Fired during plugin deactivation
+ * Fired during plugin deactivation.
  *
  * @link       https://fossasia.org
  * @since      1.0.0
@@ -23,14 +22,10 @@
 class Wpfaevent_Deactivator {
 
 	/**
-	 * Short Description. (use period)
-	 *
-	 * Long Description.
+	 * Deactivate the plugin.
 	 *
 	 * @since    1.0.0
 	 */
 	public static function deactivate() {
-
 	}
-
 }

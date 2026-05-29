@@ -1,7 +1,6 @@
 <?php
-
 /**
- * The plugin bootstrap file
+ * The plugin bootstrap file.
  *
  * This file is read by WordPress to generate the plugin information in the plugin
  * admin area. This file also includes all of the dependencies used by the plugin,
@@ -34,12 +33,12 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Currently plugin version.
  */
-// Define constants
+// Define constants.
 define( 'WPFAEVENT_VERSION', '1.0.0' );
 define( 'WPFAEVENT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WPFAEVENT_URL', plugin_dir_url( __FILE__ ) );
 
-// Requires
+// Requires.
 require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-i18n.php';
 require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-loader.php';
 require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-activator.php';
@@ -47,9 +46,9 @@ require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-deactivator.php';
 require_once WPFAEVENT_PATH . 'includes/class-wpfaevent-templates.php';
 require_once WPFAEVENT_PATH . 'includes/helpers/wpfaevent-pagination-helper.php';
 
-// Activation / Deactivation hooks
-register_activation_hook( __FILE__, [ 'Wpfaevent_Activator', 'activate' ] );
-register_deactivation_hook( __FILE__, [ 'Wpfaevent_Deactivator', 'deactivate' ] );
+// Activation / Deactivation hooks.
+register_activation_hook( __FILE__, array( 'Wpfaevent_Activator', 'activate' ) );
+register_deactivation_hook( __FILE__, array( 'Wpfaevent_Deactivator', 'deactivate' ) );
 
 /**
  * The core plugin class that is used to define internationalization,
@@ -68,18 +67,18 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent.php';
  */
 function run_wpfaevent() {
 
-	// Load translations
-	if ( class_exists( 'Wpfaevent_i18n' ) ) {
-		$i18n = new Wpfaevent_i18n();
+	// Load translations.
+	if ( class_exists( 'Wpfaevent_I18n' ) ) {
+		$i18n = new Wpfaevent_I18n();
 		$i18n->load_plugin_textdomain();
 	}
 
-	// Initialize page templates
-	if ( class_exists( 'WPFA_Templates' ) ) {
-		WPFA_Templates::init();
+	// Initialize page templates.
+	if ( class_exists( 'Wpfaevent_Templates' ) ) {
+		Wpfaevent_Templates::init();
 	}
 
-	// Run the core plugin
+	// Run the core plugin.
 	if ( class_exists( 'Wpfaevent' ) ) {
 		$plugin = new Wpfaevent();
 		$plugin->run();
@@ -91,5 +90,5 @@ run_wpfaevent();
 // Register WP-CLI commands when running in CLI context.
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	require_once WPFAEVENT_PATH . 'includes/cli/class-wpfa-cli.php';
-	WP_CLI::add_command( 'wpfa seed', [ 'WPFA_CLI', 'seed' ] );
+	WP_CLI::add_command( 'wpfa seed', array( 'WPFA_CLI', 'seed' ) );
 }

@@ -31,43 +31,67 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  *
- * @param int $per_page Number of past events per page. Default 6.
+ * @param int $posts_per_page Number of past events per page. Default 6.
  */
-$per_page = max( 1, (int) apply_filters( 'wpfa_past_events_per_page', 6 ) );
-$paged    = max( 1, (int) get_query_var( 'paged', 1 ) );
+$wpfa_past_events_per_page = max( 1, (int) apply_filters( 'wpfa_past_events_per_page', 6 ) );
+$wpfa_past_events_paged    = max( 1, (int) get_query_var( 'paged', 1 ) );
 
-// Query past events (end date before today)
+// Query past events (end date before today).
 $today = current_time( 'Y-m-d' );
-$args  = [
+$args  = array(
 	'post_type'      => 'wpfa_event',
 	'post_status'    => 'publish',
-	'meta_query'     => [
-		[
-			'key'     => 'wpfa_event_end_date',
-			'value'   => $today,
-			'compare' => '<',
-			'type'    => 'DATE',
-		],
-	],
-	'orderby'        => 'meta_value',
-	'meta_key'       => 'wpfa_event_end_date',
-	'meta_type'      => 'DATE',
-	'order'          => 'DESC',
-	'posts_per_page' => $per_page,
-	'paged'          => $paged,
-];
+	'posts_per_page' => -1,
+	'fields'         => 'ids',
+	'no_found_rows'  => true,
+);
 
-$query = new WP_Query( $args );
+$event_ids         = get_posts( $args );
+$past_events       = array();
+$past_event_offset = ( $wpfa_past_events_paged - 1 ) * $wpfa_past_events_per_page;
 
-// Get site logo
+foreach ( $event_ids as $event_id ) {
+	$end_date = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
+
+	if ( empty( $end_date ) || $end_date >= $today ) {
+		continue;
+	}
+
+	$past_events[] = array(
+		'id'       => (int) $event_id,
+		'end_date' => $end_date,
+	);
+}
+
+usort(
+	$past_events,
+	static function ( $event_a, $event_b ) {
+		$date_compare = strcmp( $event_b['end_date'], $event_a['end_date'] );
+
+		if ( 0 !== $date_compare ) {
+			return $date_compare;
+		}
+
+		if ( $event_a['id'] === $event_b['id'] ) {
+			return 0;
+		}
+
+		return ( $event_a['id'] < $event_b['id'] ) ? -1 : 1;
+	}
+);
+
+$total_past_events = count( $past_events );
+$paged_past_events = array_slice( $past_events, $past_event_offset, $wpfa_past_events_per_page );
+
+// Get site logo.
 $site_logo_url = get_option( 'wpfa_site_logo_url', '' );
 if ( empty( $site_logo_url ) ) {
 	$site_logo_url = WPFAEVENT_URL . 'assets/images/logo.png';
 }
 $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 
-// Set up header variables for the partial
-$header_vars = [
+// Set up header variables for the partial.
+$header_vars = array(
 	'site_logo_url'        => $site_logo_url,
 	'event_page_url'       => home_url( '/events/' ),
 	'show_back_button'     => false,
@@ -75,7 +99,7 @@ $header_vars = [
 	'back_button_text'     => __( 'Back to Event', 'wpfaevent' ),
 	'register_button_url'  => '',
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
-];
+);
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -89,7 +113,7 @@ $header_vars = [
 
 <div id="page" class="site">
 	<?php
-	// Load shared navigation header
+	// Load shared navigation header.
 	$site_logo_url        = $header_vars['site_logo_url'];
 	$event_page_url       = $header_vars['event_page_url'];
 	$show_back_button     = $header_vars['show_back_button'];
@@ -118,36 +142,37 @@ $header_vars = [
 		</section>
 
 		<div class="container">
-			<?php if ( $query->have_posts() ) : ?>
+			<?php if ( $paged_past_events ) : ?>
 				<div class="wpfa-results-info">
 					<?php
+					$wpfa_past_events_showing = count( $paged_past_events );
+					$wpfa_past_events_total   = $total_past_events;
 					printf(
 						/* translators: %1$d: number of events showing, %2$d: total events found */
 						esc_html__( 'Showing %1$d of %2$d past events', 'wpfaevent' ),
-						count( $query->posts ),
-						$query->found_posts
+						absint( $wpfa_past_events_showing ),
+						absint( $wpfa_past_events_total )
 					);
 					?>
 				</div>
 
 				<div class="wpfa-past-events-grid" id="wpfa-past-events-grid">
 					<?php
-					while ( $query->have_posts() ) :
-						$query->the_post();
+					foreach ( $paged_past_events as $past_event ) :
 						?>
 						<?php
-						$event_id      = get_the_ID();
-						$title         = get_the_title();
-						$excerpt       = get_the_excerpt();
+						$event_id      = $past_event['id'];
+						$event_title   = get_the_title( $event_id );
+						$excerpt       = get_the_excerpt( $event_id );
 						$start_date    = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
 						$end_date      = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
 						$location      = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
 						$event_url_raw = get_post_meta( $event_id, 'wpfa_event_url', true );
-						$event_url     = $event_url_raw ? esc_url( $event_url_raw ) : get_permalink();
+						$event_url     = $event_url_raw ? esc_url( $event_url_raw ) : get_permalink( $event_id );
 
 						$image_url = get_the_post_thumbnail_url( $event_id, 'medium' );
 
-						// Format date for display
+						// Format date for display.
 						$display_date = '';
 
 						if ( ! empty( $start_date ) ) {
@@ -155,13 +180,13 @@ $header_vars = [
 
 							if ( $start_datetime instanceof DateTime ) {
 
-								// Default: single-day event
+								// Default: single-day event.
 								$display_date = date_i18n(
 									get_option( 'date_format' ),
 									$start_datetime->getTimestamp()
 								);
 
-								// Multi-day event
+								// Multi-day event.
 								if ( ! empty( $end_date ) && $end_date !== $start_date ) {
 									$end_datetime = date_create( $end_date );
 
@@ -175,7 +200,7 @@ $header_vars = [
 							}
 						}
 
-						// If no excerpt, strip tags and get a trimmed version of content
+						// If no excerpt, strip tags and get a trimmed version of content.
 						if ( empty( $excerpt ) ) {
 							$content = get_post_field( 'post_content', $event_id );
 							$excerpt = wp_trim_words( $content, 20, '...' );
@@ -185,7 +210,7 @@ $header_vars = [
 							<a href="<?php echo esc_url( $event_url ); ?>" class="wpfa-past-event-card-link">
 								<?php if ( $image_url ) : ?>
 									<div class="wpfa-past-event-card-image">
-										<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy" />
+										<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $event_title ); ?>" loading="lazy" />
 									</div>
 								<?php else : ?>
 									<div class="wpfa-past-event-card-image">
@@ -199,7 +224,7 @@ $header_vars = [
 								<?php endif; ?>
 								<div class="wpfa-past-event-card-content">
 									<h3 class="wpfa-past-event-card-title">
-										<?php echo esc_html( $title ); ?>
+										<?php echo esc_html( $event_title ); ?>
 									</h3>
 									
 									<?php if ( ! empty( $excerpt ) ) : ?>
@@ -229,37 +254,34 @@ $header_vars = [
 								</div>
 							</a>
 						</article>
-					<?php endwhile; ?>
+					<?php endforeach; ?>
 				</div>
 
-				<?php wp_reset_postdata(); ?>
-
 				<?php
-				// Pagination
-				$total = max( 1, (int) ceil( $query->found_posts / $per_page ) );
+				// Pagination.
+				$total = max( 1, (int) ceil( $total_past_events / $wpfa_past_events_per_page ) );
 				if ( function_exists( 'wpfa_render_pagination' ) ) {
 					wpfa_render_pagination(
 						$total,
-						$paged,
+						$wpfa_past_events_paged,
 						__( 'Past events pagination', 'wpfaevent' )
 					);
-				} else {
-					// Manual pagination similar to page-speakers.php
-					if ( $total > 1 ) :
-						echo '<nav class="wpfa-pagination" aria-label="' . esc_attr__( 'Past events pagination', 'wpfaevent' ) . '">';
-						for ( $i = 1; $i <= $total; $i++ ) {
-							$link       = esc_url( get_pagenum_link( $i ) );
-							$is_current = ( $i === $paged );
-							printf(
-								'<a class="wpfa-page %s" href="%s"%s>%d</a>',
-								$is_current ? 'is-current' : '',
-								$link,
-								$is_current ? ' aria-current="page"' : '',
-								$i
-							);
-						}
-						echo '</nav>';
-					endif;
+				} elseif ( $total > 1 ) {
+					// Manual pagination similar to page-speakers.php.
+					echo '<nav class="wpfa-pagination" aria-label="' . esc_attr__( 'Past events pagination', 'wpfaevent' ) . '">';
+					for ( $page_num = 1; $page_num <= $total; $page_num++ ) {
+						$pagination_url = get_pagenum_link( $page_num );
+						$is_current     = ( $page_num === $wpfa_past_events_paged );
+						$page_classes   = trim( 'wpfa-page' . ( $is_current ? ' is-current' : '' ) );
+						printf(
+							'<a class="%1$s" href="%2$s"%3$s>%4$s</a>',
+							esc_attr( $page_classes ),
+							esc_url( $pagination_url ),
+							$is_current ? ' aria-current="page"' : '',
+							esc_html( (string) $page_num )
+						);
+					}
+					echo '</nav>';
 				}
 				?>
 
