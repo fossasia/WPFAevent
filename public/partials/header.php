@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Default values
+// Default values.
 $site_logo_url               = isset( $site_logo_url ) ? $site_logo_url : WPFAEVENT_URL . 'assets/images/logo.png';
 $event_page_url              = isset( $event_page_url ) ? $event_page_url : home_url( '/events/' );
 $show_back_button            = isset( $show_back_button ) ? $show_back_button : false;
@@ -22,10 +22,10 @@ $default_register_button_url = apply_filters( 'wpfaevent_register_button_url', '
 $register_button_url         = isset( $register_button_url ) ? $register_button_url : $default_register_button_url;
 $register_button_text        = isset( $register_button_text ) ? $register_button_text : __( 'Register', 'wpfaevent' );
 
-// Get Code of Conduct page ID (with caching handled by cache class)
+// Get the Code of Conduct page ID, with caching handled by the cache class.
 $coc_page_id = Wpfaevent_Cache::get_coc_page_id();
 
-// Determine if current page is Code of Conduct
+// Determine whether the current page is the Code of Conduct page.
 $is_current = ( $coc_page_id && is_page( $coc_page_id ) ) ? 'active' : '';
 
 // Allow customization of events URLs via filters while keeping current behavior as default.
