@@ -196,6 +196,7 @@ class Wpfaevent {
 
 		// Register settings page.
 		$this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
+		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_eventyay_import_settings' );
 
 		// Add settings link to the plugins page.
 		$plugin_basename = plugin_basename( dirname( __DIR__ ) . '/wpfaevent.php' );
@@ -216,6 +217,10 @@ class Wpfaevent {
 		$this->loader->add_action( 'wp_ajax_wpfa_add_speaker', $this->plugin_admin, 'ajax_add_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_update_speaker', $this->plugin_admin, 'ajax_update_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_delete_speaker', $this->plugin_admin, 'ajax_delete_speaker' );
+
+		// Register Eventyay sync on the maintained admin path.
+		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $this->plugin_admin, 'ajax_sync_eventyay' );
+		$this->loader->add_action( 'admin_post_wpfaevent_import_eventyay_events', $this->plugin_admin, 'handle_eventyay_events_import' );
 	}
 
 	/**
