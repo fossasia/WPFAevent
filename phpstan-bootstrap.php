@@ -10,6 +10,15 @@
  * @since   1.0.0
  */
 
+// Prevents PHPStan from treating guarded code as unreachable/dead code.
+if ( ! defined( 'WPINC' ) ) {
+	define( 'WPINC', 'wp-includes/' );
+}
+
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ . '/' );
+}
+
 // Dynamically extract the plugin version from the main file to prevent configuration drift.
 if ( ! defined( 'WPFAEVENT_VERSION' ) ) {
 	define(
