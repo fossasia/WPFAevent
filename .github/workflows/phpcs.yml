@@ -8,23 +8,43 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
+  file-filter:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      php: ${{ steps.filter.outputs.php }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            php:
+              - '**/*.php'
+
   phpcs:
+    needs: file-filter
+    if: |
+      always() &&
+      (github.event_name == 'push' || needs.file-filter.outputs.php == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-      
+
       - name: Validate composer.json
         run: composer validate
-      
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
-      
+
       - name: Run PHPCS
         run: composer phpcs
