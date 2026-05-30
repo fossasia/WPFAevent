@@ -100,6 +100,23 @@ class Wpfaevent_Templates {
 	}
 
 	/**
+	 * Returns localized template labels keyed by template filename.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<string, string>
+	 */
+	private static function get_localized_template_labels() {
+		$labels = array();
+
+		foreach ( self::$templates as $key => $template ) {
+			$labels[ $template['file'] ] = self::get_template_label( $key );
+		}
+
+		return $labels;
+	}
+
+	/**
 	 * Registers plugin page templates with WordPress.
 	 *
 	 * @since 1.0.0
@@ -108,8 +125,8 @@ class Wpfaevent_Templates {
 	 * @return array<string, string> Modified templates array including plugin templates.
 	 */
 	public static function register( $templates ) {
-		foreach ( self::$templates as $key => $template ) {
-			$templates[ $template['file'] ] = self::get_template_label( $key );
+		foreach ( self::get_localized_template_labels() as $file => $label ) {
+			$templates[ $file ] = $label;
 		}
 
 		return $templates;

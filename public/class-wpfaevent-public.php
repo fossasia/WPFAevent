@@ -343,7 +343,7 @@ class Wpfaevent_Public {
 		* if ( is_page_template( 'page-speakers.php' ) ) {
 		*     wp_enqueue_style(
 		*         $this->plugin_name . '-speakers',
-		*         plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/templates/speakers.css',
+		*         plugin_dir_url( __DIR__ ) . 'public/css/templates/speakers.css',
 		*         array(
 		*             $this->plugin_name,
 		*             $this->plugin_name . '-navigation',
