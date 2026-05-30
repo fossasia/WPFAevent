@@ -1,11 +1,18 @@
 # Node/Composer caches (in case added later)
 node_modules/
-vendor/
-composer.lock
 package-lock.json
+
 # OS/editor junk
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
 
+# Composer dependencies
+vendor/
+
+# PHPStan result cache
+tmp/
+
+# Local PHPStan overrides (allows developers to test stricter local settings without touching the .dist config)
+phpstan.neon
