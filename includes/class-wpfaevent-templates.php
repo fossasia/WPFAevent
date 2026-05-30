@@ -31,6 +31,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Wpfaevent_Templates {
 
 	/**
+	 * List of plugin-provided page templates.
+	 *
+	 * Keys are template filenames, values are human-readable labels.
+	 *
+	 * @since 1.0.0
+	 * @var   array<string, string>
+	 */
+	private static $templates = array(
+		'page-landing.php'         => 'WPFA - Landing',
+		'page-speakers.php'        => 'WPFA - Speakers',
+		'page-events.php'          => 'WPFA - Events',
+		'page-past-events.php'     => 'WPFA - Past Events',
+		'page-schedule.php'        => 'WPFA - Schedule',
+		'page-code-of-conduct.php' => 'WPFA - Code of Conduct',
+	);
+
+	/**
 	 * Registers WordPress hooks for template registration and loading.
 	 *
 	 * Hooks into:
@@ -47,13 +64,13 @@ class Wpfaevent_Templates {
 	}
 
 	/**
-	 * Returns plugin-provided page templates with localized labels.
+	 * Returns localized template labels keyed by template filename.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @return array<string, string>
 	 */
-	private static function get_templates() {
+	private static function get_localized_template_labels() {
 		return array(
 			'page-landing.php'         => __( 'WPFA - Landing', 'wpfaevent' ),
 			'page-speakers.php'        => __( 'WPFA - Speakers', 'wpfaevent' ),
@@ -81,7 +98,7 @@ class Wpfaevent_Templates {
 			return $templates;
 		}
 
-		foreach ( self::get_templates() as $file => $label ) {
+		foreach ( self::get_localized_template_labels() as $file => $label ) {
 			$templates[ $file ] = $label;
 		}
 
@@ -118,7 +135,7 @@ class Wpfaevent_Templates {
 		if ( is_singular( 'page' ) ) {
 			$chosen = get_page_template_slug( get_queried_object_id() );
 
-			if ( isset( self::get_templates()[ $chosen ] ) ) {
+			if ( isset( self::$templates[ $chosen ] ) ) {
 				$candidate = WPFAEVENT_PATH . 'public/templates/' . $chosen;
 
 				if ( file_exists( $candidate ) ) {
