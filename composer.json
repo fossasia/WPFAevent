@@ -6,25 +6,32 @@
     "license": "Apache-2.0",
 
     "require-dev": {
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "php-stubs/wp-cli-stubs": "^2.12",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.1",
         "squizlabs/php_codesniffer": "^3.13",
-        "wp-coding-standards/wpcs": "^3.3",
-        "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+        "szepeviktor/phpstan-wordpress": "^2.0",
+        "wp-coding-standards/wpcs": "^3.3"
     },
 
     "scripts": {
         "phpcs": "phpcs",
-        "phpcbf": "phpcbf"
+        "phpcbf": "phpcbf",
+        "phpstan": "phpstan analyse --memory-limit=2048M"
     },
 
     "scripts-descriptions": {
         "phpcs": "Run PHP_CodeSniffer to check coding standards",
-        "phpcbf": "Run PHP Code Beautifier to fix coding standards"
+        "phpcbf": "Run PHP Code Beautifier to fix coding standards",
+        "phpstan": "Run PHPStan static analysis for PHP code quality"
     },
     
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
         }
     }
 }
