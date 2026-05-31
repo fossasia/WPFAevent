@@ -82,7 +82,7 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
-		// Event hero section lead text
+		// Event hero section lead text.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_event_lead_text',
@@ -95,7 +95,7 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
-		// Event registration link
+		// Event registration link.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_event_registration_link',
@@ -108,7 +108,7 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
-		// Call for speakers link
+		// Call for speakers link.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_event_cfs_link',

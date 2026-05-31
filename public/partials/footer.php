@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Shared Footer Partial
  * Displays the footer used across WPFA templates, matching the MVP design exactly.
@@ -16,14 +15,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Default footer text with filter for customization
+// Default footer text with filter for customization.
 $default_footer = '© FOSSASIA • FOSSASIA Summit — Mar 8–10, 2026 • True Digital Park West, Bangkok';
 $footer_text    = get_option( 'wpfa_footer_text', '' );
 if ( empty( $footer_text ) ) {
 	$footer_text = apply_filters( 'wpfa_default_footer_text', $default_footer );
 }
 
-// Check if user is admin
+// Check if user is admin.
 $is_admin = current_user_can( 'manage_options' );
 ?>
 

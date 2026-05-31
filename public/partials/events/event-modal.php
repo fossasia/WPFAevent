@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Event Modal Partial
  * Unified modal for creating and editing events.

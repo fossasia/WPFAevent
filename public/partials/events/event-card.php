@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Event Card Partial
  *
@@ -21,25 +20,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Use the passed $event_id if it exists; otherwise, fall back to the loop ID.
 $event_id = $event_id ?? get_the_ID();
 
-// Exit if we still don't have a valid ID (e.g., if called outside the loop)
+// Exit if we still don't have a valid ID (e.g., if called outside the loop).
 if ( ! $event_id ) {
 	return;
 }
 
 $today = current_time( 'Y-m-d' );
 
-// Get meta data exactly as the main template does
+// Get meta data exactly as the main template does.
 $event_date        = get_post_meta( $event_id, 'wpfa_event_start_date', true );
 $event_end_date    = get_post_meta( $event_id, 'wpfa_event_end_date', true );
 $event_place       = get_post_meta( $event_id, 'wpfa_event_location', true );
 $event_description = get_the_excerpt( $event_id );
-$featured_img_url  = get_the_post_thumbnail_url( $event_id, 'large' ) ?: '';
+$featured_img_url  = get_the_post_thumbnail_url( $event_id, 'large' ) ? get_the_post_thumbnail_url( $event_id, 'large' ) : '';
 
-// Check if date is valid (Admin Warning Logic)
+// Check if date is valid (Admin Warning Logic).
 $is_valid_date = ! empty( $event_date ) && strtotime( $event_date ) !== false;
 $is_past_event = $is_valid_date && strtotime( $event_date ) < strtotime( $today );
 
-// Format the date string
+// Format the date string.
 $formatted_date = __( 'Date not set', 'wpfaevent' );
 if ( $is_valid_date ) {
 	if ( ! empty( $event_end_date ) && $event_end_date !== $event_date && strtotime( $event_end_date ) !== false ) {

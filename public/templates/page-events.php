@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Template Name: WPFA - Events
  *
@@ -8,7 +7,7 @@
  * - Real-time client-side event filtering by name, location, and description.
  * - Dynamic Meta Queries: Public users see upcoming events; Admins see all events.
  * - Integrated Admin CRUD: Front-end tools for event management via AJAX modals.
- * - Shows both upcoming AND past events on the same page (past events after upcoming, without admin features).
+ * - Shows both upcoming AND past events on the same page.
  *
  * @package    Wpfaevent
  * @subpackage Wpfaevent/public/templates
@@ -23,104 +22,103 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-// Set up query configurations and pagination baseline from Cleanup PR
 $today           = current_time( 'Y-m-d' );
 $events_per_page = max( 1, (int) apply_filters( 'wpfa_events_per_page', 10 ) );
 $current_page    = max( 1, (int) get_query_var( 'paged', 1 ) );
+$is_admin        = current_user_can( 'manage_options' );
 
-$future_date_query = array(
-	'relation' => 'AND',
-	array(
-		'key'     => 'wpfa_event_start_date',
-		'compare' => 'EXISTS',
-	),
-	array(
-		'key'     => 'wpfa_event_start_date',
-		'value'   => '',
-		'compare' => '!=',
-	),
-	array(
-		'relation' => 'OR',
-		array(
-			'key'     => 'wpfa_event_end_date',
-			'value'   => $today,
-			'compare' => '>=',
-			'type'    => 'DATE',
-		),
-		array(
-			'key'     => 'wpfa_event_start_date',
-			'value'   => $today,
-			'compare' => '>=',
-			'type'    => 'DATE',
-		),
-	),
-);
-
-/**
- * Define Meta Queries separately to keep main $args readable.
- */
-$missing_date_query = array(
-	'relation' => 'OR',
-	array(
-		'key'     => 'wpfa_event_start_date',
-		'compare' => 'NOT EXISTS',
-	),
-	array(
-		'key'     => 'wpfa_event_start_date',
-		'value'   => '',
-		'compare' => '=',
-	),
-);
-
-// Determine final meta query based on user role
-$final_meta_query = current_user_can( 'manage_options' )
-	? array(
-		'relation' => 'OR',
-		$future_date_query,
-		$missing_date_query,
-	)
-	: $future_date_query;
-
-// Query for UPCOMING events using dynamic pagination
-$upcoming_args = array(
+// Pull all published event IDs to replicate upstream's data handling pattern.
+$args = array(
 	'post_type'      => 'wpfa_event',
 	'post_status'    => 'publish',
-	'posts_per_page' => $events_per_page,
-	'paged'          => $current_page,
-	'orderby'        => 'meta_value',
-	'meta_key'       => 'wpfa_event_start_date',
-	'meta_type'      => 'DATE',
-	'order'          => 'ASC',
-	'meta_query'     => $final_meta_query,
+	'posts_per_page' => -1,
+	'fields'         => 'ids',
+	'no_found_rows'  => true,
 );
 
-$upcoming_query = new WP_Query( $upcoming_args );
+$event_ids       = get_posts( $args );
+$upcoming_events = array();
+$past_events     = array();
 
-// Query for PAST events (for display on same page, without admin features)
-$past_args = array(
-	'post_type'      => 'wpfa_event',
-	'post_status'    => 'publish',
-	'posts_per_page' => 6, // Limit past events to 6 most recent
-	'meta_query'     => array(
-		array(
-			'key'     => 'wpfa_event_end_date',
-			'value'   => $today,
-			'compare' => '<',
-			'type'    => 'DATE',
-		),
-	),
-	'orderby'        => 'meta_value',
-	'meta_key'       => 'wpfa_event_end_date',
-	'meta_type'      => 'DATE',
-	'order'          => 'DESC', // Most recent first
+foreach ( $event_ids as $eid ) {
+	$start    = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_start_date', true ) );
+	$end      = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_end_date', true ) );
+	$is_valid = ! empty( $start );
+
+	// Admins can see items even if the start date metadata is missing or broken.
+	if ( ! $is_valid && $is_admin ) {
+		$upcoming_events[] = array(
+			'id'    => (int) $eid,
+			'start' => '',
+			'end'   => $end,
+		);
+		continue;
+	}
+
+	if ( ! $is_valid ) {
+		continue;
+	}
+
+	// Route events into upcoming or past piles depending on target timestamp values.
+	$is_upcoming = ( $start >= $today || ( ! empty( $end ) && $end >= $today ) );
+
+	if ( $is_upcoming ) {
+		$upcoming_events[] = array(
+			'id'    => (int) $eid,
+			'start' => $start,
+			'end'   => $end,
+		);
+	} else {
+		$past_events[] = array(
+			'id'    => (int) $eid,
+			'start' => $start,
+			'end'   => $end,
+		);
+	}
+}
+
+// Sort upcoming events chronologically ascending (Soonest first).
+usort(
+	$upcoming_events,
+	static function ( $event_a, $event_b ) {
+		$date_compare = strcmp( $event_a['start'], $event_b['start'] );
+		if ( 0 !== $date_compare ) {
+			return $date_compare;
+		}
+		if ( $event_a['id'] === $event_b['id'] ) {
+			return 0;
+		}
+		return ( $event_a['id'] < $event_b['id'] ) ? -1 : 1;
+	}
 );
 
-$past_query = new WP_Query( $past_args );
+// Sort past events chronologically descending (Most recent historical first).
+usort(
+	$past_events,
+	static function ( $event_a, $event_b ) {
+		$date_compare = strcmp( $event_b['end'], $event_a['end'] );
+		if ( 0 !== $date_compare ) {
+			return $date_compare;
+		}
+		if ( $event_a['id'] === $event_b['id'] ) {
+			return 0;
+		}
+		return ( $event_a['id'] > $event_b['id'] ) ? -1 : 1;
+	}
+);
 
-// Check if user is admin for admin functionality
-$is_admin = current_user_can( 'manage_options' );
+$total_upcoming = count( $upcoming_events );
+$total_past     = count( $past_events );
+$total_events   = $total_upcoming + $total_past;
 
-// Set up header configuration
+// Slice upcoming list into active views according to pagination offsets.
+$offset       = ( $current_page - 1 ) * $events_per_page;
+$paged_events = array_slice( $upcoming_events, $offset, $events_per_page );
+
+// Limit displayed past events on this hub dashboard to the top 6.
+$displayed_past_events = array_slice( $past_events, 0, 6 );
+
+// Set up custom layout header configurations.
 $header_vars = array(
 	'site_logo_url'        => apply_filters( 'wpfa_site_logo_url', get_option( 'wpfa_site_logo_url', WPFAEVENT_URL . 'assets/images/logo.png' ) ),
 	'event_page_url'       => home_url( '/events/' ),
@@ -131,7 +129,6 @@ $header_vars = array(
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
 );
 ?>
-
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -189,39 +186,38 @@ $header_vars = array(
 					</div>
 
 					<div class="results-info">
-						<?php
-						$total_upcoming = $upcoming_query->found_posts;
-						$total_past     = $past_query->found_posts;
-						$total_events   = $total_upcoming + $total_past;
-						?>
 						<?php esc_html_e( 'Showing', 'wpfaevent' ); ?> <span id="resultsCount"><?php echo esc_html( $total_events ); ?></span> <?php esc_html_e( 'events', 'wpfaevent' ); ?>
 					</div>
 
 					<!-- Events Container for UPCOMING events -->
 					<div id="events-container">
-						<?php if ( $upcoming_query->have_posts() ) : ?>
+						<?php if ( ! empty( $paged_events ) ) : ?>
 							<?php
-							while ( $upcoming_query->have_posts() ) :
-								$upcoming_query->the_post();
-								$event_id = get_the_ID();
+							foreach ( $paged_events as $event ) :
+								$event_id = $event['id'];
+								// Setup the global post context for structural template partial dependencies.
+								$post = get_post( $event_id ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+								setup_postdata( $post );
+
 								include WPFAEVENT_PATH . 'public/partials/events/event-card.php';
-							endwhile;
+							endforeach;
+							wp_reset_postdata();
 							?>
-							<?php wp_reset_postdata(); ?>
 						<?php else : ?>
 							<p class="placeholder-text"><?php esc_html_e( 'No upcoming events found.', 'wpfaevent' ); ?></p>
 						<?php endif; ?>
 					</div>
 
 					<?php
-					// Display navigation block cleanly using WP_Query calculated lengths
-					if ( $upcoming_query->max_num_pages > 1 ) {
-						wpfa_render_pagination( $upcoming_query->max_num_pages, $current_page, __( 'Events pagination', 'wpfaevent' ) );
+					// Render pagination using upstream's collection counter tracking.
+					$total_pages = max( 1, (int) ceil( $total_upcoming / $events_per_page ) );
+					if ( $total_pages > 1 ) {
+						wpfa_render_pagination( $total_pages, $current_page, __( 'Events pagination', 'wpfaevent' ) );
 					}
 					?>
 
 					<!-- Past Events Section (if there are past events) -->
-					<?php if ( $past_query->have_posts() ) : ?>
+					<?php if ( ! empty( $displayed_past_events ) ) : ?>
 						<div class="past-events-section">
 							<div class="main-content-header">
 								<h2><?php esc_html_e( 'Past Events', 'wpfaevent' ); ?></h2>
@@ -230,23 +226,21 @@ $header_vars = array(
 							<!-- Past Events Container -->
 							<div id="past-events-container" class="events-container">
 								<?php
-								while ( $past_query->have_posts() ) :
-									$past_query->the_post();
-									$event_id = get_the_ID();
+								foreach ( $displayed_past_events as $pevent ) :
+									$event_id = $pevent['id'];
 
-									// Get event data
-									$event_date        = get_post_meta( $event_id, 'wpfa_event_start_date', true );
-									$event_end_date    = get_post_meta( $event_id, 'wpfa_event_end_date', true );
+									// Extract historical metadata directly.
+									$event_date        = $pevent['start'];
+									$event_end_date    = $pevent['end'];
 									$event_place       = get_post_meta( $event_id, 'wpfa_event_location', true );
 									$event_description = get_the_excerpt( $event_id );
-									$featured_img_url  = get_the_post_thumbnail_url( $event_id, 'large' ) ?: '';
+									$thumbnail_raw     = get_the_post_thumbnail_url( $event_id, 'large' );
+									$featured_img_url  = ! empty( $thumbnail_raw ) ? $thumbnail_raw : '';
 
-									// Format date
+									// Format descriptive timeline layout markers.
 									$formatted_date = __( 'Date not set', 'wpfaevent' );
 									if ( ! empty( $event_date ) ) {
-										$start = date_create( $event_date );
 										if ( ! empty( $event_end_date ) && $event_end_date !== $event_date ) {
-											$end            = date_create( $event_end_date );
 											$formatted_date = date_i18n( 'M j', strtotime( $event_date ) ) . ' - ' . date_i18n( 'M j, Y', strtotime( $event_end_date ) );
 										} else {
 											$formatted_date = date_i18n( 'F j, Y', strtotime( $event_date ) );
@@ -288,8 +282,7 @@ $header_vars = array(
 											</div>
 										</a>
 									</div>
-								<?php endwhile; ?>
-								<?php wp_reset_postdata(); ?>
+								<?php endforeach; ?>
 							</div>
 						</div>
 					<?php endif; ?>
@@ -342,6 +335,7 @@ if ( $is_admin ) {
 }
 ?>
 
+<?php wp_head(); ?>
 <?php wp_footer(); ?>
 </body>
 </html>

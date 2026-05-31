@@ -2,14 +2,22 @@
 /**
  * The public-facing functionality of the plugin.
  *
- * Defines asset loading, template-specific styles/scripts,
- * and frontend JS configuration for WPFA templates.
+ * @link       https://fossasia.org
+ * @since      1.0.0
+ *
+ * @package    Wpfaevent
+ * @subpackage Wpfaevent/public
+ */
+
+/**
+ * The public-facing functionality of the plugin.
+ *
+ * Defines the plugin name, version, and two examples hooks for how to
+ * enqueue the public-facing stylesheet and JavaScript.
  *
  * @package    Wpfaevent
  * @subpackage Wpfaevent/public
  * @author     FOSSASIA <contact@fossasia.org>
- * @link       https://fossasia.org
- * @since      1.0.0
  */
 class Wpfaevent_Public {
 
@@ -172,7 +180,7 @@ class Wpfaevent_Public {
 			'all'
 		);
 
-		// Footer script (handles footer text updates, shared with events config)
+		// Footer script (handles footer text updates, shared with events config).
 		wp_enqueue_script(
 			$this->plugin_name . '-footer',
 			plugin_dir_url( __FILE__ ) . 'js/wpfaevent-footer.js',
@@ -181,13 +189,13 @@ class Wpfaevent_Public {
 			true
 		);
 
-		// Localize footer script data (shared with events config)
+		// Localize footer script data (shared with events config).
 		wp_localize_script(
 			$this->plugin_name . '-footer',
 			'wpfaeventFooterConfig',
 			array(
 				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-				'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ), // Same nonce as events
+				'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ), // Same nonce as events.
 				'isAdmin'    => current_user_can( 'manage_options' ),
 				'i18n'       => array(
 					'saving'            => __( 'Saving...', 'wpfaevent' ),
@@ -296,17 +304,17 @@ class Wpfaevent_Public {
 			);
 		}
 
-		// Events template
+		// Events template.
 		if ( is_page_template( 'page-events.php' ) ) {
 			wp_enqueue_style(
 				$this->plugin_name . '-events',
-				plugin_dir_url( dirname( __FILE__ ) ) . 'public/css/templates/events.css',
+				plugin_dir_url( __DIR__ ) . 'public/css/templates/events.css',
 				array( $this->plugin_name ),
 				$this->version,
 				'all'
 			);
 
-			// Enqueue events JavaScript
+			// Enqueue events JavaScript.
 			wp_enqueue_script(
 				$this->plugin_name . '-events',
 				plugin_dir_url( __FILE__ ) . 'js/wpfaevent-events.js',
@@ -315,16 +323,16 @@ class Wpfaevent_Public {
 				true
 			);
 
-			// Pass data from PHP to JavaScript
+			// Pass data from PHP to JavaScript.
 			wp_localize_script(
 				$this->plugin_name . '-events',
-				'wpfaeventEventsConfig',      // JavaScript object name
+				'wpfaeventEventsConfig',      // JavaScript object name.
 				array(
 					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 					'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ),
 					'isAdmin'    => current_user_can( 'manage_options' ),
 
-					// All translatable strings
+					// All translatable strings.
 					'i18n'       => array(
 						'addEventTitle'      => __( 'Create a New Event', 'wpfaevent' ),
 						'editEventTitle'     => __( 'Edit Event', 'wpfaevent' ),
@@ -333,6 +341,7 @@ class Wpfaevent_Public {
 						'creating'           => __( 'Creating...', 'wpfaevent' ),
 						'saving'             => __( 'Saving...', 'wpfaevent' ),
 						'loading'            => __( 'Loading...', 'wpfaevent' ),
+						/* translators: %s: The name of the event being deleted. */
 						'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
 						'deleteSuccess'      => __( 'Event deleted successfully. The page will now reload.', 'wpfaevent' ),
 						'deleteError'        => __( 'Error deleting event', 'wpfaevent' ),

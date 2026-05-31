@@ -1,5 +1,4 @@
 <?php
-
 /**
  * News Feed Helper Functions
  *
@@ -45,11 +44,11 @@ function wpfa_ensure_feed_loaded() {
 function wpfa_render_latest_news() {
 	wpfa_ensure_feed_loaded();
 
-	// Check for cached news
+	// Check for cached news.
 	$cached_news = get_transient( 'wpfa_latest_news' );
 
 	if ( false !== $cached_news ) {
-		echo $cached_news;
+		echo wp_kses_post( $cached_news );
 		return;
 	}
 
@@ -57,8 +56,7 @@ function wpfa_render_latest_news() {
 	$rss = fetch_feed( 'https://blog.fossasia.org/rss/' );
 
 	if ( is_wp_error( $rss ) ) {
-
-		// Show fallback news
+		// Show fallback news.
 		wpfa_render_fallback_news();
 		return;
 	}
@@ -71,31 +69,33 @@ function wpfa_render_latest_news() {
 
 	ob_start();
 
-	if ( $maxitems == 0 ) {
+	if ( 0 === $maxitems ) {
 		echo '<p>' . esc_html__( 'No news items found.', 'wpfaevent' ) . '</p>';
 	} else {
 		// Loop through each feed item and display each item as a hyperlink.
 		echo '<ul class="news-list">';
 		foreach ( $rss_items as $item ) :
-			$permalink = esc_url( $item->get_permalink() );
-			$title     = esc_html( $item->get_title() );
-			$date      = esc_html( $item->get_date( 'F j, Y' ) );
-			$full_date = esc_attr( sprintf( __( 'Posted %s', 'wpfaevent' ), $item->get_date( 'F j, Y' ) ) );
+			$permalink = $item->get_permalink();
+			$title     = $item->get_title();
+			$date      = $item->get_date( 'F j, Y' );
+
+			/* translators: %s: The human-readable formatted publication date string */
+			$full_date = sprintf( __( 'Posted %s', 'wpfaevent' ), $date );
 			?>
 			<li class="news-item">
-				<a href="<?php echo $permalink; ?>"
-					title="<?php echo $full_date; ?>"
+				<a href="<?php echo esc_url( $permalink ); ?>"
+					title="<?php echo esc_attr( $full_date ); ?>"
 					target="_blank"
 					rel="noopener noreferrer">
-					<?php echo $title; ?>
+					<?php echo esc_html( $title ); ?>
 				</a>
-				<small class="news-date"><?php echo $date; ?></small>
+				<small class="news-date"><?php echo esc_html( $date ); ?></small>
 			</li>
 			<?php
 		endforeach;
 		echo '</ul>';
 
-		// Add "Visit Blog" CTA
+		// Add "Visit Blog" CTA.
 		echo '<div class="news-cta">';
 		echo '<a href="https://blog.fossasia.org/" target="_blank" rel="noopener noreferrer" class="btn btn-primary">';
 		echo esc_html__( 'Visit Blog →', 'wpfaevent' );
@@ -105,10 +105,10 @@ function wpfa_render_latest_news() {
 
 	$news_html = ob_get_clean();
 
-	// Cache for 1 hour to reduce load
+	// Cache for 1 hour to reduce load.
 	set_transient( 'wpfa_latest_news', $news_html, HOUR_IN_SECONDS );
 
-	echo $news_html;
+	echo wp_kses_post( $news_html );
 }
 
 /**
@@ -170,7 +170,7 @@ function wpfa_render_fallback_news() {
 	$fallback_cache_duration = apply_filters( 'wpfa_fallback_news_cache_duration', 4 * HOUR_IN_SECONDS );
 	set_transient( 'wpfa_latest_news', $fallback_html, $fallback_cache_duration );
 
-	echo $fallback_html;
+	echo wp_kses_post( $fallback_html );
 }
 
 /**
@@ -191,10 +191,10 @@ function wpfa_clear_news_cache() {
  *
  * @since 1.0.0
  * @return array {
- *     Test results.
+ * Test results.
  *
- *     @type bool   $success Whether the feed was fetched successfully.
- *     @type string $message Human-readable status message.
+ * @type bool   $success Whether the feed was fetched successfully.
+ * @type string $message Human-readable status message.
  * }
  */
 function wpfa_test_news_feed() {
@@ -210,7 +210,6 @@ function wpfa_test_news_feed() {
 	}
 
 	$item_count = $rss->get_item_quantity( 1 );
-	$items      = $rss->get_items( 0, 1 );
 
 	return array(
 		'success' => true,
