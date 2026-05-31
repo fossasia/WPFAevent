@@ -32,7 +32,6 @@
   <exclude-pattern>*/admin/partials/*</exclude-pattern>
   <exclude-pattern>*/includes/class-wpfaevent-landing.php</exclude-pattern>
   <exclude-pattern>*/includes/class-wpfaevent-uninstaller.php</exclude-pattern>
-  <exclude-pattern>*/public/partials/events-listing-page.php</exclude-pattern>
   <exclude-pattern>*/public/partials/schedule-page.php</exclude-pattern>
   <exclude-pattern>*/public/partials/wpfaevent-landing-template.php</exclude-pattern>
 </ruleset>
