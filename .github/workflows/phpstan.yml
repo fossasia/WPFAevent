@@ -1,0 +1,77 @@
+name: Run PHPStan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  file-filter:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      php: ${{ steps.filter.outputs.php }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            php:
+              - '**/*.php'
+
+  phpstan-analysis:
+    name: PHPStan Static Code Analysis
+    needs: file-filter
+    if: |
+      always() &&
+      (github.event_name == 'push' || needs.file-filter.outputs.php == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          coverage: none
+          tools: composer, cs2pr
+
+      - name: Restore PHPStan Result Cache
+        id: phpstan-cache-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: tmp/phpstan
+          key: phpstan-result-cache-${{ github.run_id }}
+          restore-keys: |
+            phpstan-result-cache-
+
+      - name: Install PHP dependencies
+        uses: ramsey/composer-install@v4
+        with:
+          composer-options: '--prefer-dist --optimize-autoloader --no-scripts'
+
+      - name: Run PHPStan Analysis
+        shell: bash
+        run: |
+          set -o pipefail
+          composer phpstan -- --error-format=checkstyle | cs2pr
+
+      - name: Save PHPStan Result Cache
+        uses: actions/cache/save@v5
+        if: ${{ !cancelled() }}
+        with:
+          path: tmp/phpstan
+          key: ${{ steps.phpstan-cache-restore.outputs.cache-primary-key }}
