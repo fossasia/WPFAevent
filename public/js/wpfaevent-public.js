@@ -29,4 +29,12 @@
 	 * practising this, we should strive to set a better example in our own work.
 	 */
 
+	$(function() {
+		$('.wpfa-event-timezone-select').on('change', function() {
+			if (this.form) {
+				this.form.submit();
+			}
+		});
+	});
+
 })( jQuery );

@@ -461,15 +461,8 @@ $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 					<div class="wpfa-event-card-grid">
 						<?php foreach ( $paged_events as $event ) : ?>
 							<?php
-							$event_month   = '';
-							$event_day     = '';
-							$event_time    = ! empty( $event['start_date'] ) ? strtotime( $event['start_date'] ) : 0;
-							$speaker_count = count( $event['speaker_ids'] );
-
-							if ( $event_time ) {
-								$event_month = date_i18n( 'M', $event_time );
-								$event_day   = date_i18n( 'j', $event_time );
-							}
+							$event_date_card_label = $event['date_label'] ? $event['date_label'] : __( 'TBA', 'wpfaevent' );
+							$speaker_count         = count( $event['speaker_ids'] );
 							?>
 							<article class="wpfa-event-directory-card">
 								<a class="wpfa-event-directory-card-main" href="<?php echo esc_url( get_permalink( $event['id'] ) ); ?>">
@@ -478,8 +471,8 @@ $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 											<img src="<?php echo esc_url( $event['image_url'] ); ?>" alt="<?php echo esc_attr( $event['title'] ); ?>" loading="lazy">
 										<?php else : ?>
 											<div class="wpfa-event-card-date">
-												<span><?php echo esc_html( $event_month ? $event_month : __( 'TBA', 'wpfaevent' ) ); ?></span>
-												<strong><?php echo esc_html( $event_day ); ?></strong>
+												<span><?php esc_html_e( 'Date', 'wpfaevent' ); ?></span>
+												<strong><?php echo esc_html( $event_date_card_label ); ?></strong>
 											</div>
 										<?php endif; ?>
 									</div>

@@ -335,6 +335,72 @@
 	background: #edf5fc;
 }
 
+.wpfaevent .wpfa-event-timezone-form {
+	align-items: end;
+	display: flex;
+	flex: 0 1 420px;
+	gap: 10px;
+	justify-content: flex-end;
+	min-width: 260px;
+}
+
+.wpfaevent .wpfa-event-timezone-form label {
+	display: grid;
+	flex: 1 1 240px;
+	gap: 6px;
+	margin: 0;
+	min-width: 0;
+}
+
+.wpfaevent .wpfa-event-timezone-form span {
+	color: var(--event-muted);
+	font-size: 0.78rem;
+	font-weight: 800;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+.wpfaevent .wpfa-event-timezone-form select {
+	appearance: none;
+	background:
+		linear-gradient(45deg, transparent 50%, var(--event-muted) 50%) calc(100% - 18px) 19px / 6px 6px no-repeat,
+		linear-gradient(135deg, var(--event-muted) 50%, transparent 50%) calc(100% - 12px) 19px / 6px 6px no-repeat,
+		#fff;
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	color: var(--event-ink);
+	font: inherit;
+	min-height: 42px;
+	min-width: 0;
+	padding: 8px 34px 8px 11px;
+	width: 100%;
+}
+
+.wpfaevent .wpfa-event-timezone-form select:focus {
+	border-color: var(--event-primary);
+	box-shadow: 0 0 0 3px rgba(213, 16, 7, 0.14);
+	outline: none;
+}
+
+.wpfaevent .wpfa-event-timezone-form button {
+	background: var(--event-primary);
+	border: 0;
+	border-radius: var(--event-radius);
+	color: #fff;
+	cursor: pointer;
+	font: inherit;
+	font-weight: 800;
+	min-height: 42px;
+	padding: 8px 14px;
+	white-space: nowrap;
+}
+
+.wpfaevent .wpfa-event-timezone-form button:hover,
+.wpfaevent .wpfa-event-timezone-form button:focus {
+	background: var(--event-primary-dark);
+	color: #fff;
+}
+
 .wpfaevent .wpfa-event-detail .wpfa-speakers-grid {
 	grid-template-columns: repeat(auto-fit, minmax(280px, 360px));
 	margin-bottom: 0;
@@ -823,9 +889,10 @@
 }
 
 .wpfaevent .wpfa-event-card-date strong {
-	font-size: clamp(2.6rem, 5vw, 4.2rem);
+	font-size: clamp(1.2rem, 2vw, 1.55rem);
 	letter-spacing: 0;
-	line-height: 0.9;
+	line-height: 1.2;
+	overflow-wrap: anywhere;
 }
 
 .wpfaevent .wpfa-event-card-body {
@@ -1079,6 +1146,17 @@
 	.wpfaevent .wpfa-event-section-head {
 		align-items: flex-start;
 		flex-direction: column;
+	}
+
+	.wpfaevent .wpfa-event-timezone-form {
+		align-items: stretch;
+		flex-direction: column;
+		min-width: 0;
+		width: 100%;
+	}
+
+	.wpfaevent .wpfa-event-timezone-form button {
+		width: 100%;
 	}
 
 	.wpfaevent .wpfa-event-section-nav .container {

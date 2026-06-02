@@ -96,9 +96,156 @@ $format_event_date = static function ( $date ) {
 		return '';
 	}
 
-	$timestamp = strtotime( $date );
+	try {
+		$datetime = new DateTimeImmutable( $date, wp_timezone() );
+	} catch ( Exception $exception ) {
+		return $date;
+	}
 
-	return $timestamp ? date_i18n( get_option( 'date_format' ), $timestamp ) : $date;
+	return wp_date( get_option( 'date_format' ), $datetime->getTimestamp(), wp_timezone() );
+};
+
+$get_timezone_object = static function ( $timezone_string, $fallback_timezone ) {
+	try {
+		return new DateTimeZone( $timezone_string );
+	} catch ( Exception $exception ) {
+		return $fallback_timezone;
+	}
+};
+
+$site_timezone        = wp_timezone();
+$site_timezone_string = wp_timezone_string();
+
+if ( '' === trim( (string) $site_timezone_string ) ) {
+	$site_timezone_string = $site_timezone->getName();
+}
+
+$selected_schedule_timezone_string = $site_timezone_string;
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only timezone converter for the public schedule.
+if ( isset( $_GET['schedule_tz'] ) ) {
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized immediately before validation.
+	$requested_schedule_timezone = sanitize_text_field( wp_unslash( $_GET['schedule_tz'] ) );
+
+	if ( '' !== $requested_schedule_timezone ) {
+		try {
+			new DateTimeZone( $requested_schedule_timezone );
+			$selected_schedule_timezone_string = $requested_schedule_timezone;
+		} catch ( Exception $exception ) {
+			$selected_schedule_timezone_string = $site_timezone_string;
+		}
+	}
+}
+
+$selected_schedule_timezone = $get_timezone_object( $selected_schedule_timezone_string, $site_timezone );
+$schedule_timezone_options  = array_values(
+	array_unique(
+		array_merge(
+			array(
+				$site_timezone_string,
+				'UTC',
+			),
+			DateTimeZone::listIdentifiers()
+		)
+	)
+);
+
+$format_timezone_label = static function ( $timezone_string ) use ( $site_timezone_string ) {
+	$label = str_replace( '_', ' ', $timezone_string );
+
+	if ( $timezone_string === $site_timezone_string ) {
+		return sprintf(
+			/* translators: %s: WordPress site timezone. */
+			__( 'Site timezone (%s)', 'wpfaevent' ),
+			$label
+		);
+	}
+
+	return $label;
+};
+
+$format_datetime_value = static function ( $value, $format, $timezone ) {
+	$value = trim( (string) $value );
+
+	if ( '' === $value ) {
+		return '';
+	}
+
+	try {
+		$datetime = new DateTimeImmutable( $value );
+	} catch ( Exception $exception ) {
+		return '';
+	}
+
+	return wp_date( $format, $datetime->getTimestamp(), $timezone );
+};
+
+$split_schedule_time_range = static function ( $time ) {
+	$parts = explode( ' - ', trim( (string) $time ), 2 );
+
+	if ( 2 !== count( $parts ) ) {
+		$parts = explode( '-', trim( (string) $time ), 2 );
+	}
+
+	return array(
+		isset( $parts[0] ) ? trim( $parts[0] ) : '',
+		isset( $parts[1] ) ? trim( $parts[1] ) : '',
+	);
+};
+
+$build_schedule_fallback_datetime = static function ( $date, $time, $source_timezone ) use ( $split_schedule_time_range ) {
+	$date = trim( (string) $date );
+	$time = trim( (string) $time );
+
+	if ( '' === $date ) {
+		return null;
+	}
+
+	if ( '' !== $time ) {
+		$time_parts = $split_schedule_time_range( $time );
+		$time       = $time_parts[0];
+	}
+
+	$value = trim( $date . ' ' . $time );
+
+	try {
+		return new DateTimeImmutable( $value, $source_timezone );
+	} catch ( Exception $exception ) {
+		return null;
+	}
+};
+
+$format_schedule_date = static function ( $start_datetime, $fallback_date, $fallback_time ) use ( $format_datetime_value, $build_schedule_fallback_datetime, $selected_schedule_timezone, $site_timezone ) {
+	if ( $start_datetime ) {
+		$formatted_date = $format_datetime_value( $start_datetime, get_option( 'date_format' ), $selected_schedule_timezone );
+
+		if ( $formatted_date ) {
+			return $formatted_date;
+		}
+	}
+
+	$fallback_datetime = $build_schedule_fallback_datetime( $fallback_date, $fallback_time, $site_timezone );
+
+	return $fallback_datetime ? wp_date( get_option( 'date_format' ), $fallback_datetime->getTimestamp(), $selected_schedule_timezone ) : $fallback_date;
+};
+
+$format_schedule_time = static function ( $start_datetime, $end_datetime, $fallback_date, $fallback_time ) use ( $format_datetime_value, $build_schedule_fallback_datetime, $selected_schedule_timezone, $site_timezone, $split_schedule_time_range ) {
+	$start_label = $start_datetime ? $format_datetime_value( $start_datetime, get_option( 'time_format' ), $selected_schedule_timezone ) : '';
+	$end_label   = $end_datetime ? $format_datetime_value( $end_datetime, get_option( 'time_format' ), $selected_schedule_timezone ) : '';
+
+	if ( ! $start_label && $fallback_time ) {
+		$time_parts        = $split_schedule_time_range( $fallback_time );
+		$fallback_start    = $build_schedule_fallback_datetime( $fallback_date, $time_parts[0], $site_timezone );
+		$fallback_end_time = isset( $time_parts[1] ) ? $time_parts[1] : '';
+		$fallback_end      = $fallback_end_time ? $build_schedule_fallback_datetime( $fallback_date, $fallback_end_time, $site_timezone ) : null;
+		$start_label       = $fallback_start ? wp_date( get_option( 'time_format' ), $fallback_start->getTimestamp(), $selected_schedule_timezone ) : '';
+		$end_label         = $fallback_end ? wp_date( get_option( 'time_format' ), $fallback_end->getTimestamp(), $selected_schedule_timezone ) : '';
+	}
+
+	if ( $start_label && $end_label && $start_label !== $end_label ) {
+		return $start_label . ' - ' . $end_label;
+	}
+
+	return $start_label ? $start_label : $fallback_time;
 };
 
 $site_settings      = $read_dashboard_json( 'site-settings-' . absint( $event_id ) . '.json', array() );
@@ -124,6 +271,7 @@ $show_about    = ! array_key_exists( 'about', $section_visibility ) || ! empty( 
 $show_speakers = ! array_key_exists( 'speakers', $section_visibility ) || ! empty( $section_visibility['speakers'] );
 $show_schedule = ! array_key_exists( 'schedule', $section_visibility ) || ! empty( $section_visibility['schedule'] );
 $schedule_rows = isset( $schedule_table['data'] ) && is_array( $schedule_table['data'] ) ? $schedule_table['data'] : array();
+$schedule_meta = isset( $schedule_table['sessions'] ) && is_array( $schedule_table['sessions'] ) ? $schedule_table['sessions'] : array();
 $schedule_head = ! empty( $schedule_rows[0] ) && is_array( $schedule_rows[0] ) ? $schedule_rows[0] : array();
 $schedule_body = ! empty( $schedule_head ) ? array_slice( $schedule_rows, 1 ) : $schedule_rows;
 $speaker_count = count( $speaker_ids );
@@ -138,18 +286,28 @@ if ( $end_date && $end_date !== $start_date ) {
 }
 
 $schedule_items = array();
-foreach ( $schedule_body as $row ) {
+foreach ( $schedule_body as $row_index => $row ) {
 	if ( ! is_array( $row ) ) {
 		continue;
 	}
 
+	$row_meta       = isset( $schedule_meta[ $row_index ] ) && is_array( $schedule_meta[ $row_index ] ) ? $schedule_meta[ $row_index ] : array();
+	$start_datetime = isset( $row_meta['starts_at'] ) ? sanitize_text_field( $row_meta['starts_at'] ) : '';
+	$end_datetime   = isset( $row_meta['ends_at'] ) ? sanitize_text_field( $row_meta['ends_at'] ) : '';
+	$row_date       = isset( $row[0] ) ? sanitize_text_field( $row[0] ) : '';
+	$row_time       = isset( $row[1] ) ? sanitize_text_field( $row[1] ) : '';
+
 	$schedule_items[] = array(
-		'date'     => isset( $row[0] ) ? sanitize_text_field( $row[0] ) : '',
-		'time'     => isset( $row[1] ) ? sanitize_text_field( $row[1] ) : '',
-		'title'    => isset( $row[2] ) ? sanitize_text_field( $row[2] ) : '',
-		'speakers' => isset( $row[3] ) ? sanitize_text_field( $row[3] ) : '',
-		'track'    => isset( $row[4] ) ? sanitize_text_field( $row[4] ) : '',
-		'room'     => isset( $row[5] ) ? sanitize_text_field( $row[5] ) : '',
+		'date'           => $row_date,
+		'date_label'     => $format_schedule_date( $start_datetime, $row_date, $row_time ),
+		'time'           => $row_time,
+		'time_label'     => $format_schedule_time( $start_datetime, $end_datetime, $row_date, $row_time ),
+		'title'          => isset( $row[2] ) ? sanitize_text_field( $row[2] ) : '',
+		'speakers'       => isset( $row[3] ) ? sanitize_text_field( $row[3] ) : '',
+		'track'          => isset( $row[4] ) ? sanitize_text_field( $row[4] ) : '',
+		'room'           => isset( $row[5] ) ? sanitize_text_field( $row[5] ) : '',
+		'start_datetime' => $start_datetime,
+		'end_datetime'   => $end_datetime,
 	);
 }
 
@@ -256,10 +414,10 @@ $header_vars = array(
 							<dt><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></dt>
 							<dd><?php echo esc_html( number_format_i18n( $speaker_count ) ); ?></dd>
 						</div>
-						<?php if ( ! empty( $first_schedule['time'] ) ) : ?>
+						<?php if ( ! empty( $first_schedule['time_label'] ) ) : ?>
 							<div>
 								<dt><?php esc_html_e( 'Starts', 'wpfaevent' ); ?></dt>
-								<dd><?php echo esc_html( $first_schedule['time'] ); ?></dd>
+								<dd><?php echo esc_html( $first_schedule['time_label'] ); ?></dd>
 							</div>
 						<?php endif; ?>
 					</dl>
@@ -306,6 +464,7 @@ $header_vars = array(
 						<div class="wpfa-speakers-grid">
 							<?php
 							$wpfa_hide_speaker_card_admin_actions = true;
+							$wpfa_schedule_display_timezone       = $selected_schedule_timezone;
 							foreach ( $speaker_ids as $sid ) :
 								if ( 'wpfa_speaker' !== get_post_type( $sid ) || 'publish' !== get_post_status( $sid ) ) {
 									continue;
@@ -314,6 +473,7 @@ $header_vars = array(
 								include WPFAEVENT_PATH . 'public/partials/speakers/speaker-card.php';
 							endforeach;
 							unset( $wpfa_hide_speaker_card_admin_actions );
+							unset( $wpfa_schedule_display_timezone );
 							?>
 						</div>
 					<?php elseif ( ! empty( $dashboard_speakers ) ) : ?>
@@ -390,16 +550,31 @@ $header_vars = array(
 							<h2 id="wpfa-event-schedule-title"><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></h2>
 							<p><?php esc_html_e( 'Times and rooms imported from Eventyay.', 'wpfaevent' ); ?></p>
 						</div>
+						<?php if ( ! empty( $schedule_items ) ) : ?>
+							<form class="wpfa-event-timezone-form" action="<?php echo esc_url( get_permalink( $event_id ) . '#wpfa-event-schedule-title' ); ?>" method="get">
+								<label for="wpfa-event-schedule-timezone">
+									<span><?php esc_html_e( 'Timezone', 'wpfaevent' ); ?></span>
+									<select id="wpfa-event-schedule-timezone" class="wpfa-event-timezone-select" name="schedule_tz">
+										<?php foreach ( $schedule_timezone_options as $timezone_option ) : ?>
+											<option value="<?php echo esc_attr( $timezone_option ); ?>" <?php selected( $selected_schedule_timezone_string, $timezone_option ); ?>>
+												<?php echo esc_html( $format_timezone_label( $timezone_option ) ); ?>
+											</option>
+										<?php endforeach; ?>
+									</select>
+								</label>
+								<button type="submit"><?php esc_html_e( 'Convert', 'wpfaevent' ); ?></button>
+							</form>
+						<?php endif; ?>
 					</div>
 					<?php if ( ! empty( $schedule_items ) ) : ?>
 						<div class="wpfa-event-timeline">
 							<?php foreach ( $schedule_items as $item ) : ?>
 								<article class="wpfa-event-session">
 									<div class="wpfa-event-session-time">
-										<?php if ( ! empty( $item['date'] ) ) : ?>
-											<span><?php echo esc_html( $item['date'] ); ?></span>
+										<?php if ( ! empty( $item['date_label'] ) ) : ?>
+											<span><?php echo esc_html( $item['date_label'] ); ?></span>
 										<?php endif; ?>
-										<strong><?php echo esc_html( $item['time'] ); ?></strong>
+										<strong><?php echo esc_html( $item['time_label'] ); ?></strong>
 									</div>
 									<div class="wpfa-event-session-body">
 										<h3><?php echo esc_html( $item['title'] ); ?></h3>

@@ -1561,14 +1561,14 @@ class Wpfaevent_Admin {
 		usort(
 			$sessions,
 			static function ( $session_a, $session_b ) {
-				$a_time = trim( (string) ( isset( $session_a['date'] ) ? $session_a['date'] : '' ) . ' ' . ( isset( $session_a['time'] ) ? $session_a['time'] : '' ) );
-				$b_time = trim( (string) ( isset( $session_b['date'] ) ? $session_b['date'] : '' ) . ' ' . ( isset( $session_b['time'] ) ? $session_b['time'] : '' ) );
+				$a_time = ! empty( $session_a['starts_at'] ) ? $session_a['starts_at'] : trim( (string) ( isset( $session_a['date'] ) ? $session_a['date'] : '' ) . ' ' . ( isset( $session_a['time'] ) ? $session_a['time'] : '' ) );
+				$b_time = ! empty( $session_b['starts_at'] ) ? $session_b['starts_at'] : trim( (string) ( isset( $session_b['date'] ) ? $session_b['date'] : '' ) . ' ' . ( isset( $session_b['time'] ) ? $session_b['time'] : '' ) );
 
 				return strcmp( $a_time, $b_time );
 			}
 		);
 
-		$rows = array(
+		$rows              = array(
 			array(
 				__( 'Date', 'wpfaevent' ),
 				__( 'Time', 'wpfaevent' ),
@@ -1578,15 +1578,21 @@ class Wpfaevent_Admin {
 				__( 'Room', 'wpfaevent' ),
 			),
 		);
+		$schedule_sessions = array();
 
 		foreach ( $sessions as $session ) {
 			if ( ! is_array( $session ) ) {
 				continue;
 			}
 
-			$time = isset( $session['time'] ) ? $session['time'] : '';
+			$starts_at = isset( $session['starts_at'] ) ? sanitize_text_field( $session['starts_at'] ) : '';
+			$ends_at   = isset( $session['ends_at'] ) ? sanitize_text_field( $session['ends_at'] ) : '';
+			$date      = isset( $session['date'] ) ? sanitize_text_field( $session['date'] ) : '';
+			$time      = isset( $session['time'] ) ? sanitize_text_field( $session['time'] ) : '';
+
 			if ( ! empty( $session['end_time'] ) ) {
-				$time .= $time ? ' - ' . $session['end_time'] : $session['end_time'];
+				$end_time = sanitize_text_field( $session['end_time'] );
+				$time    .= $time ? ' - ' . $end_time : $end_time;
 			}
 
 			$speakers = '';
@@ -1594,22 +1600,38 @@ class Wpfaevent_Admin {
 				$speakers = implode( ', ', array_map( 'sanitize_text_field', $session['speakers'] ) );
 			}
 
+			$title = isset( $session['title'] ) ? sanitize_text_field( $session['title'] ) : '';
+			$track = isset( $session['track'] ) ? sanitize_text_field( $session['track'] ) : '';
+			$room  = isset( $session['room'] ) ? sanitize_text_field( $session['room'] ) : '';
+
 			$rows[] = array(
-				isset( $session['date'] ) ? sanitize_text_field( $session['date'] ) : '',
+				$date,
 				sanitize_text_field( $time ),
-				isset( $session['title'] ) ? sanitize_text_field( $session['title'] ) : '',
+				$title,
 				$speakers,
-				isset( $session['track'] ) ? sanitize_text_field( $session['track'] ) : '',
-				isset( $session['room'] ) ? sanitize_text_field( $session['room'] ) : '',
+				$track,
+				$room,
+			);
+
+			$schedule_sessions[] = array(
+				'title'     => $title,
+				'date'      => $date,
+				'time'      => sanitize_text_field( $time ),
+				'speakers'  => $speakers,
+				'track'     => $track,
+				'room'      => $room,
+				'starts_at' => $starts_at,
+				'ends_at'   => $ends_at,
 			);
 		}
 
 		return array(
-			'name'   => __( 'Eventyay Schedule', 'wpfaevent' ),
-			'rows'   => count( $rows ),
-			'cols'   => 6,
-			'data'   => $rows,
-			'source' => 'eventyay',
+			'name'     => __( 'Eventyay Schedule', 'wpfaevent' ),
+			'rows'     => count( $rows ),
+			'cols'     => 6,
+			'data'     => $rows,
+			'sessions' => $schedule_sessions,
+			'source'   => 'eventyay',
 		);
 	}
 
@@ -2581,6 +2603,8 @@ class Wpfaevent_Admin {
 			'date'      => $this->format_eventyay_date( $starts_at ),
 			'time'      => $this->format_eventyay_time( $starts_at ),
 			'end_time'  => $this->format_eventyay_time( $ends_at ),
+			'starts_at' => $this->normalize_eventyay_datetime( $starts_at ),
+			'ends_at'   => $this->normalize_eventyay_datetime( $ends_at ),
 			'abstract'  => $this->eventyay_submission_abstract( $submission ),
 			'track'     => is_array( $track ) ? $this->eventyay_text_value( isset( $track['name'] ) ? $track['name'] : '' ) : $this->eventyay_text_value( $track ),
 			'room'      => $room,
@@ -2623,6 +2647,8 @@ class Wpfaevent_Admin {
 			'date'      => $this->format_eventyay_date( $starts_at ),
 			'time'      => $this->format_eventyay_time( $starts_at ),
 			'end_time'  => $this->format_eventyay_time( $ends_at ),
+			'starts_at' => $this->normalize_eventyay_datetime( $starts_at ),
+			'ends_at'   => $this->normalize_eventyay_datetime( $ends_at ),
 			'abstract'  => $abstract,
 			'track'     => is_array( $track ) ? $this->eventyay_text_value( isset( $track['name'] ) ? $track['name'] : '' ) : $this->eventyay_text_value( $track ),
 			'room'      => $room,
@@ -4240,6 +4266,8 @@ class Wpfaevent_Admin {
 			'date'      => $this->format_eventyay_date( $starts_at ),
 			'time'      => $this->format_eventyay_time( $starts_at ),
 			'end_time'  => $this->format_eventyay_time( $ends_at ),
+			'starts_at' => $this->normalize_eventyay_datetime( $starts_at ),
+			'ends_at'   => $this->normalize_eventyay_datetime( $ends_at ),
 			'abstract'  => wp_kses_post( $this->attribute_value( $attributes, array( 'long-abstract', 'short-abstract', 'abstract', 'description' ) ) ),
 			'track'     => sanitize_text_field( $track_name ),
 			'source_id' => isset( $session_resource['id'] ) ? sanitize_text_field( $session_resource['id'] ) : '',
@@ -4969,6 +4997,30 @@ class Wpfaevent_Admin {
 		}
 
 		return $date->format( 'H:i' );
+	}
+
+	/**
+	 * Normalize an Eventyay date-time value while preserving its timezone.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $value Date-time value.
+	 * @return string
+	 */
+	private function normalize_eventyay_datetime( $value ) {
+		$value = trim( (string) $value );
+
+		if ( '' === $value ) {
+			return '';
+		}
+
+		try {
+			$date = new DateTimeImmutable( $value );
+		} catch ( Exception $exception ) {
+			return '';
+		}
+
+		return $date->format( DATE_ATOM );
 	}
 
 	/**
