@@ -74,7 +74,7 @@ class Wpfaevent_Public {
 			}
 		}
 
-		return is_singular( array( 'wpfa_event', 'wpfa_speaker' ) ) || is_post_type_archive( 'wpfa_speaker' );
+		return is_singular( array( 'wpfa_event', 'wpfa_speaker' ) ) || is_post_type_archive( array( 'wpfa_event', 'wpfa_speaker' ) );
 	}
 
 	/**
@@ -97,7 +97,7 @@ class Wpfaevent_Public {
 			}
 		}
 
-		return is_post_type_archive( 'wpfa_speaker' );
+		return is_post_type_archive( array( 'wpfa_event', 'wpfa_speaker' ) );
 	}
 
 	/**
@@ -275,15 +275,24 @@ class Wpfaevent_Public {
 			);
 		}
 
-		if ( is_singular( 'wpfa_event' ) ) {
+		if ( is_singular( 'wpfa_event' ) || is_post_type_archive( 'wpfa_event' ) ) {
+			$event_style_dependencies = array(
+				$this->plugin_name,
+				$this->plugin_name . '-navigation',
+			);
+
+			if ( is_singular( 'wpfa_event' ) ) {
+				$event_style_dependencies[] = $this->plugin_name . '-speakers';
+			}
+
+			if ( is_post_type_archive( 'wpfa_event' ) ) {
+				$event_style_dependencies[] = $this->plugin_name . '-pagination';
+			}
+
 			wp_enqueue_style(
 				$this->plugin_name . '-event',
 				plugin_dir_url( __DIR__ ) . 'public/css/templates/event.css',
-				array(
-					$this->plugin_name,
-					$this->plugin_name . '-navigation',
-					$this->plugin_name . '-speakers',
-				),
+				$event_style_dependencies,
 				$this->version,
 				'all'
 			);
