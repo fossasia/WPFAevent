@@ -154,6 +154,15 @@ class Wpfaevent_Admin {
 			'wpfaevent-import-events',
 			array( $this, 'render_settings_page' )
 		);
+
+		add_submenu_page(
+			'edit.php?post_type=wpfa_speaker',
+			esc_html__( 'Event Speaker Lists', 'wpfaevent' ),
+			esc_html__( 'Events', 'wpfaevent' ),
+			'edit_posts',
+			'wpfaevent-speaker-events',
+			array( $this, 'render_speaker_events_page' )
+		);
 	}
 
 	/**
@@ -202,6 +211,100 @@ class Wpfaevent_Admin {
 					</tbody>
 				</table>
 			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render an event chooser under the Speakers admin menu.
+	 *
+	 * @since 1.0.0
+	 */
+	public function render_speaker_events_page() {
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to view event speaker lists.', 'wpfaevent' ) );
+		}
+
+		$events = get_posts(
+			array(
+				'post_type'      => 'wpfa_event',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+				'no_found_rows'  => true,
+			)
+		);
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Event Speaker Lists', 'wpfaevent' ); ?></h1>
+			<p><?php esc_html_e( 'Choose an event to view the speakers linked only to that event.', 'wpfaevent' ); ?></p>
+
+			<?php if ( empty( $events ) ) : ?>
+				<div class="notice notice-info">
+					<p><?php esc_html_e( 'No events found yet.', 'wpfaevent' ); ?></p>
+				</div>
+			<?php else : ?>
+				<table class="widefat striped">
+					<thead>
+						<tr>
+							<th scope="col"><?php esc_html_e( 'Event', 'wpfaevent' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Status', 'wpfaevent' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Actions', 'wpfaevent' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $events as $event ) : ?>
+							<?php
+							$speaker_ids    = $this->get_admin_event_speaker_ids( $event->ID );
+							$speaker_count  = count( $speaker_ids );
+							$speakers_url   = add_query_arg(
+								array(
+									'post_type'          => 'wpfa_speaker',
+									'wpfa_speaker_event' => absint( $event->ID ),
+								),
+								admin_url( 'edit.php' )
+							);
+							$edit_event_url = get_edit_post_link( $event->ID, '' );
+							$status_object  = get_post_status_object( get_post_status( $event ) );
+							$status_label   = $status_object ? $status_object->label : get_post_status( $event );
+							?>
+							<tr>
+								<td>
+									<strong>
+										<a href="<?php echo esc_url( $speakers_url ); ?>">
+											<?php echo esc_html( get_the_title( $event ) ); ?>
+										</a>
+									</strong>
+								</td>
+								<td><?php echo esc_html( $status_label ); ?></td>
+								<td>
+									<?php
+									echo esc_html(
+										sprintf(
+											/* translators: %s: Speaker count. */
+											_n( '%s speaker', '%s speakers', $speaker_count, 'wpfaevent' ),
+											number_format_i18n( $speaker_count )
+										)
+									);
+									?>
+								</td>
+								<td>
+									<a class="button button-small" href="<?php echo esc_url( $speakers_url ); ?>">
+										<?php esc_html_e( 'View Speakers', 'wpfaevent' ); ?>
+									</a>
+									<?php if ( $edit_event_url ) : ?>
+										<a class="button button-small" href="<?php echo esc_url( $edit_event_url ); ?>">
+											<?php esc_html_e( 'Edit Event', 'wpfaevent' ); ?>
+										</a>
+									<?php endif; ?>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
