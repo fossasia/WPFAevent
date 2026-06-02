@@ -44,9 +44,14 @@ $name               = get_the_title( $sid );
 $org                = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
 $position           = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
 $photo_url          = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
+$placeholder_url    = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
 $speaker_link       = get_permalink( $sid );
 $hide_admin_actions = ! empty( $wpfa_hide_speaker_card_admin_actions );
 $is_admin           = ! $hide_admin_actions && current_user_can( 'manage_options' );
+
+if ( empty( $photo_url ) && has_post_thumbnail( $sid ) ) {
+	$photo_url = get_the_post_thumbnail_url( $sid, 'medium_large' );
+}
 
 // Get categories from the taxonomy.
 $speaker_categories = array();
@@ -105,12 +110,9 @@ if ( ! $formatted_end_time ) {
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
 			<?php if ( $photo_url ) : ?>
 				<?php /* translators: %s: Speaker name. */ ?>
-				<img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $name ) ); ?>" loading="lazy" itemprop="image" />
+				<img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $name ) ); ?>" loading="lazy" itemprop="image" data-wpfa-placeholder-src="<?php echo esc_url( $placeholder_url ); ?>" data-wpfa-placeholder-alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>" />
 		<?php else : ?>
-			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" class="wpfa-placeholder-svg">
-				<rect width="100%" height="100%" fill="#eee" />
-				<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#999">Speaker</text>
-			</svg>
+			<img src="<?php echo esc_url( $placeholder_url ); ?>" alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>" loading="lazy" class="wpfa-speaker-placeholder-img" itemprop="image" />
 		<?php endif; ?>
 	</a>
 	<div class="wpfa-speaker-meta">

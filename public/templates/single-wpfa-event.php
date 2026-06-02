@@ -253,28 +253,29 @@ $dashboard_speakers = $read_dashboard_json( 'speakers-' . absint( $event_id ) . 
 $schedule_table     = $read_dashboard_json( 'schedule-' . absint( $event_id ) . '.json', array() );
 $section_visibility = isset( $site_settings['section_visibility'] ) && is_array( $site_settings['section_visibility'] ) ? $site_settings['section_visibility'] : array();
 
-$event_title   = get_the_title( $event_id );
-$start_date    = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
-$end_date      = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
-$location      = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
-$event_url     = get_post_meta( $event_id, 'wpfa_event_url', true );
-$event_url     = $event_url ? esc_url_raw( $event_url ) : '';
-$about_content = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
-$post_content  = trim( (string) get_post_field( 'post_content', $event_id ) );
-$event_lead    = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
-$speaker_ids   = $get_linked_speaker_ids( $event_id );
-$event_slug    = get_post_field( 'post_name', $event_id );
-$speakers_url  = add_query_arg( 'event', $event_slug, home_url( '/speakers/' ) );
-$register_text = ! empty( $site_settings['reg_button_text'] ) ? sanitize_text_field( $site_settings['reg_button_text'] ) : __( 'Get Tickets', 'wpfaevent' );
-$register_url  = ! empty( $site_settings['reg_button_link'] ) ? esc_url_raw( $site_settings['reg_button_link'] ) : $event_url;
-$show_about    = ! array_key_exists( 'about', $section_visibility ) || ! empty( $section_visibility['about'] );
-$show_speakers = ! array_key_exists( 'speakers', $section_visibility ) || ! empty( $section_visibility['speakers'] );
-$show_schedule = ! array_key_exists( 'schedule', $section_visibility ) || ! empty( $section_visibility['schedule'] );
-$schedule_rows = isset( $schedule_table['data'] ) && is_array( $schedule_table['data'] ) ? $schedule_table['data'] : array();
-$schedule_meta = isset( $schedule_table['sessions'] ) && is_array( $schedule_table['sessions'] ) ? $schedule_table['sessions'] : array();
-$schedule_head = ! empty( $schedule_rows[0] ) && is_array( $schedule_rows[0] ) ? $schedule_rows[0] : array();
-$schedule_body = ! empty( $schedule_head ) ? array_slice( $schedule_rows, 1 ) : $schedule_rows;
-$speaker_count = count( $speaker_ids );
+$event_title             = get_the_title( $event_id );
+$start_date              = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
+$end_date                = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
+$location                = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
+$event_url               = get_post_meta( $event_id, 'wpfa_event_url', true );
+$event_url               = $event_url ? esc_url_raw( $event_url ) : '';
+$about_content           = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
+$post_content            = trim( (string) get_post_field( 'post_content', $event_id ) );
+$event_lead              = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
+$speaker_ids             = $get_linked_speaker_ids( $event_id );
+$event_slug              = get_post_field( 'post_name', $event_id );
+$speaker_placeholder_url = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
+$speakers_url            = add_query_arg( 'event', $event_slug, home_url( '/speakers/' ) );
+$register_text           = ! empty( $site_settings['reg_button_text'] ) ? sanitize_text_field( $site_settings['reg_button_text'] ) : __( 'Get Tickets', 'wpfaevent' );
+$register_url            = ! empty( $site_settings['reg_button_link'] ) ? esc_url_raw( $site_settings['reg_button_link'] ) : $event_url;
+$show_about              = ! array_key_exists( 'about', $section_visibility ) || ! empty( $section_visibility['about'] );
+$show_speakers           = ! array_key_exists( 'speakers', $section_visibility ) || ! empty( $section_visibility['speakers'] );
+$show_schedule           = ! array_key_exists( 'schedule', $section_visibility ) || ! empty( $section_visibility['schedule'] );
+$schedule_rows           = isset( $schedule_table['data'] ) && is_array( $schedule_table['data'] ) ? $schedule_table['data'] : array();
+$schedule_meta           = isset( $schedule_table['sessions'] ) && is_array( $schedule_table['sessions'] ) ? $schedule_table['sessions'] : array();
+$schedule_head           = ! empty( $schedule_rows[0] ) && is_array( $schedule_rows[0] ) ? $schedule_rows[0] : array();
+$schedule_body           = ! empty( $schedule_head ) ? array_slice( $schedule_rows, 1 ) : $schedule_rows;
+$speaker_count           = count( $speaker_ids );
 
 if ( '' === $about_content ) {
 	$about_content = '' !== $post_content ? $post_content : $event_lead;
@@ -491,12 +492,9 @@ $header_vars = array(
 										<div class="wpfa-speaker-photo">
 											<?php if ( ! empty( $speaker['image'] ) ) : ?>
 												<?php /* translators: %s: Speaker name. */ ?>
-												<img src="<?php echo esc_url( $speaker['image'] ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $speaker['name'] ) ); ?>" loading="lazy">
+												<img src="<?php echo esc_url( $speaker['image'] ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $speaker['name'] ) ); ?>" loading="lazy" data-wpfa-placeholder-src="<?php echo esc_url( $speaker_placeholder_url ); ?>" data-wpfa-placeholder-alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>">
 										<?php else : ?>
-											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" class="wpfa-placeholder-svg" role="img" aria-label="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>">
-												<rect width="100%" height="100%" fill="#eee" />
-												<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#999">Speaker</text>
-											</svg>
+											<img src="<?php echo esc_url( $speaker_placeholder_url ); ?>" alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>" loading="lazy" class="wpfa-speaker-placeholder-img">
 										<?php endif; ?>
 									</div>
 									<div class="wpfa-speaker-meta">

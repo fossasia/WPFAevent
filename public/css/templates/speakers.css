@@ -197,6 +197,11 @@
 	transform: scale(1.05);
 }
 
+.wpfaevent .wpfa-speaker-placeholder-img {
+	background: #f4f7fb;
+	object-position: center center;
+}
+
 .wpfaevent .wpfa-placeholder-svg {
 	width: 100%;
 	height: 100%;

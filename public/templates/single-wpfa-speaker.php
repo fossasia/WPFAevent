@@ -20,16 +20,17 @@ if ( ! $speaker_id || 'wpfa_speaker' !== get_post_type( $speaker_id ) ) {
 	return;
 }
 
-$speaker_name = get_the_title( $speaker_id );
-$position     = sanitize_text_field( get_post_meta( $speaker_id, 'wpfa_speaker_position', true ) );
-$organization = sanitize_text_field( get_post_meta( $speaker_id, 'wpfa_speaker_organization', true ) );
-$bio          = get_post_meta( $speaker_id, 'wpfa_speaker_bio', true );
-$photo_url    = get_post_meta( $speaker_id, 'wpfa_speaker_headshot_url', true );
-$linkedin     = get_post_meta( $speaker_id, 'wpfa_speaker_linkedin', true );
-$twitter      = get_post_meta( $speaker_id, 'wpfa_speaker_twitter', true );
-$github       = get_post_meta( $speaker_id, 'wpfa_speaker_github', true );
-$website      = get_post_meta( $speaker_id, 'wpfa_speaker_website', true );
-$photo_alt    = sprintf(
+$speaker_name    = get_the_title( $speaker_id );
+$position        = sanitize_text_field( get_post_meta( $speaker_id, 'wpfa_speaker_position', true ) );
+$organization    = sanitize_text_field( get_post_meta( $speaker_id, 'wpfa_speaker_organization', true ) );
+$bio             = get_post_meta( $speaker_id, 'wpfa_speaker_bio', true );
+$photo_url       = get_post_meta( $speaker_id, 'wpfa_speaker_headshot_url', true );
+$placeholder_url = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
+$linkedin        = get_post_meta( $speaker_id, 'wpfa_speaker_linkedin', true );
+$twitter         = get_post_meta( $speaker_id, 'wpfa_speaker_twitter', true );
+$github          = get_post_meta( $speaker_id, 'wpfa_speaker_github', true );
+$website         = get_post_meta( $speaker_id, 'wpfa_speaker_website', true );
+$photo_alt       = sprintf(
 	/* translators: %s: Speaker name. */
 	__( 'Photo of %s', 'wpfaevent' ),
 	$speaker_name
@@ -173,28 +174,16 @@ $header_vars = array(
 							src="<?php echo esc_url( $photo_url ); ?>"
 							alt="<?php echo esc_attr( $photo_alt ); ?>"
 							itemprop="image"
+							data-wpfa-placeholder-src="<?php echo esc_url( $placeholder_url ); ?>"
+							data-wpfa-placeholder-alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>"
 						>
 					<?php else : ?>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 300 300"
-							class="wpfa-placeholder-svg"
-							role="img"
-							aria-label="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>"
+						<img
+							src="<?php echo esc_url( $placeholder_url ); ?>"
+							alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>"
+							class="wpfa-speaker-placeholder-img"
+							itemprop="image"
 						>
-							<rect width="100%" height="100%" fill="#eee" />
-							<text
-								x="50%"
-								y="50%"
-								dominant-baseline="middle"
-								text-anchor="middle"
-								font-family="sans-serif"
-								font-size="20"
-								fill="#999"
-							>
-								Speaker
-							</text>
-						</svg>
 					<?php endif; ?>
 				</div>
 

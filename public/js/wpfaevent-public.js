@@ -35,6 +35,32 @@
 				this.form.submit();
 			}
 		});
+
+		const applySpeakerPlaceholder = function() {
+			const placeholderSrc = this.getAttribute('data-wpfa-placeholder-src');
+
+			if (!placeholderSrc || this.src === placeholderSrc) {
+				return;
+			}
+
+			this.src = placeholderSrc;
+			this.removeAttribute('srcset');
+			this.removeAttribute('sizes');
+			this.classList.add('wpfa-speaker-placeholder-img');
+
+			const placeholderAlt = this.getAttribute('data-wpfa-placeholder-alt');
+			if (placeholderAlt) {
+				this.alt = placeholderAlt;
+			}
+		};
+
+		$('.wpfa-speaker-photo img[data-wpfa-placeholder-src], .wpfa-speaker-profile-photo img[data-wpfa-placeholder-src]')
+			.on('error', applySpeakerPlaceholder)
+			.each(function() {
+				if (this.complete && this.naturalWidth === 0) {
+					applySpeakerPlaceholder.call(this);
+				}
+			});
 	});
 
 })( jQuery );
