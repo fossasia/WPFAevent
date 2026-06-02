@@ -37,11 +37,11 @@ This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible 
 2. Activate **Event Plugin** in your WordPress Admin under
    `Plugins → Installed Plugins → Event Plugin → Activate`.
 
-3. Configure your API endpoints:
+3. Configure Eventyay import:
 
-   * Go to **Settings → Event Plugin** in the WordPress Admin.
-   * Enter the URLs of your Eventyay API endpoints for **Speakers**, **Sessions**, and **Schedule**.
-   * Optionally adjust the **cache time (TTL)** in seconds.
+   * Go to **Events → Import Events** in the WordPress Admin.
+   * Enter the Eventyay base URL, organizer slug, optional event slug, and API token.
+   * Choose the imported event post status, then run the import.
 
 4. Add shortcodes to your pages or posts, for example:
 
@@ -108,17 +108,33 @@ Each shortcode can accept optional attributes — for example:
 if multiple event profiles are configured in settings.
 
 
-## Settings Page
+## Settings And Import Pages
 
-Navigate to **Settings → Event Plugin** to configure:
+Navigate to **WPFAEvent → Settings** for plugin-level settings and the future admin dashboard placeholder. Eventyay event imports are configured under **Events → Import Events**.
 
-* **Speakers Endpoint:** `https://example.org/api/v1/events/{id}/speakers`
-* **Sessions Endpoint:** `https://example.org/api/v1/events/{id}/sessions`
-* **Schedule Endpoint:** `https://example.org/api/v1/events/{id}/schedule`
-* **Cache TTL (seconds):** Duration for transient caching of API results
-* **Test Buttons:** Verify that endpoints respond with valid JSON data
+The Eventyay import page accepts:
 
-If the fields are left empty, the plugin falls back to placeholder content for development.
+* **Eventyay base URL:** The Eventyay site root, for example `https://eventyay.com`
+* **Organizer slug:** The organizer path segment
+* **Event slug:** Optional single-event filter
+* **API token:** Optional private token for authenticated Eventyay endpoints
+* **Imported post status:** Draft, published, pending review, or private
+
+## Eventyay Event Import
+
+Administrators can import Eventyay events from **Events → Import Events**. The importer uses the configured Eventyay base URL, organizer slug, optional event slug, and API token to create or update WordPress content.
+
+Imported data is stored and displayed in these places:
+
+| Eventyay data | WordPress destination |
+| ------------- | --------------------- |
+| Event title, dates, location, URL, and description | `wpfa_event` posts and event post meta such as `wpfa_event_start_date`, `wpfa_event_location`, and `_wpfa_eventyay_event_slug` |
+| Speakers | `wpfa_speaker` posts linked to the imported event through `wpfa_event_speakers` and `wpfa_speaker_events` |
+| Event-specific speaker dashboard data | `wp-content/uploads/fossasia-data/speakers-{event_id}.json` |
+| Event schedule rows | `wp-content/uploads/fossasia-data/schedule-{event_id}.json` |
+| About text, registration button, and visibility settings | `wp-content/uploads/fossasia-data/site-settings-{event_id}.json` |
+
+On the frontend, imported data appears on the single event page and on the event-filtered speaker list, for example `/speakers/?event={event-slug}`. The default speakers archive does not mix all event speakers together; select an event to view that event's own speaker list.
 
 ## Development Notes
 

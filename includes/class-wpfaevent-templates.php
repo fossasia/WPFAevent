@@ -124,6 +124,30 @@ class Wpfaevent_Templates {
 			return $template;
 		}
 
+		if ( is_singular( 'wpfa_speaker' ) ) {
+			$candidate = WPFAEVENT_PATH . 'public/templates/single-wpfa-speaker.php';
+
+			if ( file_exists( $candidate ) ) {
+				return $candidate;
+			}
+		}
+
+		if ( is_singular( 'wpfa_event' ) ) {
+			$candidate = WPFAEVENT_PATH . 'public/templates/single-wpfa-event.php';
+
+			if ( file_exists( $candidate ) ) {
+				return $candidate;
+			}
+		}
+
+		if ( is_post_type_archive( 'wpfa_speaker' ) ) {
+			$candidate = WPFAEVENT_PATH . 'public/templates/page-speakers.php';
+
+			if ( file_exists( $candidate ) ) {
+				return $candidate;
+			}
+		}
+
 		if ( is_singular( 'page' ) ) {
 			$chosen = get_page_template_slug( get_queried_object_id() );
 

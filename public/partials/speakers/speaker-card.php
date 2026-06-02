@@ -40,12 +40,13 @@ if ( empty( $sid ) || ! is_numeric( $sid ) ) {
 
 $sid = (int) $sid;
 
-$name         = get_the_title( $sid );
-$org          = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
-$position     = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
-$photo_url    = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
-$speaker_link = get_permalink( $sid );
-$is_admin     = current_user_can( 'manage_options' );
+$name               = get_the_title( $sid );
+$org                = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
+$position           = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
+$photo_url          = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
+$speaker_link       = get_permalink( $sid );
+$hide_admin_actions = ! empty( $wpfa_hide_speaker_card_admin_actions );
+$is_admin           = ! $hide_admin_actions && current_user_can( 'manage_options' );
 
 // Get categories from the taxonomy.
 $speaker_categories = array();

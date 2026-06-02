@@ -202,15 +202,21 @@ class Wpfaevent {
 		$plugin_basename = plugin_basename( dirname( __DIR__ ) . '/wpfaevent.php' );
 		$this->loader->add_filter( 'plugin_action_links_' . $plugin_basename, $this->plugin_admin, 'add_settings_link' );
 
-		// Add meta boxes to CPTs.
-		$this->loader->add_action( 'add_meta_boxes', $this->plugin_admin, 'add_meta_boxes' );
+		// Add meta boxes to CPTs from the meta classes.
+		$this->loader->add_action( 'add_meta_boxes', 'Wpfaevent_Meta_Event', 'add_meta_boxes' );
+		$this->loader->add_action( 'add_meta_boxes', 'Wpfaevent_Meta_Speaker', 'add_meta_boxes' );
 
 		// Save meta box data.
-		$this->loader->add_action( 'save_post_wpfa_event', $this->plugin_admin, 'save_event_meta' );
-		$this->loader->add_action( 'save_post_wpfa_speaker', $this->plugin_admin, 'save_speaker_meta' );
+		$this->loader->add_action( 'save_post_wpfa_event', 'Wpfaevent_Meta_Event', 'save_meta' );
+		$this->loader->add_action( 'save_post_wpfa_speaker', 'Wpfaevent_Meta_Speaker', 'save_meta' );
 
 		// Show notice for block theme users.
 		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'maybe_show_block_theme_notice' );
+
+		// Keep event-owned speakers out of the global speaker admin list.
+		$this->loader->add_action( 'restrict_manage_posts', $this->plugin_admin, 'render_speaker_event_filter' );
+		$this->loader->add_action( 'pre_get_posts', $this->plugin_admin, 'filter_speaker_admin_list' );
+		$this->loader->add_filter( 'views_edit-wpfa_speaker', $this->plugin_admin, 'filter_speaker_admin_views' );
 
 		// Register AJAX handlers for the speakers page.
 		$this->loader->add_action( 'wp_ajax_wpfa_get_speaker', $this->plugin_admin, 'ajax_get_speaker' );
