@@ -23,6 +23,7 @@
   <!-- Exclude patterns -->
   <exclude-pattern>*/vendor/*</exclude-pattern>
   <exclude-pattern>*/node_modules/*</exclude-pattern>
+  <exclude-pattern>*/tmp/phpstan/*</exclude-pattern>
 
   <!--
     Legacy files pending refactor (issue #57). admin/partials is excluded
