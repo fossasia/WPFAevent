@@ -194,13 +194,15 @@ class Wpfaevent_Event_Handler {
 		// Handle featured image upload - use CORRECT file field name.
 		if ( ! empty( $_FILES['featured_image']['name'] ) ) {
 
-			// Validate file type.
+			// Validate file type using server-side detection (do not trust the client-provided MIME type).
 			$allowed_types = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
 
-			// Check if the file type is set and sanitize it.
-			$file_type = isset( $_FILES['featured_image']['type'] ) ? sanitize_text_field( wp_unslash( $_FILES['featured_image']['type'] ) ) : '';
+			$filename = isset( $_FILES['featured_image']['name'] ) ? sanitize_file_name( wp_unslash( $_FILES['featured_image']['name'] ) ) : '';
+			$tmp_name = isset( $_FILES['featured_image']['tmp_name'] ) ? $_FILES['featured_image']['tmp_name'] : '';
+			$fileinfo = wp_check_filetype_and_ext( $tmp_name, $filename );
+			$file_type = isset( $fileinfo['type'] ) ? $fileinfo['type'] : '';
 
-			if ( ! in_array( $file_type, $allowed_types, true ) ) {
+			if ( empty( $fileinfo['ext'] ) || ! in_array( $file_type, $allowed_types, true ) ) {
 				wp_send_json_error( esc_html__( 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'wpfaevent' ) );
 			}
 
@@ -337,13 +339,15 @@ class Wpfaevent_Event_Handler {
 
 		// Handle featured image upload.
 		if ( ! empty( $_FILES['featured_image']['name'] ) ) {
-			// Validate file type.
+			// Validate file type using server-side detection (do not trust the client-provided MIME type).
 			$allowed_types = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
 
-			// Check if the file type is set and sanitize it.
-			$file_type = isset( $_FILES['featured_image']['type'] ) ? sanitize_text_field( wp_unslash( $_FILES['featured_image']['type'] ) ) : '';
+			$filename = isset( $_FILES['featured_image']['name'] ) ? sanitize_file_name( wp_unslash( $_FILES['featured_image']['name'] ) ) : '';
+			$tmp_name = isset( $_FILES['featured_image']['tmp_name'] ) ? $_FILES['featured_image']['tmp_name'] : '';
+			$fileinfo = wp_check_filetype_and_ext( $tmp_name, $filename );
+			$file_type = isset( $fileinfo['type'] ) ? $fileinfo['type'] : '';
 
-			if ( ! in_array( $file_type, $allowed_types, true ) ) {
+			if ( empty( $fileinfo['ext'] ) || ! in_array( $file_type, $allowed_types, true ) ) {
 				wp_send_json_error( esc_html__( 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'wpfaevent' ) );
 			}
 

@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <!-- Create Event Modal -->
 <div id="createEventModal" class="modal">
 	<div class="modal-content">
-		<span class="close-btn">&times;</span>
+		<button type="button" class="close-btn" aria-label="<?php esc_attr_e( 'Close', 'wpfaevent' ); ?>">&times;</button>
 		<form id="createEventForm">
 			<h2><?php esc_html_e( 'Create a New Event', 'wpfaevent' ); ?></h2>
 			
@@ -64,7 +64,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <!-- Edit Event Modal -->
 <div id="editEventModal" class="modal">
 	<div class="modal-content">
-		<span class="close-btn">&times;</span>
+		<button type="button" class="close-btn" aria-label="<?php esc_attr_e( 'Close', 'wpfaevent' ); ?>">&times;</button>
 		<form id="editEventForm">
 			<h2><?php esc_html_e( 'Edit Event', 'wpfaevent' ); ?></h2>
 			<input type="hidden" id="editEventId" name="event_id">

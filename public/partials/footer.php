@@ -78,7 +78,7 @@ $is_admin = current_user_can( 'manage_options' );
 <!-- Admin-only footer edit modal -->
 <div id="edit-footer-modal" class="modal">
 	<div class="modal-content">
-		<span class="close-btn">&times;</span>
+		<button type="button" class="close-btn" aria-label="<?php esc_attr_e( 'Close', 'wpfaevent' ); ?>">&times;</button>
 		<form id="edit-footer-form">
 			<h2><?php esc_html_e( 'Edit Footer Text', 'wpfaevent' ); ?></h2>
 			<label for="footer-text"><?php esc_html_e( 'Footer Content:', 'wpfaevent' ); ?></label>

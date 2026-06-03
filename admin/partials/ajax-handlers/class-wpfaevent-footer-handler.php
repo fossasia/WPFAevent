@@ -76,11 +76,13 @@ class Wpfaevent_Footer_Handler {
 
 		$footer_text = sanitize_textarea_field( wp_unslash( $_POST['footer_text'] ) );
 
-		// Save to options.
-		if ( update_option( 'wpfa_footer_text', $footer_text ) ) {
-				wp_send_json_success( esc_html__( 'Footer text updated successfully', 'wpfaevent' ) );
-		} else {
-			wp_send_json_error( esc_html__( 'Failed to update footer text', 'wpfaevent' ) );
+		// Save to options. update_option() returns false when the value is unchanged, which is not an error.
+		$existing = get_option( 'wpfa_footer_text', '' );
+
+		if ( $existing === $footer_text || update_option( 'wpfa_footer_text', $footer_text ) ) {
+			wp_send_json_success( esc_html__( 'Footer text updated successfully', 'wpfaevent' ) );
 		}
+
+		wp_send_json_error( esc_html__( 'Failed to update footer text', 'wpfaevent' ) );
 	}
 }

@@ -96,7 +96,9 @@ usort(
 usort(
 	$past_events,
 	static function ( $event_a, $event_b ) {
-		$date_compare = strcmp( $event_b['end'], $event_a['end'] );
+		$date_a       = ! empty( $event_a['end'] ) ? $event_a['end'] : $event_a['start'];
+		$date_b       = ! empty( $event_b['end'] ) ? $event_b['end'] : $event_b['start'];
+		$date_compare = strcmp( $date_b, $date_a );
 		if ( 0 !== $date_compare ) {
 			return $date_compare;
 		}
@@ -335,7 +337,6 @@ if ( $is_admin ) {
 }
 ?>
 
-<?php wp_head(); ?>
 <?php wp_footer(); ?>
 </body>
 </html>
