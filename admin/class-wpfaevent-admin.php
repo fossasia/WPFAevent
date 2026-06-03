@@ -606,9 +606,23 @@ class Wpfaevent_Admin {
 			$base_url = $current['base_url'];
 		}
 
-		$settings['base_url']       = untrailingslashit( $base_url );
 		$settings['organizer_slug'] = isset( $input['organizer_slug'] ) ? $this->sanitize_eventyay_path_segment( $input['organizer_slug'] ) : '';
 		$settings['event_slug']     = isset( $input['event_slug'] ) ? $this->sanitize_eventyay_path_segment( $input['event_slug'] ) : '';
+		$parsed_event_url           = $this->parse_eventyay_public_event_url( $base_url );
+
+		if ( $parsed_event_url ) {
+			$base_url = $parsed_event_url['base_url'];
+
+			if ( empty( $settings['organizer_slug'] ) ) {
+				$settings['organizer_slug'] = $parsed_event_url['organizer_slug'];
+			}
+
+			if ( empty( $settings['event_slug'] ) ) {
+				$settings['event_slug'] = $parsed_event_url['event_slug'];
+			}
+		}
+
+		$settings['base_url'] = untrailingslashit( $base_url );
 
 		if ( ! empty( $input['clear_api_token'] ) ) {
 			$settings['api_token'] = '';
@@ -663,6 +677,9 @@ class Wpfaevent_Admin {
 				<p>
 					<?php esc_html_e( 'Import events from the current Eventyay REST API endpoint:', 'wpfaevent' ); ?>
 					<code>/api/v1/organizers/{organizer}/events/</code>
+				</p>
+				<p class="description">
+					<?php esc_html_e( 'When an event slug is provided, the importer also tries compatible event API URLs before reporting an event as not found.', 'wpfaevent' ); ?>
 				</p>
 
 				<form method="post" action="<?php echo esc_url( admin_url( 'options.php' ) ); ?>">
@@ -848,6 +865,50 @@ class Wpfaevent_Admin {
 	}
 
 	/**
+	 * Parse a public Eventyay event URL into root URL and path slugs.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $url Public Eventyay URL.
+	 * @return array<string, string>
+	 */
+	private function parse_eventyay_public_event_url( $url ) {
+		$parts = wp_parse_url( $url );
+
+		if ( empty( $parts['scheme'] ) || empty( $parts['host'] ) || empty( $parts['path'] ) ) {
+			return array();
+		}
+
+		$path = trim( $parts['path'], '/' );
+		if ( '' === $path || 0 === strpos( $path, 'api/' ) || 0 === strpos( $path, 'v1/' ) ) {
+			return array();
+		}
+
+		$segments = array_values( array_filter( explode( '/', $path ) ) );
+		if ( count( $segments ) < 2 ) {
+			return array();
+		}
+
+		$organizer_slug = $this->sanitize_eventyay_path_segment( $segments[0] );
+		$event_slug     = $this->sanitize_eventyay_path_segment( $segments[1] );
+
+		if ( empty( $organizer_slug ) || empty( $event_slug ) ) {
+			return array();
+		}
+
+		$base_url = $parts['scheme'] . '://' . $parts['host'];
+		if ( ! empty( $parts['port'] ) ) {
+			$base_url .= ':' . absint( $parts['port'] );
+		}
+
+		return array(
+			'base_url'       => esc_url_raw( $base_url ),
+			'organizer_slug' => $organizer_slug,
+			'event_slug'     => $event_slug,
+		);
+	}
+
+	/**
 	 * Import Eventyay event resources from saved settings.
 	 *
 	 * @since 1.0.0
@@ -938,9 +999,44 @@ class Wpfaevent_Admin {
 	 * @return array|WP_Error Event resources and metadata.
 	 */
 	private function fetch_eventyay_event_resources( $settings ) {
-		$endpoint = $this->build_eventyay_events_endpoint( $settings );
-		if ( is_wp_error( $endpoint ) ) {
-			return $endpoint;
+		$endpoints = $this->build_eventyay_event_endpoint_candidates( $settings );
+		if ( is_wp_error( $endpoints ) ) {
+			return $endpoints;
+		}
+
+		$not_found_errors = array();
+
+		foreach ( $endpoints as $endpoint ) {
+			$fetched = $this->fetch_eventyay_event_resources_from_endpoint( $endpoint, $settings );
+			if ( ! is_wp_error( $fetched ) ) {
+				return $fetched;
+			}
+
+			if ( ! $this->eventyay_error_has_http_status( $fetched, 404 ) ) {
+				return $fetched;
+			}
+
+			$not_found_errors[] = $fetched;
+		}
+
+		return $this->eventyay_event_not_found_error( $endpoints, $not_found_errors );
+	}
+
+	/**
+	 * Fetch Eventyay events from one endpoint, following paginated responses.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $endpoint Event endpoint URL.
+	 * @param array  $settings Import settings.
+	 * @return array|WP_Error Event resources and metadata.
+	 */
+	private function fetch_eventyay_event_resources_from_endpoint( $endpoint, $settings ) {
+		if ( empty( $endpoint ) || ! wp_http_validate_url( $endpoint ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_invalid_url',
+				esc_html__( 'The Eventyay API URL is invalid.', 'wpfaevent' )
+			);
 		}
 
 		$events    = array();
@@ -993,12 +1089,141 @@ class Wpfaevent_Admin {
 			foreach ( $this->extract_eventyay_event_resources( $payload ) as $event ) {
 				$events[] = $this->hydrate_eventyay_event_resource( $event, $settings, false );
 			}
-				$next_url = '';
+			$next_url = '';
 		}
 
 		return array(
-			'events' => $events,
-			'pages'  => $page,
+			'events'   => $events,
+			'pages'    => $page,
+			'endpoint' => $endpoint,
+		);
+	}
+
+	/**
+	 * Build Eventyay event endpoints to try for the saved settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $settings Import settings.
+	 * @return array|WP_Error Endpoint URLs.
+	 */
+	private function build_eventyay_event_endpoint_candidates( $settings ) {
+		$primary_endpoint = $this->build_eventyay_events_endpoint( $settings );
+		if ( is_wp_error( $primary_endpoint ) ) {
+			return $primary_endpoint;
+		}
+
+		$endpoints = array( $primary_endpoint );
+
+		if ( ! empty( $settings['event_slug'] ) ) {
+			$endpoints = array_merge(
+				$endpoints,
+				$this->build_eventyay_legacy_event_endpoint_candidates( $settings )
+			);
+		}
+
+		return array_values( array_unique( array_filter( $endpoints ) ) );
+	}
+
+	/**
+	 * Build legacy Open Event API endpoints for event-slug imports.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $settings Import settings.
+	 * @return array Endpoint URLs.
+	 */
+	private function build_eventyay_legacy_event_endpoint_candidates( $settings ) {
+		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
+		$base_url   = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
+		$event_slug = $this->sanitize_eventyay_path_segment( $settings['event_slug'] );
+
+		if ( empty( $event_slug ) || empty( $base_url ) || ! wp_http_validate_url( $base_url ) ) {
+			return array();
+		}
+
+		$api_bases   = array( $base_url );
+		$api_bases[] = apply_filters( 'wpfaevent_eventyay_legacy_api_base_url', 'https://api.eventyay.com', $settings );
+		$endpoints   = array();
+
+		foreach ( array_unique( array_filter( $api_bases ) ) as $api_base ) {
+			$api_base = untrailingslashit( esc_url_raw( $api_base ) );
+			if ( empty( $api_base ) || ! wp_http_validate_url( $api_base ) ) {
+				continue;
+			}
+
+			$endpoints[] = esc_url_raw(
+				trailingslashit( $this->trim_eventyay_legacy_api_version_path( $api_base ) ) .
+				'v1/events/' .
+				rawurlencode( $event_slug )
+			);
+		}
+
+		return $endpoints;
+	}
+
+	/**
+	 * Trim a trailing /v1 path before building legacy Open Event API URLs.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $api_base API base URL.
+	 * @return string Base URL without a trailing /v1 path.
+	 */
+	private function trim_eventyay_legacy_api_version_path( $api_base ) {
+		return preg_replace( '#/v1/?$#', '', untrailingslashit( $api_base ) );
+	}
+
+	/**
+	 * Check whether a WP_Error represents a given HTTP status.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Error $error       Error object.
+	 * @param int      $http_status HTTP status code.
+	 * @return bool
+	 */
+	private function eventyay_error_has_http_status( $error, $http_status ) {
+		if ( ! is_wp_error( $error ) ) {
+			return false;
+		}
+
+		$data = $error->get_error_data();
+
+		return is_array( $data )
+			&& isset( $data['http_status'] )
+			&& absint( $data['http_status'] ) === absint( $http_status );
+	}
+
+	/**
+	 * Build a clear event-not-found error after all candidate endpoints fail.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $endpoints        Endpoint URLs that were tried.
+	 * @param array $not_found_errors 404 errors returned by the endpoints.
+	 * @return WP_Error
+	 */
+	private function eventyay_event_not_found_error( $endpoints, $not_found_errors ) {
+		$tried_endpoints = implode( ', ', array_map( 'esc_url_raw', $endpoints ) );
+
+		return new WP_Error(
+			'wpfaevent_eventyay_event_not_found',
+			sprintf(
+				/* translators: %s: comma-separated Eventyay API endpoint URLs. */
+				esc_html__( 'Could not find the Eventyay event. Tried: %s. Please confirm the event exists, the event is visible to your API token, and the API base URL, organizer slug, and event slug are correct.', 'wpfaevent' ),
+				$tried_endpoints
+			),
+			array(
+				'http_status' => 404,
+				'endpoints'   => array_map( 'esc_url_raw', $endpoints ),
+				'errors'      => array_map(
+					static function ( $error ) {
+						return is_wp_error( $error ) ? $error->get_error_message() : '';
+					},
+					$not_found_errors
+				),
+			)
 		);
 	}
 
@@ -2018,7 +2243,7 @@ class Wpfaevent_Admin {
 		}
 
 		$headers = array(
-			'Accept' => 'application/json, text/javascript',
+			'Accept' => 'application/json, application/vnd.api+json, text/javascript',
 		);
 
 		if ( ! empty( $api_token ) ) {
@@ -2049,12 +2274,14 @@ class Wpfaevent_Admin {
 			return new WP_Error(
 				'wpfaevent_eventyay_http_error',
 				sprintf(
-					/* translators: %d: HTTP status code. */
-					esc_html__( 'Eventyay API returned HTTP %d.', 'wpfaevent' ),
-					$status
+					/* translators: 1: HTTP status code, 2: Eventyay API URL. */
+					esc_html__( 'Eventyay API returned HTTP %1$d for %2$s.', 'wpfaevent' ),
+					$status,
+					esc_url_raw( $api_url )
 				),
 				array(
 					'http_status' => $status,
+					'url'         => esc_url_raw( $api_url ),
 					'body'        => $this->decode_eventyay_error_body( $body ),
 				)
 			);
@@ -2160,14 +2387,78 @@ class Wpfaevent_Admin {
 	}
 
 		/**
-		 * Create or update one imported Eventyay event post.
+		 * Get Eventyay event languages from likely field shapes.
 		 *
 		 * @since 1.0.0
 		 *
-		 * @param array $event    Eventyay event resource.
-		 * @param array $settings Import settings.
-		 * @return array|WP_Error Upsert result.
+		 * @param array $event Eventyay event resource.
+		 * @return array<string>
 		 */
+	private function eventyay_event_languages( $event ) {
+		$languages = $this->eventyay_event_first_present_raw(
+			$event,
+			array(
+				'languages',
+				'language',
+				'event_languages',
+				'event-languages',
+				'event_language',
+				'event-language',
+				'supported_languages',
+				'supported-languages',
+				'content_languages',
+				'content-languages',
+				'content_locales',
+				'content-locales',
+				'locales',
+				'locale',
+			),
+			true
+		);
+
+		return Wpfaevent_Meta_Event::sanitize_language_list( $languages );
+	}
+
+	/**
+	 * Get Eventyay event theme colors from event settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event Eventyay event resource.
+	 * @return array<string, string>
+	 */
+	private function eventyay_event_colors( $event ) {
+		$color_fields = array(
+			'wpfa_event_primary_color'          => array( 'primary_color', 'primary-color', 'primaryColor', 'event_color', 'event-color', 'theme_color', 'theme-color', 'color' ),
+			'wpfa_event_hover_button_color'     => array( 'hover_button_color', 'hover-button-color', 'hoverButtonColor', 'button_hover_color', 'button-hover-color' ),
+			'wpfa_event_theme_background_color' => array( 'theme_color_background', 'theme-color-background', 'themeColorBackground', 'background_color', 'background-color' ),
+			'wpfa_event_theme_success_color'    => array( 'theme_color_success', 'theme-color-success', 'themeColorSuccess', 'success_color', 'success-color' ),
+			'wpfa_event_theme_danger_color'     => array( 'theme_color_danger', 'theme-color-danger', 'themeColorDanger', 'danger_color', 'danger-color' ),
+		);
+		$colors       = array();
+
+		foreach ( $color_fields as $meta_key => $candidate_keys ) {
+			$color = Wpfaevent_Meta_Event::sanitize_color_value(
+				$this->eventyay_event_first_present_raw( $event, $candidate_keys, true )
+			);
+
+			if ( $color ) {
+				$colors[ $meta_key ] = $color;
+			}
+		}
+
+		return $colors;
+	}
+
+			/**
+			 * Create or update one imported Eventyay event post.
+			 *
+			 * @since 1.0.0
+			 *
+			 * @param array $event    Eventyay event resource.
+			 * @param array $settings Import settings.
+			 * @return array|WP_Error Upsert result.
+			 */
 	private function upsert_eventyay_event_post( $event, $settings ) {
 		$event      = $this->normalize_eventyay_event_resource( $event );
 		$event_slug = $this->eventyay_event_slug( $event );
@@ -2213,15 +2504,24 @@ class Wpfaevent_Admin {
 			);
 		}
 
-		$start_date = $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'start' ) );
-		$end_date   = $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'end' ) );
-		$location   = $this->eventyay_event_location( $event );
-		$event_url  = $this->eventyay_public_event_url( $event, $settings, $event_slug );
+		$start_date    = $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'start' ) );
+			$end_date  = $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'end' ) );
+			$location  = $this->eventyay_event_location( $event );
+			$event_url = $this->eventyay_public_event_url( $event, $settings, $event_slug );
+			$languages = $this->eventyay_event_languages( $event );
+			$colors    = $this->eventyay_event_colors( $event );
 
-		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_start_date', $start_date );
-		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_end_date', $end_date );
-		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_location', $location );
-		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_url', $event_url );
+			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_start_date', $start_date );
+			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_end_date', $end_date );
+			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_location', $location );
+			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_url', $event_url );
+			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_languages', $languages );
+
+		if ( ! empty( $colors ) || $this->eventyay_event_has_settings_payload( $event ) ) {
+			foreach ( Wpfaevent_Meta_Event::get_event_color_meta_fields() as $meta_key => $label ) {
+				$this->update_or_delete_post_meta( $saved_id, $meta_key, isset( $colors[ $meta_key ] ) ? $colors[ $meta_key ] : '' );
+			}
+		}
 
 		// Keep older dashboard/landing metadata in sync with the canonical event meta.
 		$this->update_or_delete_post_meta( $saved_id, '_event_date', $start_date );
@@ -3071,16 +3371,34 @@ class Wpfaevent_Admin {
 		return $this->eventyay_text_value( $value );
 	}
 
-		/**
-		 * Return the first non-empty raw event field from top-level data, metadata, or settings.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param array $event            Eventyay event resource.
-		 * @param array $keys             Candidate keys.
-		 * @param bool  $include_settings Whether to check Eventyay settings payloads.
-		 * @return mixed
-		 */
+	/**
+	 * Determine whether an Eventyay event has a fetched settings payload.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event Eventyay event resource.
+	 * @return bool
+	 */
+	private function eventyay_event_has_settings_payload( $event ) {
+		foreach ( array( '_eventyay_settings', 'settings' ) as $settings_key ) {
+			if ( ! empty( $event[ $settings_key ] ) && is_array( $event[ $settings_key ] ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+			/**
+			 * Return the first non-empty raw event field from top-level data, metadata, or settings.
+			 *
+			 * @since 1.0.0
+			 *
+			 * @param array $event            Eventyay event resource.
+			 * @param array $keys             Candidate keys.
+			 * @param bool  $include_settings Whether to check Eventyay settings payloads.
+			 * @return mixed
+			 */
 	private function eventyay_event_first_present_raw( $event, $keys, $include_settings = false ) {
 		$value = $this->eventyay_first_present_raw( $event, $keys );
 		if ( $this->eventyay_value_is_non_empty( $value ) ) {
@@ -3100,7 +3418,8 @@ class Wpfaevent_Admin {
 		if ( $include_settings ) {
 			foreach ( array( '_eventyay_settings', 'settings' ) as $settings_key ) {
 				if ( ! empty( $event[ $settings_key ] ) && is_array( $event[ $settings_key ] ) ) {
-					$value = $this->eventyay_first_present_raw( $event[ $settings_key ], $keys );
+					$settings_resource = $this->normalize_eventyay_api_resource( $event[ $settings_key ] );
+					$value             = $this->eventyay_first_present_raw( $settings_resource, $keys );
 
 					if ( $this->eventyay_value_is_non_empty( $value ) ) {
 						return $value;

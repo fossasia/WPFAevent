@@ -51,6 +51,7 @@ $current_track    = $read_filter_value( 'track', 'slug' );
 $current_tag      = $read_filter_value( 'tag', 'slug' );
 $current_when     = $read_filter_value( 'when', 'key' );
 $current_location = $read_filter_value( 'location', 'slug' );
+$current_language = $read_filter_value( 'language', 'slug' );
 $current_page     = max( 1, absint( get_query_var( 'paged', 1 ) ) );
 $query_page       = $read_filter_value( 'paged', 'int' );
 
@@ -151,56 +152,65 @@ $event_ids = get_posts(
 
 $events    = array();
 $locations = array();
+$languages = array();
 
 foreach ( $event_ids as $event_id ) {
-	$event_id     = absint( $event_id );
-	$event_title  = get_the_title( $event_id );
-	$start_date   = $normalize_event_date( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
-	$end_date     = $normalize_event_date( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
-	$location     = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
-	$event_url    = esc_url_raw( get_post_meta( $event_id, 'wpfa_event_url', true ) );
-	$track_terms  = $get_event_terms( $event_id, 'wpfa_event_track' );
-	$tag_terms    = $get_event_terms( $event_id, 'wpfa_event_tag' );
-	$track_names  = $get_term_names( $track_terms );
-	$tag_names    = $get_term_names( $tag_terms );
-	$track_slugs  = $get_term_slugs( $track_terms );
-	$tag_slugs    = $get_term_slugs( $tag_terms );
-	$excerpt      = $build_event_excerpt( $event_id );
-	$image_url    = get_the_post_thumbnail_url( $event_id, 'large' );
-	$date_key     = $end_date ? $end_date : $start_date;
-	$event_status = ( $date_key && $date_key < $today ) ? 'past' : 'upcoming';
-	$sort_date    = $start_date ? $start_date : $end_date;
-	$sort_time    = $sort_date ? strtotime( $sort_date ) : PHP_INT_MAX;
-	$speaker_ids  = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_admin_event_speaker_ids( $event_id ) : array();
-	$event_slug   = get_post_field( 'post_name', $event_id );
+	$event_id        = absint( $event_id );
+	$event_title     = get_the_title( $event_id );
+	$start_date      = $normalize_event_date( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
+	$end_date        = $normalize_event_date( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
+	$location        = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
+	$event_languages = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array();
+	$event_url       = esc_url_raw( get_post_meta( $event_id, 'wpfa_event_url', true ) );
+	$track_terms     = $get_event_terms( $event_id, 'wpfa_event_track' );
+	$tag_terms       = $get_event_terms( $event_id, 'wpfa_event_tag' );
+	$track_names     = $get_term_names( $track_terms );
+	$tag_names       = $get_term_names( $tag_terms );
+	$track_slugs     = $get_term_slugs( $track_terms );
+	$tag_slugs       = $get_term_slugs( $tag_terms );
+	$excerpt         = $build_event_excerpt( $event_id );
+	$image_url       = get_the_post_thumbnail_url( $event_id, 'large' );
+	$date_key        = $end_date ? $end_date : $start_date;
+	$event_status    = ( $date_key && $date_key < $today ) ? 'past' : 'upcoming';
+	$sort_date       = $start_date ? $start_date : $end_date;
+	$sort_time       = $sort_date ? strtotime( $sort_date ) : PHP_INT_MAX;
+	$speaker_ids     = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_admin_event_speaker_ids( $event_id ) : array();
+	$event_slug      = get_post_field( 'post_name', $event_id );
 
 	if ( $location ) {
 		$locations[ sanitize_title( $location ) ] = $location;
 	}
 
+	foreach ( $event_languages as $language ) {
+		$languages[ sanitize_title( $language ) ] = $language;
+	}
+
 	$events[] = array(
-		'id'           => $event_id,
-		'title'        => $event_title,
-		'start_date'   => $start_date,
-		'end_date'     => $end_date,
-		'date_label'   => $format_event_date_range( $start_date, $end_date ),
-		'location'     => $location,
-		'location_key' => sanitize_title( $location ),
-		'event_url'    => $event_url,
-		'track_names'  => $track_names,
-		'track_slugs'  => $track_slugs,
-		'tag_names'    => $tag_names,
-		'tag_slugs'    => $tag_slugs,
-		'excerpt'      => $excerpt,
-		'image_url'    => $image_url,
-		'status'       => $event_status,
-		'sort_time'    => $sort_time,
-		'speaker_ids'  => $speaker_ids,
-		'speakers_url' => add_query_arg( 'event', $event_slug, home_url( '/speakers/' ) ),
+		'id'            => $event_id,
+		'title'         => $event_title,
+		'start_date'    => $start_date,
+		'end_date'      => $end_date,
+		'date_label'    => $format_event_date_range( $start_date, $end_date ),
+		'location'      => $location,
+		'location_key'  => sanitize_title( $location ),
+		'languages'     => $event_languages,
+		'language_keys' => array_map( 'sanitize_title', $event_languages ),
+		'event_url'     => $event_url,
+		'track_names'   => $track_names,
+		'track_slugs'   => $track_slugs,
+		'tag_names'     => $tag_names,
+		'tag_slugs'     => $tag_slugs,
+		'excerpt'       => $excerpt,
+		'image_url'     => $image_url,
+		'status'        => $event_status,
+		'sort_time'     => $sort_time,
+		'speaker_ids'   => $speaker_ids,
+		'speakers_url'  => add_query_arg( 'event', $event_slug, home_url( '/speakers/' ) ),
 	);
 }
 
 asort( $locations );
+asort( $languages );
 
 $tracks = get_terms(
 	array(
@@ -243,6 +253,10 @@ foreach ( $events as $event ) {
 		continue;
 	}
 
+	if ( $current_language && ! in_array( $current_language, $event['language_keys'], true ) ) {
+		continue;
+	}
+
 	if ( $search_query ) {
 		$searchable_text = implode(
 			' ',
@@ -254,7 +268,8 @@ foreach ( $events as $event ) {
 					$event['date_label'],
 				),
 				$event['track_names'],
-				$event['tag_names']
+				$event['tag_names'],
+				$event['languages']
 			)
 		);
 
@@ -307,6 +322,10 @@ if ( 'all' !== $current_when ) {
 
 if ( '' !== $current_location ) {
 	$active_filter_args['location'] = $current_location;
+}
+
+if ( '' !== $current_language ) {
+	$active_filter_args['language'] = $current_language;
 }
 
 $has_active_filters = ! empty( $active_filter_args );
@@ -362,7 +381,7 @@ $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 					<div class="wpfa-event-filter-head">
 						<div>
 							<h2 id="wpfa-event-filter-title"><?php esc_html_e( 'Find Events', 'wpfaevent' ); ?></h2>
-							<p><?php esc_html_e( 'Filter events by name, topic, track, date, and location.', 'wpfaevent' ); ?></p>
+							<p><?php esc_html_e( 'Filter events by name, topic, track, date, location, and language.', 'wpfaevent' ); ?></p>
 						</div>
 						<?php if ( $has_active_filters ) : ?>
 							<a class="wpfa-event-reset" href="<?php echo esc_url( $archive_url ); ?>">
@@ -408,6 +427,18 @@ $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 								<?php foreach ( $locations as $location_key => $location_label ) : ?>
 									<option value="<?php echo esc_attr( $location_key ); ?>" <?php selected( $current_location, $location_key ); ?>>
 										<?php echo esc_html( $location_label ); ?>
+									</option>
+								<?php endforeach; ?>
+							</select>
+						</label>
+
+						<label class="wpfa-event-field">
+							<span><?php esc_html_e( 'Language', 'wpfaevent' ); ?></span>
+							<select name="language">
+								<option value=""><?php esc_html_e( 'All languages', 'wpfaevent' ); ?></option>
+								<?php foreach ( $languages as $language_key => $language_label ) : ?>
+									<option value="<?php echo esc_attr( $language_key ); ?>" <?php selected( $current_language, $language_key ); ?>>
+										<?php echo esc_html( $language_label ); ?>
 									</option>
 								<?php endforeach; ?>
 							</select>
@@ -510,9 +541,9 @@ $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 											<p><?php echo esc_html( $event['excerpt'] ); ?></p>
 										<?php endif; ?>
 
-										<?php if ( ! empty( $event['track_names'] ) || ! empty( $event['tag_names'] ) ) : ?>
+										<?php if ( ! empty( $event['track_names'] ) || ! empty( $event['tag_names'] ) || ! empty( $event['languages'] ) ) : ?>
 											<div class="wpfa-event-badges" aria-label="<?php esc_attr_e( 'Event categories', 'wpfaevent' ); ?>">
-												<?php foreach ( array_slice( array_merge( $event['track_names'], $event['tag_names'] ), 0, 4 ) as $badge_label ) : ?>
+												<?php foreach ( array_slice( array_merge( $event['track_names'], $event['tag_names'], $event['languages'] ), 0, 5 ) as $badge_label ) : ?>
 													<span><?php echo esc_html( $badge_label ); ?></span>
 												<?php endforeach; ?>
 											</div>

@@ -82,6 +82,39 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_languages',
+			array(
+				'type'              => 'array',
+				'single'            => true,
+				'show_in_rest'      => array(
+					'schema' => array(
+						'type'  => 'array',
+						'items' => array(
+							'type' => 'string',
+						),
+					),
+				),
+				'sanitize_callback' => array( __CLASS__, 'sanitize_language_list' ),
+				'description'       => __( 'Event languages', 'wpfaevent' ),
+			)
+		);
+
+		foreach ( self::get_event_color_meta_fields() as $meta_key => $label ) {
+			register_post_meta(
+				self::$post_type,
+				$meta_key,
+				array(
+					'type'              => 'string',
+					'single'            => true,
+					'show_in_rest'      => true,
+					'sanitize_callback' => array( __CLASS__, 'sanitize_color_value' ),
+					'description'       => $label,
+				)
+			);
+		}
+
 		// Event speakers as an array of speaker IDs.
 		register_post_meta(
 			self::$post_type,
@@ -135,6 +168,8 @@ class Wpfaevent_Meta_Event {
 		$end_date   = get_post_meta( $post->ID, 'wpfa_event_end_date', true );
 		$location   = get_post_meta( $post->ID, 'wpfa_event_location', true );
 		$url        = get_post_meta( $post->ID, 'wpfa_event_url', true );
+		$languages  = self::sanitize_language_list( get_post_meta( $post->ID, 'wpfa_event_languages', true ) );
+		$colors     = self::get_event_colors( $post->ID );
 		$speakers   = self::get_admin_event_speaker_ids( $post->ID );
 		?>
 		<table class="form-table">
@@ -153,6 +188,27 @@ class Wpfaevent_Meta_Event {
 			<tr>
 				<th><label for="wpfa_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
 				<td><input type="url" id="wpfa_event_url" name="wpfa_event_url" value="<?php echo esc_attr( $url ); ?>" class="regular-text" placeholder="https://"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_languages"><?php esc_html_e( 'Event Languages', 'wpfaevent' ); ?></label></th>
+				<td>
+					<input type="text" id="wpfa_event_languages" name="wpfa_event_languages" value="<?php echo esc_attr( implode( ', ', $languages ) ); ?>" class="regular-text">
+					<p class="description"><?php esc_html_e( 'Comma-separated language names or codes, e.g. English, Hindi, German.', 'wpfaevent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Event Colors', 'wpfaevent' ); ?></th>
+				<td>
+					<fieldset>
+						<?php foreach ( self::get_event_color_meta_fields() as $meta_key => $label ) : ?>
+							<label style="display:block;margin-bottom:8px;" for="<?php echo esc_attr( $meta_key ); ?>">
+								<span style="display:inline-block;min-width:180px;"><?php echo esc_html( $label ); ?></span>
+								<input type="text" id="<?php echo esc_attr( $meta_key ); ?>" name="<?php echo esc_attr( $meta_key ); ?>" value="<?php echo esc_attr( isset( $colors[ $meta_key ] ) ? $colors[ $meta_key ] : '' ); ?>" class="regular-text" placeholder="#D51007">
+							</label>
+						<?php endforeach; ?>
+					</fieldset>
+					<p class="description"><?php esc_html_e( 'Imported from Eventyay settings when the API exposes event theme colors.', 'wpfaevent' ); ?></p>
+				</td>
 			</tr>
 			<tr>
 				<th><label for="wpfa_event_speakers"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></label></th>
@@ -235,6 +291,22 @@ class Wpfaevent_Meta_Event {
 
 		if ( isset( $_POST['wpfa_event_url'] ) ) {
 			update_post_meta( $post_id, 'wpfa_event_url', esc_url_raw( wp_unslash( $_POST['wpfa_event_url'] ) ) );
+		}
+
+		$languages = isset( $_POST['wpfa_event_languages'] ) ? self::sanitize_language_list( sanitize_text_field( wp_unslash( $_POST['wpfa_event_languages'] ) ) ) : array();
+		if ( ! empty( $languages ) ) {
+			update_post_meta( $post_id, 'wpfa_event_languages', $languages );
+		} else {
+			delete_post_meta( $post_id, 'wpfa_event_languages' );
+		}
+
+		foreach ( self::get_event_color_meta_fields() as $meta_key => $label ) {
+			$color = isset( $_POST[ $meta_key ] ) ? self::sanitize_color_value( sanitize_text_field( wp_unslash( $_POST[ $meta_key ] ) ) ) : '';
+			if ( '' !== $color ) {
+				update_post_meta( $post_id, $meta_key, $color );
+			} else {
+				delete_post_meta( $post_id, $meta_key );
+			}
 		}
 
 		$previous_speakers = self::get_event_speaker_ids( $post_id );
@@ -358,6 +430,145 @@ class Wpfaevent_Meta_Event {
 		$post_ids = array_filter( $post_ids );
 
 		return array_values( array_unique( $post_ids ) );
+	}
+
+	/**
+	 * Get event color meta fields.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<string, string>
+	 */
+	public static function get_event_color_meta_fields() {
+		return array(
+			'wpfa_event_primary_color'          => __( 'Primary color', 'wpfaevent' ),
+			'wpfa_event_hover_button_color'     => __( 'Button hover color', 'wpfaevent' ),
+			'wpfa_event_theme_background_color' => __( 'Theme background color', 'wpfaevent' ),
+			'wpfa_event_theme_success_color'    => __( 'Theme success color', 'wpfaevent' ),
+			'wpfa_event_theme_danger_color'     => __( 'Theme danger color', 'wpfaevent' ),
+		);
+	}
+
+	/**
+	 * Get sanitized event colors for a post.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<string, string>
+	 */
+	public static function get_event_colors( $event_id ) {
+		$colors = array();
+
+		foreach ( self::get_event_color_meta_fields() as $meta_key => $label ) {
+			$color = self::sanitize_color_value( get_post_meta( $event_id, $meta_key, true ) );
+			if ( '' !== $color ) {
+				$colors[ $meta_key ] = $color;
+			}
+		}
+
+		return $colors;
+	}
+
+	/**
+	 * Sanitize event language values.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $languages Raw language list.
+	 * @return array<string>
+	 */
+	public static function sanitize_language_list( $languages ) {
+		if ( is_string( $languages ) ) {
+			$decoded = json_decode( $languages, true );
+			if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
+				$languages = $decoded;
+			} else {
+				$languages = preg_split( '/[,|]/', $languages );
+			}
+		}
+
+		if ( is_scalar( $languages ) ) {
+			$languages = array( $languages );
+		}
+
+		if ( ! is_array( $languages ) ) {
+			return array();
+		}
+
+		$normalized = array();
+
+		foreach ( $languages as $language ) {
+			if ( is_array( $language ) ) {
+				foreach ( array( 'name', 'label', 'title', 'code', 'locale', 'language' ) as $key ) {
+					if ( ! empty( $language[ $key ] ) && is_scalar( $language[ $key ] ) ) {
+						$language = $language[ $key ];
+						break;
+					}
+				}
+			}
+
+			if ( ! is_scalar( $language ) ) {
+				continue;
+			}
+
+			$language = sanitize_text_field( (string) $language );
+			$language = trim( str_replace( '_', '-', $language ) );
+
+			if ( '' === $language ) {
+				continue;
+			}
+
+			$key = sanitize_title( $language );
+			if ( '' !== $key ) {
+				$normalized[ $key ] = $language;
+			}
+		}
+
+		return array_values( $normalized );
+	}
+
+	/**
+	 * Sanitize an Eventyay color value.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $color Raw color.
+	 * @return string
+	 */
+	public static function sanitize_color_value( $color ) {
+		if ( is_array( $color ) ) {
+			foreach ( array( 'value', 'color', 'hex', 'default' ) as $key ) {
+				if ( isset( $color[ $key ] ) ) {
+					return self::sanitize_color_value( $color[ $key ] );
+				}
+			}
+
+			return '';
+		}
+
+		if ( ! is_scalar( $color ) ) {
+			return '';
+		}
+
+		$color = trim( (string) $color );
+		if ( '' === $color ) {
+			return '';
+		}
+
+		if ( preg_match( '/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/', $color ) ) {
+			return strtoupper( $color );
+		}
+
+		if ( preg_match( '/^[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/', $color ) ) {
+			return '#' . strtoupper( $color );
+		}
+
+		if ( preg_match( '/^rgba?\(\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}(\\s*,\\s*(0|1|0?\\.\\d+))?\\s*\)$/', $color ) ) {
+			return $color;
+		}
+
+		return '';
 	}
 
 	/**

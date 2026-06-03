@@ -257,6 +257,8 @@ $event_title             = get_the_title( $event_id );
 $start_date              = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
 $end_date                = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
 $location                = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
+$event_languages         = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array();
+$event_language_label    = implode( ', ', $event_languages );
 $event_url               = get_post_meta( $event_id, 'wpfa_event_url', true );
 $event_url               = $event_url ? esc_url_raw( $event_url ) : '';
 $about_content           = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
@@ -276,6 +278,23 @@ $schedule_meta           = isset( $schedule_table['sessions'] ) && is_array( $sc
 $schedule_head           = ! empty( $schedule_rows[0] ) && is_array( $schedule_rows[0] ) ? $schedule_rows[0] : array();
 $schedule_body           = ! empty( $schedule_head ) ? array_slice( $schedule_rows, 1 ) : $schedule_rows;
 $speaker_count           = count( $speaker_ids );
+$event_colors            = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_colors( $event_id ) : array();
+$event_color_var_map     = array(
+	'wpfa_event_primary_color'          => '--event-primary',
+	'wpfa_event_hover_button_color'     => '--event-primary-dark',
+	'wpfa_event_theme_background_color' => '--event-soft',
+	'wpfa_event_theme_success_color'    => '--event-success',
+	'wpfa_event_theme_danger_color'     => '--event-danger',
+);
+$event_style_vars        = array();
+
+foreach ( $event_color_var_map as $meta_key => $css_var ) {
+	if ( ! empty( $event_colors[ $meta_key ] ) ) {
+		$event_style_vars[] = $css_var . ': ' . $event_colors[ $meta_key ];
+	}
+}
+
+$event_style_attr = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
 
 if ( '' === $about_content ) {
 	$about_content = '' !== $post_content ? $post_content : $event_lead;
@@ -337,7 +356,7 @@ $header_vars = array(
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<?php wp_head(); ?>
 </head>
-<body <?php body_class( 'wpfaevent wpfa-event-template' ); ?>>
+<body <?php body_class( 'wpfaevent wpfa-event-template' ); ?><?php echo $event_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>
 <?php wp_body_open(); ?>
 
 <div id="page" class="site">
@@ -368,6 +387,9 @@ $header_vars = array(
 						<?php endif; ?>
 						<?php if ( $location ) : ?>
 							<span itemprop="location"><?php echo esc_html( $location ); ?></span>
+						<?php endif; ?>
+						<?php if ( $event_language_label ) : ?>
+							<span><?php echo esc_html( $event_language_label ); ?></span>
 						<?php endif; ?>
 						<?php if ( ! empty( $schedule_items ) ) : ?>
 							<span>
@@ -409,6 +431,12 @@ $header_vars = array(
 							<div>
 								<dt><?php esc_html_e( 'Where', 'wpfaevent' ); ?></dt>
 								<dd><?php echo esc_html( $location ); ?></dd>
+							</div>
+						<?php endif; ?>
+						<?php if ( $event_language_label ) : ?>
+							<div>
+								<dt><?php esc_html_e( 'Languages', 'wpfaevent' ); ?></dt>
+								<dd><?php echo esc_html( $event_language_label ); ?></dd>
 							</div>
 						<?php endif; ?>
 						<div>
