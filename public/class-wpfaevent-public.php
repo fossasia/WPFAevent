@@ -366,5 +366,12 @@ class Wpfaevent_Public {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-public.js', array( 'jquery' ), $this->version, false );
+		wp_localize_script(
+			$this->plugin_name,
+			'wpfaeventPublic',
+			array(
+				'speakerPlaceholderAlt' => __( 'Speaker photo placeholder', 'wpfaevent' ),
+			)
+		);
 	}
 }

@@ -174,8 +174,6 @@ $header_vars = array(
 							src="<?php echo esc_url( $photo_url ); ?>"
 							alt="<?php echo esc_attr( $photo_alt ); ?>"
 							itemprop="image"
-							data-wpfa-placeholder-src="<?php echo esc_url( $placeholder_url ); ?>"
-							data-wpfa-placeholder-alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>"
 						>
 					<?php else : ?>
 						<img
