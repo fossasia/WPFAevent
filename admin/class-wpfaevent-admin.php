@@ -608,15 +608,16 @@ class Wpfaevent_Admin {
 
 		$settings['organizer_slug'] = isset( $input['organizer_slug'] ) ? $this->sanitize_eventyay_path_segment( $input['organizer_slug'] ) : '';
 		$settings['event_slug']     = isset( $input['event_slug'] ) ? $this->sanitize_eventyay_path_segment( $input['event_slug'] ) : '';
-		$parsed_event_url           = $this->parse_eventyay_public_import_url( $base_url );
+		$parsed_event_url           = $this->parse_eventyay_public_event_url( $base_url );
 
 		if ( $parsed_event_url ) {
-			$base_url                   = $parsed_event_url['base_url'];
-			$settings['organizer_slug'] = $parsed_event_url['organizer_slug'];
+			$base_url = $parsed_event_url['base_url'];
 
-			if ( ! empty( $parsed_event_url['is_event_list'] ) ) {
-				$settings['event_slug'] = '';
-			} else {
+			if ( empty( $settings['organizer_slug'] ) ) {
+				$settings['organizer_slug'] = $parsed_event_url['organizer_slug'];
+			}
+
+			if ( empty( $settings['event_slug'] ) ) {
 				$settings['event_slug'] = $parsed_event_url['event_slug'];
 			}
 		}
@@ -688,7 +689,7 @@ class Wpfaevent_Admin {
 							<th scope="row"><label for="wpfaevent_eventyay_base_url"><?php esc_html_e( 'Eventyay base URL', 'wpfaevent' ); ?></label></th>
 							<td>
 								<input type="url" class="regular-text" id="wpfaevent_eventyay_base_url" name="wpfaevent_eventyay_import_settings[base_url]" value="<?php echo esc_attr( $settings['base_url'] ); ?>" placeholder="https://eventyay.com">
-								<p class="description"><?php esc_html_e( 'Use the site root, not the API path. You may also paste a public Eventyay event URL or organizer event-list URL and the importer will extract the base URL and slugs.', 'wpfaevent' ); ?></p>
+								<p class="description"><?php esc_html_e( 'Use the site root, not the API path. Self-hosted Eventyay installs are supported.', 'wpfaevent' ); ?></p>
 							</td>
 						</tr>
 						<tr>
@@ -868,14 +869,14 @@ class Wpfaevent_Admin {
 	}
 
 	/**
-	 * Parse a public Eventyay import URL into root URL and path slugs.
+	 * Parse a public Eventyay event URL into root URL and path slugs.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $url Public Eventyay URL.
-	 * @return array<string, mixed>
+	 * @return array<string, string>
 	 */
-	private function parse_eventyay_public_import_url( $url ) {
+	private function parse_eventyay_public_event_url( $url ) {
 		$parts = wp_parse_url( $url );
 
 		if ( empty( $parts['scheme'] ) || empty( $parts['host'] ) || empty( $parts['path'] ) ) {
@@ -892,31 +893,6 @@ class Wpfaevent_Admin {
 			return array();
 		}
 
-		$base_url = $parts['scheme'] . '://' . $parts['host'];
-		if ( ! empty( $parts['port'] ) ) {
-			$base_url .= ':' . absint( $parts['port'] );
-		}
-		$base_url = esc_url_raw( $base_url );
-
-		if ( $this->is_eventyay_public_organizer_events_url( $segments ) ) {
-			$organizer_slug = $this->sanitize_eventyay_path_segment( $segments[2] );
-
-			if ( empty( $organizer_slug ) ) {
-				return array();
-			}
-
-			return array(
-				'base_url'       => $base_url,
-				'organizer_slug' => $organizer_slug,
-				'event_slug'     => '',
-				'is_event_list'  => true,
-			);
-		}
-
-		if ( 'common' === $segments[0] && isset( $segments[1] ) && 'organizer' === $segments[1] ) {
-			return array();
-		}
-
 		$organizer_slug = $this->sanitize_eventyay_path_segment( $segments[0] );
 		$event_slug     = $this->sanitize_eventyay_path_segment( $segments[1] );
 
@@ -924,27 +900,16 @@ class Wpfaevent_Admin {
 			return array();
 		}
 
+		$base_url = $parts['scheme'] . '://' . $parts['host'];
+		if ( ! empty( $parts['port'] ) ) {
+			$base_url .= ':' . absint( $parts['port'] );
+		}
+
 		return array(
-			'base_url'       => $base_url,
+			'base_url'       => esc_url_raw( $base_url ),
 			'organizer_slug' => $organizer_slug,
 			'event_slug'     => $event_slug,
-			'is_event_list'  => false,
 		);
-	}
-
-	/**
-	 * Determine whether path segments represent a public organizer events URL.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array<int, string> $segments Public URL path segments.
-	 * @return bool
-	 */
-	private function is_eventyay_public_organizer_events_url( $segments ) {
-		return count( $segments ) >= 4
-			&& 'common' === $segments[0]
-			&& 'organizer' === $segments[1]
-			&& 'events' === $segments[3];
 	}
 
 	/**
