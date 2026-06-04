@@ -23,7 +23,7 @@
   <!-- Exclude patterns -->
   <exclude-pattern>*/vendor/*</exclude-pattern>
   <exclude-pattern>*/node_modules/*</exclude-pattern>
-
+  <exclude-pattern>*/tmp/*</exclude-pattern>
   <!--
     Legacy files pending refactor (issue #57). admin/partials is excluded
     entirely (both files are legacy). Other public/partials files stay in scope.
