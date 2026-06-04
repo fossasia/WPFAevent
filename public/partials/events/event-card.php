@@ -32,7 +32,7 @@ $event_date        = get_post_meta( $event_id, 'wpfa_event_start_date', true );
 $event_end_date    = get_post_meta( $event_id, 'wpfa_event_end_date', true );
 $event_place       = get_post_meta( $event_id, 'wpfa_event_location', true );
 $event_description = get_the_excerpt( $event_id );
-$featured_img_url  = get_the_post_thumbnail_url( $event_id, 'large' ) ?: '';
+$featured_img_url  = get_the_post_thumbnail_url( $event_id, 'large' ) ?? '';
 
 // Check if date is valid (Admin Warning Logic).
 $is_valid_date = ! empty( $event_date ) && strtotime( $event_date ) !== false;
