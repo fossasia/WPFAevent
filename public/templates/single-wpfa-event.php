@@ -265,6 +265,9 @@ $about_content           = isset( $site_settings['about_section_content'] ) ? tr
 $post_content            = trim( (string) get_post_field( 'post_content', $event_id ) );
 $event_lead              = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
 $speaker_ids             = $get_linked_speaker_ids( $event_id );
+$featured_speaker_ids    = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_featured_speaker_ids( $event_id ) : array();
+$featured_speaker_ids    = array_values( array_intersect( $featured_speaker_ids, $speaker_ids ) );
+$regular_speaker_ids     = array_values( array_diff( $speaker_ids, $featured_speaker_ids ) );
 $event_slug              = get_post_field( 'post_name', $event_id );
 $speaker_placeholder_url = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
 $speakers_url            = add_query_arg( 'event', $event_slug, home_url( '/speakers/' ) );
@@ -278,6 +281,7 @@ $schedule_meta           = isset( $schedule_table['sessions'] ) && is_array( $sc
 $schedule_head           = ! empty( $schedule_rows[0] ) && is_array( $schedule_rows[0] ) ? $schedule_rows[0] : array();
 $schedule_body           = ! empty( $schedule_head ) ? array_slice( $schedule_rows, 1 ) : $schedule_rows;
 $speaker_count           = count( $speaker_ids );
+$featured_speaker_count  = count( $featured_speaker_ids );
 $event_colors            = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_colors( $event_id ) : array();
 $event_color_var_map     = array(
 	'wpfa_event_primary_color'          => '--event-primary',
@@ -295,6 +299,42 @@ foreach ( $event_color_var_map as $meta_key => $css_var ) {
 }
 
 $event_style_attr = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
+
+$dashboard_featured_speakers = array();
+$dashboard_regular_speakers  = array();
+
+foreach ( $dashboard_speakers as $dashboard_speaker ) {
+	if ( ! is_array( $dashboard_speaker ) || empty( $dashboard_speaker['name'] ) ) {
+		continue;
+	}
+
+	if ( ! empty( $dashboard_speaker['featured'] ) ) {
+		$dashboard_featured_speakers[] = $dashboard_speaker;
+		continue;
+	}
+
+	$dashboard_regular_speakers[] = $dashboard_speaker;
+}
+
+if ( ! empty( $dashboard_featured_speakers ) ) {
+	usort(
+		$dashboard_featured_speakers,
+		static function ( $speaker_a, $speaker_b ) {
+			$order_a = isset( $speaker_a['featured_order'] ) ? absint( $speaker_a['featured_order'] ) : 0;
+			$order_b = isset( $speaker_b['featured_order'] ) ? absint( $speaker_b['featured_order'] ) : 0;
+
+			if ( $order_a && $order_b && $order_a !== $order_b ) {
+				return $order_a <=> $order_b;
+			}
+
+			if ( $order_a !== $order_b ) {
+				return $order_a ? -1 : 1;
+			}
+
+			return strcasecmp( $speaker_a['name'] ?? '', $speaker_b['name'] ?? '' );
+		}
+	);
+}
 
 if ( '' === $about_content ) {
 	$about_content = '' !== $post_content ? $post_content : $event_lead;
@@ -490,77 +530,122 @@ $header_vars = array(
 					</div>
 
 					<?php if ( ! empty( $speaker_ids ) ) : ?>
-						<div class="wpfa-speakers-grid">
-							<?php
-							$wpfa_hide_speaker_card_admin_actions = true;
-							$wpfa_schedule_display_timezone       = $selected_schedule_timezone;
-							foreach ( $speaker_ids as $sid ) :
-								if ( 'wpfa_speaker' !== get_post_type( $sid ) || 'publish' !== get_post_status( $sid ) ) {
-									continue;
-								}
+						<?php if ( $featured_speaker_count ) : ?>
+							<div class="wpfa-event-featured-speakers">
+								<h3><?php esc_html_e( 'Featured Speakers', 'wpfaevent' ); ?></h3>
+								<div class="wpfa-speakers-grid wpfa-featured-speakers-grid">
+									<?php
+									$wpfa_hide_speaker_card_admin_actions = true;
+									$wpfa_schedule_display_timezone       = $selected_schedule_timezone;
+									$wpfa_featured_speaker_ids            = $featured_speaker_ids;
+									foreach ( $featured_speaker_ids as $sid ) :
+										if ( 'wpfa_speaker' !== get_post_type( $sid ) || 'publish' !== get_post_status( $sid ) ) {
+											continue;
+										}
 
-								include WPFAEVENT_PATH . 'public/partials/speakers/speaker-card.php';
-							endforeach;
-							unset( $wpfa_hide_speaker_card_admin_actions );
-							unset( $wpfa_schedule_display_timezone );
-							?>
-						</div>
-					<?php elseif ( ! empty( $dashboard_speakers ) ) : ?>
-						<div class="wpfa-speakers-grid">
-							<?php foreach ( $dashboard_speakers as $speaker ) : ?>
+										include WPFAEVENT_PATH . 'public/partials/speakers/speaker-card.php';
+									endforeach;
+									unset( $wpfa_hide_speaker_card_admin_actions );
+									unset( $wpfa_schedule_display_timezone );
+									unset( $wpfa_featured_speaker_ids );
+									?>
+								</div>
+							</div>
+
+							<?php if ( ! empty( $regular_speaker_ids ) ) : ?>
+								<div class="wpfa-event-speaker-list">
+									<h3><?php esc_html_e( 'More Speakers', 'wpfaevent' ); ?></h3>
+									<ul>
+										<?php foreach ( $regular_speaker_ids as $sid ) : ?>
+											<?php
+											if ( 'wpfa_speaker' !== get_post_type( $sid ) || 'publish' !== get_post_status( $sid ) ) {
+												continue;
+											}
+
+											$speaker_role_parts = array_filter(
+												array(
+													sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) ),
+													sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) ),
+												)
+											);
+											$speaker_role       = implode( ' | ', $speaker_role_parts );
+											?>
+											<li>
+												<a href="<?php echo esc_url( get_permalink( $sid ) ); ?>"><?php echo esc_html( get_the_title( $sid ) ); ?></a>
+												<?php if ( $speaker_role ) : ?>
+													<span><?php echo esc_html( $speaker_role ); ?></span>
+												<?php endif; ?>
+											</li>
+										<?php endforeach; ?>
+									</ul>
+								</div>
+							<?php endif; ?>
+						<?php else : ?>
+							<div class="wpfa-speakers-grid">
 								<?php
-								if ( ! is_array( $speaker ) || empty( $speaker['name'] ) ) {
-									continue;
-								}
+								$wpfa_hide_speaker_card_admin_actions = true;
+								$wpfa_schedule_display_timezone       = $selected_schedule_timezone;
+								foreach ( $speaker_ids as $sid ) :
+									if ( 'wpfa_speaker' !== get_post_type( $sid ) || 'publish' !== get_post_status( $sid ) ) {
+										continue;
+									}
 
-								$speaker_social = isset( $speaker['social'] ) && is_array( $speaker['social'] ) ? $speaker['social'] : array();
-								$session        = ! empty( $speaker['sessions'][0] ) && is_array( $speaker['sessions'][0] ) ? $speaker['sessions'][0] : array();
+									include WPFAEVENT_PATH . 'public/partials/speakers/speaker-card.php';
+								endforeach;
+								unset( $wpfa_hide_speaker_card_admin_actions );
+								unset( $wpfa_schedule_display_timezone );
 								?>
-									<article class="wpfa-speaker-card visible">
-										<div class="wpfa-speaker-photo">
-											<?php if ( ! empty( $speaker['image'] ) ) : ?>
-												<?php /* translators: %s: Speaker name. */ ?>
-												<img src="<?php echo esc_url( $speaker['image'] ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $speaker['name'] ) ); ?>" loading="lazy" data-wpfa-placeholder-src="<?php echo esc_url( $speaker_placeholder_url ); ?>" data-wpfa-placeholder-alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>">
-										<?php else : ?>
-											<img src="<?php echo esc_url( $speaker_placeholder_url ); ?>" alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>" loading="lazy" class="wpfa-speaker-placeholder-img">
-										<?php endif; ?>
-									</div>
-									<div class="wpfa-speaker-meta">
-										<?php if ( ! empty( $speaker['category'] ) ) : ?>
-											<p class="pill"><?php echo esc_html( $speaker['category'] ); ?></p>
-										<?php endif; ?>
-										<h3 class="wpfa-speaker-name"><?php echo esc_html( $speaker['name'] ); ?></h3>
-										<?php if ( ! empty( $speaker['position'] ) || ! empty( $speaker['organization'] ) ) : ?>
-											<p class="wpfa-speaker-role">
-												<?php echo esc_html( trim( ( $speaker['position'] ?? '' ) . ( ! empty( $speaker['position'] ) && ! empty( $speaker['organization'] ) ? ' | ' : '' ) . ( $speaker['organization'] ?? '' ) ) ); ?>
-											</p>
-										<?php endif; ?>
-									</div>
-									<div class="wpfa-speaker-expand">
-										<?php if ( ! empty( $speaker['bio'] ) ) : ?>
-											<div class="wpfa-speaker-bio"><?php echo wp_kses_post( wpautop( $speaker['bio'] ) ); ?></div>
-										<?php endif; ?>
-										<?php if ( ! empty( $session['title'] ) ) : ?>
-											<div class="wpfa-speaker-session">
-												<h4><?php esc_html_e( 'Session Details', 'wpfaevent' ); ?></h4>
-												<p><strong><?php echo esc_html( $session['title'] ); ?></strong></p>
-											</div>
-										<?php endif; ?>
-										<?php if ( ! empty( $speaker_social ) ) : ?>
-											<div class="wpfa-speaker-social">
-												<?php foreach ( $speaker_social as $social_label => $social_url ) : ?>
-													<?php if ( $social_url ) : ?>
-														<a href="<?php echo esc_url( $social_url ); ?>" target="_blank" rel="noopener noreferrer" class="wpfa-social-link">
-															<?php echo esc_html( ucfirst( $social_label ) ); ?>
-														</a>
+							</div>
+						<?php endif; ?>
+					<?php elseif ( ! empty( $dashboard_speakers ) ) : ?>
+						<?php if ( ! empty( $dashboard_featured_speakers ) ) : ?>
+							<div class="wpfa-event-featured-speakers">
+								<h3><?php esc_html_e( 'Featured Speakers', 'wpfaevent' ); ?></h3>
+								<div class="wpfa-speakers-grid wpfa-featured-speakers-grid">
+									<?php foreach ( $dashboard_featured_speakers as $speaker ) : ?>
+										<?php
+										$wpfa_dashboard_speaker_is_featured = true;
+										include WPFAEVENT_PATH . 'public/partials/speakers/dashboard-speaker-card.php';
+										unset( $wpfa_dashboard_speaker_is_featured );
+										?>
+									<?php endforeach; ?>
+								</div>
+							</div>
+
+							<?php if ( ! empty( $dashboard_regular_speakers ) ) : ?>
+								<div class="wpfa-event-speaker-list">
+									<h3><?php esc_html_e( 'More Speakers', 'wpfaevent' ); ?></h3>
+									<ul>
+										<?php foreach ( $dashboard_regular_speakers as $speaker ) : ?>
+											<?php
+											$speaker_name       = sanitize_text_field( $speaker['name'] ?? '' );
+											$speaker_role_parts = array_filter(
+												array(
+													sanitize_text_field( $speaker['position'] ?? '' ),
+													sanitize_text_field( $speaker['organization'] ?? '' ),
+												)
+											);
+											$speaker_role       = implode( ' | ', $speaker_role_parts );
+											?>
+											<?php if ( $speaker_name ) : ?>
+												<li>
+													<strong><?php echo esc_html( $speaker_name ); ?></strong>
+													<?php if ( $speaker_role ) : ?>
+														<span><?php echo esc_html( $speaker_role ); ?></span>
 													<?php endif; ?>
-												<?php endforeach; ?>
-											</div>
-										<?php endif; ?>
-									</div>
-								</article>
-							<?php endforeach; ?>
-						</div>
+												</li>
+											<?php endif; ?>
+										<?php endforeach; ?>
+									</ul>
+								</div>
+							<?php endif; ?>
+						<?php else : ?>
+							<div class="wpfa-speakers-grid">
+								<?php foreach ( $dashboard_speakers as $speaker ) : ?>
+									<?php include WPFAEVENT_PATH . 'public/partials/speakers/dashboard-speaker-card.php'; ?>
+								<?php endforeach; ?>
+							</div>
+						<?php endif; ?>
 					<?php else : ?>
 						<p class="wpfa-empty-state"><?php esc_html_e( 'No speakers have been imported for this event yet.', 'wpfaevent' ); ?></p>
 					<?php endif; ?>

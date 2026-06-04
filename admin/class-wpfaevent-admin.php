@@ -1722,7 +1722,7 @@ class Wpfaevent_Admin {
 			return $write_result;
 		}
 
-		$cpt_result = $this->sync_eventyay_speaker_posts( $program['speakers'], $event_id );
+		$cpt_result = $this->sync_eventyay_speaker_posts( $dashboard_speakers, $event_id );
 
 		$schedule_rows = $this->write_eventyay_schedule_table( $event_id, $program['sessions'] );
 		if ( is_wp_error( $schedule_rows ) ) {
@@ -3036,6 +3036,7 @@ class Wpfaevent_Admin {
 
 		$position     = $this->eventyay_first_present_text( $speaker_resource, array( 'position', 'job_title', 'job-title', 'title', 'role', 'speaking_experience', 'speaking-experience' ) );
 		$organization = $this->eventyay_first_present_text( $speaker_resource, array( 'organization', 'organisation', 'company', 'affiliation' ) );
+		$category     = $this->eventyay_first_present_text( $speaker_resource, array( 'category', 'track' ) );
 
 		return array(
 			'id'                  => 'eventyay-' . sanitize_key( $eventyay_speaker_id ),
@@ -3044,7 +3045,7 @@ class Wpfaevent_Admin {
 			'title'               => sanitize_text_field( $position ? $position : $organization ),
 			'position'            => sanitize_text_field( $position ),
 			'organization'        => sanitize_text_field( $organization ),
-			'category'            => sanitize_text_field( $this->eventyay_first_present_text( $speaker_resource, array( 'category', 'track' ) ) ),
+			'category'            => sanitize_text_field( $category ),
 			'image'               => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'avatar', 'avatar_url', 'avatar-url', 'avatar_url_original', 'avatar-url-original', 'image', 'image_url', 'image-url', 'photo', 'photo_url', 'photo-url' ) ), $settings['base_url'] ),
 			'bio'                 => $this->eventyay_first_present_rich_text( $speaker_resource, array( 'biography', 'bio', 'description', 'abstract', 'short_biography', 'short-biography', 'long_biography', 'long-biography' ) ),
 			'social'              => array(
@@ -3053,10 +3054,109 @@ class Wpfaevent_Admin {
 				'github'   => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'github', 'github_url', 'github-url' ) ), $settings['base_url'] ),
 				'website'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'website', 'website_url', 'website-url', 'homepage', 'homepage_url', 'homepage-url', 'url' ) ), $settings['base_url'] ),
 			),
-			'featured'            => false,
+			'featured'            => $this->eventyay_speaker_is_featured( $speaker_resource, $category ),
+			'featured_order'      => $this->eventyay_speaker_featured_order( $speaker_resource ),
 			'sessions'            => array(),
 			'source'              => 'eventyay',
 		);
+	}
+
+	/**
+	 * Detect whether an Eventyay speaker is marked for featured display.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $speaker_resource Normalized Eventyay speaker resource.
+	 * @param string $category         Speaker category or track label.
+	 * @return bool
+	 */
+	private function eventyay_speaker_is_featured( $speaker_resource, $category = '' ) {
+		$featured = $this->eventyay_first_present_raw(
+			$speaker_resource,
+			array(
+				'featured',
+				'is_featured',
+				'is-featured',
+				'featured_speaker',
+				'featured-speaker',
+				'highlighted',
+				'is_highlighted',
+				'is-highlighted',
+				'keynote',
+				'is_keynote',
+				'is-keynote',
+				'show_on_frontpage',
+				'show-on-frontpage',
+			)
+		);
+
+		if ( $this->eventyay_truthy_value( $featured ) ) {
+			return true;
+		}
+
+		return is_string( $category ) && (bool) preg_match( '/\b(featured|keynote|plenary|highlight)\b/i', $category );
+	}
+
+	/**
+	 * Get an optional featured speaker order from Eventyay data.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $speaker_resource Normalized Eventyay speaker resource.
+	 * @return int
+	 */
+	private function eventyay_speaker_featured_order( $speaker_resource ) {
+		$order = $this->eventyay_first_present_raw(
+			$speaker_resource,
+			array(
+				'featured_order',
+				'featured-order',
+				'featured_position',
+				'featured-position',
+				'featuredPosition',
+				'speaker_order',
+				'speaker-order',
+				'sort_order',
+				'sort-order',
+				'order',
+			)
+		);
+
+		return is_numeric( $order ) ? absint( $order ) : 0;
+	}
+
+	/**
+	 * Convert Eventyay truth-ish values into a boolean.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $value Raw value.
+	 * @return bool
+	 */
+	private function eventyay_truthy_value( $value ) {
+		if ( is_bool( $value ) ) {
+			return $value;
+		}
+
+		if ( is_numeric( $value ) ) {
+			return 0 !== (int) $value;
+		}
+
+		if ( is_array( $value ) ) {
+			foreach ( array( 'value', 'featured', 'is_featured', 'enabled', 'selected' ) as $key ) {
+				if ( array_key_exists( $key, $value ) ) {
+					return $this->eventyay_truthy_value( $value[ $key ] );
+				}
+			}
+
+			return ! empty( $value );
+		}
+
+		if ( ! is_scalar( $value ) ) {
+			return false;
+		}
+
+		return in_array( strtolower( trim( (string) $value ) ), array( '1', 'true', 'yes', 'y', 'on', 'featured', 'keynote', 'highlighted' ), true );
 	}
 
 	/**
@@ -4615,6 +4715,7 @@ class Wpfaevent_Admin {
 
 		$position     = $this->attribute_value( $attributes, array( 'position', 'job-title', 'designation' ) );
 		$organization = $this->attribute_value( $attributes, array( 'organisation', 'organization', 'company' ) );
+		$category     = $this->attribute_value( $attributes, array( 'category', 'track' ) );
 
 		return array(
 			'id'                  => $source_id ? 'eventyay-' . sanitize_key( $source_id ) : 'eventyay-' . sanitize_title( $name ),
@@ -4623,7 +4724,7 @@ class Wpfaevent_Admin {
 			'title'               => sanitize_text_field( $position ? $position : $organization ),
 			'position'            => sanitize_text_field( $position ),
 			'organization'        => sanitize_text_field( $organization ),
-			'category'            => sanitize_text_field( $this->attribute_value( $attributes, array( 'category', 'track' ) ) ),
+			'category'            => sanitize_text_field( $category ),
 			'image'               => esc_url_raw(
 				$this->attribute_value(
 					$attributes,
@@ -4644,7 +4745,8 @@ class Wpfaevent_Admin {
 				'github'   => esc_url_raw( $this->attribute_value( $attributes, array( 'github', 'github-url' ) ) ),
 				'website'  => esc_url_raw( $this->attribute_value( $attributes, array( 'website', 'website-url' ) ) ),
 			),
-			'featured'            => false,
+			'featured'            => $this->eventyay_speaker_is_featured( $attributes, $category ),
+			'featured_order'      => $this->eventyay_speaker_featured_order( $attributes ),
 			'sessions'            => array(),
 			'source'              => 'eventyay',
 		);
@@ -4676,6 +4778,18 @@ class Wpfaevent_Admin {
 				if ( empty( $speakers[ $key ]['social'][ $field ] ) && ! empty( $value ) ) {
 					$speakers[ $key ]['social'][ $field ] = $value;
 				}
+			}
+		}
+
+		if ( ! empty( $speaker['featured'] ) ) {
+			$speakers[ $key ]['featured'] = true;
+		}
+
+		if ( ! empty( $speaker['featured_order'] ) ) {
+			$current_order = isset( $speakers[ $key ]['featured_order'] ) ? absint( $speakers[ $key ]['featured_order'] ) : 0;
+			$new_order     = absint( $speaker['featured_order'] );
+			if ( ! $current_order || $new_order < $current_order ) {
+				$speakers[ $key ]['featured_order'] = $new_order;
 			}
 		}
 
@@ -4724,7 +4838,7 @@ class Wpfaevent_Admin {
 					continue;
 				}
 
-				$speaker['featured'] = $state[ $key ]['featured'];
+				$speaker['featured'] = ! empty( $speaker['featured'] ) || $state[ $key ]['featured'];
 				if ( null !== $state[ $key ]['featured_order'] ) {
 					$speaker['featured_order'] = $state[ $key ]['featured_order'];
 				}
@@ -4799,11 +4913,13 @@ class Wpfaevent_Admin {
 	 * @return array
 	 */
 	private function sync_eventyay_speaker_posts( $speakers, $event_id ) {
-		$result = array(
-			'created' => 0,
-			'updated' => 0,
-			'ids'     => array(),
+		$result         = array(
+			'created'      => 0,
+			'updated'      => 0,
+			'ids'          => array(),
+			'featured_ids' => array(),
 		);
+		$featured_posts = array();
 
 		foreach ( $speakers as $speaker ) {
 			$upsert = $this->upsert_eventyay_speaker_post( $speaker );
@@ -4813,6 +4929,14 @@ class Wpfaevent_Admin {
 			}
 
 			$result['ids'][] = absint( $upsert['id'] );
+			if ( ! empty( $speaker['featured'] ) ) {
+				$featured_posts[] = array(
+					'id'    => absint( $upsert['id'] ),
+					'order' => isset( $speaker['featured_order'] ) ? absint( $speaker['featured_order'] ) : 0,
+					'name'  => isset( $speaker['name'] ) ? sanitize_text_field( $speaker['name'] ) : '',
+				);
+			}
+
 			if ( ! empty( $upsert['created'] ) ) {
 				++$result['created'];
 			} else {
@@ -4821,9 +4945,29 @@ class Wpfaevent_Admin {
 		}
 
 		$result['ids'] = $this->sanitize_eventyay_post_id_list( $result['ids'] );
+		usort(
+			$featured_posts,
+			static function ( $speaker_a, $speaker_b ) {
+				if ( $speaker_a['order'] !== $speaker_b['order'] ) {
+					if ( ! $speaker_a['order'] ) {
+						return 1;
+					}
+
+					if ( ! $speaker_b['order'] ) {
+						return -1;
+					}
+
+					return $speaker_a['order'] < $speaker_b['order'] ? -1 : 1;
+				}
+
+				return strcasecmp( $speaker_a['name'], $speaker_b['name'] );
+			}
+		);
+		$result['featured_ids'] = $this->sanitize_eventyay_post_id_list( wp_list_pluck( $featured_posts, 'id' ) );
 
 		if ( $event_id && 'wpfa_event' === get_post_type( $event_id ) ) {
 			$previous_speakers = $this->get_eventyay_event_speaker_ids( $event_id );
+			$previous_featured = $this->get_eventyay_event_featured_speaker_ids( $event_id );
 			$manual_speakers   = array_values(
 				array_filter(
 					$previous_speakers,
@@ -4833,11 +4977,27 @@ class Wpfaevent_Admin {
 				)
 			);
 			$current_speakers  = $this->sanitize_eventyay_post_id_list( array_merge( $manual_speakers, $result['ids'] ) );
+			$manual_featured   = array_values(
+				array_filter(
+					$previous_featured,
+					function ( $speaker_id ) {
+						return ! $this->is_eventyay_speaker_post( $speaker_id );
+					}
+				)
+			);
+			$current_featured  = $this->sanitize_eventyay_post_id_list( array_merge( $manual_featured, $result['featured_ids'] ) );
+			$current_featured  = array_values( array_intersect( $current_featured, $current_speakers ) );
 
 			if ( empty( $current_speakers ) ) {
 				delete_post_meta( $event_id, 'wpfa_event_speakers' );
 			} else {
 				update_post_meta( $event_id, 'wpfa_event_speakers', $current_speakers );
+			}
+
+			if ( empty( $current_featured ) ) {
+				delete_post_meta( $event_id, 'wpfa_event_featured_speakers' );
+			} else {
+				update_post_meta( $event_id, 'wpfa_event_featured_speakers', $current_featured );
 			}
 			$this->sync_eventyay_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers );
 		}
@@ -4869,6 +5029,20 @@ class Wpfaevent_Admin {
 	 */
 	private function get_eventyay_event_speaker_ids( $event_id ) {
 		$speaker_ids = get_post_meta( $event_id, 'wpfa_event_speakers', true );
+
+		return $this->sanitize_eventyay_post_id_list( $speaker_ids );
+	}
+
+	/**
+	 * Get normalized featured speaker IDs assigned to an event for Eventyay sync.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int>
+	 */
+	private function get_eventyay_event_featured_speaker_ids( $event_id ) {
+		$speaker_ids = get_post_meta( $event_id, 'wpfa_event_featured_speakers', true );
 
 		return $this->sanitize_eventyay_post_id_list( $speaker_ids );
 	}

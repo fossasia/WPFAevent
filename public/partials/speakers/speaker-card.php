@@ -40,14 +40,16 @@ if ( empty( $sid ) || ! is_numeric( $sid ) ) {
 
 $sid = (int) $sid;
 
-$name               = get_the_title( $sid );
-$org                = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
-$position           = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
-$photo_url          = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
-$placeholder_url    = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
-$speaker_link       = get_permalink( $sid );
-$hide_admin_actions = ! empty( $wpfa_hide_speaker_card_admin_actions );
-$is_admin           = ! $hide_admin_actions && current_user_can( 'manage_options' );
+$name                 = get_the_title( $sid );
+$org                  = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
+$position             = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
+$photo_url            = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
+$placeholder_url      = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
+$speaker_link         = get_permalink( $sid );
+$hide_admin_actions   = ! empty( $wpfa_hide_speaker_card_admin_actions );
+$is_admin             = ! $hide_admin_actions && current_user_can( 'manage_options' );
+$featured_speaker_ids = isset( $wpfa_featured_speaker_ids ) && is_array( $wpfa_featured_speaker_ids ) ? array_map( 'absint', $wpfa_featured_speaker_ids ) : array();
+$is_featured_speaker  = in_array( $sid, $featured_speaker_ids, true );
 
 if ( empty( $photo_url ) && has_post_thumbnail( $sid ) ) {
 	$photo_url = get_the_post_thumbnail_url( $sid, 'medium_large' );
@@ -106,7 +108,7 @@ if ( ! $formatted_end_time ) {
 	$formatted_end_time = $talk_end_time;
 }
 ?>
-<article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( $sid ); ?>">
+<article class="wpfa-speaker-card <?php echo esc_attr( $is_featured_speaker ? 'is-featured' : '' ); ?>" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( $sid ); ?>">
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
 			<?php if ( $photo_url ) : ?>
 				<?php /* translators: %s: Speaker name. */ ?>
@@ -124,13 +126,17 @@ if ( ! $formatted_end_time ) {
 				×
 			</button>
 		<?php endif; ?>
-		
+
+		<?php if ( $is_featured_speaker ) : ?>
+			<p class="wpfa-speaker-featured-badge"><?php esc_html_e( 'Featured Speaker', 'wpfaevent' ); ?></p>
+		<?php endif; ?>
+
 		<?php if ( ! empty( $speaker_categories ) ) : ?>
 			<p class="pill">
 				<?php echo esc_html( $speaker_categories[0] ); ?>
 			</p>
 		<?php endif; ?>
-		
+
 		<h3 class="wpfa-speaker-name" itemprop="name"><a href="<?php echo esc_url( $speaker_link ); ?>"><?php echo esc_html( $name ); ?></a></h3>
 		<?php if ( $position || $org ) : ?>
 			<p class="wpfa-speaker-role"><?php echo esc_html( trim( $position . ( $position && $org ? ' · ' : '' ) . $org ) ); ?></p>
@@ -145,12 +151,12 @@ if ( ! $formatted_end_time ) {
 				<?php echo wp_kses_post( wpautop( $bio ) ); ?>
 			</div>
 		<?php endif; ?>
-		
+
 		<?php if ( $talk_title ) : ?>
 			<div class="wpfa-speaker-session">
 				<h4><?php esc_html_e( 'Session Details', 'wpfaevent' ); ?></h4>
 				<p><strong><?php echo esc_html( $talk_title ); ?></strong></p>
-				
+
 				<?php if ( $talk_date || $talk_time ) : ?>
 					<p>
 						<?php
@@ -169,7 +175,7 @@ if ( ! $formatted_end_time ) {
 						?>
 					</p>
 				<?php endif; ?>
-				
+
 				<?php if ( $talk_abstract ) : ?>
 					<div class="wpfa-talk-abstract">
 						<?php echo wp_kses_post( wpautop( $talk_abstract ) ); ?>

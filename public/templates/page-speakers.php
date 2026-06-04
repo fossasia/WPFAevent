@@ -137,6 +137,12 @@ if ( $selected_event_id ) {
 	$speaker_ids = array();
 }
 
+$featured_speaker_ids = array();
+if ( $selected_event_id && class_exists( 'Wpfaevent_Meta_Event' ) ) {
+	$featured_speaker_ids = Wpfaevent_Meta_Event::get_event_featured_speaker_ids( $selected_event_id );
+	$featured_speaker_ids = array_values( array_intersect( $featured_speaker_ids, $speaker_ids ) );
+}
+
 $category_source_speaker_ids = $speaker_ids;
 
 if ( 'all' !== $current_category && taxonomy_exists( 'wpfa_speaker_category' ) ) {
@@ -147,6 +153,24 @@ if ( 'all' !== $current_category && taxonomy_exists( 'wpfa_speaker_category' ) )
 				return has_term( $current_category, 'wpfa_speaker_category', $speaker_id );
 			}
 		)
+	);
+}
+
+$featured_speaker_ids = array_values( array_intersect( $featured_speaker_ids, $speaker_ids ) );
+
+if ( ! empty( $featured_speaker_ids ) ) {
+	usort(
+		$speaker_ids,
+		static function ( $speaker_a, $speaker_b ) use ( $featured_speaker_ids ) {
+			$speaker_a_is_featured = in_array( absint( $speaker_a ), $featured_speaker_ids, true );
+			$speaker_b_is_featured = in_array( absint( $speaker_b ), $featured_speaker_ids, true );
+
+			if ( $speaker_a_is_featured !== $speaker_b_is_featured ) {
+				return $speaker_a_is_featured ? -1 : 1;
+			}
+
+			return strcasecmp( get_the_title( $speaker_a ), get_the_title( $speaker_b ) );
+		}
 	);
 }
 
@@ -401,9 +425,11 @@ $header_vars         = array(
 						</div>
 					<?php else : ?>
 					<div class="wpfa-speakers-grid" id="wpfa-speakers-grid">
+						<?php $wpfa_featured_speaker_ids = $featured_speaker_ids; ?>
 						<?php foreach ( $paged_speaker_ids as $sid ) : ?>
 							<?php include WPFAEVENT_PATH . 'public/partials/speakers/speaker-card.php'; ?>
 						<?php endforeach; ?>
+						<?php unset( $wpfa_featured_speaker_ids ); ?>
 					</div>
 
 						<?php

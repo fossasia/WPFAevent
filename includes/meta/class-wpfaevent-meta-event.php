@@ -134,6 +134,25 @@ class Wpfaevent_Meta_Event {
 				'description'       => __( 'Related speaker post IDs', 'wpfaevent' ),
 			)
 		);
+
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_featured_speakers',
+			array(
+				'type'              => 'array',
+				'single'            => true,
+				'show_in_rest'      => array(
+					'schema' => array(
+						'type'  => 'array',
+						'items' => array(
+							'type' => 'integer',
+						),
+					),
+				),
+				'sanitize_callback' => array( __CLASS__, 'sanitize_speaker_ids' ),
+				'description'       => __( 'Featured speaker post IDs for this event', 'wpfaevent' ),
+			)
+		);
 	}
 
 	/**
@@ -171,6 +190,7 @@ class Wpfaevent_Meta_Event {
 		$languages  = self::sanitize_language_list( get_post_meta( $post->ID, 'wpfa_event_languages', true ) );
 		$colors     = self::get_event_colors( $post->ID );
 		$speakers   = self::get_admin_event_speaker_ids( $post->ID );
+		$featured   = array_values( array_intersect( self::get_event_featured_speaker_ids( $post->ID ), $speakers ) );
 		?>
 		<table class="form-table">
 			<tr>
@@ -251,6 +271,25 @@ class Wpfaevent_Meta_Event {
 					<?php endif; ?>
 				</td>
 			</tr>
+			<tr>
+				<th><label for="wpfa_event_featured_speakers"><?php esc_html_e( 'Featured Speakers', 'wpfaevent' ); ?></label></th>
+				<td>
+					<?php if ( ! empty( $speakers ) ) : ?>
+						<select name="wpfa_event_featured_speakers[]" id="wpfa_event_featured_speakers" multiple class="wpfaevent-speakers-select">
+							<?php foreach ( $speakers as $speaker_id ) : ?>
+								<option value="<?php echo esc_attr( $speaker_id ); ?>" <?php selected( in_array( $speaker_id, $featured, true ) ); ?>>
+									<?php echo esc_html( get_the_title( $speaker_id ) ); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+						<p class="description">
+							<?php esc_html_e( 'Featured speakers are highlighted and listed first on this event only.', 'wpfaevent' ); ?>
+						</p>
+					<?php else : ?>
+						<p><?php esc_html_e( 'Add speakers to this event before selecting featured speakers.', 'wpfaevent' ); ?></p>
+					<?php endif; ?>
+				</td>
+			</tr>
 		</table>
 		<?php
 	}
@@ -327,6 +366,23 @@ class Wpfaevent_Meta_Event {
 			delete_post_meta( $post_id, 'wpfa_event_speakers' );
 		}
 
+		$featured_speakers = array();
+		if ( isset( $_POST['wpfa_event_featured_speakers'] ) && is_array( $_POST['wpfa_event_featured_speakers'] ) ) {
+			$featured_speakers = self::sanitize_post_id_list(
+				array_map(
+					'sanitize_text_field',
+					wp_unslash( $_POST['wpfa_event_featured_speakers'] )
+				)
+			);
+		}
+		$featured_speakers = array_values( array_intersect( $featured_speakers, $speakers ) );
+
+		if ( ! empty( $featured_speakers ) ) {
+			update_post_meta( $post_id, 'wpfa_event_featured_speakers', $featured_speakers );
+		} else {
+			delete_post_meta( $post_id, 'wpfa_event_featured_speakers' );
+		}
+
 		self::sync_event_speaker_relationships( $post_id, $previous_speakers, $speakers );
 	}
 
@@ -340,6 +396,18 @@ class Wpfaevent_Meta_Event {
 	 */
 	public static function get_event_speaker_ids( $event_id ) {
 		return self::sanitize_post_id_list( get_post_meta( $event_id, 'wpfa_event_speakers', true ) );
+	}
+
+	/**
+	 * Get normalized featured speaker IDs assigned to an event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int>
+	 */
+	public static function get_event_featured_speaker_ids( $event_id ) {
+		return self::sanitize_post_id_list( get_post_meta( $event_id, 'wpfa_event_featured_speakers', true ) );
 	}
 
 	/**
