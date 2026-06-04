@@ -33,7 +33,7 @@ $coc_content_file = $data_dir . '/coc-content.json';
 // Ensure files exist
 if ($event_id) {
     if (!file_exists($sponsors_file)) { file_put_contents($sponsors_file, '[]'); }
-    if (!file_exists($settings_file)) { file_put_contents($settings_file, '{"about_section_content": "", "section_visibility": {"about": true, "speakers": true, "schedule": true, "sponsors": true}}'); }
+    if (!file_exists($settings_file)) { file_put_contents($settings_file, '{"about_section_content": "", "section_visibility": {"about": true, "speakers": true, "schedule": true, "sponsors": true, "exhibitors": true}}'); }
     if (!file_exists($speakers_file)) { file_put_contents($speakers_file, '[]'); }
     if (!file_exists($schedule_file)) { file_put_contents($schedule_file, '{}'); }
     if (!file_exists($theme_settings_file)) { file_put_contents($theme_settings_file, '{"brand_color": "#D51007", "background_color": "#f8f9fa", "text_color": "#0b0b0b"}'); }
@@ -961,7 +961,8 @@ document.addEventListener('DOMContentLoaded', function() {
             { id: 'about', name: 'About Section' },
             { id: 'speakers', name: 'Speakers Section' },
             { id: 'schedule', name: 'Schedule Overview' },
-            { id: 'sponsors', name: 'Sponsors Section' }
+            { id: 'sponsors', name: 'Sponsors Section' },
+            { id: 'exhibitors', name: 'Exhibitors Section' }
         ];
 
         const render = () => {
@@ -2123,6 +2124,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const defaultTargets = [
                 { value: '#about', label: 'About Section' }, { value: '#speakers', label: 'Speakers Section' },
                 { value: '#schedule-overview', label: 'Schedule Overview Section' }, { value: '#sponsors', label: 'Sponsors Section' },
+                { value: '#exhibitors', label: 'Exhibitors Section' },
                 { value: '#venue', label: 'Venue Section' }
             ];
             const customTargets = (store.sections || [])
