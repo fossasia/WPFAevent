@@ -238,6 +238,10 @@ class Wpfaevent_Admin {
 
 		$start_date = get_post_meta( $post->ID, 'wpfa_event_start_date', true );
 		$end_date   = get_post_meta( $post->ID, 'wpfa_event_end_date', true );
+		$start_time = get_post_meta( $post->ID, 'wpfa_event_start_time', true );
+		$end_time   = get_post_meta( $post->ID, 'wpfa_event_end_time', true );
+		$timezone   = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_timezone( $post->ID ) : wp_timezone_string();
+		$all_day    = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_all_day( $post->ID ) : false;
 		$location   = get_post_meta( $post->ID, 'wpfa_event_location', true );
 		$url        = get_post_meta( $post->ID, 'wpfa_event_url', true );
 		$speakers   = get_post_meta( $post->ID, 'wpfa_event_speakers', true );
@@ -256,6 +260,33 @@ class Wpfaevent_Admin {
 			<tr>
 				<th><label for="wpfa_event_end_date"><?php esc_html_e( 'End Date', 'wpfaevent' ); ?></label></th>
 				<td><input type="date" id="wpfa_event_end_date" name="wpfa_event_end_date" value="<?php echo esc_attr( $end_date ); ?>" class="regular-text"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_timezone"><?php esc_html_e( 'Timezone', 'wpfaevent' ); ?></label></th>
+				<td>
+					<select id="wpfa_event_timezone" name="wpfa_event_timezone" class="regular-text">
+						<?php echo wp_timezone_choice( $timezone ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Core escapes timezone option markup. ?>
+					</select>
+					<p class="description"><?php esc_html_e( 'Used to interpret timed events and calendar exports. Leave as the site timezone when the event does not need a separate timezone.', 'wpfaevent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Time Format', 'wpfaevent' ); ?></th>
+				<td>
+					<label for="wpfa_event_all_day">
+						<input type="checkbox" id="wpfa_event_all_day" name="wpfa_event_all_day" value="1" <?php checked( $all_day ); ?>>
+						<?php esc_html_e( 'All-day event', 'wpfaevent' ); ?>
+					</label>
+					<p class="description"><?php esc_html_e( 'All-day events export as date-only calendar entries. Timed events use the event timezone.', 'wpfaevent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_start_time"><?php esc_html_e( 'Start Time', 'wpfaevent' ); ?></label></th>
+				<td><input type="time" id="wpfa_event_start_time" name="wpfa_event_start_time" value="<?php echo esc_attr( $start_time ); ?>" class="regular-text"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_end_time"><?php esc_html_e( 'End Time', 'wpfaevent' ); ?></label></th>
+				<td><input type="time" id="wpfa_event_end_time" name="wpfa_event_end_time" value="<?php echo esc_attr( $end_time ); ?>" class="regular-text"></td>
 			</tr>
 			<tr>
 				<th><label for="wpfa_event_location"><?php esc_html_e( 'Location', 'wpfaevent' ); ?></label></th>
@@ -376,6 +407,40 @@ class Wpfaevent_Admin {
 
 		if ( isset( $_POST['wpfa_event_end_date'] ) ) {
 			update_post_meta( $post_id, 'wpfa_event_end_date', sanitize_text_field( wp_unslash( $_POST['wpfa_event_end_date'] ) ) );
+		}
+
+		$posted_timezone = isset( $_POST['wpfa_event_timezone'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_timezone'] ) ) : '';
+		$timezone        = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_timezone( $posted_timezone ) : $posted_timezone;
+
+		if ( '' !== $timezone ) {
+			update_post_meta( $post_id, 'wpfa_event_timezone', $timezone );
+		} else {
+			delete_post_meta( $post_id, 'wpfa_event_timezone' );
+		}
+
+		$all_day = isset( $_POST['wpfa_event_all_day'] );
+		update_post_meta( $post_id, 'wpfa_event_all_day', $all_day ? '1' : '0' );
+
+		$start_time = isset( $_POST['wpfa_event_start_time'] ) ? Wpfaevent_Meta_Event::sanitize_time_value( wp_unslash( $_POST['wpfa_event_start_time'] ) ) : '';
+		$end_time   = isset( $_POST['wpfa_event_end_time'] ) ? Wpfaevent_Meta_Event::sanitize_time_value( wp_unslash( $_POST['wpfa_event_end_time'] ) ) : '';
+
+		if ( $all_day ) {
+			delete_post_meta( $post_id, 'wpfa_event_start_time' );
+			delete_post_meta( $post_id, 'wpfa_event_end_time' );
+			delete_post_meta( $post_id, 'wpfa_event_starts_at' );
+			delete_post_meta( $post_id, 'wpfa_event_ends_at' );
+		} else {
+			if ( '' !== $start_time ) {
+				update_post_meta( $post_id, 'wpfa_event_start_time', $start_time );
+			} else {
+				delete_post_meta( $post_id, 'wpfa_event_start_time' );
+			}
+
+			if ( '' !== $end_time ) {
+				update_post_meta( $post_id, 'wpfa_event_end_time', $end_time );
+			} else {
+				delete_post_meta( $post_id, 'wpfa_event_end_time' );
+			}
 		}
 
 		if ( isset( $_POST['wpfa_event_location'] ) ) {

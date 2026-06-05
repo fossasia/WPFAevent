@@ -120,6 +120,22 @@ Navigate to **Settings → Event Plugin** to configure:
 
 If the fields are left empty, the plugin falls back to placeholder content for development.
 
+## Calendar Export And Timezones
+
+The schedule page exposes an **Add to calendar** link when an event has a valid start date. The link opens a Google Calendar event template. Individual events can also be downloaded as `.ics` files from `/wp-json/wpfaevent/v1/events/{event_id}/ics`.
+
+Event timezone behavior is deterministic:
+
+* Each event can save an explicit timezone. If it is empty, WPFAevent falls back to the WordPress site timezone.
+* All-day events export date-only `DTSTART` and exclusive date-only `DTEND` values.
+* Timed events are interpreted in the event timezone and exported as UTC `DTSTART`/`DTEND` values.
+
+Run the calendar export checks with:
+
+```bash
+php tests/calendar-test.php
+```
+
 ## Development Notes
 
 * Core logic resides in `includes/`, presentation templates in `public/partials/`.
