@@ -174,9 +174,15 @@ if ( ! empty( $featured_speaker_ids ) ) {
 	);
 }
 
-$total_speakers    = count( $speaker_ids );
-$speaker_offset    = ( $current_page - 1 ) * $speakers_per_page;
-$paged_speaker_ids = array_slice( $speaker_ids, $speaker_offset, $speakers_per_page );
+$total_speakers = count( $speaker_ids );
+
+// Event speaker lists should show everyone; the event page keeps a smaller preview set.
+if ( $selected_event_id ) {
+	$paged_speaker_ids = $speaker_ids;
+} else {
+	$speaker_offset    = ( $current_page - 1 ) * $speakers_per_page;
+	$paged_speaker_ids = array_slice( $speaker_ids, $speaker_offset, $speakers_per_page );
+}
 
 // Get categories; when an event is selected, keep category counts event-specific.
 $categories = array();
@@ -398,9 +404,8 @@ $header_vars         = array(
 					<?php
 					if ( $selected_event_id ) {
 						printf(
-							/* translators: 1: number of speakers shown, 2: total number of speakers, 3: event title. */
-							esc_html__( 'Showing %1$d of %2$d speakers for %3$s', 'wpfaevent' ),
-							count( $paged_speaker_ids ),
+							/* translators: 1: number of speakers shown, 2: event title. */
+							esc_html__( 'Showing %1$d speakers for %2$s', 'wpfaevent' ),
 							absint( $total_speakers ),
 							esc_html( $selected_event_title )
 						);
@@ -433,25 +438,24 @@ $header_vars         = array(
 					</div>
 
 						<?php
-						// Pagination.
-						$total           = max( 1, (int) ceil( $total_speakers / $speakers_per_page ) );
-						$pagination_args = array();
-						if ( $search_term ) {
-							$pagination_args['q'] = $search_term;
-						}
-						if ( 'all' !== $current_category ) {
-							$pagination_args['category'] = $current_category;
-						}
-						if ( $selected_event_slug ) {
-							$pagination_args['event'] = $selected_event_slug;
-						}
+						if ( ! $selected_event_id ) {
+							// Pagination is only used for the generic chooser state.
+							$total           = max( 1, (int) ceil( $total_speakers / $speakers_per_page ) );
+							$pagination_args = array();
+							if ( $search_term ) {
+								$pagination_args['q'] = $search_term;
+							}
+							if ( 'all' !== $current_category ) {
+								$pagination_args['category'] = $current_category;
+							}
 
-						wpfa_render_pagination(
-							$total,
-							$current_page,
-							__( 'Speakers pagination', 'wpfaevent' ),
-							$pagination_args
-						);
+							wpfa_render_pagination(
+								$total,
+								$current_page,
+								__( 'Speakers pagination', 'wpfaevent' ),
+								$pagination_args
+							);
+						}
 						?>
 			<?php endif; ?>
 			<?php wp_reset_postdata(); ?>

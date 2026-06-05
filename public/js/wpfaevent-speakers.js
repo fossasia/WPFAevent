@@ -117,12 +117,10 @@ const WPFA_Speakers = (function() {
 			elements.searchInput.addEventListener('input', handleSearch);
 		}
 		
-		// Filter buttons
-		if (elements.filterButtons.length > 0) {
-			elements.filterButtons.forEach(button => {
-				button.addEventListener('click', handleFilterClick);
-			});
-		}
+		// Category filter buttons only; event chooser links navigate normally.
+		document.querySelectorAll('.wpfa-filter-btn[data-filter]').forEach(button => {
+			button.addEventListener('click', handleFilterClick);
+		});
 		
 		// Card click for expand/collapse and admin actions
 		if (elements.speakerGrid) {
@@ -190,14 +188,19 @@ const WPFA_Speakers = (function() {
 	 * Handle filter button click
 	 */
 	function handleFilterClick(e) {
-		// Update active button
-		elements.filterButtons.forEach(btn => btn.classList.remove('active'));
-		e.target.classList.add('active');
-		
-		// Update current filter
-		currentFilter = e.target.dataset.filter;
-		
-		// Re-render speakers
+		const button = e.currentTarget;
+		const filterValue = button.getAttribute('data-filter');
+
+		if (!filterValue) {
+			return;
+		}
+
+		e.preventDefault();
+
+		document.querySelectorAll('.wpfa-filter-btn[data-filter]').forEach(btn => btn.classList.remove('active'));
+		button.classList.add('active');
+
+		currentFilter = filterValue;
 		filterAndRenderSpeakers();
 	}
 	
@@ -316,6 +319,7 @@ const WPFA_Speakers = (function() {
 		filteredSpeakers.forEach(speaker => {
 			if (speaker.element) {
 				speaker.element.style.display = 'block';
+				speaker.element.classList.add('visible');
 			}
 		});
 		
@@ -383,6 +387,14 @@ const WPFA_Speakers = (function() {
 		// Observe all speaker cards
 		document.querySelectorAll('.wpfa-speaker-card:not(.visible)').forEach(card => {
 			observer.observe(card);
+		});
+
+		// Ensure cards already in view are visible even if the observer misses the first paint.
+		document.querySelectorAll('.wpfa-speaker-card:not(.visible)').forEach(card => {
+			const rect = card.getBoundingClientRect();
+			if (rect.top < window.innerHeight && rect.bottom > 0) {
+				card.classList.add('visible');
+			}
 		});
 	}
 	
