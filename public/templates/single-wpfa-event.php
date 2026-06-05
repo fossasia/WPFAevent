@@ -548,9 +548,9 @@ foreach ( $schedule_body as $row_index => $row ) {
 
 	$schedule_item['calendar_url'] = $build_schedule_calendar_url( $schedule_item );
 
-	$time_parts = preg_split( '/\s*-\s*/', $schedule_item['time_label'], 2 );
-	$schedule_item['time_start']   = isset( $time_parts[0] ) ? trim( $time_parts[0] ) : $schedule_item['time_label'];
-	$schedule_item['time_end']     = isset( $time_parts[1] ) ? trim( $time_parts[1] ) : '';
+	$time_parts                  = preg_split( '/\s*-\s*/', $schedule_item['time_label'], 2 );
+	$schedule_item['time_start'] = isset( $time_parts[0] ) ? trim( $time_parts[0] ) : $schedule_item['time_label'];
+	$schedule_item['time_end']   = isset( $time_parts[1] ) ? trim( $time_parts[1] ) : '';
 
 	$schedule_items[] = $schedule_item;
 }
@@ -570,18 +570,18 @@ foreach ( $schedule_items as $schedule_item ) {
 $first_schedule = ! empty( $schedule_items[0] ) ? $schedule_items[0] : array();
 
 $wpfa_event_nav_context = array(
-	'show_about'       => $show_about,
-	'show_speakers'    => $show_speakers,
-	'show_schedule'    => $show_schedule,
-	'show_sponsors'    => $show_sponsors,
-	'show_exhibitors'  => $show_exhibitors,
-	'has_about'        => $show_about && '' !== trim( $about_content ),
-	'has_speakers'     => $show_speakers && ( ! empty( $speaker_ids ) || ! empty( $dashboard_speakers ) ),
-	'has_schedule'     => $show_schedule && ! empty( $schedule_items ),
-	'has_sponsors'     => $show_sponsors && ! empty( $visible_sponsor_groups ),
-	'has_exhibitors'   => $show_exhibitors && ! empty( $visible_exhibitors ),
-	'has_venue'        => false,
-	'custom_sections'  => array(),
+	'show_about'      => $show_about,
+	'show_speakers'   => $show_speakers,
+	'show_schedule'   => $show_schedule,
+	'show_sponsors'   => $show_sponsors,
+	'show_exhibitors' => $show_exhibitors,
+	'has_about'       => $show_about && '' !== trim( $about_content ),
+	'has_speakers'    => $show_speakers && ( ! empty( $speaker_ids ) || ! empty( $dashboard_speakers ) ),
+	'has_schedule'    => $show_schedule && ! empty( $schedule_items ),
+	'has_sponsors'    => $show_sponsors && ! empty( $visible_sponsor_groups ),
+	'has_exhibitors'  => $show_exhibitors && ! empty( $visible_exhibitors ),
+	'has_venue'       => false,
+	'custom_sections' => array(),
 );
 $wpfa_event_nav_items   = class_exists( 'Wpfaevent_Event_Navigation_Helper' )
 	? Wpfaevent_Event_Navigation_Helper::build_nav_items( $wpfa_event_nav_context )

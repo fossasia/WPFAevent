@@ -126,8 +126,8 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-calendar.php';
 
 		// Shared frontend helpers.
-		require_once plugin_dir_path( __FILE__ ) . 'helpers/wpfaevent-event-navigation-helper.php';
-		require_once plugin_dir_path( __FILE__ ) . 'helpers/wpfaevent-schedule-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-navigation-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
 
 		// Legacy plugin code (defines the FOSSASIA_Landing_Plugin class).
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-landing.php';

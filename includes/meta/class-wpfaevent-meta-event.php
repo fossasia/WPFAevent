@@ -548,9 +548,9 @@ class Wpfaevent_Meta_Event {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int                  $event_id           Event post ID.
-	 * @param array<int>           $speaker_ids        Linked speaker post IDs.
-	 * @param array<int, array>    $dashboard_speakers Imported dashboard speaker rows.
+	 * @param int               $event_id           Event post ID.
+	 * @param array<int>        $speaker_ids        Linked speaker post IDs.
+	 * @param array<int, array> $dashboard_speakers Imported dashboard speaker rows.
 	 * @return array<int>
 	 */
 	public static function resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers = array() ) {
