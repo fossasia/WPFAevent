@@ -2977,14 +2977,32 @@ class Wpfaevent_Admin {
 		return $this->eventyay_scalar_value( $this->eventyay_event_first_present_raw( $event, $keys, false ) );
 	}
 
-		/**
-		 * Get the Eventyay event location from likely field shapes.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param array $event Eventyay event resource.
-		 * @return string
-		 */
+	/**
+	 * Get the Eventyay event timezone from likely fields.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event Eventyay event resource.
+	 * @return string
+	 */
+	private function eventyay_event_timezone( $event ) {
+		return Wpfaevent_Meta_Event::sanitize_timezone(
+			$this->eventyay_event_first_present_raw(
+				$event,
+				array( 'timezone', 'time_zone', 'time-zone', 'tz' ),
+				true
+			)
+		);
+	}
+
+	/**
+	 * Get the Eventyay event location from likely field shapes.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event Eventyay event resource.
+	 * @return string
+	 */
 	private function eventyay_event_location( $event ) {
 		$location = $this->eventyay_event_first_present_raw(
 			$event,
@@ -3123,18 +3141,33 @@ class Wpfaevent_Admin {
 			);
 		}
 
-		$start_date    = $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'start' ) );
-			$end_date  = $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'end' ) );
-			$location  = $this->eventyay_event_location( $event );
-			$event_url = $this->eventyay_public_event_url( $event, $settings, $event_slug );
-			$languages = $this->eventyay_event_languages( $event );
-			$colors    = $this->eventyay_event_colors( $event );
+		$start_datetime       = $this->eventyay_event_datetime( $event, 'start' );
+		$end_datetime         = $this->eventyay_event_datetime( $event, 'end' );
+		$timezone             = $this->eventyay_event_timezone( $event );
+		$timezone_object      = $this->eventyay_timezone_object( $timezone );
+		$event_is_all_day     = ! $this->eventyay_datetime_has_time( $start_datetime ) && ! $this->eventyay_datetime_has_time( $end_datetime );
+		$start_date           = $this->format_eventyay_date( $start_datetime, $timezone_object );
+		$end_date             = $this->format_eventyay_date( $end_datetime, $timezone_object );
+		$start_time           = $event_is_all_day ? '' : $this->format_eventyay_time( $start_datetime, $timezone_object );
+		$end_time             = $event_is_all_day ? '' : $this->format_eventyay_time( $end_datetime, $timezone_object );
+		$normalized_starts_at = $this->normalize_eventyay_datetime( $start_datetime );
+		$normalized_ends_at   = $this->normalize_eventyay_datetime( $end_datetime );
+		$location             = $this->eventyay_event_location( $event );
+		$event_url            = $this->eventyay_public_event_url( $event, $settings, $event_slug );
+		$languages            = $this->eventyay_event_languages( $event );
+		$colors               = $this->eventyay_event_colors( $event );
 
-			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_start_date', $start_date );
-			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_end_date', $end_date );
-			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_location', $location );
-			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_url', $event_url );
-			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_languages', $languages );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_start_date', $start_date );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_end_date', $end_date );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_start_time', $start_time );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_end_time', $end_time );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_timezone', $timezone );
+		update_post_meta( $saved_id, 'wpfa_event_all_day', $event_is_all_day ? '1' : '0' );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_starts_at', $normalized_starts_at );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_ends_at', $normalized_ends_at );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_location', $location );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_url', $event_url );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_languages', $languages );
 
 		if ( ! empty( $colors ) || $this->eventyay_event_has_settings_payload( $event ) ) {
 			foreach ( Wpfaevent_Meta_Event::get_event_color_meta_fields() as $meta_key => $label ) {
@@ -6069,10 +6102,11 @@ class Wpfaevent_Admin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $value Date-time value.
+	 * @param string            $value    Date-time value.
+	 * @param DateTimeZone|null $timezone Optional timezone for display fields.
 	 * @return string
 	 */
-	private function format_eventyay_date( $value ) {
+	private function format_eventyay_date( $value, $timezone = null ) {
 		$value = trim( (string) $value );
 
 		if ( '' === $value ) {
@@ -6083,6 +6117,10 @@ class Wpfaevent_Admin {
 			$date = new DateTimeImmutable( $value );
 		} catch ( Exception $exception ) {
 			return '';
+		}
+
+		if ( $timezone instanceof DateTimeZone ) {
+			$date = $date->setTimezone( $timezone );
 		}
 
 		return $date->format( 'Y-m-d' );
@@ -6093,10 +6131,11 @@ class Wpfaevent_Admin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $value Date-time value.
+	 * @param string            $value    Date-time value.
+	 * @param DateTimeZone|null $timezone Optional timezone for display fields.
 	 * @return string
 	 */
-	private function format_eventyay_time( $value ) {
+	private function format_eventyay_time( $value, $timezone = null ) {
 		$value = trim( (string) $value );
 
 		if ( '' === $value ) {
@@ -6109,7 +6148,45 @@ class Wpfaevent_Admin {
 			return '';
 		}
 
+		if ( $timezone instanceof DateTimeZone ) {
+			$date = $date->setTimezone( $timezone );
+		}
+
 		return $date->format( 'H:i' );
+	}
+
+	/**
+	 * Determine whether an Eventyay value contains a time component.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $value Date or date-time value.
+	 * @return bool
+	 */
+	private function eventyay_datetime_has_time( $value ) {
+		return is_scalar( $value ) && 1 === preg_match( '/[T\s]\d{1,2}:\d{2}/', (string) $value );
+	}
+
+	/**
+	 * Build a timezone object from a sanitized Eventyay timezone.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $timezone Timezone identifier.
+	 * @return DateTimeZone|null
+	 */
+	private function eventyay_timezone_object( $timezone ) {
+		$timezone = Wpfaevent_Meta_Event::sanitize_timezone( $timezone );
+
+		if ( '' === $timezone ) {
+			return null;
+		}
+
+		try {
+			return new DateTimeZone( $timezone );
+		} catch ( Exception $exception ) {
+			return null;
+		}
 	}
 
 	/**

@@ -128,13 +128,24 @@ Imported data is stored and displayed in these places:
 
 | Eventyay data | WordPress destination |
 | ------------- | --------------------- |
-| Event title, dates, location, URL, and description | `wpfa_event` posts and event post meta such as `wpfa_event_start_date`, `wpfa_event_location`, and `_wpfa_eventyay_event_slug` |
+| Event title, dates, times, timezone, location, URL, and description | `wpfa_event` posts and event post meta such as `wpfa_event_start_date`, `wpfa_event_start_time`, `wpfa_event_timezone`, `wpfa_event_location`, and `_wpfa_eventyay_event_slug` |
 | Speakers | `wpfa_speaker` posts linked to the imported event through `wpfa_event_speakers` and `wpfa_speaker_events` |
 | Event-specific speaker dashboard data | `wp-content/uploads/fossasia-data/speakers-{event_id}.json` |
 | Event schedule rows | `wp-content/uploads/fossasia-data/schedule-{event_id}.json` |
 | About text, registration button, and visibility settings | `wp-content/uploads/fossasia-data/site-settings-{event_id}.json` |
 
 On the frontend, imported data appears on the single event page and on the event-filtered speaker list, for example `/speakers/?event={event-slug}`. The default speakers archive does not mix all event speakers together; select an event to view that event's own speaker list.
+
+## Calendar Export And Timezones
+
+Single event pages expose an **Add to calendar** link when the event has a valid start date. The primary link opens a Google Calendar event template, and the fallback `.ics` download is available from `/wp-json/wpfaevent/v1/events/{event_id}/ics`.
+
+Event timezone behavior is deterministic:
+
+* Each event can save an explicit timezone. If it is empty, WPFAevent falls back to the WordPress site timezone.
+* All-day events export date-only `DTSTART` and exclusive date-only `DTEND` values.
+* Timed events are interpreted in the event timezone and exported as UTC `DTSTART`/`DTEND` values.
+* Eventyay imports save the Eventyay `timezone` field when present and preserve normalized source datetime values for calendar rendering/export.
 
 ## Development Notes
 

@@ -275,7 +275,7 @@ class Wpfaevent_Public {
 			);
 		}
 
-		if ( is_singular( 'wpfa_event' ) || is_post_type_archive( 'wpfa_event' ) ) {
+		if ( is_singular( 'wpfa_event' ) || is_post_type_archive( 'wpfa_event' ) || is_page_template( 'page-schedule.php' ) ) {
 			$event_style_dependencies = array(
 				$this->plugin_name,
 				$this->plugin_name . '-navigation',
@@ -364,6 +364,10 @@ class Wpfaevent_Public {
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
+
+		if ( ! $this->is_wpfa_template() ) {
+			return;
+		}
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-public.js', array( 'jquery' ), $this->version, false );
 		wp_localize_script(

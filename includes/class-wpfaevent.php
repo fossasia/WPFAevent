@@ -122,6 +122,13 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-event.php';
 		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-speaker.php';
 
+		// Calendar export support.
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-calendar.php';
+
+		// Shared frontend helpers.
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/wpfaevent-event-navigation-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/wpfaevent-schedule-helper.php';
+
 		// Legacy plugin code (defines the FOSSASIA_Landing_Plugin class).
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-landing.php';
 
@@ -242,10 +249,15 @@ class Wpfaevent {
 
 		// Register public-specific stylesheet.
 		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
+		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_scripts' );
 
 		// Cache invalidation hooks (static method calls).
 		$this->loader->add_action( 'save_post', 'Wpfaevent_Cache', 'clear_page_cache' );
 		$this->loader->add_action( 'delete_post', 'Wpfaevent_Cache', 'clear_page_cache' );
+
+		// Calendar export endpoint.
+		$this->loader->add_action( 'rest_api_init', 'Wpfaevent_Calendar', 'register_rest_routes' );
+		$this->loader->add_filter( 'rest_pre_serve_request', 'Wpfaevent_Calendar', 'serve_rest_calendar', 10, 4 );
 	}
 
 	/**
