@@ -101,6 +101,52 @@ $normalize_event_date = static function ( $date ) {
 	return $timestamp ? date_i18n( 'Y-m-d', $timestamp ) : '';
 };
 
+$format_language_label = static function ( $language ) {
+	$language = trim( (string) $language );
+
+	if ( '' === $language ) {
+		return '';
+	}
+
+	$normalized = strtolower( str_replace( '_', '-', $language ) );
+	$labels     = array(
+		'ar'          => __( 'Arabic', 'wpfaevent' ),
+		'bn'          => __( 'Bengali', 'wpfaevent' ),
+		'bg'          => __( 'Bulgarian', 'wpfaevent' ),
+		'ca'          => __( 'Catalan', 'wpfaevent' ),
+		'cs'          => __( 'Czech', 'wpfaevent' ),
+		'da'          => __( 'Danish', 'wpfaevent' ),
+		'de'          => __( 'German', 'wpfaevent' ),
+		'en'          => __( 'English', 'wpfaevent' ),
+		'en-ca'       => __( 'English (Canada)', 'wpfaevent' ),
+		'es'          => __( 'Spanish', 'wpfaevent' ),
+		'fr'          => __( 'French', 'wpfaevent' ),
+		'gu'          => __( 'Gujarati', 'wpfaevent' ),
+		'hi'          => __( 'Hindi', 'wpfaevent' ),
+		'it'          => __( 'Italian', 'wpfaevent' ),
+		'ja'          => __( 'Japanese', 'wpfaevent' ),
+		'ko'          => __( 'Korean', 'wpfaevent' ),
+		'nl'          => __( 'Dutch', 'wpfaevent' ),
+		'nl-informal' => __( 'Dutch (Informal)', 'wpfaevent' ),
+		'pt'          => __( 'Portuguese', 'wpfaevent' ),
+		'ru'          => __( 'Russian', 'wpfaevent' ),
+		'si'          => __( 'Sinhala', 'wpfaevent' ),
+		'ta'          => __( 'Tamil', 'wpfaevent' ),
+		'zh-hans'     => __( 'Chinese (Simplified)', 'wpfaevent' ),
+		'zh-hant'     => __( 'Chinese (Traditional)', 'wpfaevent' ),
+	);
+
+	if ( isset( $labels[ $normalized ] ) ) {
+		return $labels[ $normalized ];
+	}
+
+	if ( false === strpos( $language, ' ' ) && preg_match( '/^[a-z]{2,3}(?:[-_][a-z0-9]+)*$/i', $language ) ) {
+		return ucwords( str_replace( '-', ' ', $normalized ) );
+	}
+
+	return $language;
+};
+
 $get_event_terms = static function ( $event_id, $taxonomy ) {
 	$terms = get_the_terms( $event_id, $taxonomy );
 
@@ -161,6 +207,7 @@ foreach ( $event_ids as $event_id ) {
 	$end_date        = $normalize_event_date( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
 	$location        = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
 	$event_languages = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array();
+	$language_labels = array_map( $format_language_label, $event_languages );
 	$event_url       = esc_url_raw( get_post_meta( $event_id, 'wpfa_event_url', true ) );
 	$track_terms     = $get_event_terms( $event_id, 'wpfa_event_track' );
 	$tag_terms       = $get_event_terms( $event_id, 'wpfa_event_tag' );
@@ -182,7 +229,7 @@ foreach ( $event_ids as $event_id ) {
 	}
 
 	foreach ( $event_languages as $language ) {
-		$languages[ sanitize_title( $language ) ] = $language;
+		$languages[ sanitize_title( $language ) ] = $format_language_label( $language );
 	}
 
 	$events[] = array(
@@ -193,7 +240,7 @@ foreach ( $event_ids as $event_id ) {
 		'date_label'    => $format_event_date_range( $start_date, $end_date ),
 		'location'      => $location,
 		'location_key'  => sanitize_title( $location ),
-		'languages'     => $event_languages,
+		'languages'     => $language_labels,
 		'language_keys' => array_map( 'sanitize_title', $event_languages ),
 		'event_url'     => $event_url,
 		'track_names'   => $track_names,

@@ -1372,9 +1372,10 @@
 }
 
 .wpfaevent .wpfa-event-filter-grid {
+	align-items: end;
 	display: grid;
 	gap: 14px;
-	grid-template-columns: minmax(260px, 1.5fr) repeat(4, minmax(150px, 1fr));
+	grid-template-columns: minmax(260px, 1.35fr) repeat(4, minmax(170px, 1fr));
 }
 
 .wpfaevent .wpfa-event-field {
@@ -1428,9 +1429,9 @@
 
 .wpfaevent .wpfa-event-filter-bottom {
 	align-items: end;
-	display: flex;
+	display: grid;
 	gap: 16px;
-	justify-content: space-between;
+	grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .wpfaevent .wpfa-event-when-filter {
@@ -1497,6 +1498,7 @@
 	font-weight: 800;
 	max-width: 100%;
 	min-height: 46px;
+	min-width: 170px;
 	padding: 11px 18px;
 	white-space: nowrap;
 }
@@ -1810,10 +1812,13 @@
 	}
 
 	.wpfaevent .wpfa-event-directory-hero-inner,
-	.wpfaevent .wpfa-event-filter-grid,
 	.wpfaevent .wpfa-event-directory-card,
 	.wpfaevent .wpfa-event-directory-card-main {
 		grid-template-columns: 1fr;
+	}
+
+	.wpfaevent .wpfa-event-filter-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
 	.wpfaevent .wpfa-event-directory-hero {
@@ -1970,10 +1975,18 @@
 	}
 
 	.wpfaevent .wpfa-event-filter-head,
-	.wpfaevent .wpfa-event-filter-bottom,
 	.wpfaevent .wpfa-event-results-head {
 		align-items: stretch;
 		flex-direction: column;
+	}
+
+	.wpfaevent .wpfa-event-filter-bottom {
+		align-items: stretch;
+		grid-template-columns: 1fr;
+	}
+
+	.wpfaevent .wpfa-event-filter-grid {
+		grid-template-columns: 1fr;
 	}
 
 	.wpfaevent .wpfa-event-filter-submit {
