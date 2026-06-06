@@ -121,6 +121,52 @@ $format_timezone_label = static function ( $timezone_string ) use ( $primary_tim
 		: str_replace( '_', ' ', $timezone_string );
 };
 
+$format_language_label = static function ( $language ) {
+	$language = trim( (string) $language );
+
+	if ( '' === $language ) {
+		return '';
+	}
+
+	$normalized = strtolower( str_replace( '_', '-', $language ) );
+	$labels     = array(
+		'ar'          => __( 'Arabic', 'wpfaevent' ),
+		'bn'          => __( 'Bengali', 'wpfaevent' ),
+		'bg'          => __( 'Bulgarian', 'wpfaevent' ),
+		'ca'          => __( 'Catalan', 'wpfaevent' ),
+		'cs'          => __( 'Czech', 'wpfaevent' ),
+		'da'          => __( 'Danish', 'wpfaevent' ),
+		'de'          => __( 'German', 'wpfaevent' ),
+		'en'          => __( 'English', 'wpfaevent' ),
+		'en-ca'       => __( 'English (Canada)', 'wpfaevent' ),
+		'es'          => __( 'Spanish', 'wpfaevent' ),
+		'fr'          => __( 'French', 'wpfaevent' ),
+		'gu'          => __( 'Gujarati', 'wpfaevent' ),
+		'hi'          => __( 'Hindi', 'wpfaevent' ),
+		'it'          => __( 'Italian', 'wpfaevent' ),
+		'ja'          => __( 'Japanese', 'wpfaevent' ),
+		'ko'          => __( 'Korean', 'wpfaevent' ),
+		'nl'          => __( 'Dutch', 'wpfaevent' ),
+		'nl-informal' => __( 'Dutch (Informal)', 'wpfaevent' ),
+		'pt'          => __( 'Portuguese', 'wpfaevent' ),
+		'ru'          => __( 'Russian', 'wpfaevent' ),
+		'si'          => __( 'Sinhala', 'wpfaevent' ),
+		'ta'          => __( 'Tamil', 'wpfaevent' ),
+		'zh-hans'     => __( 'Chinese (Simplified)', 'wpfaevent' ),
+		'zh-hant'     => __( 'Chinese (Traditional)', 'wpfaevent' ),
+	);
+
+	if ( isset( $labels[ $normalized ] ) ) {
+		return $labels[ $normalized ];
+	}
+
+	if ( false === strpos( $language, ' ' ) && preg_match( '/^[a-z]{2,3}(?:[-_][a-z0-9]+)*$/i', $language ) ) {
+		return ucwords( str_replace( '-', ' ', $normalized ) );
+	}
+
+	return $language;
+};
+
 $event_ids              = get_posts(
 	array(
 		'post_type'      => 'wpfa_event',
@@ -144,12 +190,12 @@ foreach ( $event_ids as $event_id ) {
 	$event_languages = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array();
 	$language_keys   = array_map( 'sanitize_title', $event_languages );
 
-	foreach ( $event_languages as $language ) {
-		$languages[ sanitize_title( $language ) ] = $language;
-	}
-
 	if ( $selected_event_id && $selected_event_id !== $event_id ) {
 		continue;
+	}
+
+	foreach ( $event_languages as $language ) {
+		$languages[ sanitize_title( $language ) ] = $format_language_label( $language );
 	}
 
 	if ( $current_language && ! in_array( $current_language, $language_keys, true ) ) {
@@ -169,7 +215,7 @@ foreach ( $event_ids as $event_id ) {
 
 		$entry['languages']      = $event_languages;
 		$entry['language_keys']  = $language_keys;
-		$entry['language_label'] = implode( ', ', $event_languages );
+		$entry['language_label'] = implode( ', ', array_map( $format_language_label, $event_languages ) );
 		$schedule_events[]       = $entry;
 	}
 }
@@ -252,6 +298,11 @@ $header_vars = array(
 	'register_button_url'  => '',
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
 );
+
+$filter_form_classes = 'wpfa-schedule-filter-form';
+if ( ! empty( $languages ) ) {
+	$filter_form_classes .= ' has-language-filter';
+}
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -292,7 +343,7 @@ $header_vars = array(
 					<?php endif; ?>
 				</div>
 				<?php if ( ! empty( $event_ids ) ) : ?>
-					<form class="wpfa-schedule-filter-form" action="<?php echo esc_url( $schedule_page_url ); ?>" method="get">
+					<form class="<?php echo esc_attr( $filter_form_classes ); ?>" action="<?php echo esc_url( $schedule_page_url ); ?>" method="get">
 						<?php if ( $selected_event_slug ) : ?>
 							<input type="hidden" name="event" value="<?php echo esc_attr( $selected_event_slug ); ?>">
 						<?php endif; ?>

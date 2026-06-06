@@ -371,11 +371,14 @@
 
 .wpfaevent .wpfa-schedule-head {
 	align-items: flex-end;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 20px;
-	justify-content: space-between;
+	display: grid;
+	gap: 20px 32px;
+	grid-template-columns: minmax(260px, 1fr) minmax(0, auto);
 	margin-bottom: 28px;
+}
+
+.wpfaevent .wpfa-schedule-head > div:first-child {
+	min-width: 0;
 }
 
 .wpfaevent .wpfa-schedule-head h1 {
@@ -389,15 +392,20 @@
 
 .wpfaevent .wpfa-schedule-filter-form {
 	align-items: end;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 10px;
+	display: grid;
+	gap: 10px 12px;
+	grid-template-columns: minmax(260px, 456px) auto auto;
 	justify-content: flex-end;
+}
+
+.wpfaevent .wpfa-schedule-filter-form.has-language-filter {
+	grid-template-columns: minmax(190px, 260px) minmax(260px, 456px) auto auto;
 }
 
 .wpfaevent .wpfa-schedule-filter-form label {
 	display: grid;
 	gap: 5px;
+	min-width: 0;
 }
 
 .wpfaevent .wpfa-schedule-filter-form span {
@@ -413,8 +421,9 @@
 	border-radius: var(--event-radius);
 	color: var(--event-ink);
 	min-height: 40px;
-	min-width: 170px;
+	min-width: 0;
 	padding: 8px 10px;
+	width: 100%;
 }
 
 .wpfaevent .wpfa-schedule-filter-form button,
@@ -426,14 +435,18 @@
 	color: #fff;
 	display: inline-flex;
 	font-weight: 800;
+	justify-content: center;
 	min-height: 40px;
+	min-width: 112px;
 	padding: 9px 14px;
+	white-space: nowrap;
 }
 
 .wpfaevent .wpfa-schedule-clear {
 	background: #fff;
 	border-color: var(--event-line);
 	color: var(--event-primary-dark);
+	min-width: 150px;
 }
 
 .wpfaevent .wpfa-schedule-filter-form button:hover,
@@ -1734,6 +1747,16 @@
 	color: #fff;
 }
 
+@media (max-width: 1180px) {
+	.wpfaevent .wpfa-schedule-head {
+		grid-template-columns: 1fr;
+	}
+
+	.wpfaevent .wpfa-schedule-filter-form {
+		justify-content: stretch;
+	}
+}
+
 @media (max-width: 900px) {
 	.wpfaevent .wpfa-event-hero-inner,
 	.wpfaevent .wpfa-event-section-layout,
@@ -1814,6 +1837,14 @@
 		flex-wrap: wrap;
 		justify-content: flex-start;
 	}
+
+	.wpfaevent .wpfa-schedule-filter-form {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.wpfaevent .wpfa-schedule-filter-form.has-language-filter {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
 }
 
 @media (max-width: 760px) {
@@ -1883,10 +1914,16 @@
 	.wpfaevent .wpfa-event-section-actions,
 	.wpfaevent .wpfa-schedule-filter-form {
 		align-items: stretch;
-		flex-direction: column;
+		grid-template-columns: 1fr;
 		width: 100%;
 	}
 
+	.wpfaevent .wpfa-schedule-filter-form.has-language-filter {
+		grid-template-columns: 1fr;
+	}
+
+	.wpfaevent .wpfa-schedule-filter-form button,
+	.wpfaevent .wpfa-schedule-clear,
 	.wpfaevent .wpfa-schedule-filter-form select {
 		width: 100%;
 	}
