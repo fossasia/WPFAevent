@@ -308,6 +308,8 @@ $regular_speaker_overflow_count = max( 0, count( $regular_speaker_ids ) - count(
 $event_slug              = get_post_field( 'post_name', $event_id );
 $speaker_placeholder_url = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
 $speakers_url            = add_query_arg( 'event', $event_slug, home_url( '/speakers/' ) );
+$schedule_page_url       = class_exists( 'Wpfaevent_Schedule_Helper' ) ? Wpfaevent_Schedule_Helper::get_schedule_page_url() : home_url( '/full-schedule/' );
+$event_schedule_url      = add_query_arg( 'event', $event_slug, $schedule_page_url );
 
 $register_text = ! empty( $site_settings['reg_button_text'] ) ? sanitize_text_field( $site_settings['reg_button_text'] ) : __( 'Get Tickets', 'wpfaevent' );
 $register_url  = ! empty( $site_settings['reg_button_link'] ) ? esc_url_raw( $site_settings['reg_button_link'] ) : $event_url;
@@ -907,19 +909,22 @@ $header_vars = array(
 							<p><?php esc_html_e( 'Times and rooms imported from Eventyay.', 'wpfaevent' ); ?></p>
 						</div>
 						<?php if ( ! empty( $schedule_items ) ) : ?>
-							<form class="wpfa-event-timezone-form" action="<?php echo esc_url( get_permalink( $event_id ) . '#wpfa-event-schedule-title' ); ?>" method="get">
-								<label for="wpfa-event-schedule-timezone">
-									<span><?php esc_html_e( 'Timezone', 'wpfaevent' ); ?></span>
-									<select id="wpfa-event-schedule-timezone" class="wpfa-event-timezone-select" name="schedule_tz">
-										<?php foreach ( $schedule_timezone_options as $timezone_option ) : ?>
-											<option value="<?php echo esc_attr( $timezone_option ); ?>" <?php selected( $selected_schedule_timezone_string, $timezone_option ); ?>>
-												<?php echo esc_html( $format_timezone_label( $timezone_option ) ); ?>
-											</option>
-										<?php endforeach; ?>
-									</select>
-								</label>
-								<button type="submit"><?php esc_html_e( 'Convert', 'wpfaevent' ); ?></button>
-							</form>
+							<div class="wpfa-event-section-actions">
+								<a href="<?php echo esc_url( $event_schedule_url ); ?>"><?php esc_html_e( 'Full Schedule', 'wpfaevent' ); ?></a>
+								<form class="wpfa-event-timezone-form" action="<?php echo esc_url( get_permalink( $event_id ) . '#wpfa-event-schedule-title' ); ?>" method="get">
+									<label for="wpfa-event-schedule-timezone">
+										<span><?php esc_html_e( 'Timezone', 'wpfaevent' ); ?></span>
+										<select id="wpfa-event-schedule-timezone" class="wpfa-event-timezone-select" name="schedule_tz">
+											<?php foreach ( $schedule_timezone_options as $timezone_option ) : ?>
+												<option value="<?php echo esc_attr( $timezone_option ); ?>" <?php selected( $selected_schedule_timezone_string, $timezone_option ); ?>>
+													<?php echo esc_html( $format_timezone_label( $timezone_option ) ); ?>
+												</option>
+											<?php endforeach; ?>
+										</select>
+									</label>
+									<button type="submit"><?php esc_html_e( 'Convert', 'wpfaevent' ); ?></button>
+								</form>
+							</div>
 						<?php endif; ?>
 					</div>
 					<?php if ( ! empty( $schedule_items ) ) : ?>

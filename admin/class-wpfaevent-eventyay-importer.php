@@ -174,7 +174,7 @@ class Wpfaevent_Eventyay_Importer {
 
 				<hr>
 
-				<h3><?php esc_html_e( 'Import Events', 'wpfaevent' ); ?></h3>
+				<h3><?php esc_html_e( 'Import or Update Events', 'wpfaevent' ); ?></h3>
 				<?php if ( is_wp_error( $endpoint_preview ) ) : ?>
 					<p><?php echo esc_html( $endpoint_preview->get_error_message() ); ?></p>
 				<?php elseif ( $endpoint_preview ) : ?>
@@ -185,11 +185,15 @@ class Wpfaevent_Eventyay_Importer {
 				<?php else : ?>
 					<p><?php esc_html_e( 'Save an organizer slug before importing.', 'wpfaevent' ); ?></p>
 				<?php endif; ?>
+				<p class="description">
+					<?php esc_html_e( 'Run this again whenever Eventyay changes. Existing Eventyay-owned event posts, speakers, schedules, sponsors, exhibitors, and event Info content are updated in place.', 'wpfaevent' ); ?>
+				</p>
 
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="wpfaevent_import_eventyay_events">
 					<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
-					<?php submit_button( __( 'Import Events from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, empty( $settings['organizer_slug'] ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
+					<?php submit_button( __( 'Import Events from Eventyay', 'wpfaevent' ), 'secondary', 'submit', false, empty( $settings['organizer_slug'] ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
+					<?php submit_button( __( 'Update Events from Eventyay', 'wpfaevent' ), 'primary', 'wpfaevent_update_events', false, empty( $settings['organizer_slug'] ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
 				</form>
 			</div>
 

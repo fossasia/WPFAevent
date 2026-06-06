@@ -64,6 +64,7 @@ class Wpfaevent_Public {
 			'page-events.php',
 			'page-past-events.php',
 			'page-schedule.php',
+			'public/partials/schedule-page.php',
 			'page-speakers.php',
 			'page-landing.php',
 		);
@@ -89,6 +90,7 @@ class Wpfaevent_Public {
 			'page-past-events.php',
 			'page-speakers.php',
 			'page-schedule.php',
+			'public/partials/schedule-page.php',
 		);
 
 		foreach ( $paginated_templates as $template ) {
@@ -275,7 +277,7 @@ class Wpfaevent_Public {
 			);
 		}
 
-		if ( is_singular( 'wpfa_event' ) || is_post_type_archive( 'wpfa_event' ) || is_page_template( 'page-schedule.php' ) ) {
+		if ( is_singular( 'wpfa_event' ) || is_post_type_archive( 'wpfa_event' ) || is_page_template( 'page-schedule.php' ) || is_page_template( 'public/partials/schedule-page.php' ) ) {
 			$event_style_dependencies = array(
 				$this->plugin_name,
 				$this->plugin_name . '-navigation',
