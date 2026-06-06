@@ -525,25 +525,6 @@ class Wpfaevent_Admin {
 					'order'                  => 'ASC',
 					'update_post_meta_cache' => false,
 					'update_post_term_cache' => false,
-					// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Speaker-event links are stored in post meta.
-					'meta_query'             => array(
-						'relation' => 'OR',
-						array(
-							'key'     => 'wpfa_speaker_events',
-							'value'   => 'i:' . $event_id . ';',
-							'compare' => 'LIKE',
-						),
-						array(
-							'key'     => 'wpfa_speaker_events',
-							'value'   => '"' . $event_id . '"',
-							'compare' => 'LIKE',
-						),
-						array(
-							'key'     => 'wpfa_speaker_events',
-							'value'   => (string) $event_id,
-							'compare' => '=',
-						),
-					),
 				)
 			);
 
@@ -551,8 +532,15 @@ class Wpfaevent_Admin {
 				break;
 			}
 
-			$speaker_ids = array_merge( $speaker_ids, $batch_ids );
 			$batch_count = count( $batch_ids );
+			update_meta_cache( 'post', $batch_ids );
+
+			foreach ( $batch_ids as $speaker_id ) {
+				if ( in_array( $event_id, $this->get_speaker_event_ids( $speaker_id ), true ) ) {
+					$speaker_ids[] = $speaker_id;
+				}
+			}
+
 			++$current_page;
 		} while ( $batch_count === $batch_size );
 
