@@ -180,6 +180,15 @@ class Wpfaevent_Admin {
 		);
 
 		add_submenu_page(
+			'edit.php?post_type=wpfa_event',
+			esc_html__( 'Update Events from Eventyay', 'wpfaevent' ),
+			esc_html__( 'Update Events', 'wpfaevent' ),
+			'manage_options',
+			'wpfaevent-update-events',
+			array( $this, 'render_update_events_page' )
+		);
+
+		add_submenu_page(
 			'edit.php?post_type=wpfa_speaker',
 			esc_html__( 'Event Speaker Lists', 'wpfaevent' ),
 			esc_html__( 'Events', 'wpfaevent' ),
@@ -623,6 +632,16 @@ class Wpfaevent_Admin {
 	 */
 	public function render_settings_page() {
 		$this->get_eventyay_importer()->render_settings_page();
+	}
+
+	/**
+	 * Render the Eventyay update page.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public function render_update_events_page() {
+		$this->get_eventyay_importer()->render_update_events_page();
 	}
 
 	/**

@@ -760,7 +760,8 @@
 	line-height: 1.35;
 }
 
-.wpfaevent .wpfa-event-speaker-limit-note {
+.wpfaevent .wpfa-event-speaker-limit-note,
+.wpfaevent .wpfa-event-schedule-preview-note {
 	color: var(--event-muted);
 	font-size: 0.94rem;
 	font-weight: 700;

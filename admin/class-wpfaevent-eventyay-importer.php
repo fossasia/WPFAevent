@@ -174,7 +174,7 @@ class Wpfaevent_Eventyay_Importer {
 
 				<hr>
 
-				<h3><?php esc_html_e( 'Import or Update Events', 'wpfaevent' ); ?></h3>
+				<h3><?php esc_html_e( 'Import Events', 'wpfaevent' ); ?></h3>
 				<?php if ( is_wp_error( $endpoint_preview ) ) : ?>
 					<p><?php echo esc_html( $endpoint_preview->get_error_message() ); ?></p>
 				<?php elseif ( $endpoint_preview ) : ?>
@@ -186,14 +186,14 @@ class Wpfaevent_Eventyay_Importer {
 					<p><?php esc_html_e( 'Save an organizer slug before importing.', 'wpfaevent' ); ?></p>
 				<?php endif; ?>
 				<p class="description">
-					<?php esc_html_e( 'Run this again whenever Eventyay changes. Existing Eventyay-owned event posts, speakers, schedules, sponsors, exhibitors, and event Info content are updated in place.', 'wpfaevent' ); ?>
+					<?php esc_html_e( 'Use this to import Eventyay events for the configured organizer. Use the Update Events menu item when Eventyay data changes after the initial import.', 'wpfaevent' ); ?>
 				</p>
 
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="wpfaevent_import_eventyay_events">
+					<input type="hidden" name="wpfaevent_eventyay_return_page" value="wpfaevent-import-events">
 					<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
-					<?php submit_button( __( 'Import Events from Eventyay', 'wpfaevent' ), 'secondary', 'submit', false, empty( $settings['organizer_slug'] ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
-					<?php submit_button( __( 'Update Events from Eventyay', 'wpfaevent' ), 'primary', 'wpfaevent_update_events', false, empty( $settings['organizer_slug'] ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
+					<?php submit_button( __( 'Import Events from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, empty( $settings['organizer_slug'] ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
 				</form>
 			</div>
 
@@ -212,6 +212,71 @@ class Wpfaevent_Eventyay_Importer {
 	}
 
 	/**
+	 * Render the Eventyay update page.
+	 *
+	 * @since 1.0.0
+	 */
+	public function render_update_events_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wpfaevent' ) );
+		}
+
+		$settings         = $this->get_eventyay_import_settings();
+		$endpoint_preview = ! empty( $settings['organizer_slug'] ) ? $this->build_eventyay_events_endpoint( $settings ) : '';
+		$notice_key       = 'wpfaevent_eventyay_import_notice_' . get_current_user_id();
+		$notice           = get_transient( $notice_key );
+
+		if ( $notice ) {
+			delete_transient( $notice_key );
+		}
+		?>
+		<div class="wrap">
+			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+
+			<?php settings_errors( 'wpfaevent_eventyay_import' ); ?>
+
+			<?php if ( is_array( $notice ) && ! empty( $notice['message'] ) ) : ?>
+				<div class="notice notice-<?php echo esc_attr( ! empty( $notice['type'] ) ? $notice['type'] : 'info' ); ?> is-dismissible">
+					<p><?php echo esc_html( $notice['message'] ); ?></p>
+				</div>
+			<?php endif; ?>
+
+			<div class="card" style="max-width: 960px;">
+				<h2><?php esc_html_e( 'Update Events from Eventyay', 'wpfaevent' ); ?></h2>
+				<p><?php esc_html_e( 'Run this when Eventyay data changes after events have already been imported.', 'wpfaevent' ); ?></p>
+				<p class="description">
+					<?php esc_html_e( 'Existing Eventyay-owned event posts, speakers, schedules, sponsors, exhibitors, and event Info content are updated in place.', 'wpfaevent' ); ?>
+				</p>
+
+				<?php if ( is_wp_error( $endpoint_preview ) ) : ?>
+					<p><?php echo esc_html( $endpoint_preview->get_error_message() ); ?></p>
+				<?php elseif ( $endpoint_preview ) : ?>
+					<p>
+						<?php esc_html_e( 'Current endpoint:', 'wpfaevent' ); ?>
+						<code><?php echo esc_html( $endpoint_preview ); ?></code>
+					</p>
+				<?php else : ?>
+					<p><?php esc_html_e( 'Save an organizer slug on the Import Events page before updating.', 'wpfaevent' ); ?></p>
+				<?php endif; ?>
+
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<input type="hidden" name="action" value="wpfaevent_import_eventyay_events">
+					<input type="hidden" name="wpfaevent_eventyay_return_page" value="wpfaevent-update-events">
+					<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
+					<?php submit_button( __( 'Update Events from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, empty( $settings['organizer_slug'] ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
+				</form>
+
+				<p>
+					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=wpfa_event&page=wpfaevent-import-events' ) ); ?>">
+						<?php esc_html_e( 'Edit Eventyay import settings', 'wpfaevent' ); ?>
+					</a>
+				</p>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Import Eventyay events using the saved newer REST API settings.
 	 *
 	 * @since 1.0.0
@@ -222,6 +287,15 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		check_admin_referer( 'wpfaevent_import_eventyay_events' );
+
+		$return_page = 'wpfaevent-import-events';
+		if ( isset( $_POST['wpfaevent_eventyay_return_page'] ) ) {
+			$return_page = sanitize_key( wp_unslash( $_POST['wpfaevent_eventyay_return_page'] ) );
+		}
+
+		if ( ! in_array( $return_page, array( 'wpfaevent-import-events', 'wpfaevent-update-events' ), true ) ) {
+			$return_page = 'wpfaevent-import-events';
+		}
 
 		$result     = $this->import_eventyay_events_from_settings();
 		$notice_key = 'wpfaevent_eventyay_import_notice_' . get_current_user_id();
@@ -261,7 +335,7 @@ class Wpfaevent_Eventyay_Importer {
 			);
 		}
 
-		wp_safe_redirect( admin_url( 'edit.php?post_type=wpfa_event&page=wpfaevent-import-events' ) );
+		wp_safe_redirect( admin_url( 'edit.php?post_type=wpfa_event&page=' . $return_page ) );
 		exit;
 	}
 

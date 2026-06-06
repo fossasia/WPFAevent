@@ -557,19 +557,22 @@ foreach ( $schedule_body as $row_index => $row ) {
 	$schedule_items[] = $schedule_item;
 }
 
-$schedule_day_groups = array();
+$schedule_preview_limit      = absint( apply_filters( 'wpfa_event_schedule_preview_limit', 3, $event_id ) );
+$schedule_preview_items      = $schedule_preview_limit ? array_slice( $schedule_items, 0, $schedule_preview_limit ) : $schedule_items;
+$schedule_preview_day_groups = array();
 
-foreach ( $schedule_items as $schedule_item ) {
+foreach ( $schedule_preview_items as $schedule_item ) {
 	$day_key = ! empty( $schedule_item['date_label'] ) ? $schedule_item['date_label'] : __( 'TBD', 'wpfaevent' );
 
-	if ( ! isset( $schedule_day_groups[ $day_key ] ) ) {
-		$schedule_day_groups[ $day_key ] = array();
+	if ( ! isset( $schedule_preview_day_groups[ $day_key ] ) ) {
+		$schedule_preview_day_groups[ $day_key ] = array();
 	}
 
-	$schedule_day_groups[ $day_key ][] = $schedule_item;
+	$schedule_preview_day_groups[ $day_key ][] = $schedule_item;
 }
 
-$first_schedule = ! empty( $schedule_items[0] ) ? $schedule_items[0] : array();
+$schedule_hidden_count = max( 0, count( $schedule_items ) - count( $schedule_preview_items ) );
+$first_schedule        = ! empty( $schedule_items[0] ) ? $schedule_items[0] : array();
 
 $wpfa_event_nav_context = array(
 	'show_about'      => $show_about,
@@ -927,9 +930,9 @@ $header_vars = array(
 							</div>
 						<?php endif; ?>
 					</div>
-					<?php if ( ! empty( $schedule_items ) ) : ?>
+					<?php if ( ! empty( $schedule_preview_items ) ) : ?>
 						<div class="wpfa-schedule-program">
-							<?php foreach ( $schedule_day_groups as $day_label => $day_sessions ) : ?>
+							<?php foreach ( $schedule_preview_day_groups as $day_label => $day_sessions ) : ?>
 								<section class="wpfa-schedule-day" aria-labelledby="<?php echo esc_attr( sanitize_title( $day_label ) ); ?>-heading">
 									<header class="wpfa-schedule-day-head">
 										<div>
@@ -1011,6 +1014,18 @@ $header_vars = array(
 								</section>
 							<?php endforeach; ?>
 						</div>
+						<?php if ( $schedule_hidden_count ) : ?>
+							<p class="wpfa-event-schedule-preview-note">
+								<?php
+								printf(
+									/* translators: 1: shown session count, 2: total session count. */
+									esc_html__( 'Showing the first %1$d of %2$d sessions. Open the full schedule to view every session.', 'wpfaevent' ),
+									absint( count( $schedule_preview_items ) ),
+									absint( count( $schedule_items ) )
+								);
+								?>
+							</p>
+						<?php endif; ?>
 					<?php else : ?>
 						<p class="wpfa-empty-state"><?php esc_html_e( 'No schedule has been imported for this event yet.', 'wpfaevent' ); ?></p>
 					<?php endif; ?>
