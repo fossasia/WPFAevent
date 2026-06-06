@@ -483,7 +483,7 @@ if ( empty( $cfs_button_link ) ) {
 	.panel{margin-top:18px}
 	table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden;table-layout:fixed}
 	.schedule-table th, .schedule-table td { padding: 16px 14px; text-align: left; word-wrap: break-word; }
-	.schedule-table th { 
+	.schedule-table th {
 	background: var(--brand); /* Red background */
 	color: #fff; /* White text */
 	font-weight: bold; /* Bold text */
@@ -537,36 +537,36 @@ if ( empty( $cfs_button_link ) ) {
 	@media (max-width:980px){ .info-grid{grid-template-columns:1fr} }
 	.venue-address{font-size:.95rem;color:var(--muted);background:#fbfcfd;padding:12px;border-radius:10px}
 	.muted-note{font-size:.95rem;color:var(--muted)}
-  
+
 	/* Gutenberg content area */
 	.gutenberg-content { padding: 40px 0; }
 	.gutenberg-content > * { max-width: var(--container); margin-left: auto; margin-right: auto; }
-	.gutenberg-content .wp-block-group, 
-	.gutenberg-content .wp-block-cover, 
+	.gutenberg-content .wp-block-group,
+	.gutenberg-content .wp-block-cover,
 	.gutenberg-content .wp-block-columns { max-width: none; }
-  
+
 	/* Admin bar adjustment */
 	.admin-bar .nav { top: 32px; }
 	@media (max-width: 782px) {
 	.admin-bar .nav { top: 46px; }
 	}
-  
+
 	/* Speaker card expandable content */
-	.card-expand { 
-	max-height: 0; 
-	overflow: hidden; 
-	opacity: 0; 
-	transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease; 
-	padding: 0 16px; 
-	background: #fafafa; 
+	.card-expand {
+	max-height: 0;
+	overflow: hidden;
+	opacity: 0;
+	transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+	padding: 0 16px;
+	background: #fafafa;
 	}
-	.card.expanded .card-expand { 
+	.card.expanded .card-expand {
 	max-height: 9999px;
 	opacity: 1;
 	padding: 14px 16px 16px;
 	}
 	/* Custom rule for centering the 'More Speakers' button */
-	.wp-block-buttons.aligncenter { 
+	.wp-block-buttons.aligncenter {
 	display: flex !important;
 	justify-content: center;
 	width: 100% !important;

@@ -137,16 +137,16 @@ $header_vars         = array(
 			<div class="container">
 				<h1><?php echo esc_html( apply_filters( 'wpfa_speakers_title', __( 'FOSSASIA Summit Speakers', 'wpfaevent' ) ) ); ?></h1>
 				<p><?php echo esc_html( apply_filters( 'wpfa_speakers_subtitle', __( 'Discover all the amazing speakers joining us at FOSSASIA Summit', 'wpfaevent' ) ) ); ?></p>
-				
+
 				<form class="wpfa-speakers-search" method="get" action="<?php echo esc_url( get_permalink() ); ?>">
 					<label for="wpfa-speaker-search" class="screen-reader-text">
 						<?php esc_html_e( 'Search speakers', 'wpfaevent' ); ?>
 					</label>
-					<input 
-						type="search" 
-						id="wpfa-speaker-search" 
-						name="q" 
-							value="<?php echo esc_attr( $search_term ); ?>" 
+					<input
+						type="search"
+						id="wpfa-speaker-search"
+						name="q"
+							value="<?php echo esc_attr( $search_term ); ?>"
 						placeholder="<?php esc_attr_e( 'Search speakers...', 'wpfaevent' ); ?>"
 					/>
 					<button type="submit">
@@ -158,7 +158,7 @@ $header_vars         = array(
 
 				<?php if ( ! empty( $categories ) ) : ?>
 				<div class="wpfa-speakers-filters">
-					<a href="<?php echo esc_url( add_query_arg( array( 'category' => 'all' ), remove_query_arg( 'category' ) ) ); ?>" 
+					<a href="<?php echo esc_url( add_query_arg( array( 'category' => 'all' ), remove_query_arg( 'category' ) ) ); ?>"
 							class="wpfa-filter-btn <?php echo esc_attr( 'all' === $current_category ? 'active' : '' ); ?>"
 						data-filter="all">
 						<?php esc_html_e( 'All Speakers', 'wpfaevent' ); ?>
@@ -172,7 +172,7 @@ $header_vars         = array(
 							remove_query_arg( array( 'paged', 'category' ) )
 						);
 						?>
-						<a href="<?php echo esc_url( $category_url ); ?>" 
+						<a href="<?php echo esc_url( $category_url ); ?>"
 							class="wpfa-filter-btn <?php echo $is_active ? 'active' : ''; ?>"
 							data-filter="<?php echo esc_attr( $category_slug ); ?>">
 							<?php echo esc_html( $category_term->name ); ?>
