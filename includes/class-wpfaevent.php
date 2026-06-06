@@ -133,6 +133,7 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-landing.php';
 
 		// Admin and Public classes.
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-importer.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
 
