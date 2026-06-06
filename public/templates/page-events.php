@@ -171,13 +171,13 @@ $header_vars = array(
 				<div class="main-content">
 					<div class="main-content-header">
 						<h1><?php esc_html_e( 'Events', 'wpfaevent' ); ?></h1>
-						<?php if ( $is_admin ) : ?>                         
+						<?php if ( $is_admin ) : ?>
 							<button id="createEventBtn" class="btn btn-primary">
 								<?php esc_html_e( 'Create Custom Event', 'wpfaevent' ); ?>
-							</button>           
+							</button>
 						<?php endif; ?>
 					</div>
-					
+
 					<!-- Search Section -->
 					<div class="wpfaevent-search-section">
 						<form class="wpfa-search-form" onsubmit="return false;">
@@ -224,7 +224,7 @@ $header_vars = array(
 							<div class="main-content-header">
 								<h2><?php esc_html_e( 'Past Events', 'wpfaevent' ); ?></h2>
 							</div>
-							
+
 							<!-- Past Events Container -->
 							<div id="past-events-container" class="events-container">
 								<?php
@@ -249,15 +249,15 @@ $header_vars = array(
 										}
 									}
 									?>
-									
-									<div class="event-card past-event-card" 
+
+									<div class="event-card past-event-card"
 										data-post-id="<?php echo esc_attr( $event_id ); ?>"
 										data-name="<?php echo esc_attr( get_the_title( $event_id ) ); ?>"
 										data-date="<?php echo esc_attr( $event_date ); ?>"
 										data-place="<?php echo esc_attr( $event_place ); ?>"
 										data-end-date="<?php echo esc_attr( $event_end_date ); ?>"
 										data-description="<?php echo esc_attr( $event_description ); ?>">
-										
+
 										<a href="<?php echo esc_url( get_permalink( $event_id ) ); ?>" class="event-card-link">
 											<div class="event-card-image">
 												<img src="<?php echo esc_url( $featured_img_url ); ?>" alt="<?php echo esc_attr( get_the_title( $event_id ) ); ?>">
@@ -267,14 +267,14 @@ $header_vars = array(
 												<p>
 													<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
 														<path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"></path>
-													</svg> 
+													</svg>
 													<?php echo esc_html( $formatted_date ); ?>
 												</p>
 												<?php if ( ! empty( $event_place ) ) : ?>
 												<p>
 													<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
 														<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path>
-													</svg> 
+													</svg>
 													<?php echo esc_html( $event_place ); ?>
 												</p>
 												<?php endif; ?>
@@ -299,7 +299,7 @@ $header_vars = array(
 						</a>
 					</div>
 				</div>
-				
+
 				<!-- Sidebar with Latest News -->
 				<aside class="sidebar">
 					<h2><?php esc_html_e( 'Latest News', 'wpfaevent' ); ?></h2>
