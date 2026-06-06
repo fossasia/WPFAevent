@@ -56,6 +56,19 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
+		// Event time.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_time',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'sanitize_text_field',
+				'description'       => __( 'Event start time', 'wpfaevent' ),
+			)
+		);
+
 		// Event location.
 		register_post_meta(
 			self::$post_type,
