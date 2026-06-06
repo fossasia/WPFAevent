@@ -21,23 +21,23 @@ const WPFA_Footer = (function() {
         }
         return fallback;
     }
-    
+
     /**
      * Initialize the footer module
      */
     function init(options) {
         config = options || {};
-        
+
         // Ensure i18n object exists
         config.i18n = config.i18n || {};
-        
+
         // Cache DOM elements
         cacheElements();
-        
+
         // Setup event listeners
         setupEventListeners();
     }
-    
+
     /**
      * Cache DOM elements
      */
@@ -49,7 +49,7 @@ const WPFA_Footer = (function() {
             footerForm: document.getElementById('edit-footer-form'),
         };
     }
-    
+
     /**
      * Setup event listeners
      */
@@ -58,25 +58,25 @@ const WPFA_Footer = (function() {
         if (elements.editFooterBtn) {
             elements.editFooterBtn.addEventListener('click', openFooterModal);
         }
-        
+
         // Modal close button
         if (elements.closeFooterModal) {
             elements.closeFooterModal.addEventListener('click', closeFooterModal);
         }
-        
+
         // Close modal on background click
         if (elements.footerModal) {
             elements.footerModal.addEventListener('click', function(e) {
                 if (e.target === this) closeFooterModal();
             });
         }
-        
+
         // Form submission
         if (elements.footerForm) {
             elements.footerForm.addEventListener('submit', handleFooterFormSubmit);
         }
     }
-    
+
     /**
      * Open footer modal
      */
@@ -84,36 +84,36 @@ const WPFA_Footer = (function() {
         // Get current footer text
         const footerTextElement = document.getElementById('footer-text-display');
         const footerTextInput = document.getElementById('footer-text');
-        
+
         if (footerTextElement && footerTextInput) {
             footerTextInput.value = footerTextElement.textContent.trim();
         }
-        
+
         if (elements.footerModal) {
             elements.footerModal.style.display = 'flex';
         }
     }
-    
+
     /**
      * Handle footer form submission
      */
     function handleFooterFormSubmit(e) {
         e.preventDefault();
-        
+
         const form = e.target;
         const formData = new FormData(form);
         const submitBtn = form.querySelector('button[type="submit"]');
-        
+
         // Disable button during submission
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.textContent = config.i18n.saving || 'Saving...';
         }
-        
+
         // Add AJAX action and nonce
         formData.append('action', 'wpfa_update_footer_text');
         formData.append('nonce', config.adminNonce);
-        
+
         fetch(config.ajaxUrl, {
             method: 'POST',
             body: formData
@@ -126,14 +126,14 @@ const WPFA_Footer = (function() {
                 if (footerTextElement) {
                     footerTextElement.textContent = formData.get('footer_text');
                 }
-                
+
                 alert(config.i18n.footerSaveSuccess || 'Footer text updated successfully.');
                 closeFooterModal();
             } else {
                 const baseMsg = config.i18n.footerSaveError || 'Error updating footer text';
                 alert(getErrorMessage(data, baseMsg));
             }
-            
+
             // Re-enable button
             if (submitBtn) {
                 submitBtn.disabled = false;
@@ -142,7 +142,7 @@ const WPFA_Footer = (function() {
         })
         .catch(error => {
             alert(config.i18n.footerSaveError || 'Error updating footer text.');
-            
+
             // Re-enable button
             if (submitBtn) {
                 submitBtn.disabled = false;
@@ -150,7 +150,7 @@ const WPFA_Footer = (function() {
             }
         });
     }
-    
+
     /**
      * Close footer modal
      */
@@ -159,7 +159,7 @@ const WPFA_Footer = (function() {
             elements.footerModal.style.display = 'none';
         }
     }
-    
+
     // Public API
     return {
         init: init,
