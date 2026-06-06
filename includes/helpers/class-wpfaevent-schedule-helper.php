@@ -262,6 +262,83 @@ class Wpfaevent_Schedule_Helper {
 	}
 
 	/**
+	 * Ensure the public full schedule page exists.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param bool $check_capability Whether to require manage_options before creating the page.
+	 * @return int Page ID, or 0 when the page could not be ensured.
+	 */
+	public static function ensure_schedule_page( $check_capability = true ) {
+		if ( $check_capability && ! current_user_can( 'manage_options' ) ) {
+			return 0;
+		}
+
+		$page_id = absint( get_option( 'wpfaevent_schedule_page_id', 0 ) );
+		if ( $page_id && 'page' === get_post_type( $page_id ) && 'trash' !== get_post_status( $page_id ) ) {
+			self::ensure_schedule_page_template( $page_id );
+
+			return $page_id;
+		}
+
+		$page = get_page_by_path( 'full-schedule' );
+		if ( $page instanceof WP_Post ) {
+			$page_id = absint( $page->ID );
+			self::ensure_schedule_page_template( $page_id );
+			update_option( 'wpfaevent_schedule_page_id', $page_id, false );
+
+			return $page_id;
+		}
+
+		$page_id = wp_insert_post(
+			array(
+				'post_title'     => __( 'Full Schedule', 'wpfaevent' ),
+				'post_name'      => 'full-schedule',
+				'post_type'      => 'page',
+				'post_status'    => 'publish',
+				'post_content'   => '',
+				'comment_status' => 'closed',
+				'ping_status'    => 'closed',
+			),
+			true
+		);
+
+		if ( is_wp_error( $page_id ) || ! $page_id ) {
+			return 0;
+		}
+
+		$page_id = absint( $page_id );
+		update_post_meta( $page_id, '_wp_page_template', 'page-schedule.php' );
+		update_post_meta( $page_id, '_wpfaevent_managed_page', 'schedule' );
+		update_option( 'wpfaevent_schedule_page_id', $page_id, false );
+
+		return $page_id;
+	}
+
+	/**
+	 * Ensure the schedule page uses the plugin schedule template.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $page_id Page ID.
+	 * @return void
+	 */
+	private static function ensure_schedule_page_template( $page_id ) {
+		$page_id = absint( $page_id );
+
+		if ( ! $page_id ) {
+			return;
+		}
+
+		$template = get_page_template_slug( $page_id );
+		if ( in_array( $template, array( 'page-schedule.php', 'public/partials/schedule-page.php' ), true ) ) {
+			return;
+		}
+
+		update_post_meta( $page_id, '_wp_page_template', 'page-schedule.php' );
+	}
+
+	/**
 	 * Build event-specific schedule session items from dashboard JSON.
 	 *
 	 * @since 1.0.0

@@ -83,6 +83,7 @@ class Wpfaevent {
 		$this->define_cpt_hooks();
 		$this->define_taxonomy_hooks();
 		$this->define_meta_hooks();
+		$this->define_page_hooks();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
 	}
@@ -186,6 +187,17 @@ class Wpfaevent {
 
 		// Register Speaker meta fields.
 		$this->loader->add_action( 'init', 'Wpfaevent_Meta_Speaker', 'register' );
+	}
+
+	/**
+	 * Register hooks for plugin-managed pages.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_page_hooks() {
+		// Repair the schedule page for existing installs before WordPress resolves the request.
+		$this->loader->add_action( 'init', 'Wpfaevent_Schedule_Helper', 'ensure_schedule_page', 20 );
 	}
 
 	/**

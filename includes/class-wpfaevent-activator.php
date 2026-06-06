@@ -31,11 +31,15 @@ class Wpfaevent_Activator {
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-speaker.php';
 		require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
 
 		// Register CPTs and taxonomies.
 		Wpfaevent_CPT_Event::register();
 		Wpfaevent_CPT_Speaker::register();
 		Wpfaevent_Taxonomies::register();
+
+		// Create the public schedule page used by event detail links.
+		Wpfaevent_Schedule_Helper::ensure_schedule_page( false );
 
 		// Flush rewrite rules so CPT permalinks work.
 		flush_rewrite_rules();
