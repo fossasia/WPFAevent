@@ -2,7 +2,8 @@
    Event Detail Template
    ========================================================================== */
 
-.wpfaevent.wpfa-event-template {
+.wpfaevent.wpfa-event-template,
+.wpfaevent.wpfa-schedule-template {
 	--event-primary: var(--brand, #D51007);
 	--event-primary-dark: #b20d06;
 	--event-ink: #243447;
@@ -21,9 +22,13 @@
 }
 
 .wpfaevent.wpfa-event-template,
+.wpfaevent.wpfa-schedule-template,
 .wpfaevent.wpfa-event-template *,
+.wpfaevent.wpfa-schedule-template *,
 .wpfaevent.wpfa-event-template *::before,
-.wpfaevent.wpfa-event-template *::after {
+.wpfaevent.wpfa-schedule-template *::before,
+.wpfaevent.wpfa-event-template *::after,
+.wpfaevent.wpfa-schedule-template *::after {
 	box-sizing: border-box;
 }
 
