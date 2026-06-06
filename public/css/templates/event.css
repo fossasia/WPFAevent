@@ -142,12 +142,15 @@
 	border-radius: var(--event-radius);
 	box-shadow: 0 18px 46px rgba(9, 42, 71, 0.22);
 	color: var(--event-ink);
+	display: flex;
+	flex-direction: column;
 	padding: 22px;
 }
 
 .wpfaevent .wpfa-event-ticket-head {
 	align-items: center;
 	display: flex;
+	gap: 16px;
 	justify-content: space-between;
 	margin-bottom: 16px;
 }
@@ -181,6 +184,7 @@
 	display: flex;
 	font-weight: 800;
 	justify-content: center;
+	line-height: 1.2;
 	min-height: 46px;
 	padding: 12px 18px;
 	text-align: center;
@@ -201,6 +205,7 @@
 	display: flex;
 	font-weight: 800;
 	justify-content: center;
+	line-height: 1.2;
 	margin-top: 10px;
 	min-height: 42px;
 	padding: 10px 16px;
@@ -215,12 +220,16 @@
 }
 
 .wpfaevent .wpfa-event-calendar-download {
+	align-items: center;
 	color: var(--event-muted);
 	display: inline-flex;
 	font-size: 0.9rem;
 	font-weight: 800;
 	justify-content: center;
+	line-height: 1.2;
 	margin-top: 10px;
+	min-height: 32px;
+	text-align: center;
 	width: 100%;
 }
 
@@ -234,13 +243,15 @@
 	display: grid;
 	gap: 0;
 	margin: 18px 0 0;
+	width: 100%;
 }
 
 .wpfaevent .wpfa-event-facts div {
+	align-items: baseline;
 	border-bottom: 1px solid var(--event-line);
 	display: grid;
-	gap: 12px;
-	grid-template-columns: 86px 1fr;
+	column-gap: 18px;
+	grid-template-columns: minmax(96px, max-content) minmax(0, 1fr);
 	padding: 12px 0;
 }
 
@@ -257,12 +268,17 @@
 	color: var(--event-muted);
 	font-size: 0.78rem;
 	font-weight: 800;
+	line-height: 1.35;
 	text-transform: uppercase;
+	white-space: nowrap;
 }
 
 .wpfaevent .wpfa-event-facts dd {
 	color: var(--event-ink);
 	font-weight: 700;
+	line-height: 1.35;
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 
 .wpfaevent .wpfa-event-section-nav {
@@ -1619,6 +1635,11 @@
 		align-self: stretch;
 	}
 
+	.wpfaevent .wpfa-event-facts div {
+		column-gap: 28px;
+		grid-template-columns: minmax(126px, 0.28fr) minmax(0, 1fr);
+	}
+
 	.wpfaevent .wpfa-event-section-nav {
 		top: 64px;
 	}
@@ -1816,6 +1837,16 @@
 }
 
 @media (max-width: 520px) {
+	.wpfaevent .wpfa-event-facts div {
+		align-items: start;
+		gap: 4px;
+		grid-template-columns: 1fr;
+	}
+
+	.wpfaevent .wpfa-event-facts dt {
+		white-space: normal;
+	}
+
 	.wpfaevent .wpfa-event-directory-hero h1,
 	.wpfaevent .wpfa-event-directory-lead,
 	.wpfaevent .wpfa-event-directory-count,
