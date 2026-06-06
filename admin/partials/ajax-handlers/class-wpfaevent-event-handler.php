@@ -130,15 +130,19 @@ class Wpfaevent_Event_Handler {
 		$title             = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
 		$excerpt           = isset( $_POST['excerpt'] ) ? sanitize_text_field( wp_unslash( $_POST['excerpt'] ) ) : '';
 		$start_date        = isset( $_POST['start_date'] ) ? sanitize_text_field( wp_unslash( $_POST['start_date'] ) ) : '';
+		$time              = isset( $_POST['time'] ) ? sanitize_text_field( wp_unslash( $_POST['time'] ) ) : '';
 		$location          = isset( $_POST['location'] ) ? sanitize_text_field( wp_unslash( $_POST['location'] ) ) : '';
+		$lead_text         = isset( $_POST['lead_text'] ) ? sanitize_text_field( wp_unslash( $_POST['lead_text'] ) ) : '';
 		$registration_link = isset( $_POST['registration_link'] ) ? esc_url_raw( wp_unslash( $_POST['registration_link'] ) ) : '';
 
-		// Validate required fields.
+		// Validate required fields - must match UI requirements.
 		$required_fields = array(
 			'title'             => $title,
 			'excerpt'           => $excerpt,
 			'start_date'        => $start_date,
+			'time'              => $time,
 			'location'          => $location,
+			'lead_text'         => $lead_text,
 			'registration_link' => $registration_link,
 		);
 
@@ -149,7 +153,31 @@ class Wpfaevent_Event_Handler {
 			}
 		}
 
-		// Create event post.
+		// Validate featured image BEFORE creating event (must be required).
+		if ( empty( $_FILES['featured_image']['name'] ) ) {
+			wp_send_json_error( esc_html__( 'Missing required field: featured_image', 'wpfaevent' ) );
+		}
+
+		// Validate and upload image before creating event post.
+		$allowed_types = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
+		$filename      = isset( $_FILES['featured_image']['name'] ) ? sanitize_file_name( wp_unslash( $_FILES['featured_image']['name'] ) ) : '';
+		$tmp_name      = isset( $_FILES['featured_image']['tmp_name'] ) ? sanitize_text_field( wp_unslash( $_FILES['featured_image']['tmp_name'] ) ) : '';
+		$fileinfo      = wp_check_filetype_and_ext( $tmp_name, $filename );
+		$file_type     = isset( $fileinfo['type'] ) ? $fileinfo['type'] : '';
+
+		if ( empty( $fileinfo['ext'] ) || ! in_array( $file_type, $allowed_types, true ) ) {
+			wp_send_json_error( esc_html__( 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'wpfaevent' ) );
+		}
+
+		// Validate file size (2MB max).
+		$max_size  = 2 * 1024 * 1024; // 2MB in bytes.
+		$file_size = isset( $_FILES['featured_image']['size'] ) ? intval( $_FILES['featured_image']['size'] ) : 0;
+
+		if ( $file_size > $max_size ) {
+			wp_send_json_error( esc_html__( 'File size exceeds 2MB limit.', 'wpfaevent' ) );
+		}
+
+		// Create event post - now that all validations pass.
 		$event_data = array(
 			'post_title'   => $title,
 			'post_content' => isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '',
@@ -191,46 +219,22 @@ class Wpfaevent_Event_Handler {
 			}
 		}
 
-		// Handle featured image upload - use CORRECT file field name.
-		if ( ! empty( $_FILES['featured_image']['name'] ) ) {
+		// Handle featured image upload - now safe since validation passed.
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
 
-			// Validate file type using server-side detection (do not trust the client-provided MIME type).
-			$allowed_types = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
+		$attachment_id = media_handle_upload( 'featured_image', $event_id );
 
-			$filename = isset( $_FILES['featured_image']['name'] ) ? sanitize_file_name( wp_unslash( $_FILES['featured_image']['name'] ) ) : '';
-			$tmp_name = isset( $_FILES['featured_image']['tmp_name'] ) ? $_FILES['featured_image']['tmp_name'] : '';
-			$fileinfo = wp_check_filetype_and_ext( $tmp_name, $filename );
-			$file_type = isset( $fileinfo['type'] ) ? $fileinfo['type'] : '';
-
-			if ( empty( $fileinfo['ext'] ) || ! in_array( $file_type, $allowed_types, true ) ) {
-				wp_send_json_error( esc_html__( 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'wpfaevent' ) );
-			}
-
-			// Validate file size (2MB max).
-			$max_size = 2 * 1024 * 1024; // 2MB in bytes.
-
-			// Check if the file size is set.
-			$file_size = isset( $_FILES['featured_image']['size'] ) ? intval( $_FILES['featured_image']['size'] ) : 0;
-
-			if ( $file_size > $max_size ) {
-				wp_send_json_error( esc_html__( 'File size exceeds 2MB limit.', 'wpfaevent' ) );
-			}
-
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-			require_once ABSPATH . 'wp-admin/includes/image.php';
-			require_once ABSPATH . 'wp-admin/includes/media.php';
-
-			// Upload and create attachment.
-			$attachment_id = media_handle_upload( 'featured_image', $event_id );
-
-			if ( is_wp_error( $attachment_id ) ) {
-				/* translators: %s: Error message */
-				wp_send_json_error( sprintf( esc_html__( 'Image upload failed: %s', 'wpfaevent' ), $attachment_id->get_error_message() ) );
-			}
-
-			// Set as featured image.
-			set_post_thumbnail( $event_id, $attachment_id );
+		if ( is_wp_error( $attachment_id ) ) {
+			// Delete the event if image upload fails.
+			wp_delete_post( $event_id, true );
+			/* translators: %s: Error message */
+			wp_send_json_error( sprintf( esc_html__( 'Image upload failed: %s', 'wpfaevent' ), $attachment_id->get_error_message() ) );
 		}
+
+		// Set as featured image.
+		set_post_thumbnail( $event_id, $attachment_id );
 
 		wp_send_json_success(
 			array(
@@ -276,12 +280,33 @@ class Wpfaevent_Event_Handler {
 			wp_send_json_error( __( 'Cannot edit this event', 'wpfaevent' ) );
 		}
 
-		// Validate required fields.
-		$required_fields = array( 'title', 'excerpt', 'start_date', 'location', 'registration_link' );
+		// Validate required fields - must match UI requirements.
+		$required_fields = array( 'title', 'excerpt', 'start_date', 'time', 'location', 'lead_text', 'registration_link' );
 		foreach ( $required_fields as $field ) {
 			if ( empty( $_POST[ $field ] ) ) {
 				/* translators: %s: Field name */
 				wp_send_json_error( sprintf( esc_html__( 'Missing required field: %s', 'wpfaevent' ), $field ) );
+			}
+		}
+
+		// Validate image BEFORE updating event (only if a new image is being uploaded).
+		if ( ! empty( $_FILES['featured_image']['name'] ) ) {
+			$allowed_types = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
+			$filename      = isset( $_FILES['featured_image']['name'] ) ? sanitize_file_name( wp_unslash( $_FILES['featured_image']['name'] ) ) : '';
+			$tmp_name      = isset( $_FILES['featured_image']['tmp_name'] ) ? sanitize_text_field( wp_unslash( $_FILES['featured_image']['tmp_name'] ) ) : '';
+			$fileinfo      = wp_check_filetype_and_ext( $tmp_name, $filename );
+			$file_type     = isset( $fileinfo['type'] ) ? $fileinfo['type'] : '';
+
+			if ( empty( $fileinfo['ext'] ) || ! in_array( $file_type, $allowed_types, true ) ) {
+				wp_send_json_error( esc_html__( 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'wpfaevent' ) );
+			}
+
+			// Validate file size (2MB max).
+			$max_size  = 2 * 1024 * 1024;
+			$file_size = isset( $_FILES['featured_image']['size'] ) ? intval( $_FILES['featured_image']['size'] ) : 0;
+
+			if ( $file_size > $max_size ) {
+				wp_send_json_error( esc_html__( 'File size exceeds 2MB limit.', 'wpfaevent' ) );
 			}
 		}
 
@@ -290,7 +315,7 @@ class Wpfaevent_Event_Handler {
 		$excerpt = isset( $_POST['excerpt'] ) ? sanitize_text_field( wp_unslash( $_POST['excerpt'] ) ) : '';
 		$content = isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '';
 
-		// Update post.
+		// Update post - only after image validation passes.
 		$event_data = array(
 			'ID'           => $event_id,
 			'post_title'   => $title,
@@ -337,30 +362,8 @@ class Wpfaevent_Event_Handler {
 			}
 		}
 
-		// Handle featured image upload.
+		// Handle featured image upload - now safe since validation passed.
 		if ( ! empty( $_FILES['featured_image']['name'] ) ) {
-			// Validate file type using server-side detection (do not trust the client-provided MIME type).
-			$allowed_types = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
-
-			$filename = isset( $_FILES['featured_image']['name'] ) ? sanitize_file_name( wp_unslash( $_FILES['featured_image']['name'] ) ) : '';
-			$tmp_name = isset( $_FILES['featured_image']['tmp_name'] ) ? $_FILES['featured_image']['tmp_name'] : '';
-			$fileinfo = wp_check_filetype_and_ext( $tmp_name, $filename );
-			$file_type = isset( $fileinfo['type'] ) ? $fileinfo['type'] : '';
-
-			if ( empty( $fileinfo['ext'] ) || ! in_array( $file_type, $allowed_types, true ) ) {
-				wp_send_json_error( esc_html__( 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'wpfaevent' ) );
-			}
-
-			// Validate file size (2MB max).
-			$max_size = 2 * 1024 * 1024;
-
-			// Check if the file size is set.
-			$file_size = isset( $_FILES['featured_image']['size'] ) ? intval( $_FILES['featured_image']['size'] ) : 0;
-
-			if ( $file_size > $max_size ) {
-				wp_send_json_error( esc_html__( 'File size exceeds 2MB limit.', 'wpfaevent' ) );
-			}
-
 			require_once ABSPATH . 'wp-admin/includes/file.php';
 			require_once ABSPATH . 'wp-admin/includes/image.php';
 			require_once ABSPATH . 'wp-admin/includes/media.php';
