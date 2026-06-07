@@ -128,6 +128,7 @@ class Wpfaevent {
 
 		// Shared frontend helpers.
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-navigation-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-additional-information-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
 
 		// Legacy plugin code (defines the FOSSASIA_Landing_Plugin class).
@@ -198,6 +199,7 @@ class Wpfaevent {
 	private function define_page_hooks() {
 		// Repair the schedule page for existing installs before WordPress resolves the request.
 		$this->loader->add_action( 'init', 'Wpfaevent_Schedule_Helper', 'ensure_schedule_page', 20 );
+		$this->loader->add_action( 'init', 'Wpfaevent_Additional_Information_Helper', 'ensure_additional_information_page', 21 );
 	}
 
 	/**

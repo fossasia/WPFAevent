@@ -39,12 +39,13 @@ class Wpfaevent_Templates {
 	 * @var   array<string, string>
 	 */
 	private static $templates = array(
-		'page-landing.php'         => 'WPFA - Landing',
-		'page-speakers.php'        => 'WPFA - Speakers',
-		'page-events.php'          => 'WPFA - Events',
-		'page-past-events.php'     => 'WPFA - Past Events',
-		'page-schedule.php'        => 'WPFA - Schedule',
-		'page-code-of-conduct.php' => 'WPFA - Code of Conduct',
+		'page-landing.php'                => 'WPFA - Landing',
+		'page-speakers.php'               => 'WPFA - Speakers',
+		'page-events.php'                 => 'WPFA - Events',
+		'page-past-events.php'            => 'WPFA - Past Events',
+		'page-schedule.php'               => 'WPFA - Schedule',
+		'page-additional-information.php' => 'WPFA - Additional Information',
+		'page-code-of-conduct.php'        => 'WPFA - Code of Conduct',
 	);
 
 	/**
@@ -72,12 +73,13 @@ class Wpfaevent_Templates {
 	 */
 	private static function get_localized_template_labels() {
 		return array(
-			'page-landing.php'         => __( 'WPFA - Landing', 'wpfaevent' ),
-			'page-speakers.php'        => __( 'WPFA - Speakers', 'wpfaevent' ),
-			'page-events.php'          => __( 'WPFA - Events', 'wpfaevent' ),
-			'page-past-events.php'     => __( 'WPFA - Past Events', 'wpfaevent' ),
-			'page-schedule.php'        => __( 'WPFA - Schedule', 'wpfaevent' ),
-			'page-code-of-conduct.php' => __( 'WPFA - Code of Conduct', 'wpfaevent' ),
+			'page-landing.php'                => __( 'WPFA - Landing', 'wpfaevent' ),
+			'page-speakers.php'               => __( 'WPFA - Speakers', 'wpfaevent' ),
+			'page-events.php'                 => __( 'WPFA - Events', 'wpfaevent' ),
+			'page-past-events.php'            => __( 'WPFA - Past Events', 'wpfaevent' ),
+			'page-schedule.php'               => __( 'WPFA - Schedule', 'wpfaevent' ),
+			'page-additional-information.php' => __( 'WPFA - Additional Information', 'wpfaevent' ),
+			'page-code-of-conduct.php'        => __( 'WPFA - Code of Conduct', 'wpfaevent' ),
 		);
 	}
 

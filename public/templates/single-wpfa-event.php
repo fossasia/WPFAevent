@@ -311,6 +311,8 @@ $speaker_placeholder_url = WPFAEVENT_URL . 'assets/images/speaker-placeholder.sv
 $speakers_url            = add_query_arg( 'event', $event_slug, home_url( '/speakers/' ) );
 $schedule_page_url       = class_exists( 'Wpfaevent_Schedule_Helper' ) ? Wpfaevent_Schedule_Helper::get_schedule_page_url() : home_url( '/full-schedule/' );
 $event_schedule_url      = add_query_arg( 'event', $event_slug, $schedule_page_url );
+$additional_page_url     = class_exists( 'Wpfaevent_Additional_Information_Helper' ) ? Wpfaevent_Additional_Information_Helper::get_additional_information_page_url() : home_url( '/additional-information/' );
+$event_additional_url    = add_query_arg( 'event', $event_slug, $additional_page_url );
 
 $register_text = ! empty( $site_settings['reg_button_text'] ) ? sanitize_text_field( $site_settings['reg_button_text'] ) : __( 'Get Tickets', 'wpfaevent' );
 $register_url  = ! empty( $site_settings['reg_button_link'] ) ? esc_url_raw( $site_settings['reg_button_link'] ) : $event_url;
@@ -774,22 +776,6 @@ $header_vars = array(
 			</section>
 		<?php endif; ?>
 
-		<?php if ( '' !== trim( wp_strip_all_tags( $venue_information ) ) ) : ?>
-			<section id="venue" class="wpfa-event-section wpfa-event-venue" aria-labelledby="wpfa-event-venue-title">
-				<div class="container">
-					<div class="wpfa-event-section-layout">
-						<header class="wpfa-event-section-label">
-							<p><?php esc_html_e( 'Venue and travel', 'wpfaevent' ); ?></p>
-							<h2 id="wpfa-event-venue-title"><?php esc_html_e( 'Additional information', 'wpfaevent' ); ?></h2>
-						</header>
-						<div class="wpfa-event-rich-text">
-							<?php echo wp_kses_post( wpautop( $venue_information ) ); ?>
-						</div>
-					</div>
-				</div>
-			</section>
-		<?php endif; ?>
-
 		<?php if ( $show_speakers ) : ?>
 			<section id="speakers" class="wpfa-event-section wpfa-event-speakers" aria-labelledby="wpfa-event-speakers-title">
 				<div class="container">
@@ -1046,6 +1032,23 @@ $header_vars = array(
 					<?php else : ?>
 						<p class="wpfa-empty-state"><?php esc_html_e( 'No schedule has been imported for this event yet.', 'wpfaevent' ); ?></p>
 					<?php endif; ?>
+				</div>
+			</section>
+		<?php endif; ?>
+
+		<?php if ( '' !== trim( wp_strip_all_tags( $venue_information ) ) ) : ?>
+			<section id="venue" class="wpfa-event-section wpfa-event-venue" aria-labelledby="wpfa-event-venue-title">
+				<div class="container">
+					<div class="wpfa-event-section-head">
+						<div>
+							<h2 id="wpfa-event-venue-title"><?php esc_html_e( 'Additional information', 'wpfaevent' ); ?></h2>
+							<p><?php esc_html_e( 'Nearby hotels, transportation, parking, directions, and venue notes.', 'wpfaevent' ); ?></p>
+						</div>
+						<a href="<?php echo esc_url( $event_additional_url ); ?>"><?php esc_html_e( 'View Additional Information', 'wpfaevent' ); ?></a>
+					</div>
+					<div class="wpfa-event-rich-text wpfa-event-additional-preview">
+						<?php echo wp_kses_post( wpautop( $venue_information ) ); ?>
+					</div>
 				</div>
 			</section>
 		<?php endif; ?>

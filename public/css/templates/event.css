@@ -588,6 +588,11 @@
 	margin-bottom: 0;
 }
 
+.wpfaevent .wpfa-event-additional-preview,
+.wpfaevent .wpfa-additional-information-body {
+	max-width: 900px;
+}
+
 .wpfaevent .wpfa-event-section-head {
 	align-items: end;
 	display: flex;
@@ -692,6 +697,36 @@
 .wpfaevent .wpfa-event-timezone-form button:focus {
 	background: var(--event-primary-dark);
 	color: #fff;
+}
+
+.wpfaevent .wpfa-additional-information {
+	background: var(--event-soft);
+	min-height: 70vh;
+}
+
+.wpfaevent .wpfa-additional-information-hero {
+	background:
+		linear-gradient(180deg, rgba(213, 16, 7, 0.06), rgba(244, 247, 251, 0) 100%),
+		var(--event-soft);
+	padding: 54px 0 28px;
+}
+
+.wpfaevent .wpfa-additional-information-hero h1 {
+	color: var(--event-ink);
+	font-size: clamp(2.1rem, 5vw, 4rem);
+	font-weight: 800;
+	letter-spacing: 0;
+	line-height: 1;
+	margin: 0;
+	max-width: 860px;
+}
+
+.wpfaevent .wpfa-additional-information-hero p:last-child {
+	color: var(--event-muted);
+	font-size: 1.02rem;
+	line-height: 1.7;
+	margin: 18px 0 0;
+	max-width: 760px;
 }
 
 .wpfaevent .wpfa-event-detail .wpfa-speakers-grid {

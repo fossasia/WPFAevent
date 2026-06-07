@@ -185,16 +185,16 @@ class Wpfaevent_Event_Navigation_Helper {
 				'text' => __( 'Overview', 'wpfaevent' ),
 			),
 			array(
-				'href' => '#venue',
-				'text' => __( 'Additional Info', 'wpfaevent' ),
-			),
-			array(
 				'href' => '#speakers',
 				'text' => __( 'Speakers', 'wpfaevent' ),
 			),
 			array(
 				'href' => '#schedule-overview',
 				'text' => __( 'Schedule', 'wpfaevent' ),
+			),
+			array(
+				'href' => '#venue',
+				'text' => __( 'Additional Info', 'wpfaevent' ),
 			),
 			array(
 				'href' => '#sponsors',

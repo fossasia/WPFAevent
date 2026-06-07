@@ -37,6 +37,7 @@ class FOSSASIA_Uninstaller {
 			'fossasia-summit',
 			'speakers',
 			'full-schedule',
+			'additional-information',
 			'admin-dashboard',
 			'events',
 			'past-events',

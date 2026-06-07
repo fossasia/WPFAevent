@@ -141,6 +141,7 @@ class Wpfaevent_Landing {
 		$this->create_page_if_not_exists( 'FOSSASIA Summit', 'fossasia-summit', 'public/partials/wpfaevent-landing-template.php' );
 		$this->create_page_if_not_exists( 'Speakers', 'speakers', 'public/partials/speakers-page.php' );
 		$this->create_page_if_not_exists( 'Full Schedule', 'full-schedule', 'public/partials/schedule-page.php' );
+		$this->create_page_if_not_exists( 'Additional Information', 'additional-information', 'public/partials/additional-information-page.php' );
 		$this->create_page_if_not_exists( 'Admin Dashboard', 'admin-dashboard', 'public/partials/wpfaevent-landing-template.php', 'private' );
 		$this->create_page_if_not_exists( 'Events', 'events', 'public/partials/wpfaevent-landing-template.php' );
 		$this->create_page_if_not_exists( 'Past Events', 'past-events', 'public/partials/past-events-page.php' );
