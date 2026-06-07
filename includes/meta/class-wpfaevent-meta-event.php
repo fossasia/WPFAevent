@@ -141,6 +141,18 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_venue_information',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'wp_kses_post',
+				'description'       => __( 'Venue, hotel, and transportation information for attendees', 'wpfaevent' ),
+			)
+		);
+
 		// Event external URL.
 		register_post_meta(
 			self::$post_type,
@@ -262,6 +274,7 @@ class Wpfaevent_Meta_Event {
 		$timezone   = self::get_event_timezone( $post->ID );
 		$all_day    = self::get_event_all_day( $post->ID );
 		$location   = get_post_meta( $post->ID, 'wpfa_event_location', true );
+		$venue_info = get_post_meta( $post->ID, 'wpfa_event_venue_information', true );
 		$url        = get_post_meta( $post->ID, 'wpfa_event_url', true );
 		$languages  = self::sanitize_language_list( get_post_meta( $post->ID, 'wpfa_event_languages', true ) );
 		$colors     = self::get_event_colors( $post->ID );
@@ -307,6 +320,23 @@ class Wpfaevent_Meta_Event {
 			<tr>
 				<th><label for="wpfa_event_location"><?php esc_html_e( 'Location', 'wpfaevent' ); ?></label></th>
 				<td><input type="text" id="wpfa_event_location" name="wpfa_event_location" value="<?php echo esc_attr( $location ); ?>" class="regular-text"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_venue_information"><?php esc_html_e( 'Venue and Travel Information', 'wpfaevent' ); ?></label></th>
+				<td>
+					<?php
+					wp_editor(
+						$venue_info,
+						'wpfa_event_venue_information',
+						array(
+							'textarea_name' => 'wpfa_event_venue_information',
+							'textarea_rows' => 8,
+							'media_buttons' => false,
+						)
+					);
+					?>
+					<p class="description"><?php esc_html_e( 'Add nearby hotels, transportation, parking, directions, accessibility notes, or other arrival details for attendees.', 'wpfaevent' ); ?></p>
+				</td>
 			</tr>
 			<tr>
 				<th><label for="wpfa_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
@@ -459,6 +489,10 @@ class Wpfaevent_Meta_Event {
 
 		if ( isset( $_POST['wpfa_event_location'] ) ) {
 			update_post_meta( $post_id, 'wpfa_event_location', sanitize_text_field( wp_unslash( $_POST['wpfa_event_location'] ) ) );
+		}
+
+		if ( isset( $_POST['wpfa_event_venue_information'] ) ) {
+			self::update_or_delete_meta( $post_id, 'wpfa_event_venue_information', wp_kses_post( wp_unslash( $_POST['wpfa_event_venue_information'] ) ) );
 		}
 
 		if ( isset( $_POST['wpfa_event_url'] ) ) {

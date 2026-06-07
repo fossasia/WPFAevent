@@ -285,6 +285,7 @@ $event_title          = get_the_title( $event_id );
 $start_date           = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
 $end_date             = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
 $location             = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
+$venue_information    = trim( (string) get_post_meta( $event_id, 'wpfa_event_venue_information', true ) );
 $event_languages      = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array();
 $event_language_label = implode( ', ', $event_languages );
 $event_url            = get_post_meta( $event_id, 'wpfa_event_url', true );
@@ -585,7 +586,7 @@ $wpfa_event_nav_context = array(
 	'has_schedule'    => $show_schedule && ! empty( $schedule_items ),
 	'has_sponsors'    => $show_sponsors && ! empty( $visible_sponsor_groups ),
 	'has_exhibitors'  => $show_exhibitors && ! empty( $visible_exhibitors ),
-	'has_venue'       => false,
+	'has_venue'       => '' !== trim( wp_strip_all_tags( $venue_information ) ),
 	'custom_sections' => array(),
 );
 $wpfa_event_nav_items   = class_exists( 'Wpfaevent_Event_Navigation_Helper' )
@@ -767,6 +768,22 @@ $header_vars = array(
 						</header>
 						<div class="wpfa-event-rich-text" itemprop="description">
 							<?php echo wp_kses_post( wpautop( $about_content ) ); ?>
+						</div>
+					</div>
+				</div>
+			</section>
+		<?php endif; ?>
+
+		<?php if ( '' !== trim( wp_strip_all_tags( $venue_information ) ) ) : ?>
+			<section id="venue" class="wpfa-event-section wpfa-event-venue" aria-labelledby="wpfa-event-venue-title">
+				<div class="container">
+					<div class="wpfa-event-section-layout">
+						<header class="wpfa-event-section-label">
+							<p><?php esc_html_e( 'Travel', 'wpfaevent' ); ?></p>
+							<h2 id="wpfa-event-venue-title"><?php esc_html_e( 'Venue and travel information', 'wpfaevent' ); ?></h2>
+						</header>
+						<div class="wpfa-event-rich-text">
+							<?php echo wp_kses_post( wpautop( $venue_information ) ); ?>
 						</div>
 					</div>
 				</div>
