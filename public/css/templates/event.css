@@ -700,15 +700,34 @@
 }
 
 .wpfaevent .wpfa-additional-information {
-	background: var(--event-soft);
+	background:
+		linear-gradient(180deg, #fff 0%, var(--event-soft) 520px),
+		var(--event-soft);
 	min-height: 70vh;
 }
 
 .wpfaevent .wpfa-additional-information-hero {
-	background:
-		linear-gradient(180deg, rgba(213, 16, 7, 0.06), rgba(244, 247, 251, 0) 100%),
-		var(--event-soft);
-	padding: 54px 0 28px;
+	background: #f8fbf9;
+	border-bottom: 1px solid var(--event-line);
+	padding: 46px 0 48px;
+}
+
+@supports (background: color-mix(in srgb, red 10%, white)) {
+	.wpfaevent .wpfa-additional-information-hero {
+		background:
+			linear-gradient(
+				135deg,
+				color-mix(in srgb, var(--event-primary) 14%, #fff) 0%,
+				#fff 64%,
+				color-mix(in srgb, var(--event-primary) 7%, #fff) 100%
+			);
+		border-bottom-color: color-mix(in srgb, var(--event-primary) 18%, var(--event-line));
+	}
+}
+
+.wpfaevent .wpfa-additional-information-hero .wpfa-event-kicker {
+	color: var(--event-primary);
+	margin-bottom: 14px;
 }
 
 .wpfaevent .wpfa-additional-information-hero h1 {
@@ -727,6 +746,41 @@
 	line-height: 1.7;
 	margin: 18px 0 0;
 	max-width: 760px;
+}
+
+.wpfaevent .wpfa-additional-information-detail {
+	padding-top: 34px;
+}
+
+.wpfaevent.wpfa-additional-information-template .wpfa-schedule-tabs {
+	margin-bottom: 30px;
+}
+
+.wpfaevent.wpfa-additional-information-template .wpfa-schedule-tabs a {
+	color: var(--event-ink);
+}
+
+.wpfaevent.wpfa-additional-information-template .wpfa-schedule-tabs a:hover,
+.wpfaevent.wpfa-additional-information-template .wpfa-schedule-tabs a:focus {
+	background: #f6faf7;
+	color: var(--event-ink);
+}
+
+.wpfaevent.wpfa-additional-information-template .wpfa-schedule-tabs a.is-active {
+	background: var(--event-primary);
+	border-color: var(--event-primary);
+	color: #fff;
+}
+
+.wpfaevent .wpfa-additional-information-detail .wpfa-event-section-head {
+	border-bottom: 1px solid var(--event-line);
+	margin-bottom: 22px;
+	padding-bottom: 22px;
+}
+
+.wpfaevent .wpfa-additional-information-body {
+	border-left: 4px solid var(--event-primary);
+	padding-left: 20px;
 }
 
 .wpfaevent .wpfa-event-detail .wpfa-speakers-grid {
