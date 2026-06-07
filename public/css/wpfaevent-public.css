@@ -2,7 +2,7 @@
  * All of the CSS for your public-facing functionality should be
  * included in this file.
  */
- 
+
 /* ==========================================================================
    Base Styles
    ========================================================================== */
@@ -20,7 +20,7 @@
 	background: var(--bg);
 	color: var(--text);
 	font-family: Inter, system-ui, sans-serif;
-} 
+}
 
 .wpfaevent * {
 	box-sizing: border-box;
@@ -243,14 +243,14 @@
 		align-items: center;
 		text-align: center;
 	}
-	
+
 	.wpfaevent #edit-footer-btn {
 		position: static;
 		margin: 10px 0 0 0;
 		transform: none;
 		align-self: center;
 	}
-	
+
 	.wpfaevent .footer-text {
 		text-align: center;
 	}
