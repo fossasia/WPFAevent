@@ -186,7 +186,7 @@ class Wpfaevent_Event_Navigation_Helper {
 			),
 			array(
 				'href' => '#venue',
-				'text' => __( 'Travel', 'wpfaevent' ),
+				'text' => __( 'Additional Info', 'wpfaevent' ),
 			),
 			array(
 				'href' => '#speakers',

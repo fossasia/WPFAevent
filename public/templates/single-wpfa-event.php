@@ -779,8 +779,8 @@ $header_vars = array(
 				<div class="container">
 					<div class="wpfa-event-section-layout">
 						<header class="wpfa-event-section-label">
-							<p><?php esc_html_e( 'Travel', 'wpfaevent' ); ?></p>
-							<h2 id="wpfa-event-venue-title"><?php esc_html_e( 'Venue and travel information', 'wpfaevent' ); ?></h2>
+							<p><?php esc_html_e( 'Venue and travel', 'wpfaevent' ); ?></p>
+							<h2 id="wpfa-event-venue-title"><?php esc_html_e( 'Additional information', 'wpfaevent' ); ?></h2>
 						</header>
 						<div class="wpfa-event-rich-text">
 							<?php echo wp_kses_post( wpautop( $venue_information ) ); ?>

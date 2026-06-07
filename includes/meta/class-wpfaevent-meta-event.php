@@ -254,6 +254,15 @@ class Wpfaevent_Meta_Event {
 			'high'
 		);
 
+		add_meta_box(
+			'wpfa_event_additional_information',
+			__( 'Additional Information', 'wpfaevent' ),
+			array( __CLASS__, 'render_additional_information_meta_box' ),
+			self::$post_type,
+			'normal',
+			'default'
+		);
+
 		remove_meta_box( 'postcustom', self::$post_type, 'normal' );
 	}
 
@@ -274,7 +283,6 @@ class Wpfaevent_Meta_Event {
 		$timezone   = self::get_event_timezone( $post->ID );
 		$all_day    = self::get_event_all_day( $post->ID );
 		$location   = get_post_meta( $post->ID, 'wpfa_event_location', true );
-		$venue_info = get_post_meta( $post->ID, 'wpfa_event_venue_information', true );
 		$url        = get_post_meta( $post->ID, 'wpfa_event_url', true );
 		$languages  = self::sanitize_language_list( get_post_meta( $post->ID, 'wpfa_event_languages', true ) );
 		$colors     = self::get_event_colors( $post->ID );
@@ -320,23 +328,6 @@ class Wpfaevent_Meta_Event {
 			<tr>
 				<th><label for="wpfa_event_location"><?php esc_html_e( 'Location', 'wpfaevent' ); ?></label></th>
 				<td><input type="text" id="wpfa_event_location" name="wpfa_event_location" value="<?php echo esc_attr( $location ); ?>" class="regular-text"></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_event_venue_information"><?php esc_html_e( 'Venue and Travel Information', 'wpfaevent' ); ?></label></th>
-				<td>
-					<?php
-					wp_editor(
-						$venue_info,
-						'wpfa_event_venue_information',
-						array(
-							'textarea_name' => 'wpfa_event_venue_information',
-							'textarea_rows' => 8,
-							'media_buttons' => false,
-						)
-					);
-					?>
-					<p class="description"><?php esc_html_e( 'Add nearby hotels, transportation, parking, directions, accessibility notes, or other arrival details for attendees.', 'wpfaevent' ); ?></p>
-				</td>
 			</tr>
 			<tr>
 				<th><label for="wpfa_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
@@ -425,6 +416,31 @@ class Wpfaevent_Meta_Event {
 			</tr>
 		</table>
 		<?php
+	}
+
+	/**
+	 * Render the Additional Information meta box.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Post $post Event post object.
+	 */
+	public static function render_additional_information_meta_box( $post ) {
+		$venue_info = get_post_meta( $post->ID, 'wpfa_event_venue_information', true );
+		?>
+		<p class="description">
+			<?php esc_html_e( 'Add attendee-facing details for nearby hotels, transportation, parking, directions, accessibility notes, or other venue information.', 'wpfaevent' ); ?>
+		</p>
+		<?php
+		wp_editor(
+			$venue_info,
+			'wpfa_event_venue_information',
+			array(
+				'textarea_name' => 'wpfa_event_venue_information',
+				'textarea_rows' => 8,
+				'media_buttons' => false,
+			)
+		);
 	}
 
 	/**
