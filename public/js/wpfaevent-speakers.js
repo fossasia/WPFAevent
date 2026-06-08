@@ -318,16 +318,29 @@ const WPFA_Speakers = (function() {
 		// Show filtered speakers
 		filteredSpeakers.forEach(speaker => {
 			if (speaker.element) {
-				speaker.element.style.display = 'block';
+				speaker.element.style.display = '';
 				speaker.element.classList.add('visible');
 			}
 		});
+
+		updateSpeakerGroupVisibility();
 		
 		// Update results count
 		updateResultsCount(filteredSpeakers.length);
 		
 		// Show/hide no results message
 		showNoResults(filteredSpeakers.length === 0);
+	}
+
+	/**
+	 * Show only speaker groups that still contain visible cards.
+	 */
+	function updateSpeakerGroupVisibility() {
+		document.querySelectorAll('.wpfa-speaker-group').forEach(group => {
+			const hasVisibleCards = Array.from(group.querySelectorAll('.wpfa-speaker-card')).some(card => card.style.display !== 'none');
+
+			group.classList.toggle('is-hidden', !hasVisibleCards);
+		});
 	}
 	
 	/**

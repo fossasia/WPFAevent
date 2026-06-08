@@ -183,6 +183,9 @@ if ( $selected_event_id ) {
 	$paged_speaker_ids = array_slice( $speaker_ids, $speaker_offset, $speakers_per_page );
 }
 
+$featured_display_speaker_ids = array_values( array_intersect( $paged_speaker_ids, $featured_speaker_ids ) );
+$regular_display_speaker_ids  = array_values( array_diff( $paged_speaker_ids, $featured_display_speaker_ids ) );
+
 // Get categories; when an event is selected, keep category counts event-specific.
 $categories = array();
 if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
@@ -428,11 +431,35 @@ $header_vars         = array(
 							</p>
 						</div>
 					<?php else : ?>
-					<div class="wpfa-speakers-grid" id="wpfa-speakers-grid">
+					<div class="wpfa-speakers-list" id="wpfa-speakers-grid">
 						<?php $wpfa_featured_speaker_ids = $featured_speaker_ids; ?>
-						<?php foreach ( $paged_speaker_ids as $sid ) : ?>
-							<?php include WPFAEVENT_PATH . 'public/partials/speakers/speaker-card.php'; ?>
-						<?php endforeach; ?>
+						<?php if ( ! empty( $featured_display_speaker_ids ) ) : ?>
+							<section class="wpfa-speaker-group wpfa-featured-speaker-group" aria-labelledby="wpfa-featured-speakers-title">
+								<div class="wpfa-speaker-group-head">
+									<h2 id="wpfa-featured-speakers-title"><?php esc_html_e( 'Featured Speakers', 'wpfaevent' ); ?></h2>
+								</div>
+								<div class="wpfa-speakers-grid wpfa-featured-speakers-grid">
+									<?php foreach ( $featured_display_speaker_ids as $sid ) : ?>
+										<?php include WPFAEVENT_PATH . 'public/partials/speakers/speaker-card.php'; ?>
+									<?php endforeach; ?>
+								</div>
+							</section>
+						<?php endif; ?>
+
+						<?php if ( ! empty( $regular_display_speaker_ids ) ) : ?>
+							<section class="wpfa-speaker-group wpfa-regular-speaker-group" aria-labelledby="wpfa-regular-speakers-title">
+								<?php if ( ! empty( $featured_display_speaker_ids ) ) : ?>
+									<div class="wpfa-speaker-group-head">
+										<h2 id="wpfa-regular-speakers-title"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h2>
+									</div>
+								<?php endif; ?>
+								<div class="wpfa-speakers-grid">
+									<?php foreach ( $regular_display_speaker_ids as $sid ) : ?>
+										<?php include WPFAEVENT_PATH . 'public/partials/speakers/speaker-card.php'; ?>
+									<?php endforeach; ?>
+								</div>
+							</section>
+						<?php endif; ?>
 						<?php unset( $wpfa_featured_speaker_ids ); ?>
 					</div>
 
