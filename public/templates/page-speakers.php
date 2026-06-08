@@ -29,6 +29,29 @@ $current_event_filter = isset( $_GET['event'] ) ? sanitize_text_field( wp_unslas
 
 $speakers_per_page = max( 1, (int) apply_filters( 'wpfa_speakers_per_page', 24 ) );
 
+$read_dashboard_json = static function ( $filename, $fallback ) {
+	$upload_dir = wp_upload_dir();
+
+	if ( ! empty( $upload_dir['error'] ) ) {
+		return $fallback;
+	}
+
+	$path = trailingslashit( $upload_dir['basedir'] ) . 'fossasia-data/' . sanitize_file_name( $filename );
+
+	if ( ! file_exists( $path ) || ! is_readable( $path ) ) {
+		return $fallback;
+	}
+
+	$contents = file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading plugin-managed JSON from uploads.
+	if ( false === $contents || '' === trim( $contents ) ) {
+		return $fallback;
+	}
+
+	$decoded = json_decode( $contents, true );
+
+	return ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) ? $decoded : $fallback;
+};
+
 $normalize_post_id_list = static function ( $post_ids ) {
 	if ( ! is_array( $post_ids ) ) {
 		return array();
@@ -41,43 +64,17 @@ $normalize_post_id_list = static function ( $post_ids ) {
 };
 
 $get_event_speaker_ids = static function ( $event_id ) use ( $normalize_post_id_list ) {
-	$event_id    = absint( $event_id );
-	$speaker_ids = $normalize_post_id_list( get_post_meta( $event_id, 'wpfa_event_speakers', true ) );
+	$event_id = absint( $event_id );
 
 	if ( ! $event_id ) {
 		return array();
 	}
 
-	$reverse_speaker_ids = get_posts(
-		array(
-			'post_type'      => 'wpfa_speaker',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'fields'         => 'ids',
-			'no_found_rows'  => true,
-			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Speaker-event links are stored as post meta.
-			'meta_query'     => array(
-				'relation' => 'OR',
-				array(
-					'key'     => 'wpfa_speaker_events',
-					'value'   => 'i:' . $event_id . ';',
-					'compare' => 'LIKE',
-				),
-				array(
-					'key'     => 'wpfa_speaker_events',
-					'value'   => '"' . $event_id . '"',
-					'compare' => 'LIKE',
-				),
-				array(
-					'key'     => 'wpfa_speaker_events',
-					'value'   => (string) $event_id,
-					'compare' => '=',
-				),
-			),
-		)
-	);
+	if ( class_exists( 'Wpfaevent_Meta_Event' ) ) {
+		return Wpfaevent_Meta_Event::get_admin_event_speaker_ids( $event_id );
+	}
 
-	return $normalize_post_id_list( array_merge( $speaker_ids, $reverse_speaker_ids ) );
+	return $normalize_post_id_list( get_post_meta( $event_id, 'wpfa_event_speakers', true ) );
 };
 
 $selected_event_id = 0;
@@ -105,6 +102,8 @@ $event_filter_posts = get_posts(
 		'no_found_rows'  => true,
 	)
 );
+
+$dashboard_speakers = $selected_event_id ? $read_dashboard_json( 'speakers-' . absint( $selected_event_id ) . '.json', array() ) : array();
 
 if ( $selected_event_id ) {
 	$speaker_ids = $get_event_speaker_ids( $selected_event_id );
@@ -139,7 +138,7 @@ if ( $selected_event_id ) {
 
 $featured_speaker_ids = array();
 if ( $selected_event_id && class_exists( 'Wpfaevent_Meta_Event' ) ) {
-	$featured_speaker_ids = Wpfaevent_Meta_Event::get_event_featured_speaker_ids( $selected_event_id );
+	$featured_speaker_ids = Wpfaevent_Meta_Event::resolve_event_featured_speaker_ids( $selected_event_id, $speaker_ids, $dashboard_speakers );
 	$featured_speaker_ids = array_values( array_intersect( $featured_speaker_ids, $speaker_ids ) );
 }
 
