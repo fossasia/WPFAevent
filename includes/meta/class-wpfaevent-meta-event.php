@@ -56,6 +56,19 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
+		// Event time.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_time',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'sanitize_text_field',
+				'description'       => __( 'Event start time', 'wpfaevent' ),
+			)
+		);
+
 		// Event location.
 		register_post_meta(
 			self::$post_type,
@@ -79,6 +92,45 @@ class Wpfaevent_Meta_Event {
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'esc_url_raw',
 				'description'       => __( 'External event link (Eventyay, etc.)', 'wpfaevent' ),
+			)
+		);
+
+		// Event hero section lead text.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_lead_text',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'sanitize_text_field',
+				'description'       => __( 'Event hero lead text', 'wpfaevent' ),
+			)
+		);
+
+		// Event registration link.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_registration_link',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'esc_url_raw',
+				'description'       => __( 'Event registration link', 'wpfaevent' ),
+			)
+		);
+
+		// Call for speakers link.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_cfs_link',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'esc_url_raw',
+				'description'       => __( 'Call for speakers link', 'wpfaevent' ),
 			)
 		);
 
