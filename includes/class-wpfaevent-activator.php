@@ -33,6 +33,7 @@ class Wpfaevent_Activator {
 		require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-additional-information-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-partner-helper.php';
 
 		// Register CPTs and taxonomies.
 		Wpfaevent_CPT_Event::register();
@@ -42,6 +43,7 @@ class Wpfaevent_Activator {
 		// Create the public schedule page used by event detail links.
 		Wpfaevent_Schedule_Helper::ensure_schedule_page( false );
 		Wpfaevent_Additional_Information_Helper::ensure_additional_information_page( false );
+		Wpfaevent_Partner_Helper::ensure_partner_page( false );
 
 		// Flush rewrite rules so CPT permalinks work.
 		flush_rewrite_rules();

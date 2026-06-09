@@ -46,6 +46,7 @@ class Wpfaevent_Templates {
 		'page-schedule.php'               => 'WPFA - Schedule',
 		'page-additional-information.php' => 'WPFA - Additional Information',
 		'page-code-of-conduct.php'        => 'WPFA - Code of Conduct',
+		'page-partner.php'                => 'WPFA - Partner',
 	);
 
 	/**
@@ -80,6 +81,7 @@ class Wpfaevent_Templates {
 			'page-schedule.php'               => __( 'WPFA - Schedule', 'wpfaevent' ),
 			'page-additional-information.php' => __( 'WPFA - Additional Information', 'wpfaevent' ),
 			'page-code-of-conduct.php'        => __( 'WPFA - Code of Conduct', 'wpfaevent' ),
+			'page-partner.php'                => __( 'WPFA - Partner', 'wpfaevent' ),
 		);
 	}
 

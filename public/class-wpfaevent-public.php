@@ -313,6 +313,7 @@ class Wpfaevent_Public {
 			|| is_page_template( 'public/partials/schedule-page.php' )
 			|| is_page_template( 'page-additional-information.php' )
 			|| is_page_template( 'public/partials/additional-information-page.php' )
+			|| is_page_template( 'page-partner.php' )
 		) {
 			$event_style_dependencies = array(
 				$this->plugin_name,
