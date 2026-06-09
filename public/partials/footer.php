@@ -32,13 +32,13 @@ $is_admin = current_user_can( 'manage_options' );
 		<small id="footer-text-display" class="footer-text">
 			<?php echo esc_html( $footer_text ); ?>
 		</small>
-
+		
 		<?php if ( $is_admin ) : ?>
 			<button id="edit-footer-btn" class="btn btn-secondary">
 				<span class="btn-text"><?php esc_html_e( 'Edit Footer', 'wpfaevent' ); ?></span>
 			</button>
 		<?php endif; ?>
-
+		
 		<div class="social-icons">
 			<a href="https://github.com/fossasia" target="_blank" rel="noopener noreferrer" title="GitHub">
 				<svg viewBox="0 0 24 24" fill="currentColor">
