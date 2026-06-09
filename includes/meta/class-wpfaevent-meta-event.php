@@ -68,6 +68,19 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
+		// Legacy single event time used by the event modal.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_time',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => array( __CLASS__, 'sanitize_time_value' ),
+				'description'       => __( 'Event time', 'wpfaevent' ),
+			)
+		);
+
 		register_post_meta(
 			self::$post_type,
 			'wpfa_event_end_time',
@@ -163,6 +176,45 @@ class Wpfaevent_Meta_Event {
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'esc_url_raw',
 				'description'       => __( 'External event link (Eventyay, etc.)', 'wpfaevent' ),
+			)
+		);
+
+		// Event hero section lead text.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_lead_text',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'sanitize_text_field',
+				'description'       => __( 'Event hero lead text', 'wpfaevent' ),
+			)
+		);
+
+		// Event registration link.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_registration_link',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'esc_url_raw',
+				'description'       => __( 'Event registration link', 'wpfaevent' ),
+			)
+		);
+
+		// Call for speakers link.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_cfs_link',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'esc_url_raw',
+				'description'       => __( 'Call for speakers link', 'wpfaevent' ),
 			)
 		);
 
@@ -284,6 +336,9 @@ class Wpfaevent_Meta_Event {
 		$all_day    = self::get_event_all_day( $post->ID );
 		$location   = get_post_meta( $post->ID, 'wpfa_event_location', true );
 		$url        = get_post_meta( $post->ID, 'wpfa_event_url', true );
+		$lead_text  = get_post_meta( $post->ID, 'wpfa_event_lead_text', true );
+		$reg_link   = get_post_meta( $post->ID, 'wpfa_event_registration_link', true );
+		$cfs_link   = get_post_meta( $post->ID, 'wpfa_event_cfs_link', true );
 		$languages  = self::sanitize_language_list( get_post_meta( $post->ID, 'wpfa_event_languages', true ) );
 		$colors     = self::get_event_colors( $post->ID );
 		$speakers   = self::get_admin_event_speaker_ids( $post->ID );
@@ -332,6 +387,18 @@ class Wpfaevent_Meta_Event {
 			<tr>
 				<th><label for="wpfa_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
 				<td><input type="url" id="wpfa_event_url" name="wpfa_event_url" value="<?php echo esc_attr( $url ); ?>" class="regular-text" placeholder="https://"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_lead_text"><?php esc_html_e( 'Lead Text', 'wpfaevent' ); ?></label></th>
+				<td><input type="text" id="wpfa_event_lead_text" name="wpfa_event_lead_text" value="<?php echo esc_attr( $lead_text ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Short description for hero section', 'wpfaevent' ); ?>"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_registration_link"><?php esc_html_e( 'Registration Link', 'wpfaevent' ); ?></label></th>
+				<td><input type="url" id="wpfa_event_registration_link" name="wpfa_event_registration_link" value="<?php echo esc_attr( $reg_link ); ?>" class="regular-text" placeholder="https://eventyay.com/e/..."></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_cfs_link"><?php esc_html_e( 'Call for Speakers Link', 'wpfaevent' ); ?></label></th>
+				<td><input type="url" id="wpfa_event_cfs_link" name="wpfa_event_cfs_link" value="<?php echo esc_attr( $cfs_link ); ?>" class="regular-text" placeholder="https://eventyay.com/e/.../cfs"></td>
 			</tr>
 			<tr>
 				<th><label for="wpfa_event_languages"><?php esc_html_e( 'Event Languages', 'wpfaevent' ); ?></label></th>
@@ -493,11 +560,13 @@ class Wpfaevent_Meta_Event {
 
 		if ( $all_day ) {
 			delete_post_meta( $post_id, 'wpfa_event_start_time' );
+			delete_post_meta( $post_id, 'wpfa_event_time' );
 			delete_post_meta( $post_id, 'wpfa_event_end_time' );
 			delete_post_meta( $post_id, 'wpfa_event_starts_at' );
 			delete_post_meta( $post_id, 'wpfa_event_ends_at' );
 		} else {
 			self::update_or_delete_meta( $post_id, 'wpfa_event_start_time', $start_time );
+			self::update_or_delete_meta( $post_id, 'wpfa_event_time', $start_time );
 			self::update_or_delete_meta( $post_id, 'wpfa_event_end_time', $end_time );
 			self::update_or_delete_meta( $post_id, 'wpfa_event_starts_at', self::build_datetime_value( get_post_meta( $post_id, 'wpfa_event_start_date', true ), $start_time, $timezone ) );
 			self::update_or_delete_meta( $post_id, 'wpfa_event_ends_at', self::build_datetime_value( get_post_meta( $post_id, 'wpfa_event_end_date', true ), $end_time, $timezone ) );
@@ -513,6 +582,18 @@ class Wpfaevent_Meta_Event {
 
 		if ( isset( $_POST['wpfa_event_url'] ) ) {
 			update_post_meta( $post_id, 'wpfa_event_url', esc_url_raw( wp_unslash( $_POST['wpfa_event_url'] ) ) );
+		}
+
+		if ( isset( $_POST['wpfa_event_lead_text'] ) ) {
+			self::update_or_delete_meta( $post_id, 'wpfa_event_lead_text', sanitize_text_field( wp_unslash( $_POST['wpfa_event_lead_text'] ) ) );
+		}
+
+		if ( isset( $_POST['wpfa_event_registration_link'] ) ) {
+			self::update_or_delete_meta( $post_id, 'wpfa_event_registration_link', esc_url_raw( wp_unslash( $_POST['wpfa_event_registration_link'] ) ) );
+		}
+
+		if ( isset( $_POST['wpfa_event_cfs_link'] ) ) {
+			self::update_or_delete_meta( $post_id, 'wpfa_event_cfs_link', esc_url_raw( wp_unslash( $_POST['wpfa_event_cfs_link'] ) ) );
 		}
 
 		$languages = isset( $_POST['wpfa_event_languages'] ) ? self::sanitize_language_list( sanitize_text_field( wp_unslash( $_POST['wpfa_event_languages'] ) ) ) : array();
