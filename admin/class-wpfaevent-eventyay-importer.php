@@ -153,7 +153,7 @@ class Wpfaevent_Eventyay_Importer {
 										<?php esc_html_e( 'Clear saved token', 'wpfaevent' ); ?>
 									</label>
 								<?php endif; ?>
-								<p class="description"><?php esc_html_e( 'Eventyay sends tokens as an Authorization: Token header. Keep this token private.', 'wpfaevent' ); ?></p>
+								<p class="description"><?php esc_html_e( 'Eventyay API tokens are sent as an Authorization header. The importer uses Token auth first and retries legacy Eventyay endpoints with JWT auth when needed. Keep this token private.', 'wpfaevent' ); ?></p>
 							</td>
 						</tr>
 						<tr>
@@ -1261,7 +1261,7 @@ class Wpfaevent_Eventyay_Importer {
 			add_query_arg(
 				array(
 					'lang'      => 'en',
-					'page_size' => absint( apply_filters( 'wpfaevent_eventyay_partner_import_page_size', 100, $resource_type ) ),
+					'page_size' => absint( apply_filters( 'wpfaevent_eventyay_partner_import_page_size', 50, $resource_type ) ),
 					'sort'      => 'sponsors' === $resource_type ? 'level' : 'position',
 				),
 				$url
@@ -2310,7 +2310,26 @@ class Wpfaevent_Eventyay_Importer {
 			return esc_url_raw( $next_url );
 		}
 
-		return esc_url_raw( trailingslashit( $base_url ) . ltrim( $next_url, '/' ) );
+		if ( 0 === strpos( $next_url, '?' ) ) {
+			$base_path = preg_replace( '/[?#].*$/', '', $base_url );
+			$next_url  = $base_path . $next_url;
+
+			if ( ! wp_http_validate_url( $next_url ) ) {
+				return new WP_Error(
+					'wpfaevent_eventyay_invalid_next_url',
+					esc_html__( 'Eventyay pagination returned an invalid next URL.', 'wpfaevent' )
+				);
+			}
+
+			return esc_url_raw( $next_url );
+		}
+
+		$base_origin = $this->eventyay_url_origin( $base_url );
+		if ( empty( $base_origin ) ) {
+			return '';
+		}
+
+		return esc_url_raw( trailingslashit( $base_origin ) . ltrim( $next_url, '/' ) );
 	}
 
 	/**
@@ -2338,6 +2357,29 @@ class Wpfaevent_Eventyay_Importer {
 		return $url_scheme === $base_scheme
 			&& strtolower( $url_parts['host'] ) === strtolower( $base_parts['host'] )
 			&& $url_port === $base_port;
+	}
+
+	/**
+	 * Get the scheme/host/port origin from a URL.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $url URL or endpoint.
+	 * @return string
+	 */
+	private function eventyay_url_origin( $url ) {
+		$parts = wp_parse_url( $url );
+
+		if ( empty( $parts['scheme'] ) || empty( $parts['host'] ) ) {
+			return '';
+		}
+
+		$origin = strtolower( $parts['scheme'] ) . '://' . strtolower( $parts['host'] );
+		if ( isset( $parts['port'] ) ) {
+			$origin .= ':' . absint( $parts['port'] );
+		}
+
+		return wp_http_validate_url( $origin ) ? esc_url_raw( $origin ) : '';
 	}
 
 	/**
@@ -2377,31 +2419,57 @@ class Wpfaevent_Eventyay_Importer {
 			);
 		}
 
-		$headers = array(
-			'Accept' => 'application/json, application/vnd.api+json, text/javascript',
-		);
+		$auth_schemes = $this->get_eventyay_authorization_schemes( $api_token );
+		$last_error   = null;
 
-		if ( ! empty( $api_token ) ) {
-			$headers['Authorization'] = 'Token ' . sanitize_text_field( $api_token );
-		}
-
-		$response = wp_remote_get(
-			$api_url,
-			array(
-				'timeout'     => 20,
-				'redirection' => 3,
-				'headers'     => $headers,
-			)
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_request_failed',
-				esc_html__( 'Eventyay request failed.', 'wpfaevent' ),
-				array( 'details' => $response->get_error_message() )
+		foreach ( $auth_schemes as $auth_scheme ) {
+			$response = wp_remote_get(
+				$api_url,
+				array(
+					'timeout'     => 20,
+					'redirection' => 3,
+					'headers'     => $this->build_eventyay_rest_headers( $api_token, $auth_scheme ),
+				)
 			);
+
+			if ( is_wp_error( $response ) ) {
+				return new WP_Error(
+					'wpfaevent_eventyay_request_failed',
+					esc_html__( 'Eventyay request failed.', 'wpfaevent' ),
+					array( 'details' => $response->get_error_message() )
+				);
+			}
+
+			$decoded = $this->decode_eventyay_rest_response( $response, $api_url );
+			if ( ! is_wp_error( $decoded ) ) {
+				return $decoded;
+			}
+
+			$last_error = $decoded;
+			if (
+				! $this->eventyay_error_has_http_status( $decoded, 401 )
+				&& ! $this->eventyay_error_has_http_status( $decoded, 403 )
+			) {
+				return $decoded;
+			}
 		}
 
+		return is_wp_error( $last_error ) ? $last_error : new WP_Error(
+			'wpfaevent_eventyay_request_failed',
+			esc_html__( 'Eventyay request failed.', 'wpfaevent' )
+		);
+	}
+
+	/**
+	 * Decode an Eventyay REST response into an array or structured error.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $response WordPress HTTP response.
+	 * @param string $api_url  API endpoint URL.
+	 * @return array|WP_Error
+	 */
+	private function decode_eventyay_rest_response( $response, $api_url ) {
 		$status = absint( wp_remote_retrieve_response_code( $response ) );
 		$body   = wp_remote_retrieve_body( $response );
 
@@ -2435,6 +2503,97 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		return $decoded;
+	}
+
+	/**
+	 * Build request headers for Eventyay REST calls.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $api_token   Optional API token.
+	 * @param string $auth_scheme Authorization scheme.
+	 * @return array<string, string>
+	 */
+	private function build_eventyay_rest_headers( $api_token, $auth_scheme ) {
+		$headers = array(
+			'Accept' => 'application/json, application/vnd.api+json, text/javascript',
+		);
+
+		$authorization = $this->format_eventyay_authorization_header( $api_token, $auth_scheme );
+		if ( $authorization ) {
+			$headers['Authorization'] = $authorization;
+		}
+
+		return $headers;
+	}
+
+	/**
+	 * Get authorization schemes to try for Eventyay requests.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $api_token Optional API token.
+	 * @return array<int, string>
+	 */
+	private function get_eventyay_authorization_schemes( $api_token ) {
+		$api_token = trim( (string) $api_token );
+
+		if ( '' === $api_token ) {
+			return array( '' );
+		}
+
+		if ( preg_match( '/^(Token|JWT|Bearer)\s+/i', $api_token ) ) {
+			return array( '' );
+		}
+
+		$schemes = apply_filters(
+			'wpfaevent_eventyay_import_auth_schemes',
+			array( 'Token', 'JWT' ),
+			$api_token
+		);
+
+		if ( ! is_array( $schemes ) ) {
+			$schemes = array( 'Token', 'JWT' );
+		}
+
+		$schemes = array_filter(
+			array_map(
+				static function ( $scheme ) {
+					return sanitize_text_field( (string) $scheme );
+				},
+				$schemes
+			)
+		);
+
+		return ! empty( $schemes ) ? array_values( array_unique( $schemes ) ) : array( 'Token', 'JWT' );
+	}
+
+	/**
+	 * Format an Authorization header value for Eventyay requests.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $api_token   Optional API token.
+	 * @param string $auth_scheme Authorization scheme.
+	 * @return string
+	 */
+	private function format_eventyay_authorization_header( $api_token, $auth_scheme ) {
+		$api_token = trim( sanitize_text_field( (string) $api_token ) );
+
+		if ( '' === $api_token ) {
+			return '';
+		}
+
+		if ( preg_match( '/^(Token|JWT|Bearer)\s+/i', $api_token ) ) {
+			return $api_token;
+		}
+
+		$auth_scheme = trim( sanitize_text_field( (string) $auth_scheme ) );
+		if ( '' === $auth_scheme ) {
+			$auth_scheme = 'Token';
+		}
+
+		return $auth_scheme . ' ' . $api_token;
 	}
 
 		/**
@@ -2741,14 +2900,18 @@ class Wpfaevent_Eventyay_Importer {
 		$event_url          = $this->eventyay_public_event_url( $event, $settings, $event_slug );
 		$about_updated      = 0;
 
+		$default_section_visibility = array(
+			'about'      => true,
+			'speakers'   => true,
+			'schedule'   => true,
+			'sponsors'   => true,
+			'exhibitors' => true,
+		);
+
 		if ( empty( $dashboard_settings['section_visibility'] ) || ! is_array( $dashboard_settings['section_visibility'] ) ) {
-			$dashboard_settings['section_visibility'] = array(
-				'about'      => true,
-				'speakers'   => true,
-				'schedule'   => true,
-				'sponsors'   => true,
-				'exhibitors' => true,
-			);
+			$dashboard_settings['section_visibility'] = $default_section_visibility;
+		} else {
+			$dashboard_settings['section_visibility'] = wp_parse_args( $dashboard_settings['section_visibility'], $default_section_visibility );
 		}
 
 		if ( '' !== trim( $description ) ) {
@@ -5306,7 +5469,7 @@ class Wpfaevent_Eventyay_Importer {
 		if ( false === $json ) {
 			return new WP_Error(
 				'eventyay_json_encode_failed',
-				esc_html__( 'Could not encode synced Eventyay speakers.', 'wpfaevent' ),
+				esc_html__( 'Could not encode synced Eventyay dashboard data.', 'wpfaevent' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -5315,7 +5478,7 @@ class Wpfaevent_Eventyay_Importer {
 		if ( ! $filesystem->put_contents( $path, $json, $chmod_file ) ) {
 			return new WP_Error(
 				'eventyay_json_write_failed',
-				esc_html__( 'Could not write synced Eventyay speakers to the dashboard data file.', 'wpfaevent' ),
+				esc_html__( 'Could not write synced Eventyay dashboard data to the dashboard data file.', 'wpfaevent' ),
 				array( 'status' => 500 )
 			);
 		}

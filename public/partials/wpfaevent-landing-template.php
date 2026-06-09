@@ -9,6 +9,7 @@ $data_dir = $upload_dir['basedir'] . '/fossasia-data';
 // Event-specific files
 $speakers_file = $data_dir . '/speakers-' . $post_id . '.json';
 $sponsors_file = $data_dir . '/sponsors-' . $post_id . '.json';
+$exhibitors_file = $data_dir . '/exhibitors-' . $post_id . '.json';
 $settings_file = $data_dir . '/site-settings-' . $post_id . '.json';
 $schedule_file = $data_dir . '/schedule-' . $post_id . '.json';
 
@@ -23,6 +24,7 @@ $event_theme_settings_file = $data_dir . '/theme-settings-' . $post_id . '.json'
 // Ensure file exists, if not, it will be created on plugin activation.
 if (!file_exists($speakers_file)) { file_put_contents($speakers_file, '[]'); }
 if (!file_exists($sponsors_file)) { file_put_contents($sponsors_file, '[]'); }
+if (!file_exists($exhibitors_file)) { file_put_contents($exhibitors_file, '[]'); }
 if (!file_exists($settings_file)) { file_put_contents($settings_file, '{}'); }
 if (!file_exists($global_sections_file)) { file_put_contents($global_sections_file, '[]'); }
 if (!file_exists($event_sections_file)) { file_put_contents($event_sections_file, '[]'); }
@@ -33,6 +35,7 @@ if (!file_exists($event_theme_settings_file)) { file_put_contents($event_theme_s
 
 $speakers_data = json_decode(file_get_contents($speakers_file), true);
 $sponsors_data = json_decode(file_get_contents($sponsors_file), true);
+$exhibitors_data = json_decode(file_get_contents($exhibitors_file), true);
 $site_settings_data = json_decode(file_get_contents($settings_file), true) ?: [];
 // Load both global and event-specific sections and merge them.
 $global_sections = json_decode(file_get_contents($global_sections_file), true) ?: [];

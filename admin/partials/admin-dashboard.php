@@ -15,6 +15,7 @@ $data_dir = $upload_dir['basedir'] . '/fossasia-data';
 
 // Define file paths based on event ID
 $sponsors_file = $event_id ? $data_dir . '/sponsors-' . $event_id . '.json' : '';
+$exhibitors_file = $event_id ? $data_dir . '/exhibitors-' . $event_id . '.json' : '';
 $settings_file = $event_id ? $data_dir . '/site-settings-' . $event_id . '.json' : '';
 $speakers_file = $event_id ? $data_dir . '/speakers-' . $event_id . '.json' : '';
 $schedule_file = $event_id ? $data_dir . '/schedule-' . $event_id . '.json' : '';
@@ -33,6 +34,7 @@ $coc_content_file = $data_dir . '/coc-content.json';
 // Ensure files exist
 if ($event_id) {
     if (!file_exists($sponsors_file)) { file_put_contents($sponsors_file, '[]'); }
+    if (!file_exists($exhibitors_file)) { file_put_contents($exhibitors_file, '[]'); }
     if (!file_exists($settings_file)) { file_put_contents($settings_file, '{"about_section_content": "", "section_visibility": {"about": true, "speakers": true, "schedule": true, "sponsors": true, "exhibitors": true}}'); }
     if (!file_exists($speakers_file)) { file_put_contents($speakers_file, '[]'); }
     if (!file_exists($schedule_file)) { file_put_contents($schedule_file, '{}'); }
@@ -46,6 +48,7 @@ if (!file_exists($coc_content_file)) { file_put_contents($coc_content_file, '{"c
 // Speaker data is needed for the new "Manage Speakers" tab
 $speakers_data = $event_id && file_exists($speakers_file) ? json_decode(file_get_contents($speakers_file), true) : [];
 $sponsors_data = $event_id && file_exists($sponsors_file) ? json_decode(file_get_contents($sponsors_file), true) : [];
+$exhibitors_data = $event_id && file_exists($exhibitors_file) ? json_decode(file_get_contents($exhibitors_file), true) : [];
 $site_settings_data = $event_id && file_exists($settings_file) ? json_decode(file_get_contents($settings_file), true) : [];
 $custom_sections_data = json_decode(file_get_contents($sections_file), true);
 $schedule_data = $event_id && file_exists($schedule_file) ? json_decode(file_get_contents($schedule_file), true) : [];
@@ -739,6 +742,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const store = {
         speakers: <?php echo json_encode($speakers_data); ?>,
         sponsors: <?php echo json_encode($sponsors_data); ?>,
+        exhibitors: <?php echo json_encode($exhibitors_data); ?>,
         settings: <?php echo json_encode($site_settings_data); ?>,
         sections: <?php echo json_encode($custom_sections_data); ?>,
         navigation: <?php echo json_encode($navigation_data); ?>,

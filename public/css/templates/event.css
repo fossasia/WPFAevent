@@ -1195,8 +1195,12 @@
 .wpfaevent .wpfa-event-partner-grid,
 .wpfaevent .wpfa-event-exhibitor-grid {
 	display: grid;
-	gap: 16px;
-	grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+	gap: 18px;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+
+.wpfaevent .wpfa-event-exhibitor-grid {
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
 }
 
 .wpfaevent .wpfa-event-partner-card,
@@ -1236,13 +1240,118 @@
 	padding: 18px;
 }
 
+.wpfaevent .wpfa-event-exhibitor-card {
+	display: flex;
+	flex-direction: column;
+	min-height: 168px;
+	position: relative;
+	transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.wpfaevent .wpfa-event-exhibitor-card::before {
+	background: linear-gradient(180deg, var(--event-primary), var(--event-primary-dark));
+	content: "";
+	inset: 0 auto 0 0;
+	position: absolute;
+	width: 4px;
+}
+
+.wpfaevent .wpfa-event-exhibitor-card:hover,
+.wpfaevent .wpfa-event-exhibitor-card:focus-within {
+	border-color: rgba(213, 16, 7, 0.32);
+	box-shadow: 0 16px 34px rgba(36, 52, 71, 0.14);
+	transform: translateY(-2px);
+}
+
+.wpfaevent .wpfa-event-exhibitor-card.has-banner::before {
+	display: none;
+}
+
+.wpfaevent .wpfa-event-exhibitor-summary {
+	cursor: pointer;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 18px;
+	justify-content: space-between;
+	list-style: none;
+	padding: 22px;
+}
+
+.wpfaevent .wpfa-event-exhibitor-summary::-webkit-details-marker {
+	display: none;
+}
+
+.wpfaevent .wpfa-event-exhibitor-summary::marker {
+	content: "";
+}
+
+.wpfaevent .wpfa-event-exhibitor-body {
+	border-top: 1px solid var(--event-line);
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 16px 22px 20px;
+}
+
+.wpfaevent .wpfa-event-exhibitor-main {
+	align-items: center;
+	display: grid;
+	gap: 16px;
+	grid-template-columns: auto minmax(0, 1fr);
+}
+
+.wpfaevent .wpfa-event-exhibitor-eyebrow {
+	color: var(--event-primary-dark);
+	font-size: 0.74rem;
+	font-weight: 900;
+	letter-spacing: 0.08em;
+	line-height: 1.2;
+	margin: 0 0 5px;
+	text-transform: uppercase;
+}
+
+.wpfaevent .wpfa-event-exhibitor-toggle {
+	align-items: center;
+	align-self: flex-start;
+	background: #fff;
+	border: 1px solid rgba(213, 16, 7, 0.24);
+	border-radius: var(--event-radius);
+	color: var(--event-primary-dark);
+	display: inline-flex;
+	font-size: 0.84rem;
+	font-weight: 900;
+	gap: 8px;
+	line-height: 1;
+	padding: 8px 10px;
+}
+
+.wpfaevent .wpfa-event-exhibitor-toggle::after {
+	content: "+";
+	font-size: 1rem;
+	line-height: 1;
+}
+
+.wpfaevent .wpfa-event-exhibitor-toggle-open,
+.wpfaevent .wpfa-event-exhibitor-card[open] .wpfa-event-exhibitor-toggle-closed {
+	display: none;
+}
+
+.wpfaevent .wpfa-event-exhibitor-card[open] .wpfa-event-exhibitor-toggle-open {
+	display: inline;
+}
+
+.wpfaevent .wpfa-event-exhibitor-card[open] .wpfa-event-exhibitor-toggle::after {
+	content: "-";
+}
+
 .wpfaevent .wpfa-event-partner-body h4,
 .wpfaevent .wpfa-event-exhibitor-body h3 {
 	color: var(--event-ink);
-	font-size: 1.08rem;
+	font-size: 1.12rem;
 	font-weight: 900;
 	letter-spacing: 0;
-	line-height: 1.3;
+	line-height: 1.25;
 	margin: 0;
 }
 
@@ -1263,8 +1372,8 @@
 .wpfaevent .wpfa-event-partner-description {
 	color: #3f4d5e;
 	font-size: 0.94rem;
-	line-height: 1.6;
-	margin-top: 10px;
+	line-height: 1.55;
+	margin-top: 2px;
 }
 
 .wpfaevent .wpfa-event-partner-description p {
@@ -1279,7 +1388,7 @@
 	background: #f7fafc;
 	border-bottom: 1px solid var(--event-line);
 	display: block;
-	height: 150px;
+	height: 140px;
 	object-fit: cover;
 	width: 100%;
 }
@@ -1290,11 +1399,10 @@
 	border: 1px solid var(--event-line);
 	border-radius: var(--event-radius);
 	display: flex;
-	height: 86px;
+	height: 70px;
 	justify-content: center;
-	margin-bottom: 14px;
 	padding: 12px;
-	width: 120px;
+	width: 88px;
 }
 
 .wpfaevent .wpfa-event-exhibitor-logo img {
@@ -1304,21 +1412,38 @@
 	object-fit: contain;
 }
 
+.wpfaevent .wpfa-event-exhibitor-placeholder {
+	align-items: center;
+	background:
+		linear-gradient(135deg, rgba(213, 16, 7, 0.13), rgba(36, 52, 71, 0.08)),
+		#f7fafc;
+	border: 1px solid rgba(213, 16, 7, 0.16);
+	border-radius: var(--event-radius);
+	color: var(--event-primary-dark);
+	display: flex;
+	font-size: 1.25rem;
+	font-weight: 900;
+	height: 64px;
+	justify-content: center;
+	width: 64px;
+}
+
 .wpfaevent .wpfa-event-exhibitor-links {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
-	margin-top: 14px;
+	margin-top: auto;
+	padding-top: 4px;
 }
 
 .wpfaevent .wpfa-event-exhibitor-links a {
-	background: rgba(213, 16, 7, 0.08);
-	border: 1px solid rgba(213, 16, 7, 0.18);
+	background: #fff;
+	border: 1px solid rgba(213, 16, 7, 0.24);
 	border-radius: var(--event-radius);
 	color: var(--event-primary-dark);
 	font-size: 0.86rem;
 	font-weight: 800;
-	padding: 7px 10px;
+	padding: 8px 11px;
 	text-decoration: none;
 }
 
