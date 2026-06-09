@@ -28,7 +28,6 @@ parameters:
             - admin/partials/wpfaevent-admin-display.php
             - includes/class-wpfaevent-landing.php
             - includes/class-wpfaevent-uninstaller.php
-            - public/partials/events-listing-page.php
             - public/partials/schedule-page.php
             - public/partials/wpfaevent-landing-template.php
 

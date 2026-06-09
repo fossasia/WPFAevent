@@ -2,11 +2,11 @@
 /**
  * WP-CLI Seeder for WPFA Event.
  *
+ * @package Wpfaevent
+ *
  * Usage:
  *   wp wpfa seed --minimal
  *   wp wpfa seed --from-json=wp-content/plugins/WPFAevent/assets/demo/minimal.json
- *
- * @package Wpfaevent
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -142,8 +142,18 @@ class WPFA_CLI {
 		if ( ! file_exists( $path ) ) {
 			WP_CLI::error( "JSON file not found: {$path}" );
 		}
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- This reads a local seed file path provided to WP-CLI.
-			$json = file_get_contents( $path );
+
+		global $wp_filesystem;
+		if ( empty( $wp_filesystem ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			WP_Filesystem();
+		}
+
+		if ( empty( $wp_filesystem ) ) {
+			WP_CLI::error( 'Unable to initialize WordPress filesystem.' );
+		}
+
+		$json = $wp_filesystem->get_contents( $path );
 		if ( false === $json ) {
 			WP_CLI::error( "Unable to read JSON file: {$path}" );
 		}

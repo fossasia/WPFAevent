@@ -1,10 +1,13 @@
 <?php
 /**
- * Prevent direct access to this file.
+ * Core plugin class bootstrap.
  *
  * @package Wpfaevent
  */
 
+/**
+ * Prevent direct access to this file
+ */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -44,13 +47,6 @@ class Wpfaevent {
 	 * @var Wpfaevent_Public
 	 */
 	private $plugin_public;
-
-	/**
-	 * Legacy landing plugin bridge.
-	 *
-	 * @var FOSSASIA_Landing_Plugin|null
-	 */
-	private $legacy = null;
 
 	/**
 	 * The ID of this plugin.
@@ -133,6 +129,11 @@ class Wpfaevent {
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
 
+		// AJAX handler classes.
+		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-footer-handler.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-event-handler.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-speakers-handler.php';
+
 		// Optional utilities if present.
 		if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php' ) ) {
 			require_once plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php';
@@ -212,42 +213,26 @@ class Wpfaevent {
 		$this->loader->add_action( 'save_post_wpfa_event', $this->plugin_admin, 'save_event_meta' );
 		$this->loader->add_action( 'save_post_wpfa_speaker', $this->plugin_admin, 'save_speaker_meta' );
 
-		// Register AJAX handlers for the speakers page.
-		$this->loader->add_action( 'wp_ajax_wpfa_get_speaker', $this->plugin_admin, 'ajax_get_speaker' );
-		$this->loader->add_action( 'wp_ajax_wpfa_add_speaker', $this->plugin_admin, 'ajax_add_speaker' );
-		$this->loader->add_action( 'wp_ajax_wpfa_update_speaker', $this->plugin_admin, 'ajax_update_speaker' );
-		$this->loader->add_action( 'wp_ajax_wpfa_delete_speaker', $this->plugin_admin, 'ajax_delete_speaker' );
+		// Show notice for block theme users.
+		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'maybe_show_block_theme_notice' );
 
-		// Legacy bridge intentionally disabled until those hooks are reintroduced.
+		// Register AJAX handlers for speakers page.
+		$plugin_speakers_handler = new Wpfaevent_Speakers_Handler( $this->plugin_name, $this->version );
+		$this->loader->add_action( 'wp_ajax_wpfa_get_speaker', $plugin_speakers_handler, 'ajax_get_speaker' );
+		$this->loader->add_action( 'wp_ajax_wpfa_add_speaker', $plugin_speakers_handler, 'ajax_add_speaker' );
+		$this->loader->add_action( 'wp_ajax_wpfa_update_speaker', $plugin_speakers_handler, 'ajax_update_speaker' );
+		$this->loader->add_action( 'wp_ajax_wpfa_delete_speaker', $plugin_speakers_handler, 'ajax_delete_speaker' );
 
-		if ( ! $this->legacy ) {
-			return;
-		}
+		// Register AJAX handlers for events page.
+		$plugin_event_handler = new Wpfaevent_Event_Handler( $this->plugin_name, $this->version );
+		$this->loader->add_action( 'wp_ajax_wpfa_get_event', $plugin_event_handler, 'ajax_get_event' );
+		$this->loader->add_action( 'wp_ajax_wpfa_add_event', $plugin_event_handler, 'ajax_add_event' );
+		$this->loader->add_action( 'wp_ajax_wpfa_update_event', $plugin_event_handler, 'ajax_update_event' );
+		$this->loader->add_action( 'wp_ajax_wpfa_delete_event', $plugin_event_handler, 'ajax_delete_event' );
 
-		// Register admin-facing hooks via the loader so tests/tooling can inspect them.
-
-		// Register the many AJAX handlers the legacy class provides.
-		$ajax_methods = array(
-			'fossasia_manage_speakers'       => 'ajax_manage_speakers',
-			'fossasia_manage_sponsors'       => 'ajax_manage_sponsors',
-			'fossasia_manage_site_settings'  => 'ajax_manage_site_settings',
-			'fossasia_manage_sections'       => 'ajax_manage_sections',
-			'fossasia_manage_schedule'       => 'ajax_manage_schedule',
-			'fossasia_manage_navigation'     => 'ajax_manage_navigation',
-			'fossasia_sync_eventyay'         => 'ajax_sync_eventyay',
-			'fossasia_create_event_page'     => 'ajax_create_event_page',
-			'fossasia_edit_event_page'       => 'ajax_edit_event_page',
-			'fossasia_delete_event_page'     => 'ajax_delete_event_page',
-			'fossasia_manage_theme_settings' => 'ajax_manage_theme_settings',
-			'fossasia_import_sample_data'    => 'ajax_import_sample_data',
-			'fossasia_add_sample_event'      => 'ajax_add_sample_event',
-			'fossasia_manage_coc'            => 'ajax_manage_coc',
-		);
-
-		foreach ( $ajax_methods as $action => $method ) {
-			// Register admin AJAX action.
-			$this->loader->add_action( 'wp_ajax_' . $action, $this->legacy, $method );
-		}
+		// Register AJAX handler for footer text update.
+		$plugin_footer_handler = new Wpfaevent_Footer_Handler( $this->plugin_name, $this->version );
+		$this->loader->add_action( 'wp_ajax_wpfa_update_footer_text', $plugin_footer_handler, 'ajax_update_footer_text' );
 	}
 
 	/**
@@ -267,8 +252,6 @@ class Wpfaevent {
 		// Cache invalidation hooks (static method calls).
 		$this->loader->add_action( 'save_post', 'Wpfaevent_Cache', 'clear_page_cache' );
 		$this->loader->add_action( 'delete_post', 'Wpfaevent_Cache', 'clear_page_cache' );
-
-		// Legacy public template hooks remain disabled for now.
 	}
 
 	/**
