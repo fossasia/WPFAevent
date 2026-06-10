@@ -3,7 +3,7 @@
  * Template Name: FOSSASIA Admin Dashboard (Plugin)
  * Description: A template for the admin dashboard to manage speaker submissions.
  */
-if ( ! current_user_can( 'manage_options' ) ) {
+if ( ! Wpfaevent_Roles::current_user_can_manage_settings() ) {
     wp_die( 'You do not have sufficient permissions to access this page.', 'Access Denied', [ 'response' => 403 ] );
 }
 

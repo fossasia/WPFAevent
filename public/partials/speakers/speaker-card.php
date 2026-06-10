@@ -47,7 +47,7 @@ $photo_url            = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true )
 $placeholder_url      = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
 $speaker_link         = get_permalink( $sid );
 $hide_admin_actions   = ! empty( $wpfa_hide_speaker_card_admin_actions );
-$is_admin             = ! $hide_admin_actions && current_user_can( 'manage_options' );
+$is_admin             = ! $hide_admin_actions && Wpfaevent_Roles::current_user_can_manage_dashboard();
 $featured_speaker_ids = isset( $wpfa_featured_speaker_ids ) && is_array( $wpfa_featured_speaker_ids ) ? array_map( 'absint', $wpfa_featured_speaker_ids ) : array();
 $is_featured_speaker  = in_array( $sid, $featured_speaker_ids, true );
 

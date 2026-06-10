@@ -170,11 +170,11 @@ class Wpfaevent_Partner_Helper {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param bool $check_capability Whether to require manage_options before creating the page.
+	 * @param bool $check_capability Whether to require plugin settings access before creating the page.
 	 * @return int Page ID, or 0 when the page could not be ensured.
 	 */
 	public static function ensure_partner_page( $check_capability = true ) {
-		if ( $check_capability && ! current_user_can( 'manage_options' ) ) {
+		if ( $check_capability && ! Wpfaevent_Roles::current_user_can_manage_settings() ) {
 			return 0;
 		}
 

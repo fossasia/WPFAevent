@@ -65,6 +65,7 @@ class Wpfaevent_Public {
 			'page-past-events.php',
 			'page-schedule.php',
 			'page-additional-information.php',
+			'page-partner.php',
 			'public/partials/additional-information-page.php',
 			'public/partials/schedule-page.php',
 			'page-speakers.php',
@@ -200,7 +201,7 @@ class Wpfaevent_Public {
 			array(
 				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 				'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ), // Same nonce as events.
-				'isAdmin'    => current_user_can( 'manage_options' ),
+				'isAdmin'    => Wpfaevent_Roles::current_user_can_manage_dashboard(),
 				'i18n'       => array(
 					'saving'            => __( 'Saving...', 'wpfaevent' ),
 					'saveFooter'        => __( 'Save Footer', 'wpfaevent' ),
@@ -268,7 +269,7 @@ class Wpfaevent_Public {
 				array(
 					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 					'adminNonce' => wp_create_nonce( 'wpfa_speakers_ajax' ),
-					'isAdmin'    => current_user_can( 'manage_options' ),
+					'isAdmin'    => Wpfaevent_Roles::current_user_can_manage_dashboard(),
 
 					'i18n'       => array(
 						/* translators: %s: speaker name. */
@@ -378,7 +379,7 @@ class Wpfaevent_Public {
 				array(
 					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 					'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ),
-					'isAdmin'    => current_user_can( 'manage_options' ),
+					'isAdmin'    => Wpfaevent_Roles::current_user_can_manage_dashboard(),
 
 					// All translatable strings.
 					'i18n'       => array(

@@ -48,7 +48,7 @@ if ( $is_valid_date ) {
 	}
 }
 
-$is_admin = current_user_can( 'manage_options' );
+$is_admin = Wpfaevent_Roles::current_user_can_manage_dashboard();
 ?>
 
 <div class="event-card"

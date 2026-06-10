@@ -154,7 +154,7 @@ class Wpfaevent_Admin {
 		add_menu_page(
 			esc_html__( 'WPFAEvent Settings', 'wpfaevent' ),
 			esc_html__( 'WPFAEvent', 'wpfaevent' ),
-			'manage_options',
+			Wpfaevent_Roles::CAP_MANAGE_SETTINGS,
 			'wpfaevent-settings',
 			array( $this, 'render_plugin_settings_page' ),
 			'dashicons-calendar-alt',
@@ -165,7 +165,7 @@ class Wpfaevent_Admin {
 			'wpfaevent-settings',
 			esc_html__( 'WPFAEvent Settings', 'wpfaevent' ),
 			esc_html__( 'Settings', 'wpfaevent' ),
-			'manage_options',
+			Wpfaevent_Roles::CAP_MANAGE_SETTINGS,
 			'wpfaevent-settings',
 			array( $this, 'render_plugin_settings_page' )
 		);
@@ -174,7 +174,7 @@ class Wpfaevent_Admin {
 			'edit.php?post_type=wpfa_event',
 			esc_html__( 'Import Events from Eventyay', 'wpfaevent' ),
 			esc_html__( 'Import Events', 'wpfaevent' ),
-			'manage_options',
+			Wpfaevent_Roles::CAP_IMPORT_EVENTYAY,
 			'wpfaevent-import-events',
 			array( $this, 'render_settings_page' )
 		);
@@ -183,7 +183,7 @@ class Wpfaevent_Admin {
 			'edit.php?post_type=wpfa_event',
 			esc_html__( 'Update Events from Eventyay', 'wpfaevent' ),
 			esc_html__( 'Update Events', 'wpfaevent' ),
-			'manage_options',
+			Wpfaevent_Roles::CAP_IMPORT_EVENTYAY,
 			'wpfaevent-update-events',
 			array( $this, 'render_update_events_page' )
 		);
@@ -204,7 +204,7 @@ class Wpfaevent_Admin {
 	 * @since 1.0.0
 	 */
 	public function render_plugin_settings_page() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Wpfaevent_Roles::current_user_can_manage_settings() ) {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wpfaevent' ) );
 		}
 		?>
@@ -688,14 +688,6 @@ class Wpfaevent_Admin {
 			);
 		}
 
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
-				403
-			);
-		}
-
 		$speaker_id = isset( $_POST['speaker_id'] ) ? absint( $_POST['speaker_id'] ) : 0;
 
 		if ( ! $speaker_id ) {
@@ -704,7 +696,7 @@ class Wpfaevent_Admin {
 
 		$speaker = get_post( $speaker_id );
 
-		if ( ! $speaker || 'wpfa_speaker' !== $speaker->post_type ) {
+		if ( ! $speaker || 'wpfa_speaker' !== $speaker->post_type || ! current_user_can( 'edit_post', $speaker_id ) ) {
 			wp_send_json_error( esc_html__( 'Speaker not found', 'wpfaevent' ) );
 		}
 
@@ -756,8 +748,7 @@ class Wpfaevent_Admin {
 			);
 		}
 
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'publish_speakers' ) ) {
 			wp_send_json_error(
 				array(
 					'message' => __( 'Unauthorized', 'wpfaevent' ),
@@ -926,14 +917,6 @@ class Wpfaevent_Admin {
 			);
 		}
 
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
-				403
-			);
-		}
-
 		$speaker_id = isset( $_POST['speaker_id'] ) ? absint( $_POST['speaker_id'] ) : 0;
 
 		if ( ! $speaker_id ) {
@@ -1098,14 +1081,6 @@ class Wpfaevent_Admin {
 				array(
 					'message' => esc_html__( 'Invalid nonce', 'wpfaevent' ),
 				),
-				403
-			);
-		}
-
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
 				403
 			);
 		}

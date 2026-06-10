@@ -80,6 +80,7 @@ class Wpfaevent {
 		$this->version     = WPFAEVENT_VERSION;
 
 		$this->load_dependencies();
+		Wpfaevent_Roles::init();
 		$this->define_cpt_hooks();
 		$this->define_taxonomy_hooks();
 		$this->define_meta_hooks();
@@ -110,6 +111,7 @@ class Wpfaevent {
 
 		// Cache management.
 		require_once plugin_dir_path( __FILE__ ) . 'cache/class-wpfaevent-cache.php';
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-roles.php';
 
 		// Data model classes - Custom Post Types.
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';

@@ -86,7 +86,7 @@ class Wpfaevent_Eventyay_Importer {
 	 */
 	public function render_settings_page() {
 		// Check user capabilities.
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Wpfaevent_Roles::current_user_can_import_eventyay() ) {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wpfaevent' ) );
 		}
 
@@ -217,7 +217,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @since 1.0.0
 	 */
 	public function render_update_events_page() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Wpfaevent_Roles::current_user_can_import_eventyay() ) {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wpfaevent' ) );
 		}
 
@@ -282,7 +282,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @since 1.0.0
 	 */
 	public function handle_eventyay_events_import() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Wpfaevent_Roles::current_user_can_import_eventyay() ) {
 			wp_die( esc_html__( 'You do not have sufficient permissions to import Eventyay events.', 'wpfaevent' ) );
 		}
 
@@ -4101,7 +4101,7 @@ class Wpfaevent_Eventyay_Importer {
 			);
 		}
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Wpfaevent_Roles::current_user_can_import_eventyay() ) {
 			wp_send_json_error(
 				array(
 					'message' => esc_html__( 'Unauthorized', 'wpfaevent' ),

@@ -23,7 +23,7 @@ if ( empty( $footer_text ) ) {
 }
 
 // Check if user is admin.
-$is_admin = current_user_can( 'manage_options' );
+$is_admin = Wpfaevent_Roles::current_user_can_manage_site_branding();
 ?>
 
 <!-- Main Site Footer -->

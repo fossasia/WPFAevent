@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $today           = current_time( 'Y-m-d' );
 $events_per_page = max( 1, (int) apply_filters( 'wpfa_events_per_page', 10 ) );
 $current_page    = max( 1, (int) get_query_var( 'paged', 1 ) );
-$is_admin        = current_user_can( 'manage_options' );
+$is_admin        = Wpfaevent_Roles::current_user_can_manage_dashboard();
 
 // Pull all published event IDs to replicate upstream's data handling pattern.
 $args = array(
@@ -309,7 +309,7 @@ $header_vars = array(
 					} else {
 						echo '<p class="news-loading-text">' . esc_html__( 'Latest news feed loading...', 'wpfaevent' ) . '</p>';
 
-						if ( current_user_can( 'manage_options' ) ) {
+						if ( Wpfaevent_Roles::current_user_can_manage_dashboard() ) {
 							echo '<div class="wpfaevent-admin-warning">';
 								echo '<svg class="wpfaevent-warning-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">';
 									echo '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>';

@@ -36,6 +36,17 @@ WPFAevent is a WordPress plugin for FOSSASIA/Eventyay events. It defines custom 
   - `site-settings-{event_id}.json`
 - Do not mix every event's speakers into one visible speaker list. Speaker lists should be event-scoped.
 
+## Roles And Capabilities
+
+- Role and capability registration lives in `includes/class-wpfaevent-roles.php`.
+- The plugin adds an **Event Organizer** role (`wpfa_event_organizer`) for event staff who should manage events, speakers, and Eventyay imports without full WordPress administrator access.
+- Plugin-level capabilities:
+  - `manage_wpfa_settings` — WPFAEvent settings screen
+  - `import_eventyay_events` — Eventyay import settings, import/update actions, and per-event sync
+- Event and speaker CPT capabilities (`publish_events`, `edit_events`, `publish_speakers`, etc.) are granted to administrators and Event Organizers on activation/upgrade.
+- Frontend dashboard edit controls use `Wpfaevent_Roles::current_user_can_manage_dashboard()` (`edit_events` + `edit_speakers`).
+- Site-wide footer branding remains limited to WordPress administrators (`manage_options`).
+
 ## Architecture
 
 - CPT meta registration and metabox handling belong under `includes/meta/`.
@@ -50,6 +61,7 @@ Run these before handing work back:
 ```bash
 php -l admin/class-wpfaevent-admin.php
 php -l includes/class-wpfaevent.php
+php -l includes/class-wpfaevent-roles.php
 php -l includes/meta/class-wpfaevent-meta-event.php
 php -l includes/meta/class-wpfaevent-meta-speaker.php
 vendor/bin/phpcs admin/class-wpfaevent-admin.php includes/class-wpfaevent.php includes/meta/class-wpfaevent-meta-event.php includes/meta/class-wpfaevent-meta-speaker.php public/templates/page-speakers.php

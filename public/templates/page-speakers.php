@@ -506,7 +506,7 @@ $header_vars         = array(
 
 <?php
 // Load admin modals if the user is an admin.
-if ( current_user_can( 'manage_options' ) ) :
+if ( Wpfaevent_Roles::current_user_can_manage_dashboard() ) :
 	$modal_partial = WPFAEVENT_PATH . 'public/partials/speakers/speaker-modal.php';
 	if ( file_exists( $modal_partial ) ) {
 		include $modal_partial;

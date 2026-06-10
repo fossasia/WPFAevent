@@ -108,6 +108,27 @@ Each shortcode can accept optional attributes — for example:
 if multiple event profiles are configured in settings.
 
 
+## Roles And Permissions
+
+WPFAevent follows Eventyay's organizer-team model: event staff can manage event content and imports without needing full WordPress administrator access.
+
+| Role / capability | Can publish events & speakers | Can import/update from Eventyay | Can edit frontend dashboard |
+| --- | --- | --- | --- |
+| **Administrator** | Yes | Yes | Yes |
+| **Event Organizer** (`wpfa_event_organizer`) | Yes | Yes | Yes |
+| **Editor / Author** | No (unless granted manually) | No | No |
+
+Assign the **Event Organizer** role under **Users → All Users → Edit User → Role**.
+
+Plugin capabilities:
+
+* `publish_events`, `edit_events`, and related event CPT caps
+* `publish_speakers`, `edit_speakers`, and related speaker CPT caps
+* `import_eventyay_events` — save Eventyay settings and run import/update
+* `manage_wpfa_settings` — access **WPFAEvent → Settings**
+
+Site-wide footer branding remains administrator-only.
+
 ## Settings And Import Pages
 
 Navigate to **WPFAEvent → Settings** for plugin-level settings and the future admin dashboard placeholder. Eventyay event imports are configured under **Events → Import Events**.
@@ -122,7 +143,7 @@ The Eventyay import page accepts:
 
 ## Eventyay Event Import
 
-Administrators can import Eventyay events from **Events → Import Events**. The importer uses the configured Eventyay base URL, organizer slug, optional event slug, and API token to create or update WordPress content.
+Users with the **Event Organizer** role or **Administrator** role can import Eventyay events from **Events → Import Events**. The importer uses the configured Eventyay base URL, organizer slug, optional event slug, and API token to create or update WordPress content.
 
 Imported data is stored and displayed in these places:
 
