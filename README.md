@@ -110,15 +110,15 @@ if multiple event profiles are configured in settings.
 
 ## Roles And Permissions
 
-WPFAevent uses three access levels:
+WPFAevent uses three access levels. WordPress user roles stay unchanged.
 
-| Role | Publish events & speakers | Import/update from Eventyay | Edit existing content | Delete content |
+| Access level | Publish events & speakers | Import/update from Eventyay | Edit existing content | Delete content |
 | --- | --- | --- | --- | --- |
 | **Administrator** | Yes | Yes | Yes | Yes |
-| **Event Organizer** (`wpfa_event_organizer`) | Yes | Yes | Yes | Yes |
-| **Event Contributor** (`wpfa_event_contributor`) | No | No | Yes | No |
+| **Event Organizer** | Yes | Yes | Yes | Yes |
+| **Event Contributor** | No | No | Yes | No |
 
-Assign **Event Organizer** or **Event Contributor** under **Users → All Users → Edit User → Role**.
+Site administrators assign access under **WPFAEvent → Settings → Event Plugin Access**.
 
 * **Administrator** — full WordPress site control.
 * **Event Organizer** — run Eventyay import/update, publish new events and speakers, and access **WPFAEvent → Settings**.

@@ -38,11 +38,14 @@ WPFAevent is a WordPress plugin for FOSSASIA/Eventyay events. It defines custom 
 
 ## Roles And Capabilities
 
-- Role and capability registration lives in `includes/class-wpfaevent-roles.php`.
+- Access control lives in `includes/class-wpfaevent-roles.php`.
+- Do not create custom WordPress roles for event staff. Assign access under **WPFAEvent -> Settings -> Event Plugin Access**.
 - Supported access levels:
   - **Administrator** — WordPress site admin with full plugin access.
-  - **Event Organizer** (`wpfa_event_organizer`) — import from Eventyay, publish events/speakers, and manage plugin settings.
-  - **Event Contributor** (`wpfa_event_contributor`) — edit existing event and speaker content without import, publish, or delete.
+  - **Event Organizer** — import from Eventyay, publish events/speakers, and open WPFAEvent settings.
+  - **Event Contributor** — edit existing event and speaker content without import, publish, or delete.
+- Assignments are stored in the `wpfaevent_user_access_levels` option and applied through the `user_has_cap` filter.
+- Only site administrators (`manage_options`) can edit access assignments.
 - Plugin-level capabilities:
   - `manage_wpfa_settings` — WPFAEvent settings screen
   - `import_eventyay_events` — Eventyay import settings, import/update actions, and per-event sync

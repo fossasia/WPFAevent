@@ -207,18 +207,39 @@ class Wpfaevent_Admin {
 		if ( ! Wpfaevent_Roles::current_user_can_manage_settings() ) {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wpfaevent' ) );
 		}
+
+		$can_manage_access = Wpfaevent_Roles::current_user_can_manage_plugin_access();
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 
+			<?php if ( $can_manage_access ) : ?>
+				<?php settings_errors( Wpfaevent_Roles::SETTINGS_GROUP ); ?>
+				<div class="card" style="max-width: 960px;">
+					<h2><?php esc_html_e( 'Event Plugin Access', 'wpfaevent' ); ?></h2>
+					<p><?php esc_html_e( 'Assign Event Organizer or Event Contributor access to existing WordPress users. Their normal WordPress role stays unchanged.', 'wpfaevent' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Administrators always have full plugin access. Organizers can import and publish. Contributors can edit existing event and speaker content only.', 'wpfaevent' ); ?></p>
+
+					<form method="post" action="<?php echo esc_url( admin_url( 'options.php' ) ); ?>">
+						<?php
+						settings_fields( Wpfaevent_Roles::SETTINGS_GROUP );
+						$this->render_user_access_settings_fields();
+						submit_button( __( 'Save Event Plugin Access', 'wpfaevent' ) );
+						?>
+					</form>
+				</div>
+			<?php endif; ?>
+
 			<div class="card" style="max-width: 960px;">
 				<h2><?php esc_html_e( 'WPFAEvent Settings', 'wpfaevent' ); ?></h2>
 				<p><?php esc_html_e( 'This page is reserved for the future WPFAEvent admin dashboard and shared plugin settings.', 'wpfaevent' ); ?></p>
-				<p>
-					<a class="button button-primary" href="<?php echo esc_url( admin_url( 'edit.php?post_type=wpfa_event&page=wpfaevent-import-events' ) ); ?>">
-						<?php esc_html_e( 'Open Eventyay Import', 'wpfaevent' ); ?>
-					</a>
-				</p>
+				<?php if ( Wpfaevent_Roles::current_user_can_import_eventyay() ) : ?>
+					<p>
+						<a class="button button-primary" href="<?php echo esc_url( admin_url( 'edit.php?post_type=wpfa_event&page=wpfaevent-import-events' ) ); ?>">
+							<?php esc_html_e( 'Open Eventyay Import', 'wpfaevent' ); ?>
+						</a>
+					</p>
+				<?php endif; ?>
 			</div>
 
 			<div class="card" style="max-width: 960px;">
@@ -339,6 +360,96 @@ class Wpfaevent_Admin {
 				</table>
 			<?php endif; ?>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Register plugin settings stored under WPFAEvent -> Settings.
+	 *
+	 * @since 1.0.0
+	 */
+	public function register_plugin_settings() {
+		register_setting(
+			Wpfaevent_Roles::SETTINGS_GROUP,
+			Wpfaevent_Roles::ACCESS_LEVELS_OPTION,
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( 'Wpfaevent_Roles', 'sanitize_user_access_levels' ),
+				'default'           => array(),
+			)
+		);
+	}
+
+	/**
+	 * Render the per-user plugin access assignment table.
+	 *
+	 * @since 1.0.0
+	 */
+	private function render_user_access_settings_fields() {
+		$access_labels    = Wpfaevent_Roles::get_access_level_labels();
+		$assigned_levels  = Wpfaevent_Roles::get_user_access_levels();
+		$users            = get_users(
+			array(
+				'orderby' => 'display_name',
+				'order'   => 'ASC',
+				'fields'  => array( 'ID', 'display_name', 'user_email', 'roles' ),
+			)
+		);
+
+		if ( empty( $users ) ) {
+			echo '<p>' . esc_html__( 'No WordPress users are available to assign.', 'wpfaevent' ) . '</p>';
+			return;
+		}
+		?>
+		<table class="widefat striped" style="max-width: 960px;">
+			<thead>
+				<tr>
+					<th scope="col"><?php esc_html_e( 'User', 'wpfaevent' ); ?></th>
+					<th scope="col"><?php esc_html_e( 'Email', 'wpfaevent' ); ?></th>
+					<th scope="col"><?php esc_html_e( 'WordPress role', 'wpfaevent' ); ?></th>
+					<th scope="col"><?php esc_html_e( 'Event plugin access', 'wpfaevent' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ( $users as $user ) : ?>
+					<?php
+					$user_id        = absint( $user->ID );
+					$is_admin       = user_can( $user_id, 'manage_options' );
+					$role_names     = array_map( 'translate_user_role', array_filter( (array) $user->roles ) );
+					$wordpress_role = ! empty( $role_names ) ? implode( ', ', $role_names ) : __( 'No role', 'wpfaevent' );
+					$field_name     = Wpfaevent_Roles::ACCESS_LEVELS_OPTION . '[' . $user_id . ']';
+					$current_level  = $is_admin ? '' : ( $assigned_levels[ $user_id ] ?? '' );
+					?>
+					<tr>
+						<td><strong><?php echo esc_html( $user->display_name ); ?></strong></td>
+						<td><?php echo esc_html( $user->user_email ); ?></td>
+						<td><?php echo esc_html( $wordpress_role ); ?></td>
+						<td>
+							<?php if ( $is_admin ) : ?>
+								<em><?php esc_html_e( 'Full access (Administrator)', 'wpfaevent' ); ?></em>
+							<?php else : ?>
+								<label class="screen-reader-text" for="<?php echo esc_attr( 'wpfaevent-access-' . $user_id ); ?>">
+									<?php
+									printf(
+										/* translators: %s: user display name. */
+										esc_html__( 'Event plugin access for %s', 'wpfaevent' ),
+										esc_html( $user->display_name )
+									);
+									?>
+								</label>
+								<select id="<?php echo esc_attr( 'wpfaevent-access-' . $user_id ); ?>" name="<?php echo esc_attr( $field_name ); ?>">
+									<?php foreach ( $access_labels as $level => $label ) : ?>
+										<option value="<?php echo esc_attr( $level ); ?>" <?php selected( $current_level, $level ); ?>>
+											<?php echo esc_html( $label ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							<?php endif; ?>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
 		<?php
 	}
 
