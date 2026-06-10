@@ -386,13 +386,12 @@ class Wpfaevent_Admin {
 	 * @since 1.0.0
 	 */
 	private function render_user_access_settings_fields() {
-		$access_labels    = Wpfaevent_Roles::get_access_level_labels();
-		$assigned_levels  = Wpfaevent_Roles::get_user_access_levels();
-		$users            = get_users(
+		$access_labels   = Wpfaevent_Roles::get_access_level_labels();
+		$assigned_levels = Wpfaevent_Roles::get_user_access_levels();
+		$users           = get_users(
 			array(
 				'orderby' => 'display_name',
 				'order'   => 'ASC',
-				'fields'  => array( 'ID', 'display_name', 'user_email', 'roles' ),
 			)
 		);
 
@@ -400,6 +399,8 @@ class Wpfaevent_Admin {
 			echo '<p>' . esc_html__( 'No WordPress users are available to assign.', 'wpfaevent' ) . '</p>';
 			return;
 		}
+
+		$this->render_user_access_level_guide();
 		?>
 		<table class="widefat striped" style="max-width: 960px;">
 			<thead>
@@ -414,7 +415,7 @@ class Wpfaevent_Admin {
 				<?php foreach ( $users as $user ) : ?>
 					<?php
 					$user_id        = absint( $user->ID );
-					$is_admin       = user_can( $user_id, 'manage_options' );
+					$is_admin       = Wpfaevent_Roles::user_is_site_administrator( $user );
 					$role_names     = array_map( 'translate_user_role', array_filter( (array) $user->roles ) );
 					$wordpress_role = ! empty( $role_names ) ? implode( ', ', $role_names ) : __( 'No role', 'wpfaevent' );
 					$field_name     = Wpfaevent_Roles::ACCESS_LEVELS_OPTION . '[' . $user_id . ']';
@@ -448,6 +449,43 @@ class Wpfaevent_Admin {
 						</td>
 					</tr>
 				<?php endforeach; ?>
+			</tbody>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Render the access-level reference guide shown above the assignment table.
+	 *
+	 * @since 1.0.0
+	 */
+	private function render_user_access_level_guide() {
+		?>
+		<h3 class="title" style="margin-top: 1.5em;"><?php esc_html_e( 'Access level guide', 'wpfaevent' ); ?></h3>
+		<table class="widefat striped" style="max-width: 960px; margin-bottom: 1.5em;">
+			<thead>
+				<tr>
+					<th scope="col" style="width: 28%;"><?php esc_html_e( 'Access level', 'wpfaevent' ); ?></th>
+					<th scope="col"><?php esc_html_e( 'What they can do', 'wpfaevent' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><strong><?php esc_html_e( 'Administrator', 'wpfaevent' ); ?></strong></td>
+					<td><?php esc_html_e( 'Full plugin access automatically. Can import from Eventyay, publish and delete events and speakers, and open WPFAEvent settings.', 'wpfaevent' ); ?></td>
+				</tr>
+				<tr>
+					<td><strong><?php echo esc_html( Wpfaevent_Roles::get_access_level_labels()[ Wpfaevent_Roles::ACCESS_ORGANIZER ] ); ?></strong></td>
+					<td><?php esc_html_e( 'Import and sync events from Eventyay, publish events and speakers, delete content, and open WPFAEvent settings. Does not change their WordPress role.', 'wpfaevent' ); ?></td>
+				</tr>
+				<tr>
+					<td><strong><?php echo esc_html( Wpfaevent_Roles::get_access_level_labels()[ Wpfaevent_Roles::ACCESS_CONTRIBUTOR ] ); ?></strong></td>
+					<td><?php esc_html_e( 'Edit existing event and speaker content only. Cannot import, publish, delete, or change plugin settings.', 'wpfaevent' ); ?></td>
+				</tr>
+				<tr>
+					<td><strong><?php echo esc_html( Wpfaevent_Roles::get_access_level_labels()[''] ); ?></strong></td>
+					<td><?php esc_html_e( 'No access to WPFAEvent features. The user keeps their normal WordPress permissions only.', 'wpfaevent' ); ?></td>
+				</tr>
 			</tbody>
 		</table>
 		<?php

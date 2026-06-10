@@ -90,6 +90,13 @@ class Wpfaevent_Roles {
 	const CAP_IMPORT_EVENTYAY = 'import_eventyay_events';
 
 	/**
+	 * Recursion guard for the user_has_cap filter.
+	 *
+	 * @var bool
+	 */
+	private static $in_capability_filter = false;
+
+	/**
 	 * Bootstrap access handling on plugin load.
 	 *
 	 * @since 1.0.0
@@ -350,20 +357,28 @@ class Wpfaevent_Roles {
 	public static function filter_user_capabilities( $allcaps, $caps, $args, $user ) {
 		unset( $args );
 
+		if ( self::$in_capability_filter ) {
+			return $allcaps;
+		}
+
 		if ( ! $user instanceof WP_User || ! $user->ID ) {
 			return $allcaps;
 		}
 
-		if ( self::user_is_site_administrator( $user ) ) {
+		self::$in_capability_filter = true;
+
+		if ( self::user_is_site_administrator( $user, $allcaps ) ) {
 			foreach ( self::get_organizer_capabilities() as $capability ) {
 				$allcaps[ $capability ] = true;
 			}
 
+			self::$in_capability_filter = false;
 			return $allcaps;
 		}
 
 		$level = self::get_assigned_access_level( $user->ID );
 		if ( '' === $level ) {
+			self::$in_capability_filter = false;
 			return $allcaps;
 		}
 
@@ -377,6 +392,7 @@ class Wpfaevent_Roles {
 			}
 		}
 
+		self::$in_capability_filter = false;
 		return $allcaps;
 	}
 
@@ -512,13 +528,28 @@ class Wpfaevent_Roles {
 	/**
 	 * Whether a user is a WordPress site administrator.
 	 *
+	 * Must not call has_cap() — this runs inside the user_has_cap filter.
+	 *
 	 * @since 1.0.0
 	 *
-	 * @param WP_User $user User object.
+	 * @param WP_User              $user    User object.
+	 * @param array<string, bool>|null $allcaps Optional capability map from user_has_cap.
 	 * @return bool
 	 */
-	private static function user_is_site_administrator( $user ) {
-		return $user->has_cap( 'manage_options' );
+	public static function user_is_site_administrator( $user, $allcaps = null ) {
+		if ( is_array( $allcaps ) && ! empty( $allcaps['manage_options'] ) ) {
+			return true;
+		}
+
+		if ( ! $user instanceof WP_User ) {
+			return false;
+		}
+
+		if ( in_array( 'administrator', (array) $user->roles, true ) ) {
+			return true;
+		}
+
+		return is_multisite() && is_super_admin( $user->ID );
 	}
 
 	/**
