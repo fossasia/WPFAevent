@@ -180,6 +180,33 @@ class Wpfaevent_Public {
 			'all'
 		);
 
+		// Footer script (handles footer text updates, shared with events config).
+		wp_enqueue_script(
+			$this->plugin_name . '-footer',
+			plugin_dir_url( __FILE__ ) . 'js/wpfaevent-footer.js',
+			array( 'jquery' ),
+			$this->version,
+			true
+		);
+
+		// Localize footer script data (shared with events config).
+		wp_localize_script(
+			$this->plugin_name . '-footer',
+			'wpfaeventFooterConfig',
+			array(
+				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+				'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ), // Same nonce as events.
+				'isAdmin'    => current_user_can( 'manage_options' ),
+				'i18n'       => array(
+					'saving'            => __( 'Saving...', 'wpfaevent' ),
+					'saveFooter'        => __( 'Save Footer', 'wpfaevent' ),
+					'footerSaveSuccess' => __( 'Footer text updated successfully.', 'wpfaevent' ),
+					'footerSaveError'   => __( 'Error updating footer text.', 'wpfaevent' ),
+					'noPermission'      => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
+				),
+			)
+		);
+
 		// Pagination component (only templates with pagination).
 		if ( $this->is_paginated_template() ) {
 			wp_enqueue_style(
@@ -287,6 +314,61 @@ class Wpfaevent_Public {
 				),
 				$this->version,
 				'all'
+			);
+		}
+
+		// Events template.
+		if ( is_page_template( 'page-events.php' ) ) {
+			wp_enqueue_style(
+				$this->plugin_name . '-events',
+				plugin_dir_url( __DIR__ ) . 'public/css/templates/events.css',
+				array( $this->plugin_name ),
+				$this->version,
+				'all'
+			);
+
+			// Enqueue events JavaScript.
+			wp_enqueue_script(
+				$this->plugin_name . '-events',
+				plugin_dir_url( __FILE__ ) . 'js/wpfaevent-events.js',
+				array( 'jquery' ),
+				$this->version,
+				true
+			);
+
+			// Pass data from PHP to JavaScript.
+			wp_localize_script(
+				$this->plugin_name . '-events',
+				'wpfaeventEventsConfig',      // JavaScript object name.
+				array(
+					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+					'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ),
+					'isAdmin'    => current_user_can( 'manage_options' ),
+
+					// All translatable strings.
+					'i18n'       => array(
+						'addEventTitle'      => __( 'Create a New Event', 'wpfaevent' ),
+						'editEventTitle'     => __( 'Edit Event', 'wpfaevent' ),
+						'addEventButton'     => __( 'Create Card', 'wpfaevent' ),
+						'editEventButton'    => __( 'Save Changes', 'wpfaevent' ),
+						'creating'           => __( 'Creating...', 'wpfaevent' ),
+						'saving'             => __( 'Saving...', 'wpfaevent' ),
+						'loading'            => __( 'Loading...', 'wpfaevent' ),
+						/* translators: %s: The name of the event being deleted. */
+						'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
+						'deleteSuccess'      => __( 'Event deleted successfully. The page will now reload.', 'wpfaevent' ),
+						'deleteError'        => __( 'Error deleting event', 'wpfaevent' ),
+						'deleteErrorGeneric' => __( 'Error deleting event. Please try again.', 'wpfaevent' ),
+						'addSuccess'         => __( 'Event created successfully. The page will now reload.', 'wpfaevent' ),
+						'addError'           => __( 'Error creating event', 'wpfaevent' ),
+						'addErrorGeneric'    => __( 'Error creating event. Please try again.', 'wpfaevent' ),
+						'updateSuccess'      => __( 'Event updated successfully. The page will now reload.', 'wpfaevent' ),
+						'updateError'        => __( 'Error updating event', 'wpfaevent' ),
+						'updateErrorGeneric' => __( 'Error updating event. Please try again.', 'wpfaevent' ),
+						'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
+						'loadError'          => __( 'Error loading event data', 'wpfaevent' ),
+					),
+				)
 			);
 		}
 
