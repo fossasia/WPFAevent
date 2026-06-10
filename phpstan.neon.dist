@@ -1,12 +1,12 @@
 parameters:
-    level: 1 # TODO: raise level incrementally as codebase is cleaned up
-    
+    level: 2 # TODO: raise level incrementally as codebase is cleaned up
+
     # Target PHP 7.4 specifically to match the plugin's platform requirement
     phpVersion: 70400
-    
+
     # Store the result cache inside the project folder for easy CI cache restoration
     tmpDir: tmp/phpstan
-    
+
     # Force evaluation of actual runtime types over potentially outdated PHPDoc types
     treatPhpDocTypesAsCertain: false
 
