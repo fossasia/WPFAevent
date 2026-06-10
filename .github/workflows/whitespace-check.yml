@@ -1,0 +1,25 @@
+name: Trailing Whitespace Check
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  whitespace-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run trailing whitespace diff check
+        run: |
+          if ! git diff --check origin/${{ github.base_ref }}...HEAD; then
+            echo "❌ Trailing whitespace or space-before-tab errors found above."
+            echo "Run locally: git diff --check origin/${{ github.base_ref }}...HEAD"
+            exit 1
+          fi
