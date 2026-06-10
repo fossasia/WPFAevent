@@ -107,6 +107,11 @@ Each shortcode can accept optional attributes — for example:
 
 if multiple event profiles are configured in settings.
 
+## Speaker Data Model
+
+Speaker profiles use the `wpfa_speaker` custom post type, registered speaker metadata, and the event-speaker relationship fields `wpfa_event_speakers` and `wpfa_speaker_events`.
+
+See [`docs/speaker-data-model.md`](docs/speaker-data-model.md) for the speaker fields, REST-exposed metadata, relationship sync behavior, and the interim session metadata approach.
 
 ## Settings Page
 
