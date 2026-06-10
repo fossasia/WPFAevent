@@ -96,6 +96,14 @@ $header_vars = array(
 
 $partner_initial = $partner_name ? strtoupper( substr( $partner_name, 0, 1 ) ) : '';
 $has_links       = $website_link || $video_url || $slides_url || $contact_link || $contact_email;
+$partner_classes = array(
+	'wpfa-partner-detail',
+	$partner_type ? 'is-' . sanitize_html_class( $partner_type ) : 'is-partner',
+	$logo_url ? 'has-logo' : 'no-logo',
+	$banner_url ? 'has-banner' : 'no-banner',
+	$has_links ? 'has-links' : 'no-links',
+);
+$partner_label   = $partner_label ? $partner_label : __( 'Partner', 'wpfaevent' );
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -123,80 +131,104 @@ $has_links       = $website_link || $video_url || $slides_url || $contact_link |
 	}
 	?>
 
-	<main class="wpfa-partner-detail">
+	<main class="<?php echo esc_attr( implode( ' ', $partner_classes ) ); ?>">
 		<section class="wpfa-partner-detail-hero">
 			<div class="container">
-				<?php if ( $partner_label ) : ?>
-					<p class="wpfa-event-kicker"><?php echo esc_html( $partner_label ); ?></p>
-				<?php endif; ?>
-				<h1><?php echo esc_html( $partner_name ? $partner_name : __( 'Partner', 'wpfaevent' ) ); ?></h1>
-				<?php if ( $event_title ) : ?>
-					<p>
-						<?php
-						printf(
-							/* translators: %s: event title. */
-							esc_html__( 'Details for %s.', 'wpfaevent' ),
-							esc_html( $event_title )
-						);
-						?>
-					</p>
-				<?php endif; ?>
-				<?php if ( $group_name ) : ?>
-					<p class="wpfa-partner-detail-group"><?php echo esc_html( $group_name ); ?></p>
-				<?php endif; ?>
+				<div class="wpfa-partner-detail-hero-inner">
+					<div class="wpfa-partner-detail-hero-copy">
+						<p class="wpfa-event-kicker"><?php echo esc_html( $partner_label ); ?></p>
+						<h1><?php echo esc_html( $partner_name ? $partner_name : __( 'Partner', 'wpfaevent' ) ); ?></h1>
+						<?php if ( $event_title ) : ?>
+							<p class="wpfa-partner-detail-lead">
+								<?php
+								printf(
+									/* translators: %s: event title. */
+									esc_html__( 'Details for %s.', 'wpfaevent' ),
+									esc_html( $event_title )
+								);
+								?>
+							</p>
+						<?php endif; ?>
+					</div>
+					<?php if ( $has_partner ) : ?>
+						<div class="wpfa-partner-detail-hero-meta" aria-label="<?php esc_attr_e( 'Partner summary', 'wpfaevent' ); ?>">
+							<span><?php echo esc_html( $partner_label ); ?></span>
+							<strong><?php echo esc_html( $event_title ? $event_title : __( 'Event partner', 'wpfaevent' ) ); ?></strong>
+							<?php if ( $group_name ) : ?>
+								<em><?php echo esc_html( $group_name ); ?></em>
+							<?php endif; ?>
+						</div>
+					<?php endif; ?>
+				</div>
 			</div>
 		</section>
 
 		<section class="wpfa-event-section wpfa-partner-detail-body" aria-labelledby="wpfa-partner-detail-title">
 			<div class="container">
 				<?php if ( $has_partner ) : ?>
-					<?php if ( $banner_url ) : ?>
-						<img class="wpfa-partner-detail-banner" src="<?php echo esc_url( $banner_url ); ?>" alt="<?php echo esc_attr( $partner_name ); ?>" loading="lazy">
-					<?php endif; ?>
-
 					<div class="wpfa-partner-detail-card">
-						<div class="wpfa-partner-detail-header">
-							<?php if ( $logo_url ) : ?>
-								<div class="wpfa-partner-detail-logo">
-									<img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $partner_name ); ?>" loading="lazy">
-								</div>
-							<?php else : ?>
-								<div class="wpfa-event-exhibitor-placeholder" aria-hidden="true">
-									<?php echo esc_html( $partner_initial ); ?>
-								</div>
+						<div class="wpfa-partner-detail-media">
+							<?php if ( $banner_url ) : ?>
+								<img class="wpfa-partner-detail-banner" src="<?php echo esc_url( $banner_url ); ?>" alt="<?php echo esc_attr( $partner_name ); ?>" loading="lazy">
 							<?php endif; ?>
-							<div>
+
+							<div class="wpfa-partner-detail-identity">
+								<?php if ( $logo_url ) : ?>
+									<div class="wpfa-partner-detail-logo">
+										<img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $partner_name ); ?>" loading="lazy">
+									</div>
+								<?php else : ?>
+									<div class="wpfa-event-exhibitor-placeholder" aria-hidden="true">
+										<?php echo esc_html( $partner_initial ); ?>
+									</div>
+								<?php endif; ?>
+								<div class="wpfa-partner-detail-identity-copy">
+									<span><?php echo esc_html( $partner_label ); ?></span>
+									<strong><?php echo esc_html( $partner_name ); ?></strong>
+								</div>
+							</div>
+
+							<?php if ( $group_name ) : ?>
+								<p class="wpfa-partner-detail-group"><?php echo esc_html( $group_name ); ?></p>
+							<?php endif; ?>
+						</div>
+
+						<div class="wpfa-partner-detail-content">
+							<div class="wpfa-partner-detail-header">
+								<p class="wpfa-event-kicker"><?php esc_html_e( 'Profile', 'wpfaevent' ); ?></p>
 								<h2 id="wpfa-partner-detail-title"><?php echo esc_html( $partner_name ); ?></h2>
 								<?php if ( $group_name ) : ?>
 									<p class="wpfa-partner-detail-meta"><?php echo esc_html( $group_name ); ?></p>
 								<?php endif; ?>
 							</div>
+
+							<?php if ( $description ) : ?>
+								<div class="wpfa-event-rich-text wpfa-partner-detail-description">
+									<?php echo wp_kses_post( wpautop( $description ) ); ?>
+								</div>
+							<?php else : ?>
+								<p class="wpfa-partner-detail-empty"><?php esc_html_e( 'No profile details have been added yet.', 'wpfaevent' ); ?></p>
+							<?php endif; ?>
+
+							<?php if ( $has_links ) : ?>
+								<div class="wpfa-event-exhibitor-links wpfa-partner-detail-links">
+									<?php if ( $website_link ) : ?>
+										<a href="<?php echo esc_url( $website_link ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Website', 'wpfaevent' ); ?></a>
+									<?php endif; ?>
+									<?php if ( $video_url ) : ?>
+										<a href="<?php echo esc_url( $video_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Video', 'wpfaevent' ); ?></a>
+									<?php endif; ?>
+									<?php if ( $slides_url ) : ?>
+										<a href="<?php echo esc_url( $slides_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Slides', 'wpfaevent' ); ?></a>
+									<?php endif; ?>
+									<?php if ( $contact_link ) : ?>
+										<a href="<?php echo esc_url( $contact_link ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Contact', 'wpfaevent' ); ?></a>
+									<?php elseif ( $contact_email ) : ?>
+										<a href="<?php echo esc_url( 'mailto:' . $contact_email ); ?>"><?php esc_html_e( 'Contact', 'wpfaevent' ); ?></a>
+									<?php endif; ?>
+								</div>
+							<?php endif; ?>
 						</div>
-
-						<?php if ( $description ) : ?>
-							<div class="wpfa-event-rich-text wpfa-partner-detail-description">
-								<?php echo wp_kses_post( wpautop( $description ) ); ?>
-							</div>
-						<?php endif; ?>
-
-						<?php if ( $has_links ) : ?>
-							<div class="wpfa-event-exhibitor-links wpfa-partner-detail-links">
-								<?php if ( $website_link ) : ?>
-									<a href="<?php echo esc_url( $website_link ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Website', 'wpfaevent' ); ?></a>
-								<?php endif; ?>
-								<?php if ( $video_url ) : ?>
-									<a href="<?php echo esc_url( $video_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Video', 'wpfaevent' ); ?></a>
-								<?php endif; ?>
-								<?php if ( $slides_url ) : ?>
-									<a href="<?php echo esc_url( $slides_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Slides', 'wpfaevent' ); ?></a>
-								<?php endif; ?>
-								<?php if ( $contact_link ) : ?>
-									<a href="<?php echo esc_url( $contact_link ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Contact', 'wpfaevent' ); ?></a>
-								<?php elseif ( $contact_email ) : ?>
-									<a href="<?php echo esc_url( 'mailto:' . $contact_email ); ?>"><?php esc_html_e( 'Contact', 'wpfaevent' ); ?></a>
-								<?php endif; ?>
-							</div>
-						<?php endif; ?>
 					</div>
 
 					<p class="wpfa-partner-detail-back">
