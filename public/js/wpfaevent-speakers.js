@@ -748,21 +748,22 @@ const WPFA_Speakers = (function() {
 	function handleFormSubmit(e) {
 		e.preventDefault();
 		
-		if (!config.isAdmin) {
+		if (!elements.speakerForm) {
+			console.error('Speaker form element not found');
+			return;
+		}
+
+		const formData = new FormData(elements.speakerForm);
+		const action = formData.get('action');
+		const canSubmit = action === 'add' ? config.isAdmin : config.canManageContent;
+
+		if (!canSubmit) {
 			const errorMsg = config.i18n && config.i18n.noPermission 
 				? config.i18n.noPermission 
 				: 'You do not have permission to perform this action.';
 			alert(errorMsg);
 			return;
 		}
-
-		if (!elements.speakerForm) {
-			console.error('Speaker form element not found');
-			return;
-		}
-		
-		const formData = new FormData(elements.speakerForm);
-		const action = formData.get('action');
 		const submitBtn = elements.speakerForm.querySelector('button[type="submit"]');
 		
 		// Disable button during submission

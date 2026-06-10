@@ -47,7 +47,10 @@ $photo_url            = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true )
 $placeholder_url      = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
 $speaker_link         = get_permalink( $sid );
 $hide_admin_actions   = ! empty( $wpfa_hide_speaker_card_admin_actions );
-$is_admin             = ! $hide_admin_actions && Wpfaevent_Roles::current_user_can_manage_dashboard();
+$can_manage_content   = ! $hide_admin_actions && Wpfaevent_Roles::current_user_can_manage_dashboard();
+$can_delete_content   = ! $hide_admin_actions && Wpfaevent_Roles::current_user_can_delete_content();
+$can_edit_this_speaker = $can_manage_content && current_user_can( 'edit_post', $sid );
+$can_delete_speaker    = $can_delete_content && current_user_can( 'delete_post', $sid );
 $featured_speaker_ids = isset( $wpfa_featured_speaker_ids ) && is_array( $wpfa_featured_speaker_ids ) ? array_map( 'absint', $wpfa_featured_speaker_ids ) : array();
 $is_featured_speaker  = in_array( $sid, $featured_speaker_ids, true );
 
@@ -118,10 +121,12 @@ if ( ! $formatted_end_time ) {
 		<?php endif; ?>
 	</a>
 	<div class="wpfa-speaker-meta">
-		<?php if ( $is_admin ) : ?>
+		<?php if ( $can_edit_this_speaker ) : ?>
 			<button class="btn-edit-speaker" data-id="<?php echo esc_attr( $sid ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Edit Speaker', 'wpfaevent' ); ?>">
 				✎
 			</button>
+		<?php endif; ?>
+		<?php if ( $can_delete_speaker ) : ?>
 			<button class="btn-delete-speaker" data-id="<?php echo esc_attr( $sid ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Delete Speaker', 'wpfaevent' ); ?>">
 				×
 			</button>

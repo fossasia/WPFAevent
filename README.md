@@ -110,22 +110,19 @@ if multiple event profiles are configured in settings.
 
 ## Roles And Permissions
 
-WPFAevent follows Eventyay's organizer-team model: event staff can manage event content and imports without needing full WordPress administrator access.
+WPFAevent uses three access levels:
 
-| Role / capability | Can publish events & speakers | Can import/update from Eventyay | Can edit frontend dashboard |
-| --- | --- | --- | --- |
-| **Administrator** | Yes | Yes | Yes |
-| **Event Organizer** (`wpfa_event_organizer`) | Yes | Yes | Yes |
-| **Editor / Author** | No (unless granted manually) | No | No |
+| Role | Publish events & speakers | Import/update from Eventyay | Edit existing content | Delete content |
+| --- | --- | --- | --- | --- |
+| **Administrator** | Yes | Yes | Yes | Yes |
+| **Event Organizer** (`wpfa_event_organizer`) | Yes | Yes | Yes | Yes |
+| **Event Contributor** (`wpfa_event_contributor`) | No | No | Yes | No |
 
-Assign the **Event Organizer** role under **Users → All Users → Edit User → Role**.
+Assign **Event Organizer** or **Event Contributor** under **Users → All Users → Edit User → Role**.
 
-Plugin capabilities:
-
-* `publish_events`, `edit_events`, and related event CPT caps
-* `publish_speakers`, `edit_speakers`, and related speaker CPT caps
-* `import_eventyay_events` — save Eventyay settings and run import/update
-* `manage_wpfa_settings` — access **WPFAEvent → Settings**
+* **Administrator** — full WordPress site control.
+* **Event Organizer** — run Eventyay import/update, publish new events and speakers, and access **WPFAEvent → Settings**.
+* **Event Contributor** — maintain existing event and speaker details from wp-admin and the frontend dashboard, without import, publish, or delete access.
 
 Site-wide footer branding remains administrator-only.
 

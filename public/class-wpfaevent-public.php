@@ -201,7 +201,7 @@ class Wpfaevent_Public {
 			array(
 				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 				'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ), // Same nonce as events.
-				'isAdmin'    => Wpfaevent_Roles::current_user_can_manage_dashboard(),
+				'isAdmin'    => Wpfaevent_Roles::current_user_can_manage_site_branding(),
 				'i18n'       => array(
 					'saving'            => __( 'Saving...', 'wpfaevent' ),
 					'saveFooter'        => __( 'Save Footer', 'wpfaevent' ),
@@ -266,10 +266,10 @@ class Wpfaevent_Public {
 			wp_localize_script(
 				$this->plugin_name . '-speakers',
 				'wpfaeventSpeakersConfig',
-				array(
+				array_merge(
+					array(
 					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 					'adminNonce' => wp_create_nonce( 'wpfa_speakers_ajax' ),
-					'isAdmin'    => Wpfaevent_Roles::current_user_can_manage_dashboard(),
 
 					'i18n'       => array(
 						/* translators: %s: speaker name. */
@@ -290,6 +290,8 @@ class Wpfaevent_Public {
 						/* translators: %d: number of speakers shown. */
 						'resultsCount'       => __( 'Showing %d speakers', 'wpfaevent' ),
 					),
+					),
+					Wpfaevent_Roles::get_frontend_script_capabilities()
 				)
 			);
 		}
@@ -376,10 +378,10 @@ class Wpfaevent_Public {
 			wp_localize_script(
 				$this->plugin_name . '-events',
 				'wpfaeventEventsConfig',      // JavaScript object name.
-				array(
+				array_merge(
+					array(
 					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 					'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ),
-					'isAdmin'    => Wpfaevent_Roles::current_user_can_manage_dashboard(),
 
 					// All translatable strings.
 					'i18n'       => array(
@@ -404,6 +406,8 @@ class Wpfaevent_Public {
 						'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
 						'loadError'          => __( 'Error loading event data', 'wpfaevent' ),
 					),
+					),
+					Wpfaevent_Roles::get_frontend_script_capabilities()
 				)
 			);
 		}

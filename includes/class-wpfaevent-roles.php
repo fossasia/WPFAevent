@@ -2,8 +2,10 @@
 /**
  * WPFAevent roles and capabilities.
  *
- * Mirrors Eventyay's organizer-team model: event staff can manage event
- * content and imports without full WordPress administrator access.
+ * Three access levels:
+ * - Administrator: full WordPress site control plus all plugin capabilities.
+ * - Event Organizer: import from Eventyay and publish/manage events and speakers.
+ * - Event Contributor: maintain existing event and speaker content without import or publish.
  *
  * @package    Wpfaevent
  * @subpackage Wpfaevent/includes
@@ -15,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Register plugin capabilities and the Event Organizer role.
+ * Register plugin capabilities and custom event roles.
  */
 class Wpfaevent_Roles {
 
@@ -24,7 +26,7 @@ class Wpfaevent_Roles {
 	 *
 	 * @var string
 	 */
-	const ROLES_VERSION = '1.0.0';
+	const ROLES_VERSION = '1.1.0';
 
 	/**
 	 * Option key for the roles schema version.
@@ -34,11 +36,18 @@ class Wpfaevent_Roles {
 	const ROLES_VERSION_OPTION = 'wpfaevent_roles_version';
 
 	/**
-	 * Custom role for event staff.
+	 * Event staff who can import and publish.
 	 *
 	 * @var string
 	 */
 	const ROLE_ORGANIZER = 'wpfa_event_organizer';
+
+	/**
+	 * Event staff with limited content-management access.
+	 *
+	 * @var string
+	 */
+	const ROLE_CONTRIBUTOR = 'wpfa_event_contributor';
 
 	/**
 	 * Capability for the WPFAEvent settings screen.
@@ -85,7 +94,7 @@ class Wpfaevent_Roles {
 	}
 
 	/**
-	 * Register capabilities and the Event Organizer role.
+	 * Register capabilities and plugin roles.
 	 *
 	 * @since 1.0.0
 	 *
@@ -93,6 +102,7 @@ class Wpfaevent_Roles {
 	 */
 	public static function register_roles_and_capabilities() {
 		self::register_organizer_role();
+		self::register_contributor_role();
 		self::grant_administrator_capabilities();
 	}
 
@@ -130,7 +140,7 @@ class Wpfaevent_Roles {
 	}
 
 	/**
-	 * Whether the current user can use the frontend event/speaker dashboard tools.
+	 * Whether the current user can maintain existing event and speaker content.
 	 *
 	 * @since 1.0.0
 	 *
@@ -138,6 +148,28 @@ class Wpfaevent_Roles {
 	 */
 	public static function current_user_can_manage_dashboard() {
 		return current_user_can( 'edit_events' ) && current_user_can( 'edit_speakers' );
+	}
+
+	/**
+	 * Whether the current user can create or publish new events and speakers.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return bool
+	 */
+	public static function current_user_can_publish_content() {
+		return current_user_can( 'publish_events' ) && current_user_can( 'publish_speakers' );
+	}
+
+	/**
+	 * Whether the current user can delete events or speakers.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return bool
+	 */
+	public static function current_user_can_delete_content() {
+		return current_user_can( 'delete_events' ) && current_user_can( 'delete_speakers' );
 	}
 
 	/**
@@ -152,7 +184,23 @@ class Wpfaevent_Roles {
 	}
 
 	/**
-	 * Event CPT capabilities granted to organizers.
+	 * Frontend script capability flags shared across events and speakers pages.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<string, bool>
+	 */
+	public static function get_frontend_script_capabilities() {
+		return array(
+			'isAdmin'               => self::current_user_can_publish_content(),
+			'canManageContent'      => self::current_user_can_manage_dashboard(),
+			'canDeleteContent'      => self::current_user_can_delete_content(),
+			'canManageSiteBranding' => self::current_user_can_manage_site_branding(),
+		);
+	}
+
+	/**
+	 * Full event CPT capabilities for organizers.
 	 *
 	 * @since 1.0.0
 	 *
@@ -177,7 +225,7 @@ class Wpfaevent_Roles {
 	}
 
 	/**
-	 * Speaker CPT capabilities granted to organizers.
+	 * Full speaker CPT capabilities for organizers.
 	 *
 	 * @since 1.0.0
 	 *
@@ -235,6 +283,35 @@ class Wpfaevent_Roles {
 	}
 
 	/**
+	 * Capabilities assigned to the Event Contributor role.
+	 *
+	 * Contributors can update existing event and speaker content, but cannot
+	 * import from Eventyay, publish new posts, or delete content.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<int, string>
+	 */
+	public static function get_contributor_capabilities() {
+		return array(
+			'read_event',
+			'edit_event',
+			'edit_events',
+			'edit_others_events',
+			'edit_published_events',
+			'edit_private_events',
+			'read_private_events',
+			'read_speaker',
+			'edit_speaker',
+			'edit_speakers',
+			'edit_others_speakers',
+			'edit_published_speakers',
+			'edit_private_speakers',
+			'read_private_speakers',
+		);
+	}
+
+	/**
 	 * Create or update the Event Organizer role.
 	 *
 	 * @since 1.0.0
@@ -242,11 +319,36 @@ class Wpfaevent_Roles {
 	 * @return void
 	 */
 	private static function register_organizer_role() {
-		$capabilities = array_fill_keys( self::get_organizer_capabilities(), true );
-		$role         = get_role( self::ROLE_ORGANIZER );
+		self::register_role( self::ROLE_ORGANIZER, __( 'Event Organizer', 'wpfaevent' ), self::get_organizer_capabilities() );
+	}
+
+	/**
+	 * Create or update the Event Contributor role.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	private static function register_contributor_role() {
+		self::register_role( self::ROLE_CONTRIBUTOR, __( 'Event Contributor', 'wpfaevent' ), self::get_contributor_capabilities() );
+	}
+
+	/**
+	 * Create or update one plugin role.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string              $role_key     Role slug.
+	 * @param string              $display_name Human-readable role name.
+	 * @param array<int, string>  $capabilities Capabilities to grant.
+	 * @return void
+	 */
+	private static function register_role( $role_key, $display_name, $capabilities ) {
+		$capability_map = array_fill_keys( $capabilities, true );
+		$role           = get_role( $role_key );
 
 		if ( $role instanceof WP_Role ) {
-			foreach ( $capabilities as $capability => $granted ) {
+			foreach ( $capability_map as $capability => $granted ) {
 				if ( $granted ) {
 					$role->add_cap( $capability );
 				}
@@ -255,11 +357,7 @@ class Wpfaevent_Roles {
 			return;
 		}
 
-		add_role(
-			self::ROLE_ORGANIZER,
-			__( 'Event Organizer', 'wpfaevent' ),
-			$capabilities
-		);
+		add_role( $role_key, $display_name, $capability_map );
 	}
 
 	/**
