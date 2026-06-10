@@ -133,6 +133,11 @@ class Wpfaevent {
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
 
+		// AJAX handler classes.
+		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-footer-handler.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-event-handler.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-speakers-handler.php';
+
 		// Optional utilities if present.
 		if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php' ) ) {
 			require_once plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php';
@@ -215,11 +220,23 @@ class Wpfaevent {
 		// Show notice for block theme users.
 		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'maybe_show_block_theme_notice' );
 
-		// Register AJAX handlers for the speakers page.
-		$this->loader->add_action( 'wp_ajax_wpfa_get_speaker', $this->plugin_admin, 'ajax_get_speaker' );
-		$this->loader->add_action( 'wp_ajax_wpfa_add_speaker', $this->plugin_admin, 'ajax_add_speaker' );
-		$this->loader->add_action( 'wp_ajax_wpfa_update_speaker', $this->plugin_admin, 'ajax_update_speaker' );
-		$this->loader->add_action( 'wp_ajax_wpfa_delete_speaker', $this->plugin_admin, 'ajax_delete_speaker' );
+		// Register AJAX handlers for speakers page.
+		$plugin_speakers_handler = new Wpfaevent_Speakers_Handler( $this->plugin_name, $this->version );
+		$this->loader->add_action( 'wp_ajax_wpfa_get_speaker', $plugin_speakers_handler, 'ajax_get_speaker' );
+		$this->loader->add_action( 'wp_ajax_wpfa_add_speaker', $plugin_speakers_handler, 'ajax_add_speaker' );
+		$this->loader->add_action( 'wp_ajax_wpfa_update_speaker', $plugin_speakers_handler, 'ajax_update_speaker' );
+		$this->loader->add_action( 'wp_ajax_wpfa_delete_speaker', $plugin_speakers_handler, 'ajax_delete_speaker' );
+
+		// Register AJAX handlers for events page.
+		$plugin_event_handler = new Wpfaevent_Event_Handler( $this->plugin_name, $this->version );
+		$this->loader->add_action( 'wp_ajax_wpfa_get_event', $plugin_event_handler, 'ajax_get_event' );
+		$this->loader->add_action( 'wp_ajax_wpfa_add_event', $plugin_event_handler, 'ajax_add_event' );
+		$this->loader->add_action( 'wp_ajax_wpfa_update_event', $plugin_event_handler, 'ajax_update_event' );
+		$this->loader->add_action( 'wp_ajax_wpfa_delete_event', $plugin_event_handler, 'ajax_delete_event' );
+
+		// Register AJAX handler for footer text update.
+		$plugin_footer_handler = new Wpfaevent_Footer_Handler( $this->plugin_name, $this->version );
+		$this->loader->add_action( 'wp_ajax_wpfa_update_footer_text', $plugin_footer_handler, 'ajax_update_footer_text' );
 	}
 
 	/**
