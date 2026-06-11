@@ -758,8 +758,8 @@ const WPFA_Speakers = (function() {
 		const canSubmit = action === 'add' ? config.isAdmin : config.canManageContent;
 
 		if (!canSubmit) {
-			const errorMsg = config.i18n && config.i18n.noPermission 
-				? config.i18n.noPermission 
+			const errorMsg = config.i18n && config.i18n.noPermission
+				? config.i18n.noPermission
 				: 'You do not have permission to perform this action.';
 			alert(errorMsg);
 			return;
