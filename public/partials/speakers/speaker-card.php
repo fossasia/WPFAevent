@@ -40,19 +40,19 @@ if ( empty( $sid ) || ! is_numeric( $sid ) ) {
 
 $sid = (int) $sid;
 
-$name                 = get_the_title( $sid );
-$org                  = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
-$position             = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
-$photo_url            = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
-$placeholder_url      = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
-$speaker_link         = get_permalink( $sid );
-$hide_admin_actions   = ! empty( $wpfa_hide_speaker_card_admin_actions );
-$can_manage_content   = ! $hide_admin_actions && Wpfaevent_Roles::current_user_can_manage_dashboard();
-$can_delete_content   = ! $hide_admin_actions && Wpfaevent_Roles::current_user_can_delete_content();
+$name                  = get_the_title( $sid );
+$org                   = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
+$position              = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
+$photo_url             = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
+$placeholder_url       = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
+$speaker_link          = get_permalink( $sid );
+$hide_admin_actions    = ! empty( $wpfa_hide_speaker_card_admin_actions );
+$can_manage_content    = ! $hide_admin_actions && Wpfaevent_Roles::current_user_can_manage_dashboard();
+$can_delete_content    = ! $hide_admin_actions && Wpfaevent_Roles::current_user_can_delete_content();
 $can_edit_this_speaker = $can_manage_content && current_user_can( 'edit_post', $sid );
 $can_delete_speaker    = $can_delete_content && current_user_can( 'delete_post', $sid );
-$featured_speaker_ids = isset( $wpfa_featured_speaker_ids ) && is_array( $wpfa_featured_speaker_ids ) ? array_map( 'absint', $wpfa_featured_speaker_ids ) : array();
-$is_featured_speaker  = in_array( $sid, $featured_speaker_ids, true );
+$featured_speaker_ids  = isset( $wpfa_featured_speaker_ids ) && is_array( $wpfa_featured_speaker_ids ) ? array_map( 'absint', $wpfa_featured_speaker_ids ) : array();
+$is_featured_speaker   = in_array( $sid, $featured_speaker_ids, true );
 
 if ( empty( $photo_url ) && has_post_thumbnail( $sid ) ) {
 	$photo_url = get_the_post_thumbnail_url( $sid, 'medium_large' );

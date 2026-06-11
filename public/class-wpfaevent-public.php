@@ -67,7 +67,6 @@ class Wpfaevent_Public {
 			'page-additional-information.php',
 			'page-partner.php',
 			'public/partials/additional-information-page.php',
-			'public/partials/schedule-page.php',
 			'page-speakers.php',
 			'page-landing.php',
 		);
@@ -93,7 +92,6 @@ class Wpfaevent_Public {
 			'page-past-events.php',
 			'page-speakers.php',
 			'page-schedule.php',
-			'public/partials/schedule-page.php',
 		);
 
 		foreach ( $paginated_templates as $template ) {
@@ -268,28 +266,28 @@ class Wpfaevent_Public {
 				'wpfaeventSpeakersConfig',
 				array_merge(
 					array(
-					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-					'adminNonce' => wp_create_nonce( 'wpfa_speakers_ajax' ),
+						'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+						'adminNonce' => wp_create_nonce( 'wpfa_speakers_ajax' ),
 
-					'i18n'       => array(
-						/* translators: %s: speaker name. */
-						'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
-						'deleteSuccess'      => __( 'Speaker deleted successfully. The page will now reload.', 'wpfaevent' ),
-						'deleteError'        => __( 'Error deleting speaker', 'wpfaevent' ),
-						'deleteErrorGeneric' => __( 'Error deleting speaker. Please try again.', 'wpfaevent' ),
-						'addSuccess'         => __( 'Speaker added successfully. The page will now reload.', 'wpfaevent' ),
-						'addError'           => __( 'Error adding speaker', 'wpfaevent' ),
-						'addErrorGeneric'    => __( 'Error adding speaker. Please try again.', 'wpfaevent' ),
-						'updateSuccess'      => __( 'Speaker updated successfully. The page will now reload.', 'wpfaevent' ),
-						'updateError'        => __( 'Error updating speaker', 'wpfaevent' ),
-						'updateErrorGeneric' => __( 'Error updating speaker. Please try again.', 'wpfaevent' ),
-						'loadError'          => __( 'Error loading speaker data', 'wpfaevent' ),
-						'fetchError'         => __( 'Error fetching speaker data', 'wpfaevent' ),
-						'fetchErrorGeneric'  => __( 'Error fetching speaker data. Please try again.', 'wpfaevent' ),
-						'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
-						/* translators: %d: number of speakers shown. */
-						'resultsCount'       => __( 'Showing %d speakers', 'wpfaevent' ),
-					),
+						'i18n'       => array(
+							/* translators: %s: speaker name. */
+							'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
+							'deleteSuccess'      => __( 'Speaker deleted successfully. The page will now reload.', 'wpfaevent' ),
+							'deleteError'        => __( 'Error deleting speaker', 'wpfaevent' ),
+							'deleteErrorGeneric' => __( 'Error deleting speaker. Please try again.', 'wpfaevent' ),
+							'addSuccess'         => __( 'Speaker added successfully. The page will now reload.', 'wpfaevent' ),
+							'addError'           => __( 'Error adding speaker', 'wpfaevent' ),
+							'addErrorGeneric'    => __( 'Error adding speaker. Please try again.', 'wpfaevent' ),
+							'updateSuccess'      => __( 'Speaker updated successfully. The page will now reload.', 'wpfaevent' ),
+							'updateError'        => __( 'Error updating speaker', 'wpfaevent' ),
+							'updateErrorGeneric' => __( 'Error updating speaker. Please try again.', 'wpfaevent' ),
+							'loadError'          => __( 'Error loading speaker data', 'wpfaevent' ),
+							'fetchError'         => __( 'Error fetching speaker data', 'wpfaevent' ),
+							'fetchErrorGeneric'  => __( 'Error fetching speaker data. Please try again.', 'wpfaevent' ),
+							'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
+							/* translators: %d: number of speakers shown. */
+							'resultsCount'       => __( 'Showing %d speakers', 'wpfaevent' ),
+						),
 					),
 					Wpfaevent_Roles::get_frontend_script_capabilities()
 				)
@@ -313,7 +311,6 @@ class Wpfaevent_Public {
 			is_singular( 'wpfa_event' )
 			|| is_post_type_archive( 'wpfa_event' )
 			|| is_page_template( 'page-schedule.php' )
-			|| is_page_template( 'public/partials/schedule-page.php' )
 			|| is_page_template( 'page-additional-information.php' )
 			|| is_page_template( 'public/partials/additional-information-page.php' )
 			|| is_page_template( 'page-partner.php' )
@@ -380,32 +377,32 @@ class Wpfaevent_Public {
 				'wpfaeventEventsConfig',      // JavaScript object name.
 				array_merge(
 					array(
-					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-					'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ),
+						'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+						'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ),
 
-					// All translatable strings.
-					'i18n'       => array(
-						'addEventTitle'      => __( 'Create a New Event', 'wpfaevent' ),
-						'editEventTitle'     => __( 'Edit Event', 'wpfaevent' ),
-						'addEventButton'     => __( 'Create Card', 'wpfaevent' ),
-						'editEventButton'    => __( 'Save Changes', 'wpfaevent' ),
-						'creating'           => __( 'Creating...', 'wpfaevent' ),
-						'saving'             => __( 'Saving...', 'wpfaevent' ),
-						'loading'            => __( 'Loading...', 'wpfaevent' ),
-						/* translators: %s: The name of the event being deleted. */
-						'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
-						'deleteSuccess'      => __( 'Event deleted successfully. The page will now reload.', 'wpfaevent' ),
-						'deleteError'        => __( 'Error deleting event', 'wpfaevent' ),
-						'deleteErrorGeneric' => __( 'Error deleting event. Please try again.', 'wpfaevent' ),
-						'addSuccess'         => __( 'Event created successfully. The page will now reload.', 'wpfaevent' ),
-						'addError'           => __( 'Error creating event', 'wpfaevent' ),
-						'addErrorGeneric'    => __( 'Error creating event. Please try again.', 'wpfaevent' ),
-						'updateSuccess'      => __( 'Event updated successfully. The page will now reload.', 'wpfaevent' ),
-						'updateError'        => __( 'Error updating event', 'wpfaevent' ),
-						'updateErrorGeneric' => __( 'Error updating event. Please try again.', 'wpfaevent' ),
-						'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
-						'loadError'          => __( 'Error loading event data', 'wpfaevent' ),
-					),
+						// All translatable strings.
+						'i18n'       => array(
+							'addEventTitle'      => __( 'Create a New Event', 'wpfaevent' ),
+							'editEventTitle'     => __( 'Edit Event', 'wpfaevent' ),
+							'addEventButton'     => __( 'Create Card', 'wpfaevent' ),
+							'editEventButton'    => __( 'Save Changes', 'wpfaevent' ),
+							'creating'           => __( 'Creating...', 'wpfaevent' ),
+							'saving'             => __( 'Saving...', 'wpfaevent' ),
+							'loading'            => __( 'Loading...', 'wpfaevent' ),
+							/* translators: %s: The name of the event being deleted. */
+							'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
+							'deleteSuccess'      => __( 'Event deleted successfully. The page will now reload.', 'wpfaevent' ),
+							'deleteError'        => __( 'Error deleting event', 'wpfaevent' ),
+							'deleteErrorGeneric' => __( 'Error deleting event. Please try again.', 'wpfaevent' ),
+							'addSuccess'         => __( 'Event created successfully. The page will now reload.', 'wpfaevent' ),
+							'addError'           => __( 'Error creating event', 'wpfaevent' ),
+							'addErrorGeneric'    => __( 'Error creating event. Please try again.', 'wpfaevent' ),
+							'updateSuccess'      => __( 'Event updated successfully. The page will now reload.', 'wpfaevent' ),
+							'updateError'        => __( 'Error updating event', 'wpfaevent' ),
+							'updateErrorGeneric' => __( 'Error updating event. Please try again.', 'wpfaevent' ),
+							'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
+							'loadError'          => __( 'Error loading event data', 'wpfaevent' ),
+						),
 					),
 					Wpfaevent_Roles::get_frontend_script_capabilities()
 				)

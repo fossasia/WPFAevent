@@ -187,11 +187,10 @@ $featured_display_speaker_ids = array_values( array_intersect( $paged_speaker_id
 $regular_display_speaker_ids  = array_values( array_diff( $paged_speaker_ids, $featured_display_speaker_ids ) );
 
 // Get categories; when an event is selected, keep category counts event-specific.
-$categories = array();
+$categories           = array();
+$category_term_counts = array();
 if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 	if ( $selected_event_id ) {
-		$term_counts = array();
-
 		foreach ( $category_source_speaker_ids as $speaker_id ) {
 			$terms = wp_get_post_terms( $speaker_id, 'wpfa_speaker_category' );
 
@@ -200,15 +199,15 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 			}
 
 			foreach ( $terms as $speaker_term ) {
-				$term_counts[ $speaker_term->term_id ] = isset( $term_counts[ $speaker_term->term_id ] ) ? $term_counts[ $speaker_term->term_id ] + 1 : 1;
+				$category_term_counts[ $speaker_term->term_id ] = isset( $category_term_counts[ $speaker_term->term_id ] ) ? $category_term_counts[ $speaker_term->term_id ] + 1 : 1;
 			}
 		}
 
-		if ( ! empty( $term_counts ) ) {
+		if ( ! empty( $category_term_counts ) ) {
 			$terms = get_terms(
 				array(
 					'taxonomy'   => 'wpfa_speaker_category',
-					'include'    => array_keys( $term_counts ),
+					'include'    => array_keys( $category_term_counts ),
 					'hide_empty' => false,
 					'orderby'    => 'name',
 					'order'      => 'ASC',
@@ -216,9 +215,6 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 			);
 
 			if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
-				foreach ( $terms as $speaker_term ) {
-					$speaker_term->wpfa_event_count = isset( $term_counts[ $speaker_term->term_id ] ) ? absint( $term_counts[ $speaker_term->term_id ] ) : 0;
-				}
 				$categories = $terms;
 			}
 		}
@@ -385,7 +381,7 @@ $header_vars         = array(
 							$category_args['event'] = $selected_event_slug;
 						}
 						$category_url   = add_query_arg( $category_args, $speakers_base_url );
-						$category_count = isset( $category_term->wpfa_event_count ) ? absint( $category_term->wpfa_event_count ) : absint( $category_term->count );
+						$category_count = isset( $category_term_counts[ $category_term->term_id ] ) ? absint( $category_term_counts[ $category_term->term_id ] ) : absint( $category_term->count );
 						?>
 						<a href="<?php echo esc_url( $category_url ); ?>" 
 							class="wpfa-filter-btn <?php echo esc_attr( $is_active ? 'active' : '' ); ?>"

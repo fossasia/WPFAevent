@@ -22,10 +22,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-$today           = current_time( 'Y-m-d' );
-$events_per_page = max( 1, (int) apply_filters( 'wpfa_events_per_page', 10 ) );
-$current_page    = max( 1, (int) get_query_var( 'paged', 1 ) );
-$can_manage_content = Wpfaevent_Roles::current_user_can_manage_dashboard();
+$today               = current_time( 'Y-m-d' );
+$events_per_page     = max( 1, (int) apply_filters( 'wpfa_events_per_page', 10 ) );
+$current_page        = max( 1, (int) get_query_var( 'paged', 1 ) );
+$can_manage_content  = Wpfaevent_Roles::current_user_can_manage_dashboard();
 $can_publish_content = Wpfaevent_Roles::current_user_can_publish_content();
 
 // Pull all published event IDs to replicate upstream's data handling pattern.

@@ -349,9 +349,9 @@ class Wpfaevent_Roles {
 	 * @since 1.0.0
 	 *
 	 * @param array<string, bool> $allcaps All capabilities for the user.
-	 * @param array<int, string> $caps    Primitive capabilities being checked.
-	 * @param array<int, mixed>  $args    Capability check arguments.
-	 * @param WP_User              $user    User object.
+	 * @param array<int, string>  $caps    Primitive capabilities being checked.
+	 * @param array<int, mixed>   $args    Capability check arguments.
+	 * @param WP_User             $user    User object.
 	 * @return array<string, bool>
 	 */
 	public static function filter_user_capabilities( $allcaps, $caps, $args, $user ) {
@@ -532,7 +532,7 @@ class Wpfaevent_Roles {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param WP_User              $user    User object.
+	 * @param WP_User                  $user    User object.
 	 * @param array<string, bool>|null $allcaps Optional capability map from user_has_cap.
 	 * @return bool
 	 */

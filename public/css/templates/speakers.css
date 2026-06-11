@@ -684,6 +684,52 @@
 	margin-top: 24px;
 }
 
+.wpfaevent .wpfa-speaker-sessions {
+	background: #f8f9fa;
+	padding: 48px 0;
+}
+
+.wpfaevent .wpfa-speaker-sessions h2 {
+	margin: 0 0 24px;
+	color: var(--text);
+	font-size: 2rem;
+}
+
+.wpfaevent .wpfa-speaker-session-card {
+	max-width: 760px;
+	background: #fff;
+	border: 1px solid #eee;
+	border-radius: var(--card-radius);
+	box-shadow: var(--shadow);
+	padding: 24px;
+}
+
+.wpfaevent .wpfa-speaker-session-card h3 {
+	margin: 0 0 10px;
+	color: var(--brand);
+	font-size: 1.35rem;
+	line-height: 1.3;
+}
+
+.wpfaevent .wpfa-speaker-session-meta {
+	margin: 0 0 16px;
+	color: var(--muted);
+	font-size: 14px;
+}
+
+.wpfaevent .wpfa-speaker-session-abstract {
+	color: #333;
+	line-height: 1.7;
+}
+
+.wpfaevent .wpfa-speaker-session-abstract p:first-child {
+	margin-top: 0;
+}
+
+.wpfaevent .wpfa-speaker-session-abstract p:last-child {
+	margin-bottom: 0;
+}
+
 .wpfaevent .wpfa-linked-events {
 	padding: 48px 0;
 }
