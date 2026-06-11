@@ -74,7 +74,7 @@ class Wpfaevent_Public {
 			}
 		}
 
-		return false;
+		return is_singular( 'wpfa_speaker' );
 	}
 
 	/**
@@ -286,6 +286,19 @@ class Wpfaevent_Public {
 						'resultsCount'       => __( 'Showing %d speakers', 'wpfaevent' ),
 					),
 				)
+			);
+		}
+
+		if ( is_singular( 'wpfa_speaker' ) ) {
+			wp_enqueue_style(
+				$this->plugin_name . '-speakers',
+				plugin_dir_url( __DIR__ ) . 'public/css/templates/speakers.css',
+				array(
+					$this->plugin_name,
+					$this->plugin_name . '-navigation',
+				),
+				$this->version,
+				'all'
 			);
 		}
 
