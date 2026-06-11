@@ -428,8 +428,10 @@ class Wpfaevent_Admin {
 		$all_day = isset( $_POST['wpfa_event_all_day'] );
 		update_post_meta( $post_id, 'wpfa_event_all_day', $all_day ? '1' : '0' );
 
-		$start_time = isset( $_POST['wpfa_event_start_time'] ) ? Wpfaevent_Meta_Event::sanitize_time_value( wp_unslash( $_POST['wpfa_event_start_time'] ) ) : '';
-		$end_time   = isset( $_POST['wpfa_event_end_time'] ) ? Wpfaevent_Meta_Event::sanitize_time_value( wp_unslash( $_POST['wpfa_event_end_time'] ) ) : '';
+		$posted_start_time = isset( $_POST['wpfa_event_start_time'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_start_time'] ) ) : '';
+		$posted_end_time   = isset( $_POST['wpfa_event_end_time'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_end_time'] ) ) : '';
+		$start_time        = Wpfaevent_Meta_Event::sanitize_time_value( $posted_start_time );
+		$end_time          = Wpfaevent_Meta_Event::sanitize_time_value( $posted_end_time );
 
 		if ( $all_day ) {
 			delete_post_meta( $post_id, 'wpfa_event_start_time' );

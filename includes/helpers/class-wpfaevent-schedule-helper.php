@@ -171,7 +171,7 @@ class Wpfaevent_Schedule_Helper {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int              $event_id        Event post ID.
+	 * @param int               $event_id        Event post ID.
 	 * @param DateTimeZone|null $display_timezone Target timezone.
 	 * @return string
 	 */
@@ -194,7 +194,7 @@ class Wpfaevent_Schedule_Helper {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int              $event_id        Event post ID.
+	 * @param int               $event_id        Event post ID.
 	 * @param DateTimeZone|null $display_timezone Target timezone.
 	 * @return string
 	 */
@@ -223,7 +223,7 @@ class Wpfaevent_Schedule_Helper {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int              $event_id        Event post ID.
+	 * @param int               $event_id        Event post ID.
 	 * @param DateTimeZone|null $display_timezone Target timezone.
 	 * @return array<string, mixed>|null
 	 */

@@ -215,7 +215,7 @@ $schedule_page_url = get_permalink();
 				<?php endforeach; ?>
 
 				<?php
-				$total       = max( 1, (int) ceil( $total_events / $events_per_page ) );
+				$total           = max( 1, (int) ceil( $total_events / $events_per_page ) );
 				$pagination_args = array();
 				if ( $selected_schedule_timezone_str && $selected_schedule_timezone_str !== $site_timezone_string ) {
 					$pagination_args['schedule_tz'] = $selected_schedule_timezone_str;

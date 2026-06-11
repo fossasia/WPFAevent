@@ -39,7 +39,7 @@ class Wpfaevent_Meta_Event {
 				'type'              => 'string',
 				'single'            => true,
 				'show_in_rest'      => true,
-				'sanitize_callback' => 'sanitize_text_field',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_date_value' ),
 				'description'       => __( 'Event start date', 'wpfaevent' ),
 			)
 		);
@@ -51,7 +51,7 @@ class Wpfaevent_Meta_Event {
 				'type'              => 'string',
 				'single'            => true,
 				'show_in_rest'      => true,
-				'sanitize_callback' => 'sanitize_text_field',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_date_value' ),
 				'description'       => __( 'Event end date', 'wpfaevent' ),
 			)
 		);
@@ -228,6 +228,36 @@ class Wpfaevent_Meta_Event {
 		}
 
 		return array_map( 'absint', $speaker_ids );
+	}
+
+	/**
+	 * Sanitize an event date value.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $date Raw date.
+	 * @return string
+	 */
+	public static function sanitize_date_value( $date ) {
+		if ( ! is_scalar( $date ) ) {
+			return '';
+		}
+
+		$date = trim( sanitize_text_field( (string) $date ) );
+
+		if ( '' === $date ) {
+			return '';
+		}
+
+		if ( ! preg_match( '/^(\d{4})-(\d{2})-(\d{2})$/', $date, $matches ) ) {
+			return '';
+		}
+
+		if ( ! checkdate( (int) $matches[2], (int) $matches[3], (int) $matches[1] ) ) {
+			return '';
+		}
+
+		return $date;
 	}
 
 	/**
