@@ -78,7 +78,7 @@ class Wpfaevent_Public {
 			}
 		}
 
-		return false;
+		return is_singular( 'wpfa_speaker' );
 	}
 
 	/**
@@ -345,6 +345,19 @@ class Wpfaevent_Public {
 		if ( $this->is_wpfa_template_file_active( 'page-speakers.php' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-speakers' );
 			wp_enqueue_script( $this->plugin_name . '-speakers' );
+		}
+
+		if ( is_singular( 'wpfa_speaker' ) ) {
+			wp_enqueue_style(
+				$this->plugin_name . '-speakers',
+				plugin_dir_url( __DIR__ ) . 'public/css/templates/speakers.css',
+				array(
+					$this->plugin_name,
+					$this->plugin_name . '-navigation',
+				),
+				$this->version,
+				'all'
+			);
 		}
 
 		// Past Events template.

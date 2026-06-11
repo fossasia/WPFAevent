@@ -44,7 +44,7 @@ if ( ! $wpfaevent_is_embed && have_posts() ) {
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent' ); ?>>
-<?php wp_body_open(); // phpcs:ignore Generic.WhiteSpace.ScopeIndent.Incorrect ?>
+	<?php wp_body_open(); ?>
 
 <div id="page" class="site">
 	<?php
@@ -94,7 +94,7 @@ if ( ! $wpfaevent_is_embed && have_posts() ) {
 <?php if ( ! $wpfaevent_is_embed ) : ?>
 </div>
 
-<?php wp_footer(); // phpcs:ignore Generic.WhiteSpace.ScopeIndent.Incorrect ?>
+	<?php wp_footer(); ?>
 </body>
 </html>
 <?php endif; ?>

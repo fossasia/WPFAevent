@@ -145,6 +145,19 @@ class Wpfaevent_Templates {
 	 * @return string Absolute path to the template to load.
 	 */
 	public static function load( $template ) {
+		if ( is_singular( 'wpfa_speaker' ) ) {
+			$candidate = WPFAEVENT_PATH . 'public/templates/single-wpfa-speaker.php';
+
+			if ( file_exists( $candidate ) ) {
+				return $candidate;
+			}
+		}
+
+		// Don't load page templates for block themes.
+		if ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ) {
+			return $template;
+		}
+
 		if ( is_singular( 'page' ) ) {
 			$chosen = get_page_template_slug( get_queried_object_id() );
 			$key    = self::get_template_key_by_file( $chosen );
