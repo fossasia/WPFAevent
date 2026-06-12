@@ -93,7 +93,8 @@ class Wpfaevent_Templates {
 	 */
 	public static function init() {
 		add_filter( 'theme_page_templates', array( __CLASS__, 'register' ) );
-		add_filter( 'template_include', array( __CLASS__, 'load' ) );
+		add_filter( 'single_template', array( __CLASS__, 'load' ), 99 );
+		add_filter( 'template_include', array( __CLASS__, 'load' ), 99 );
 		add_action( 'init', array( __CLASS__, 'register_shortcodes' ) );
 		add_action( 'init', array( __CLASS__, 'register_blocks' ) );
 		add_action( 'init', array( __CLASS__, 'register_patterns' ) );
