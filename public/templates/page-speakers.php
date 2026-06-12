@@ -309,9 +309,8 @@ $header_vars         = array(
 							: apply_filters( 'wpfa_speakers_subtitle', __( 'Choose an event to view its separate speaker list.', 'wpfaevent' ) )
 					);
 					?>
-				</p>
-				
-				<?php if ( $selected_event_id ) : ?>
+					</p>
+					<?php if ( $selected_event_id ) : ?>
 					<form class="wpfa-speakers-search" method="get" action="<?php echo esc_url( $speakers_base_url ); ?>">
 						<label for="wpfa-speaker-search" class="screen-reader-text">
 							<?php esc_html_e( 'Search speakers', 'wpfaevent' ); ?>
@@ -391,7 +390,7 @@ $header_vars         = array(
 						$category_url   = add_query_arg( $category_args, $speakers_base_url );
 						$category_count = isset( $category_term_counts[ $category_term->term_id ] ) ? absint( $category_term_counts[ $category_term->term_id ] ) : absint( $category_term->count );
 						?>
-						<a href="<?php echo esc_url( $category_url ); ?>" 
+						<a href="<?php echo esc_url( $category_url ); ?>"
 							class="wpfa-filter-btn <?php echo esc_attr( $is_active ? 'active' : '' ); ?>"
 							data-filter="<?php echo esc_attr( $category_slug ); ?>">
 							<?php echo esc_html( $category_term->name ); ?>
