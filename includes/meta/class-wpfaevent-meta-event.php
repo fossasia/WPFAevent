@@ -168,6 +168,9 @@ class Wpfaevent_Meta_Event {
 			return array();
 		}
 
-		return array_map( 'absint', $speaker_ids );
+		$speaker_ids = array_map( 'absint', $speaker_ids );
+		$speaker_ids = array_filter( $speaker_ids );
+
+		return array_values( array_unique( $speaker_ids ) );
 	}
 }
