@@ -217,9 +217,6 @@ class Wpfaevent {
 		$this->loader->add_action( 'save_post_wpfa_event', $this->plugin_admin, 'save_event_meta' );
 		$this->loader->add_action( 'save_post_wpfa_speaker', $this->plugin_admin, 'save_speaker_meta' );
 
-		// Show notice for block theme users.
-		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'maybe_show_block_theme_notice' );
-
 		// Register AJAX handlers for speakers page.
 		$plugin_speakers_handler = new Wpfaevent_Speakers_Handler( $this->plugin_name, $this->version );
 		$this->loader->add_action( 'wp_ajax_wpfa_get_speaker', $plugin_speakers_handler, 'ajax_get_speaker' );

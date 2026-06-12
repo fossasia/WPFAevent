@@ -22,7 +22,12 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; }
 
-get_header();
+$wpfaevent_is_embed         = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+$wpfaevent_use_theme_layout = ! $wpfaevent_is_embed && ( ! function_exists( 'wp_is_block_theme' ) || ! wp_is_block_theme() );
+
+if ( $wpfaevent_use_theme_layout ) {
+	get_header();
+}
 // Fetch customizable pieces (later we can add an Options page; for now use filters or placeholders).
 
 /**
@@ -75,7 +80,31 @@ $logos = (array) apply_filters(
 	)
 );
 ?>
+<?php if ( ! $wpfaevent_is_embed && ! $wpfaevent_use_theme_layout ) : ?>
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+	<meta charset="<?php bloginfo( 'charset' ); ?>">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<?php wp_head(); ?>
+</head>
+<body <?php body_class( 'wpfaevent' ); ?>>
+	<?php wp_body_open(); ?>
+
+<div id="page" class="site">
+	<?php
+	$nav_partial = WPFAEVENT_PATH . 'public/partials/header.php';
+	if ( file_exists( $nav_partial ) ) {
+		include $nav_partial;
+	}
+	?>
+<?php endif; ?>
+
+<?php if ( $wpfaevent_is_embed ) : ?>
+<section class="wpfa-landing">
+<?php else : ?>
 <main class="wpfa-landing">
+<?php endif; ?>
 	<section class="wpfa-hero">
 		<h1><?php echo esc_html( $hero_title ); ?></h1>
 		<p class="wpfa-hero-sub"><?php echo esc_html( $hero_sub ); ?></p>
@@ -91,5 +120,19 @@ $logos = (array) apply_filters(
 			</ul>
 		</section>
 	<?php endif; ?>
+<?php if ( $wpfaevent_is_embed ) : ?>
+</section>
+<?php else : ?>
 </main>
-<?php get_footer(); ?>
+<?php endif; ?>
+
+<?php if ( ! $wpfaevent_is_embed && ! $wpfaevent_use_theme_layout ) : ?>
+	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
+</div>
+
+	<?php wp_footer(); ?>
+</body>
+</html>
+<?php elseif ( $wpfaevent_use_theme_layout ) : ?>
+	<?php get_footer(); ?>
+<?php endif; ?>

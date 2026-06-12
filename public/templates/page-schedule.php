@@ -23,6 +23,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+$wpfaevent_is_embed         = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+$wpfaevent_use_theme_layout = ! $wpfaevent_is_embed && ( ! function_exists( 'wp_is_block_theme' ) || ! wp_is_block_theme() );
+
+if ( $wpfaevent_use_theme_layout ) {
+	get_header();
+}
+
 $events_per_page = max( 1, (int) apply_filters( 'wpfa_schedule_events_per_page', 20 ) );
 $current_page    = max( 1, (int) get_query_var( 'paged', 1 ) );
 
@@ -122,6 +129,7 @@ $header_vars = array(
 
 $schedule_page_url = get_permalink();
 ?>
+<?php if ( ! $wpfaevent_is_embed && ! $wpfaevent_use_theme_layout ) : ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -130,7 +138,7 @@ $schedule_page_url = get_permalink();
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent wpfa-schedule-template' ); ?>>
-<?php wp_body_open(); ?>
+	<?php wp_body_open(); ?>
 
 <div id="page" class="site">
 	<?php
@@ -147,88 +155,103 @@ $schedule_page_url = get_permalink();
 		include $nav_partial;
 	}
 	?>
+<?php endif; ?>
 
-	<main class="wpfa-schedule">
-		<div class="container">
-			<div class="wpfa-schedule-head">
-				<div>
-					<h1><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></h1>
-					<p><?php esc_html_e( 'Upcoming events grouped by start date.', 'wpfaevent' ); ?></p>
-				</div>
-				<?php if ( ! empty( $schedule_events ) ) : ?>
-					<form class="wpfa-event-timezone-form" action="<?php echo esc_url( $schedule_page_url ); ?>" method="get">
-						<label for="wpfa-schedule-timezone">
-							<span><?php esc_html_e( 'Timezone', 'wpfaevent' ); ?></span>
-							<select id="wpfa-schedule-timezone" class="wpfa-event-timezone-select" name="schedule_tz">
-								<?php foreach ( $schedule_timezone_options as $timezone_option ) : ?>
-									<option value="<?php echo esc_attr( $timezone_option ); ?>" <?php selected( $selected_schedule_timezone_str, $timezone_option ); ?>>
-										<?php echo esc_html( $format_timezone_label( $timezone_option ) ); ?>
-									</option>
-								<?php endforeach; ?>
-							</select>
-						</label>
-						<button type="submit"><?php esc_html_e( 'Convert', 'wpfaevent' ); ?></button>
-					</form>
-				<?php endif; ?>
+<?php if ( $wpfaevent_is_embed ) : ?>
+<section class="wpfa-schedule">
+<?php else : ?>
+<main class="wpfa-schedule">
+<?php endif; ?>
+	<div class="container">
+		<div class="wpfa-schedule-head">
+			<div>
+				<h1><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></h1>
+				<p><?php esc_html_e( 'Upcoming events grouped by start date.', 'wpfaevent' ); ?></p>
 			</div>
-
-			<?php if ( $groups ) : ?>
-				<?php foreach ( $groups as $group ) : ?>
-					<section class="wpfa-schedule-group">
-						<h2 class="wpfa-schedule-date"><?php echo esc_html( $group['date'] ); ?></h2>
-						<ul class="wpfa-schedule-items">
-							<?php foreach ( $group['events'] as $schedule_event ) : ?>
-								<li class="wpfa-schedule-item">
-									<strong>
-										<a href="<?php echo esc_url( $schedule_event['permalink'] ); ?>">
-											<?php echo esc_html( $schedule_event['title'] ); ?>
-										</a>
-									</strong>
-									<?php if ( ! empty( $schedule_event['time_label'] ) ) : ?>
-										<span class="wpfa-schedule-time"><?php echo esc_html( $schedule_event['time_label'] ); ?></span>
-									<?php endif; ?>
-									<?php if ( ! empty( $schedule_event['location'] ) ) : ?>
-										<span class="wpfa-schedule-location"><?php echo esc_html( $schedule_event['location'] ); ?></span>
-									<?php endif; ?>
-									<?php if ( ! empty( $schedule_event['calendar_url'] ) ) : ?>
-										<?php
-										$calendar_label = sprintf(
-											/* translators: %s: event title. */
-											__( 'Add %s to Google Calendar', 'wpfaevent' ),
-											$schedule_event['title']
-										);
-										?>
-										<a
-											class="wpfa-calendar-action"
-											href="<?php echo esc_url( $schedule_event['calendar_url'] ); ?>"
-											target="_blank"
-											rel="noopener"
-											aria-label="<?php echo esc_attr( $calendar_label ); ?>"
-										>
-											<?php esc_html_e( 'Add to calendar', 'wpfaevent' ); ?>
-										</a>
-									<?php endif; ?>
-								</li>
+			<?php if ( ! empty( $schedule_events ) ) : ?>
+				<form class="wpfa-event-timezone-form" action="<?php echo esc_url( $schedule_page_url ); ?>" method="get">
+					<label for="wpfa-schedule-timezone">
+						<span><?php esc_html_e( 'Timezone', 'wpfaevent' ); ?></span>
+						<select id="wpfa-schedule-timezone" class="wpfa-event-timezone-select" name="schedule_tz">
+							<?php foreach ( $schedule_timezone_options as $timezone_option ) : ?>
+								<option value="<?php echo esc_attr( $timezone_option ); ?>" <?php selected( $selected_schedule_timezone_str, $timezone_option ); ?>>
+									<?php echo esc_html( $format_timezone_label( $timezone_option ) ); ?>
+								</option>
 							<?php endforeach; ?>
-						</ul>
-					</section>
-				<?php endforeach; ?>
-
-				<?php
-				$total           = max( 1, (int) ceil( $total_events / $events_per_page ) );
-				$pagination_args = array();
-				if ( $selected_schedule_timezone_str && $selected_schedule_timezone_str !== $site_timezone_string ) {
-					$pagination_args['schedule_tz'] = $selected_schedule_timezone_str;
-				}
-				wpfa_render_pagination( $total, $current_page, __( 'Schedule pagination', 'wpfaevent' ), $pagination_args );
-				?>
-			<?php else : ?>
-				<p><?php esc_html_e( 'No schedule entries yet.', 'wpfaevent' ); ?></p>
+						</select>
+					</label>
+					<button type="submit"><?php esc_html_e( 'Convert', 'wpfaevent' ); ?></button>
+				</form>
 			<?php endif; ?>
 		</div>
-	</main>
+
+		<?php if ( $groups ) : ?>
+			<?php foreach ( $groups as $group ) : ?>
+				<section class="wpfa-schedule-group">
+					<h2 class="wpfa-schedule-date"><?php echo esc_html( $group['date'] ); ?></h2>
+					<ul class="wpfa-schedule-items">
+						<?php foreach ( $group['events'] as $schedule_event ) : ?>
+							<li class="wpfa-schedule-item">
+								<strong>
+									<a href="<?php echo esc_url( $schedule_event['permalink'] ); ?>">
+										<?php echo esc_html( $schedule_event['title'] ); ?>
+									</a>
+								</strong>
+								<?php if ( ! empty( $schedule_event['time_label'] ) ) : ?>
+									<span class="wpfa-schedule-time"><?php echo esc_html( $schedule_event['time_label'] ); ?></span>
+								<?php endif; ?>
+								<?php if ( ! empty( $schedule_event['location'] ) ) : ?>
+									<span class="wpfa-schedule-location"><?php echo esc_html( $schedule_event['location'] ); ?></span>
+								<?php endif; ?>
+								<?php if ( ! empty( $schedule_event['calendar_url'] ) ) : ?>
+									<?php
+									$calendar_label = sprintf(
+										/* translators: %s: event title. */
+										__( 'Add %s to Google Calendar', 'wpfaevent' ),
+										$schedule_event['title']
+									);
+									?>
+									<a
+										class="wpfa-calendar-action"
+										href="<?php echo esc_url( $schedule_event['calendar_url'] ); ?>"
+										target="_blank"
+										rel="noopener"
+										aria-label="<?php echo esc_attr( $calendar_label ); ?>"
+									>
+										<?php esc_html_e( 'Add to calendar', 'wpfaevent' ); ?>
+									</a>
+								<?php endif; ?>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</section>
+			<?php endforeach; ?>
+
+			<?php
+			$total           = max( 1, (int) ceil( $total_events / $events_per_page ) );
+			$pagination_args = array();
+			if ( $selected_schedule_timezone_str && $selected_schedule_timezone_str !== $site_timezone_string ) {
+				$pagination_args['schedule_tz'] = $selected_schedule_timezone_str;
+			}
+			wpfa_render_pagination( $total, $current_page, __( 'Schedule pagination', 'wpfaevent' ), $pagination_args );
+			?>
+		<?php else : ?>
+			<p><?php esc_html_e( 'No schedule entries yet.', 'wpfaevent' ); ?></p>
+		<?php endif; ?>
+	</div>
+<?php if ( $wpfaevent_is_embed ) : ?>
+</section>
+<?php else : ?>
+</main>
+<?php endif; ?>
+
+<?php if ( ! $wpfaevent_is_embed && ! $wpfaevent_use_theme_layout ) : ?>
+	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
 </div>
 
-<?php wp_footer(); ?>
+	<?php wp_footer(); ?>
 </body>
 </html>
+<?php elseif ( $wpfaevent_use_theme_layout ) : ?>
+	<?php get_footer(); ?>
+<?php endif; ?>
