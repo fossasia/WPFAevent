@@ -153,9 +153,12 @@ class Wpfaevent_Templates {
 			}
 		}
 
-		// Don't load page templates for block themes.
-		if ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ) {
-			return $template;
+		if ( is_singular( 'wpfa_event' ) ) {
+			$candidate = WPFAEVENT_PATH . 'public/templates/single-wpfa-event.php';
+
+			if ( file_exists( $candidate ) ) {
+				return $candidate;
+			}
 		}
 
 		if ( is_singular( 'page' ) ) {

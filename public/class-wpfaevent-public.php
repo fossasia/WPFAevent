@@ -59,6 +59,10 @@ class Wpfaevent_Public {
 	 * @return   bool    True if WPFA template is active.
 	 */
 	private function is_wpfa_template() {
+		if ( is_singular( array( 'wpfa_event', 'wpfa_speaker' ) ) ) {
+			return true;
+		}
+
 		if ( class_exists( 'Wpfaevent_Templates' ) ) {
 			return ! empty( Wpfaevent_Templates::get_active_template_keys() );
 		}
@@ -78,7 +82,7 @@ class Wpfaevent_Public {
 			}
 		}
 
-		return is_singular( 'wpfa_speaker' );
+		return false;
 	}
 
 	/**
@@ -430,6 +434,10 @@ class Wpfaevent_Public {
 		if ( $this->is_wpfa_template_file_active( 'page-events.php' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-events' );
 			wp_enqueue_script( $this->plugin_name . '-events' );
+		}
+
+		if ( is_singular( 'wpfa_event' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-events' );
 		}
 
 		/**
