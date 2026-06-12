@@ -236,9 +236,6 @@ class Wpfaevent {
 		$this->loader->add_action( 'save_post_wpfa_event', 'Wpfaevent_Meta_Event', 'save_meta' );
 		$this->loader->add_action( 'save_post_wpfa_speaker', 'Wpfaevent_Meta_Speaker', 'save_meta' );
 
-		// Show notice for block theme users.
-		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'maybe_show_block_theme_notice' );
-
 		// Keep event-owned speakers out of the global speaker admin list.
 		$this->loader->add_action( 'restrict_manage_posts', $this->plugin_admin, 'render_speaker_event_filter' );
 		$this->loader->add_action( 'pre_get_posts', $this->plugin_admin, 'filter_speaker_admin_list' );

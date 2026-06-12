@@ -6,13 +6,13 @@
  /**
  * Meta Box Styling
  */
-.wpfaevent-speakers-select {
+.wpfaevent-relationship-select {
     width: 100%;
     min-height: 150px;
     padding: 4px;
 }
 
 /* Ensure proper spacing in meta boxes */
-.wpfaevent-speakers-select option {
+.wpfaevent-relationship-select option {
     padding: 2px 2px;
 }

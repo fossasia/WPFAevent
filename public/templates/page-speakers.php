@@ -13,6 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+
 /**
  * Filters the number of speakers per page.
  *
@@ -250,6 +252,7 @@ $header_vars         = array(
 );
 
 ?>
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -258,7 +261,7 @@ $header_vars         = array(
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent' ); ?>>
-<?php wp_body_open(); ?>
+	<?php wp_body_open(); ?>
 
 <div id="page" class="site">
 	<?php
@@ -276,8 +279,13 @@ $header_vars         = array(
 		include $nav_partial;
 	}
 	?>
+<?php endif; ?>
 
+<?php if ( $wpfaevent_is_embed ) : ?>
+	<section class="wpfa-speakers">
+<?php else : ?>
 	<main class="wpfa-speakers">
+<?php endif; ?>
 		<section class="wpfa-speakers-hero">
 			<div class="container">
 				<h1>
@@ -482,6 +490,9 @@ $header_vars         = array(
 			<?php endif; ?>
 			<?php wp_reset_postdata(); ?>
 		</div>
+<?php if ( $wpfaevent_is_embed ) : ?>
+	</section>
+<?php else : ?>
 	</main>
 
 	<footer class="wpfa-footer">
@@ -499,6 +510,7 @@ $header_vars         = array(
 		</div>
 	</footer>
 </div><!-- #page -->
+<?php endif; ?>
 
 <?php
 // Load admin modals if the user is an admin.
@@ -510,6 +522,8 @@ if ( Wpfaevent_Roles::current_user_can_manage_dashboard() ) :
 endif;
 ?>
 
-<?php wp_footer(); ?>
+<?php if ( ! $wpfaevent_is_embed ) : ?>
+	<?php wp_footer(); ?>
 </body>
 </html>
+<?php endif; ?>

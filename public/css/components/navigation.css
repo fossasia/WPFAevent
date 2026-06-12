@@ -28,7 +28,8 @@
 	border-radius: 999px;
 	font-weight: 600;
 	color: #222;
-	font-size: 0.9rem;
+	font-size: 1rem;
+	line-height: 1.25;
 }
 
 .wpfaevent .nav-links a.active {
@@ -118,7 +119,8 @@
     font-weight: 700;
     text-decoration: none;
     transition: all 0.2s ease;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    line-height: 1.25;
 }
 
 /* Register button (primary) */

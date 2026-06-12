@@ -1231,23 +1231,24 @@ class Wpfaevent_Meta_Event {
 		 */
 	private static function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
 		$event_id          = absint( $event_id );
-		$previous_speakers = self::sanitize_post_id_list( $previous_speakers );
+		$previous_speakers = self::sanitize_post_id_list(
+			array_merge(
+				self::sanitize_post_id_list( $previous_speakers ),
+				Wpfaevent_Meta_Speaker::get_speakers_linked_to_event( $event_id )
+			)
+		);
 		$current_speakers  = self::sanitize_post_id_list( $current_speakers );
 
 		if ( ! $event_id ) {
 			return;
 		}
 
-		if ( empty( $previous_speakers ) ) {
-			$previous_speakers = Wpfaevent_Meta_Speaker::get_speakers_linked_to_event( $event_id );
-		}
-
 		foreach ( array_diff( $previous_speakers, $current_speakers ) as $speaker_id ) {
-			Wpfaevent_Meta_Speaker::remove_event_from_speaker( $speaker_id, $event_id );
+			Wpfaevent_Meta_Speaker::remove_event_from_speaker( $speaker_id, $event_id, false );
 		}
 
 		foreach ( $current_speakers as $speaker_id ) {
-			Wpfaevent_Meta_Speaker::add_event_to_speaker( $speaker_id, $event_id );
+			Wpfaevent_Meta_Speaker::add_event_to_speaker( $speaker_id, $event_id, false );
 		}
 	}
 
@@ -1264,6 +1265,9 @@ class Wpfaevent_Meta_Event {
 			return array();
 		}
 
-		return array_map( 'absint', $speaker_ids );
+		$speaker_ids = array_map( 'absint', $speaker_ids );
+		$speaker_ids = array_filter( $speaker_ids );
+
+		return array_values( array_unique( $speaker_ids ) );
 	}
 }

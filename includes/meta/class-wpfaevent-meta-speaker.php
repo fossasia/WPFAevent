@@ -289,14 +289,105 @@ class Wpfaevent_Meta_Speaker {
 	}
 
 	/**
+	 * Find events whose event-side speaker meta includes a speaker.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int          $speaker_id  Speaker post ID.
+	 * @param string|array $post_status Event post status filter.
+	 * @return array<int>
+	 */
+	public static function get_events_referencing_speaker( $speaker_id, $post_status = 'any' ) {
+		$speaker_id = absint( $speaker_id );
+
+		if ( ! $speaker_id ) {
+			return array();
+		}
+
+		$event_ids = get_posts(
+			array(
+				'post_type'      => 'wpfa_event',
+				'post_status'    => $post_status,
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Speaker-event links are stored in post meta.
+				'meta_query'     => array(
+					'relation' => 'OR',
+					array(
+						'key'     => 'wpfa_event_speakers',
+						'value'   => 'i:' . $speaker_id . ';',
+						'compare' => 'LIKE',
+					),
+					array(
+						'key'     => 'wpfa_event_speakers',
+						'value'   => '"' . $speaker_id . '"',
+						'compare' => 'LIKE',
+					),
+					array(
+						'key'     => 'wpfa_event_speakers',
+						'value'   => (string) $speaker_id,
+						'compare' => '=',
+					),
+				),
+			)
+		);
+
+		return Wpfaevent_Meta_Event::sanitize_post_id_list( $event_ids );
+	}
+
+	/**
+	 * Get normalized event IDs linked to a speaker from both relationship sides.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int          $speaker_id  Speaker post ID.
+	 * @param string|array $post_status Event post status filter.
+	 * @return array<int>
+	 */
+	public static function get_events_linked_to_speaker( $speaker_id, $post_status = 'publish' ) {
+		$speaker_id = absint( $speaker_id );
+
+		if ( ! $speaker_id || get_post_type( $speaker_id ) !== self::$post_type ) {
+			return array();
+		}
+
+		$event_ids = Wpfaevent_Meta_Event::sanitize_post_id_list(
+			array_merge(
+				self::get_speaker_event_ids( $speaker_id ),
+				self::get_events_referencing_speaker( $speaker_id, $post_status )
+			)
+		);
+
+		if ( empty( $event_ids ) || empty( $post_status ) || 'any' === $post_status ) {
+			return $event_ids;
+		}
+
+		$event_ids = get_posts(
+			array(
+				'post_type'      => 'wpfa_event',
+				'post_status'    => $post_status,
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'post__in'       => $event_ids,
+				'orderby'        => 'post__in',
+				'no_found_rows'  => true,
+			)
+		);
+
+		return Wpfaevent_Meta_Event::sanitize_post_id_list( $event_ids );
+	}
+
+	/**
 	 * Add an event ID to a speaker's related events.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $speaker_id Speaker post ID.
-	 * @param int $event_id   Event post ID.
+	 * @param int  $speaker_id       Speaker post ID.
+	 * @param int  $event_id         Event post ID.
+	 * @param bool $check_capability Whether to require edit access to the speaker.
 	 */
-	public static function add_event_to_speaker( $speaker_id, $event_id ) {
+	public static function add_event_to_speaker( $speaker_id, $event_id, $check_capability = true ) {
 		$speaker_id = absint( $speaker_id );
 		$event_id   = absint( $event_id );
 
@@ -304,7 +395,7 @@ class Wpfaevent_Meta_Speaker {
 			return;
 		}
 
-		if ( ! current_user_can( 'edit_post', $speaker_id ) ) {
+		if ( $check_capability && ! current_user_can( 'edit_post', $speaker_id ) ) {
 			return;
 		}
 
@@ -319,10 +410,11 @@ class Wpfaevent_Meta_Speaker {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $speaker_id Speaker post ID.
-	 * @param int $event_id   Event post ID.
+	 * @param int  $speaker_id       Speaker post ID.
+	 * @param int  $event_id         Event post ID.
+	 * @param bool $check_capability Whether to require edit access to the speaker.
 	 */
-	public static function remove_event_from_speaker( $speaker_id, $event_id ) {
+	public static function remove_event_from_speaker( $speaker_id, $event_id, $check_capability = true ) {
 		$speaker_id = absint( $speaker_id );
 		$event_id   = absint( $event_id );
 
@@ -330,7 +422,7 @@ class Wpfaevent_Meta_Speaker {
 			return;
 		}
 
-		if ( ! current_user_can( 'edit_post', $speaker_id ) ) {
+		if ( $check_capability && ! current_user_can( 'edit_post', $speaker_id ) ) {
 			return;
 		}
 
@@ -389,13 +481,6 @@ class Wpfaevent_Meta_Speaker {
 	 * @return array Sanitized array of integers.
 	 */
 	public static function sanitize_event_ids( $event_ids ) {
-		if ( ! is_array( $event_ids ) ) {
-			return array();
-		}
-
-		$event_ids = array_map( 'absint', $event_ids );
-		$event_ids = array_filter( $event_ids );
-
-		return array_values( array_unique( $event_ids ) );
+		return Wpfaevent_Meta_Event::sanitize_post_id_list( $event_ids );
 	}
 }

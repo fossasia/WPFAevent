@@ -18,6 +18,10 @@
 
 	background: var(--event-soft);
 	color: var(--event-ink);
+	font-size: 16px;
+	font-weight: 400;
+	letter-spacing: 0;
+	line-height: 1.5;
 	overflow-x: hidden;
 }
 
@@ -91,9 +95,10 @@
 
 .wpfaevent .wpfa-event-kicker {
 	color: rgba(255, 255, 255, 0.78);
-	font-size: 0.78rem;
+	font-size: 0.9rem;
 	font-weight: 800;
 	letter-spacing: 0;
+	line-height: 1.25;
 	margin: 0 0 12px;
 	text-transform: uppercase;
 }
@@ -111,7 +116,8 @@
 
 .wpfaevent .wpfa-event-hero-text {
 	color: rgba(255, 255, 255, 0.9);
-	font-size: 1.05rem;
+	font-size: 1.12rem;
+	font-weight: 400;
 	line-height: 1.7;
 	margin-top: 22px;
 	max-width: 720px;
@@ -135,8 +141,9 @@
 	border-radius: var(--event-radius);
 	color: #fff;
 	display: inline-flex;
-	font-size: 0.94rem;
+	font-size: 1rem;
 	font-weight: 700;
+	line-height: 1.25;
 	min-height: 38px;
 	padding: 8px 12px;
 }
@@ -167,8 +174,9 @@
 
 .wpfaevent .wpfa-event-ticket-head p {
 	color: var(--event-muted);
-	font-size: 0.86rem;
+	font-size: 0.95rem;
 	font-weight: 800;
+	line-height: 1.25;
 	text-transform: uppercase;
 }
 
@@ -176,7 +184,9 @@
 	background: #e8f4ff;
 	border-radius: 999px;
 	color: var(--event-primary-dark);
-	font-size: 0.82rem;
+	font-size: 0.92rem;
+	font-weight: 800;
+	line-height: 1.2;
 	padding: 5px 10px;
 }
 
@@ -187,6 +197,7 @@
 	box-shadow: 0 8px 18px rgba(213, 16, 7, 0.2);
 	color: #fff;
 	display: flex;
+	font-size: 1.12rem;
 	font-weight: 800;
 	justify-content: center;
 	line-height: 1.2;
@@ -208,6 +219,7 @@
 	border-radius: var(--event-radius);
 	color: var(--event-primary-dark);
 	display: flex;
+	font-size: 1.02rem;
 	font-weight: 800;
 	justify-content: center;
 	line-height: 1.2;
@@ -228,7 +240,7 @@
 	align-items: center;
 	color: var(--event-muted);
 	display: inline-flex;
-	font-size: 0.9rem;
+	font-size: 0.95rem;
 	font-weight: 800;
 	justify-content: center;
 	line-height: 1.2;
@@ -271,7 +283,7 @@
 
 .wpfaevent .wpfa-event-facts dt {
 	color: var(--event-muted);
-	font-size: 0.78rem;
+	font-size: 0.9rem;
 	font-weight: 800;
 	line-height: 1.35;
 	text-transform: uppercase;
@@ -280,6 +292,7 @@
 
 .wpfaevent .wpfa-event-facts dd {
 	color: var(--event-ink);
+	font-size: 1.08rem;
 	font-weight: 700;
 	line-height: 1.35;
 	min-width: 0;

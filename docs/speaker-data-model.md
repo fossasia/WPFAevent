@@ -27,14 +27,16 @@ All speaker metadata above is registered through `register_post_meta()` and expo
 
 Events store their assigned speakers in `wpfa_event_speakers` as an array of `wpfa_speaker` post IDs. Speakers store their related events in `wpfa_speaker_events` as an array of `wpfa_event` post IDs.
 
-When an event is saved, the event-speaker sync flow should keep both sides aligned:
+When an event is saved, the event-speaker sync flow keeps both sides aligned:
 
-1. Read the previous `wpfa_event_speakers` value.
+1. Read the previous `wpfa_event_speakers` value and merge any reverse `wpfa_speaker_events` links already pointing to the event.
 2. Sanitize and save the current speaker IDs on the event.
 3. Add the event ID to every newly assigned speaker's `wpfa_speaker_events`.
 4. Remove the event ID from speakers that were removed from the event.
 
-Speaker profile pages use `wpfa_speaker_events` first and also check `wpfa_event_speakers` as a fallback so older data can still render linked events.
+The Speaker edit screen also exposes the same relationship from the speaker side. Saving the speaker's related events writes `wpfa_speaker_events` and syncs each selected or removed event's `wpfa_event_speakers` list.
+
+Speaker profile pages merge `wpfa_speaker_events` with events that reference the speaker through `wpfa_event_speakers`, so older one-sided data can still render linked published events.
 
 ## Session Data
 

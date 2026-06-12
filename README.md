@@ -1,7 +1,7 @@
 # WordPress FOSSASIA Event Plugin (WPFAevent)
 
-The **FOSSASIA Event Plugin** provides WordPress integrations for [Eventyay](https://eventyay.com)-based events.  
-It allows you to display event sessions, speakers, and schedules directly on WordPress pages using **shortcodes**, **manual content**, or **custom templates**.
+The **FOSSASIA Event Plugin** provides WordPress integrations for [Eventyay](https://eventyay.com)-based events.
+It lets you display event landing pages, speakers, events, past events, schedules, and code of conduct content using classic page templates, Gutenberg blocks, or shortcodes. Shortcodes and blocks use embedded template rendering so WPFA content can live inside existing theme pages without the standalone template header/footer.
 
 This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible with the **eventyay** platform.
 
@@ -10,7 +10,9 @@ This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible 
 - Display **speakers**, **sessions**, and **event schedules** from Eventyay or other compatible APIs.
 - Works with the unified **Eventyay (Django + Vue 3)** architecture.
 - Includes an **admin settings page** to configure JSON API endpoints and cache duration.
-- Supports **shortcodes** for embedding event data anywhere on your site.
+- Supports WPFA template **shortcodes** for embedding event pages anywhere on your site.
+- Provides Gutenberg **blocks** for the landing, speakers, events, past events, schedule, and code of conduct templates.
+- Uses embedded template output for shortcodes and blocks so templates work in classic and block themes.
 - Built with modern WordPress development practices:
   - Class-based structure
   - Hooks and actions
@@ -43,16 +45,18 @@ This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible 
    * Enter the Eventyay base URL, organizer slug, optional event slug, and API token.
    * Choose the imported event post status, then run the import.
 
-4. Add shortcodes to your pages or posts, for example:
+4. Add WPFA template shortcodes to your pages or posts, for example:
 
    ```text
-   [event_speakers]
-   [event_sessions]
-   [event_schedule]
+   [wpfaevent_landing]
+   [wpfaevent_speakers]
+   [wpfaevent_events]
+   [wpfaevent_past_events]
+   [wpfaevent_schedule]
+   [wpfaevent_code_of_conduct]
    ```
 
-   These will automatically display data fetched from your configured endpoints.
-   If no API data is available, placeholder content will appear instead.
+   You can also add the matching WPFA blocks in the block editor.
 
 ## Directory Structure
 
@@ -93,19 +97,36 @@ event-plugin/
 
 ## Shortcodes Overview
 
-| Shortcode          | Description                                             | Output Source               |
-| ------------------ | ------------------------------------------------------- | --------------------------- |
-| `[event_speakers]` | Displays the list of speakers.                          | API endpoint or placeholder |
-| `[event_sessions]` | Displays event sessions with title, time, and abstract. | API endpoint or placeholder |
-| `[event_schedule]` | Displays daily schedule in a table format.              | API endpoint or placeholder |
+| Shortcode                             | Description                                      | Output Source  |
+| ------------------------------------- | ------------------------------------------------ | -------------- |
+| `[wpfaevent_landing]`                 | Displays the WPFA event landing page.            | WPFA template  |
+| `[wpfaevent_speakers]`                | Displays the speaker directory.                  | WPFA template  |
+| `[wpfaevent_events]`                  | Displays the upcoming events hub.                | WPFA template  |
+| `[wpfaevent_past_events]`             | Displays the past events archive.                | WPFA template  |
+| `[wpfaevent_schedule]`                | Displays the event schedule.                     | WPFA template  |
+| `[wpfaevent_code_of_conduct]`         | Displays the code of conduct content.            | WPFA template  |
+| `[wpfaevent_template template="events"]` | Embeds a selected WPFA template by template key. | WPFA template  |
 
-Each shortcode can accept optional attributes — for example:
+The generic `wpfaevent_template` shortcode accepts a `template` attribute. Supported values include `landing`, `speakers`, `events`, `past_events`, `schedule`, and `code_of_conduct`.
+
+## Blocks Overview
+
+| Block Title              | Block Name                         |
+| ------------------------ | ---------------------------------- |
+| WPFA Landing             | `wpfaevent/landing`                |
+| WPFA Speakers            | `wpfaevent/speakers`               |
+| WPFA Events              | `wpfaevent/events`                 |
+| WPFA Past Events         | `wpfaevent/past-events`            |
+| WPFA Schedule            | `wpfaevent/schedule`               |
+| WPFA Code of Conduct     | `wpfaevent/code-of-conduct`        |
+
+WPFA blocks render dynamically and share the same embedded template mode as the shortcodes.
+
+Each generic template shortcode can accept optional attributes, for example:
 
 ```text
-[event_schedule profile="summit2026"]
+[wpfaevent_template template="speakers"]
 ```
-
-if multiple event profiles are configured in settings.
 
 ## Speaker Data Model
 

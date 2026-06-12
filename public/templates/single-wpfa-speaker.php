@@ -69,52 +69,7 @@ if ( $talk_start || $talk_end ) {
 
 $has_session_details = $talk_title || $talk_date || $talk_start || $talk_end || $talk_abstract;
 
-$stored_event_ids = get_post_meta( $speaker_id, 'wpfa_speaker_events', true );
-$stored_event_ids = is_array( $stored_event_ids ) ? array_map( 'absint', $stored_event_ids ) : array();
-$stored_event_ids = array_filter( $stored_event_ids );
-
-$relationship_event_ids = array();
-if ( empty( $stored_event_ids ) ) {
-	$relationship_event_ids = get_posts(
-		array(
-			'post_type'      => 'wpfa_event',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'fields'         => 'ids',
-			'no_found_rows'  => true,
-			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Speaker-event links are stored in post meta.
-			'meta_query'     => array(
-				'relation' => 'OR',
-				array(
-					'key'     => 'wpfa_event_speakers',
-					'value'   => 'i:' . $speaker_id . ';',
-					'compare' => 'LIKE',
-				),
-				array(
-					'key'     => 'wpfa_event_speakers',
-					'value'   => '"' . $speaker_id . '"',
-					'compare' => 'LIKE',
-				),
-				array(
-					'key'     => 'wpfa_event_speakers',
-					'value'   => (string) $speaker_id,
-					'compare' => '=',
-				),
-			),
-		)
-	);
-}
-
-$linked_event_ids = array_values(
-	array_unique(
-		array_filter(
-			array_map(
-				'absint',
-				array_merge( $stored_event_ids, $relationship_event_ids )
-			)
-		)
-	)
-);
+$linked_event_ids = Wpfaevent_Meta_Speaker::get_events_linked_to_speaker( $speaker_id, 'publish' );
 
 usort(
 	$linked_event_ids,

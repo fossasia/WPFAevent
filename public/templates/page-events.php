@@ -22,6 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+$wpfaevent_is_embed  = ! empty( $GLOBALS['wpfaevent_template_embed'] );
 $today               = current_time( 'Y-m-d' );
 $events_per_page     = max( 1, (int) apply_filters( 'wpfa_events_per_page', 10 ) );
 $current_page        = max( 1, (int) get_query_var( 'paged', 1 ) );
@@ -132,6 +133,7 @@ $header_vars = array(
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
 );
 ?>
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -140,7 +142,7 @@ $header_vars = array(
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent' ); ?>>
-<?php wp_body_open(); ?>
+	<?php wp_body_open(); ?>
 
 <div id="page" class="site">
 	<?php
@@ -158,8 +160,13 @@ $header_vars = array(
 		include $nav_partial;
 	}
 	?>
+<?php endif; ?>
 
+<?php if ( $wpfaevent_is_embed ) : ?>
+	<section class="wpfa-events">
+<?php else : ?>
 	<main>
+<?php endif; ?>
 		<!-- Hero Section -->
 		<header class="page-hero">
 			<div class="hero-bg" aria-hidden="true"></div>
@@ -326,11 +333,15 @@ $header_vars = array(
 				</aside>
 			</div>
 		</div>
+<?php if ( $wpfaevent_is_embed ) : ?>
+	</section>
+<?php else : ?>
 	</main>
 
 	<!-- Include Footer Custom Partials -->
 	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
 </div>
+<?php endif; ?>
 
 <?php
 if ( $can_manage_content ) {
@@ -338,6 +349,8 @@ if ( $can_manage_content ) {
 }
 ?>
 
-<?php wp_footer(); ?>
+<?php if ( ! $wpfaevent_is_embed ) : ?>
+	<?php wp_footer(); ?>
 </body>
 </html>
+<?php endif; ?>

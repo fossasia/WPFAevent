@@ -23,9 +23,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$events_per_page   = max( 1, (int) apply_filters( 'wpfa_schedule_events_per_page', 20 ) );
-$current_page      = max( 1, (int) get_query_var( 'paged', 1 ) );
-$schedule_page_url = get_permalink();
+$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+$events_per_page    = max( 1, (int) apply_filters( 'wpfa_schedule_events_per_page', 20 ) );
+$current_page       = max( 1, (int) get_query_var( 'paged', 1 ) );
+$schedule_page_url  = get_permalink();
 
 if ( ! $schedule_page_url && class_exists( 'Wpfaevent_Schedule_Helper' ) ) {
 	$schedule_page_url = Wpfaevent_Schedule_Helper::get_schedule_page_url();
@@ -304,6 +305,7 @@ if ( ! empty( $languages ) ) {
 	$filter_form_classes .= ' has-language-filter';
 }
 ?>
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -312,7 +314,7 @@ if ( ! empty( $languages ) ) {
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent wpfa-schedule-template' ); ?><?php echo $event_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>
-<?php wp_body_open(); ?>
+	<?php wp_body_open(); ?>
 
 <div id="page" class="site">
 	<?php
@@ -329,8 +331,13 @@ if ( ! empty( $languages ) ) {
 		include $nav_partial;
 	}
 	?>
+<?php endif; ?>
 
+<?php if ( $wpfaevent_is_embed ) : ?>
+	<section class="wpfa-schedule">
+<?php else : ?>
 	<main class="wpfa-schedule">
+<?php endif; ?>
 		<div class="container">
 			<div class="wpfa-schedule-head">
 				<div>
@@ -539,9 +546,13 @@ if ( ! empty( $languages ) ) {
 				<p><?php esc_html_e( 'No schedule entries yet.', 'wpfaevent' ); ?></p>
 			<?php endif; ?>
 		</div>
+<?php if ( $wpfaevent_is_embed ) : ?>
+	</section>
+<?php else : ?>
 	</main>
 </div>
 
-<?php wp_footer(); ?>
+	<?php wp_footer(); ?>
 </body>
 </html>
+<?php endif; ?>
