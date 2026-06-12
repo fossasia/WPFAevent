@@ -26,7 +26,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-get_header();
+$wpfaevent_is_embed         = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+$wpfaevent_use_theme_layout = ! $wpfaevent_is_embed && ( ! function_exists( 'wp_is_block_theme' ) || ! wp_is_block_theme() );
+
+if ( $wpfaevent_use_theme_layout ) {
+	get_header();
+}
 
 /**
  * MVP parity: we don’t have sessions yet, so render events grouped by date.
@@ -39,18 +44,22 @@ $current_page    = max( 1, (int) get_query_var( 'paged', 1 ) );
 $args = array(
 	'post_type'      => 'wpfa_event',
 	'post_status'    => 'publish',
-	'posts_per_page' => -1,
+		// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Required to sort schedule output by stored event start date.
+	'meta_key'       => 'wpfa_event_start_date',
+	'meta_type'      => 'DATE',
+	'orderby'        => 'meta_value',
+	'order'          => 'ASC',
+	'posts_per_page' => $events_per_page,
+	'paged'          => $current_page,
 	'fields'         => 'ids',
-	'no_found_rows'  => true,
 );
 
-$event_ids       = get_posts( $args );
-$schedule_events = array();
-
-foreach ( $event_ids as $eid ) {
+$q      = new WP_Query( $args );
+$groups = array();
+foreach ( $q->posts as $eid ) {
 	$d = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_start_date', true ) );
 
-	// Normalize the date for proper chronological sorting.
+		// Normalize the date for proper chronological sorting.
 	if ( $d ) {
 		// Convert to a timestamp for sorting, and keep the original for display.
 		// Use explicit formats for predictable parsing instead of relying on strtotime().
@@ -74,47 +83,15 @@ foreach ( $event_ids as $eid ) {
 			$sort_key     = $timestamp;
 			$display_date = $d;
 		} else {
-			// Invalid or unexpected date format; treat it as TBD.
+				// Invalid or unexpected date format; treat it as TBD.
 			$sort_key     = PHP_INT_MAX;
 			$display_date = __( 'TBD', 'wpfaevent' );
 		}
 	} else {
-		// No date; treat it as TBD.
+			// No date; treat it as TBD.
 		$sort_key     = PHP_INT_MAX;
 		$display_date = __( 'TBD', 'wpfaevent' );
 	}
-
-	$schedule_events[] = array(
-		'id'       => (int) $eid,
-		'sort_key' => $sort_key,
-		'date'     => $display_date,
-	);
-}
-
-usort(
-	$schedule_events,
-	static function ( $event_a, $event_b ) {
-		if ( $event_a['sort_key'] === $event_b['sort_key'] ) {
-			if ( $event_a['id'] === $event_b['id'] ) {
-				return 0;
-			}
-
-			return ( $event_a['id'] < $event_b['id'] ) ? -1 : 1;
-		}
-
-		return ( $event_a['sort_key'] < $event_b['sort_key'] ) ? -1 : 1;
-	}
-);
-
-$total_events          = count( $schedule_events );
-$offset                = ( $current_page - 1 ) * $events_per_page;
-$paged_schedule_events = array_slice( $schedule_events, $offset, $events_per_page );
-$groups                = array();
-
-foreach ( $paged_schedule_events as $schedule_event ) {
-	$eid          = $schedule_event['id'];
-	$sort_key     = $schedule_event['sort_key'];
-	$display_date = $schedule_event['date'];
 
 	if ( ! isset( $groups[ $sort_key ] ) ) {
 		$groups[ $sort_key ] = array(
@@ -126,11 +103,38 @@ foreach ( $paged_schedule_events as $schedule_event ) {
 
 	// MVP note: sessions are not available yet.
 	// A future iteration may add a Session CPT and attach
-	// session IDs to each date group in a future release.
+		// session IDs to each date group in a future release.
 
 }
+
+// Sort by timestamp in chronological order.
+ksort( $groups, SORT_NUMERIC );
 ?>
+<?php if ( ! $wpfaevent_is_embed && ! $wpfaevent_use_theme_layout ) : ?>
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+	<meta charset="<?php bloginfo( 'charset' ); ?>">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<?php wp_head(); ?>
+</head>
+<body <?php body_class( 'wpfaevent' ); ?>>
+	<?php wp_body_open(); ?>
+
+<div id="page" class="site">
+	<?php
+	$nav_partial = WPFAEVENT_PATH . 'public/partials/header.php';
+	if ( file_exists( $nav_partial ) ) {
+		include $nav_partial;
+	}
+	?>
+<?php endif; ?>
+
+<?php if ( $wpfaevent_is_embed ) : ?>
+<section class="wpfa-schedule">
+<?php else : ?>
 <main class="wpfa-schedule">
+<?php endif; ?>
 	<h1><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></h1>
 	<?php
 	if ( $groups ) :
@@ -144,24 +148,38 @@ foreach ( $paged_schedule_events as $schedule_event ) {
 							$loc         = sanitize_text_field( get_post_meta( $eid, 'wpfa_event_location', true ) );
 							$url         = get_permalink( $eid );
 						?>
-					<li>
-					<strong><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $event_title ); ?></a></strong>
-						<?php
-						if ( $loc ) :
-							?>
-						— <span><?php echo esc_html( $loc ); ?></span><?php endif; ?>
-					</li>
+				<li>
+						<strong><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $event_title ); ?></a></strong>
+							<?php
+							if ( $loc ) :
+								?>
+								— <span><?php echo esc_html( $loc ); ?></span><?php endif; ?>
+				</li>
 			<?php endforeach; ?>
 		</ul>
-	<?php endforeach; // End foreach groups. ?>
-		<?php
-		// Pagination.
-		$total = max( 1, (int) ceil( $total_events / $events_per_page ) );
-		wpfa_render_pagination( $total, $current_page, __( 'Schedule pagination', 'wpfaevent' ) );
-		?>
+		<?php endforeach; // End foreach groups. ?>
+			<?php
+			// Pagination.
+			$total = max( 1, (int) ceil( $q->found_posts / $events_per_page ) );
+			wpfa_render_pagination( $total, $current_page, __( 'Schedule pagination', 'wpfaevent' ) );
+			?>
 
 	<?php else : ?>
 		<p><?php esc_html_e( 'No schedule entries yet.', 'wpfaevent' ); ?></p>
 	<?php endif; ?>
+<?php if ( $wpfaevent_is_embed ) : ?>
+</section>
+<?php else : ?>
 </main>
-<?php get_footer(); ?>
+<?php endif; ?>
+
+<?php if ( ! $wpfaevent_is_embed && ! $wpfaevent_use_theme_layout ) : ?>
+	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
+</div>
+
+	<?php wp_footer(); ?>
+</body>
+</html>
+<?php elseif ( $wpfaevent_use_theme_layout ) : ?>
+	<?php get_footer(); ?>
+<?php endif; ?>

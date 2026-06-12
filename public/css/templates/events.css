@@ -9,7 +9,7 @@
 }
 
 /* Page Layout */
-.page-layout {
+.wpfaevent .page-layout {
 	display: grid;
 	grid-template-columns: 1fr 320px;
 	align-items: start;
@@ -18,33 +18,33 @@
 }
 
 @media (max-width: 980px) {
-	.page-layout {
+	.wpfaevent .page-layout {
 		grid-template-columns: 1fr;
 	}
 }
 
-.main-content {
+.wpfaevent .main-content {
 	background: #fff;
 	padding: 30px;
 	border-radius: var(--card-radius);
 	box-shadow: var(--shadow);
 }
 
-.sidebar {
+.wpfaevent .sidebar {
 	background: #fff;
 	padding: 20px;
 	border-radius: var(--card-radius);
 	box-shadow: var(--shadow);
 }
 
-.sidebar h2 {
+.wpfaevent .sidebar h2 {
 	margin-top: 0;
 	font-size: 1.5rem;
 	color: var(--brand);
 }
 
 /* Hero Section (matches MVP) */
-.page-hero {
+.wpfaevent .page-hero {
 	text-align: center;
 	padding: 60px 20px;
 	background: #fff;
@@ -53,7 +53,7 @@
 	overflow: hidden;
 }
 
-.hero-bg {
+.wpfaevent .hero-bg {
 	position: absolute;
 	inset: 0;
 	z-index: 0;
@@ -64,18 +64,18 @@
 	pointer-events: none;
 }
 
-.page-hero > * {
+.wpfaevent .page-hero > * {
 	position: relative;
 	z-index: 1;
 }
 
-.page-hero h1 {
+.wpfaevent .page-hero h1 {
 	margin: 0 0 10px;
 	font-size: 2.5rem;
 	color: var(--brand);
 }
 
-.page-hero p {
+.wpfaevent .page-hero p {
 	color: var(--muted);
 	font-size: 1.1rem;
 	max-width: 70ch;
@@ -83,13 +83,13 @@
 }
 
 /* Event Cards (matches MVP) */
-#events-container {
+.wpfaevent #events-container {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 	gap: 20px;
 }
 
-.event-card {
+.wpfaevent .event-card {
 	background: #fff;
 	border-radius: var(--card-radius);
 	box-shadow: var(--shadow);
@@ -100,32 +100,32 @@
 	transition: transform .2s ease, box-shadow .2s ease;
 }
 
-.event-card:hover {
+.wpfaevent .event-card:hover {
 	transform: translateY(-5px);
 	box-shadow: 0 15px 35px rgba(11,11,11,.1);
 }
 
-.event-card-image {
+.wpfaevent .event-card-image {
 	height: 180px;
 	background-color: #f0f0f0;
 }
 
-.event-card-image img {
+.wpfaevent .event-card-image img {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
 }
 
-.event-card-content {
+.wpfaevent .event-card-content {
 	padding: 15px;
 }
 
-.event-card-content h3 {
+.wpfaevent .event-card-content h3 {
 	margin: 0 0 10px;
 	font-size: 1.25rem;
 }
 
-.event-card-content p {
+.wpfaevent .event-card-content p {
 	margin: 5px 0 0;
 	color: var(--muted);
 	font-size: 0.95rem;
@@ -134,26 +134,26 @@
 	gap: 8px;
 }
 
-.event-card-description {
+.wpfaevent .event-card-description {
 	font-size: 0.9rem;
 	color: var(--muted);
 	line-height: 1.5;
 	margin-top: 10px;
 }
 
-.event-card-content p svg {
+.wpfaevent .event-card-content p svg {
 	width: 16px;
 	height: 16px;
 	flex-shrink: 0;
 }
 
-.event-card-link {
+.wpfaevent .event-card-link {
 	text-decoration: none;
 	color: inherit;
 }
 
 /* Event Card Actions (Admin) */
-.event-card-actions {
+.wpfaevent .event-card-actions {
 	position: absolute;
 	top: 10px;
 	right: 10px;
@@ -162,7 +162,7 @@
 	gap: 5px;
 }
 
-.event-card-actions button {
+.wpfaevent .event-card-actions button {
 	background: rgba(0,0,0,0.6);
 	color: white;
 	border: none;
@@ -172,11 +172,11 @@
 	cursor: pointer;
 }
 
-.event-card-actions button:hover {
+.wpfaevent .event-card-actions button:hover {
 	background: rgba(0,0,0,0.8);
 }
 
-.btn-edit-content {
+.wpfaevent .btn-edit-content {
 	background: #ffc107;
 	color: #212529 !important;
 	border: none;
@@ -189,40 +189,40 @@
 	display: inline-block;
 }
 
-.btn-edit-content:hover {
+.wpfaevent .btn-edit-content:hover {
 	background: #e0a800;
 }
 
-.event-card-actions .btn-edit-event {
+.wpfaevent .event-card-actions .btn-edit-event {
 	background: #17a2b8;
 }
 
-.event-card-actions .btn-edit-event:hover {
+.wpfaevent .event-card-actions .btn-edit-event:hover {
 	background: #138496;
 }
 
-.event-card-actions .btn-delete-event {
+.wpfaevent .event-card-actions .btn-delete-event {
 	background: #dc3545;
 }
 
-.event-card-actions .btn-delete-event:hover {
+.wpfaevent .event-card-actions .btn-delete-event:hover {
 	background: #c82333;
 }
 
 /* Main Content Header */
-.main-content-header {
+.wpfaevent .main-content-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	margin-bottom: 20px;
 }
 
-.main-content-header h1 {
+.wpfaevent .main-content-header h1 {
 	margin: 0;
 }
 
 /* Search and Filter */
-.wpfaevent-search-section {
+.wpfaevent .wpfaevent-search-section {
 	background: transparent;
 	padding: 0px;
 	margin-bottom: 30px;
@@ -236,7 +236,7 @@
 	font-size: 16px;
 }
 
-.results-info {
+.wpfaevent .results-info {
 	text-align: center;
 	margin: 20px 0;
 	font-size: 1.1rem;
@@ -277,44 +277,44 @@
 }
 
 /* News List (Sidebar) */
-.news-list {
+.wpfaevent .news-list {
 	list-style: none;
 	padding: 0;
 	margin: 0;
 }
 
-.news-item {
+.wpfaevent .news-item {
 	border-bottom: 1px solid #eee;
 	padding: 15px 0;
 }
 
-.news-item:last-child {
+.wpfaevent .news-item:last-child {
 	border-bottom: none;
 }
 
-.news-item a {
+.wpfaevent .news-item a {
 	font-weight: 600;
 	color: var(--text);
 	display: block;
 	margin-bottom: 5px;
 }
 
-.news-item a:hover {
+.wpfaevent .news-item a:hover {
 	color: var(--brand);
 }
 
-.news-date {
+.wpfaevent .news-date {
 	font-size: 0.85rem;
 	color: var(--muted);
 }
 
-.news-cta {
+.wpfaevent .news-cta {
 	margin-top: 20px;
 	text-align: center;
 }
 
 /* Modals */
-.modal {
+.wpfaevent .modal {
 	display: none;
 	position: fixed;
 	z-index: 100;
@@ -328,7 +328,7 @@
 	justify-content: center;
 }
 
-.modal-content {
+.wpfaevent .modal-content {
 	background-color: #fefefe;
 	margin: auto;
 	padding: 20px 30px 30px;
@@ -340,7 +340,7 @@
 	box-shadow: 0 15px 40px rgba(0,0,0,0.2);
 }
 
-.close-btn {
+.wpfaevent .close-btn {
 	color: #aaa;
 	position: absolute;
 	top: 10px;
@@ -350,31 +350,31 @@
 	cursor: pointer;
 }
 
-#createEventForm,
-#editEventForm,
-#edit-footer-form {
+.wpfaevent #createEventForm,
+.wpfaevent #editEventForm,
+.wpfaevent #edit-footer-form {
 	display: flex;
 	flex-direction: column;
 	gap: 15px;
 }
 
-#createEventForm h2,
-#editEventForm h2,
-#edit-footer-form h2 {
+.wpfaevent #createEventForm h2,
+.wpfaevent #editEventForm h2,
+.wpfaevent #edit-footer-form h2 {
 	margin-top: 0;
 	color: var(--brand);
 }
 
-#createEventForm label,
-#editEventForm label,
-#edit-footer-form label {
+.wpfaevent #createEventForm label,
+.wpfaevent #editEventForm label,
+.wpfaevent #edit-footer-form label {
 	font-weight: 600;
 	margin-bottom: -10px;
 }
 
-#createEventForm input,
-#editEventForm input,
-#edit-footer-form input {
+.wpfaevent #createEventForm input,
+.wpfaevent #editEventForm input,
+.wpfaevent #edit-footer-form input {
 	width: 100%;
 	padding: 10px;
 	border: 1px solid #ddd;
@@ -383,22 +383,22 @@
 	font-size: 1rem;
 }
 
-.char-counter {
+.wpfaevent .char-counter {
 	font-size: 0.85rem;
 	color: var(--muted);
 	text-align: right;
 	margin-top: -10px;
 }
 
-#createEventForm button,
-#editEventForm button,
-#edit-footer-form button {
+.wpfaevent #createEventForm button,
+.wpfaevent #editEventForm button,
+.wpfaevent #edit-footer-form button {
 	margin-top: 15px;
 	align-self: flex-start;
 }
 
 /* Footer Styling (matches MVP) */
-.footer {
+.wpfaevent .footer {
 	padding: 28px 0;
 	color: var(--muted);
 	border-top: 1px solid #f3f4f6;
@@ -407,35 +407,35 @@
 	margin-top: 40px;
 }
 
-.footer-content {
+.wpfaevent .footer-content {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	gap: 15px;
 }
 
-.social-icons {
+.wpfaevent .social-icons {
 	display: flex;
 	gap: 1rem;
 	margin-top: 1rem;
 	justify-content: center;
 }
 
-.social-icons a {
+.wpfaevent .social-icons a {
 	color: var(--muted);
 }
 
-.social-icons svg {
+.wpfaevent .social-icons svg {
 	width: 24px;
 	height: 24px;
 }
 
-.social-icons a:hover {
+.wpfaevent .social-icons a:hover {
 	color: var(--brand);
 }
 
 /* Placeholder Text */
-#events-container .placeholder-text {
+.wpfaevent #events-container .placeholder-text {
 	grid-column: 1 / -1;
 	text-align: center;
 	color: var(--muted);
@@ -445,7 +445,7 @@
 /**
  * Admin Warning Styling
  */
-.wpfaevent-admin-warning {
+.wpfaevent .wpfaevent-admin-warning {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -458,7 +458,7 @@
     font-size: 0.9rem;
 }
 
-.wpfaevent-warning-icon {
+.wpfaevent .wpfaevent-warning-icon {
     width: 18px;
     height: 18px;
     flex-shrink: 0;
@@ -469,57 +469,196 @@
    ========================================================================== */
 
 /* Past Events Section */
-.past-events-section {
+.wpfaevent .past-events-section {
     margin-top: 60px;
     padding-top: 40px;
     border-top: 2px solid #eee;
 }
 
-.past-events-section .main-content-header {
+.wpfaevent .past-events-section .main-content-header {
     margin-bottom: 20px;
 }
 
-.past-events-section .main-content-header h2 {
+.wpfaevent .past-events-section .main-content-header h2 {
     font-size: 1.8rem;
     color: var(--text);
     margin: 0;
 }
 
 /* Past event cards - same styling as regular events but without admin features */
-.past-event-card {
+.wpfaevent .past-event-card {
     opacity: 0.95;
     transition: opacity 0.2s ease;
 }
 
-.past-event-card:hover {
+.wpfaevent .past-event-card:hover {
     opacity: 1;
 }
 
 /* Search should also filter past events */
-#past-events-container {
+.wpfaevent #past-events-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
 }
 
 /* When searching, hide/show past events too */
-#past-events-container .event-card {
+.wpfaevent #past-events-container .event-card {
     display: block; /* Default: show */
 }
 
-#past-events-container .event-card.search-hidden {
+.wpfaevent #past-events-container .event-card.search-hidden {
     display: none; /* Hidden by search */
 }
 
 /* Update results info to include past events */
-.results-info {
+.wpfaevent .results-info {
     margin-bottom: 20px;
+}
+
+/* Single Event Template */
+.wpfaevent.wpfa-single-event-template {
+	font-size: 16px;
+	font-weight: 400;
+	letter-spacing: 0;
+	line-height: 1.5;
+}
+
+.wpfaevent .wpfa-single-event {
+	font-size: 1rem;
+	line-height: 1.6;
+	min-height: 70vh;
+}
+
+.wpfaevent .wpfa-single-event .btn {
+	font-size: 1rem;
+	line-height: 1.2;
+	min-height: 42px;
+}
+
+.wpfaevent .wpfa-single-event-hero .container {
+	position: relative;
+	z-index: 1;
+}
+
+.wpfaevent .wpfa-single-event-hero h1 {
+	font-size: clamp(2.5rem, 5vw, 4.75rem);
+	font-weight: 800;
+	letter-spacing: 0;
+	line-height: 1;
+}
+
+.wpfaevent .wpfa-single-event-hero p {
+	font-size: 1.1rem;
+	font-weight: 400;
+	line-height: 1.65;
+}
+
+.wpfaevent .wpfa-single-event-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 12px;
+	margin-top: 28px;
+}
+
+.wpfaevent .wpfa-single-event-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+	gap: 30px;
+	align-items: start;
+	margin-top: 40px;
+}
+
+.wpfaevent .wpfa-single-event-content,
+.wpfaevent .wpfa-single-event-details {
+	background: #fff;
+	border-radius: var(--card-radius);
+	box-shadow: var(--shadow);
+}
+
+.wpfaevent .wpfa-single-event-content {
+	overflow: hidden;
+}
+
+.wpfaevent .wpfa-single-event-image {
+	margin: 0;
+	background: #f0f0f0;
+}
+
+.wpfaevent .wpfa-single-event-image img {
+	width: 100%;
+	max-height: 460px;
+	object-fit: cover;
+}
+
+.wpfaevent .wpfa-single-event-body {
+	padding: 30px;
+	color: var(--text);
+	font-size: 1rem;
+	line-height: 1.7;
+}
+
+.wpfaevent .wpfa-single-event-body > *:first-child {
+	margin-top: 0;
+}
+
+.wpfaevent .wpfa-single-event-body > *:last-child {
+	margin-bottom: 0;
+}
+
+.wpfaevent .wpfa-single-event-details {
+	padding: 24px;
+}
+
+.wpfaevent .wpfa-single-event-details h2 {
+	margin: 0 0 20px;
+	color: var(--brand);
+	font-size: 1.5rem;
+	font-weight: 800;
+	letter-spacing: 0;
+	line-height: 1.2;
+}
+
+.wpfaevent .wpfa-single-event-detail {
+	padding: 16px 0;
+	border-top: 1px solid #eee;
+}
+
+.wpfaevent .wpfa-single-event-detail strong {
+	display: block;
+	margin-bottom: 6px;
+	color: var(--text);
+	font-size: 0.92rem;
+	font-weight: 800;
+	letter-spacing: 0;
+	line-height: 1.25;
+	text-transform: uppercase;
+}
+
+.wpfaevent .wpfa-single-event-detail span {
+	color: var(--muted);
+	display: block;
+	font-size: 1.08rem;
+	font-weight: 700;
+	letter-spacing: 0;
+	line-height: 1.35;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .past-events-section {
+    .wpfaevent .past-events-section {
         margin-top: 40px;
         padding-top: 30px;
     }
+
+	.wpfaevent .wpfa-single-event-layout {
+		grid-template-columns: 1fr;
+		gap: 20px;
+	}
+
+	.wpfaevent .wpfa-single-event-body,
+	.wpfaevent .wpfa-single-event-details {
+		padding: 20px;
+	}
 }

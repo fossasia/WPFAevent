@@ -14,7 +14,7 @@
  * @wordpress-plugin
  * Plugin Name:       FOSSASIA event plugin
  * Plugin URI:        https://github.com/fossasia/WPFAevent
- * Description:       The FOSSASIA Event Plugin provides WordPress integrations for Eventyay-based events.
+ * Description:       Display Eventyay/FOSSASIA event templates with classic page templates, blocks, shortcodes, and embeddable output.
  *
  * Version:           1.0.0
  * Author:            FOSSASIA

@@ -890,22 +890,4 @@ class Wpfaevent_Admin {
 
 		$this->update_post_id_list_meta( $event_id, 'wpfa_event_speakers', $speaker_ids );
 	}
-
-	/**
-	 * Show notice when block themes are active.
-	 *
-	 * @since 1.0.0
-	 */
-	public function maybe_show_block_theme_notice() {
-		if ( ! function_exists( 'wp_is_block_theme' ) || ! wp_is_block_theme() ) {
-			return;
-		}
-
-		echo '<div class="notice notice-warning is-dismissible"><p>';
-		echo esc_html__(
-			'WPFA Event page templates require a classic theme. Block themes (e.g., Twenty Twenty-Five) do not support PHP page templates.',
-			'wpfaevent'
-		);
-		echo '</p></div>';
-	}
 }
