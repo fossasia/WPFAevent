@@ -68,6 +68,19 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
+		// Legacy single event time used by the front-end event modal.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_time',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => array( __CLASS__, 'sanitize_time_value' ),
+				'description'       => __( 'Event time', 'wpfaevent' ),
+			)
+		);
+
 		register_post_meta(
 			self::$post_type,
 			'wpfa_event_end_time',
@@ -366,8 +379,39 @@ class Wpfaevent_Meta_Event {
 			return rest_sanitize_boolean( $value );
 		}
 
-		return '' === self::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_start_time', true ) )
-			&& '' === self::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_end_time', true ) );
+		return false;
+	}
+
+	/**
+	 * Build an ISO 8601 datetime for timed manual events.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $date     Date in Y-m-d format.
+	 * @param string $time     Time in H:i format.
+	 * @param string $timezone Timezone identifier.
+	 * @return string
+	 */
+	public static function build_datetime_value( $date, $time, $timezone ) {
+		$date     = self::sanitize_date_value( $date );
+		$time     = self::sanitize_time_value( $time );
+		$timezone = self::sanitize_timezone( $timezone );
+
+		if ( '' === $date || '' === $time ) {
+			return '';
+		}
+
+		if ( '' === $timezone ) {
+			$timezone = self::get_event_timezone( 0 );
+		}
+
+		try {
+			$datetime = new DateTimeImmutable( $date . ' ' . $time, new DateTimeZone( $timezone ) );
+		} catch ( Exception $exception ) {
+			return '';
+		}
+
+		return $datetime->format( DATE_ATOM );
 	}
 
 	/**

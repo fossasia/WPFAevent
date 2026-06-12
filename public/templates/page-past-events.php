@@ -160,52 +160,62 @@ $header_vars = array(
 					<?php
 					foreach ( $paged_past_events as $past_event ) :
 						?>
-						<?php
-						$event_id      = $past_event['id'];
-						$event_title   = get_the_title( $event_id );
-						$excerpt       = get_the_excerpt( $event_id );
-						$start_date    = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
-						$end_date      = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
-						$location      = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
-						$event_url_raw = get_post_meta( $event_id, 'wpfa_event_url', true );
-						$event_url     = $event_url_raw ? esc_url( $event_url_raw ) : get_permalink( $event_id );
+							<?php
+							$event_id      = $past_event['id'];
+							$event_title   = get_the_title( $event_id );
+							$excerpt       = get_the_excerpt( $event_id );
+							$start_date    = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
+							$end_date      = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
+							$location      = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
+							$event_url_raw = get_post_meta( $event_id, 'wpfa_event_url', true );
+							$event_url     = $event_url_raw ? esc_url( $event_url_raw ) : get_permalink( $event_id );
+							$calendar_data = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_calendar_data( $event_id ) : array();
+							$calendar_data = is_wp_error( $calendar_data ) ? array() : $calendar_data;
 
-						$image_url = get_the_post_thumbnail_url( $event_id, 'medium' );
+							$image_url = get_the_post_thumbnail_url( $event_id, 'medium' );
 
-						// Format date for display.
-						$display_date = '';
+							// Format date for display.
+							$display_date      = '';
+							$display_time_meta = '';
 
-						if ( ! empty( $start_date ) ) {
-							$start_datetime = date_create( $start_date );
+							if ( ! empty( $calendar_data['date_label'] ) ) {
+								$display_date      = sanitize_text_field( $calendar_data['date_label'] );
+								$display_time_meta = ! empty( $calendar_data['time_label'] ) ? sanitize_text_field( $calendar_data['time_label'] ) : '';
 
-							if ( $start_datetime instanceof DateTime ) {
+								if ( $display_time_meta && empty( $calendar_data['all_day'] ) && ! empty( $calendar_data['timezone_label'] ) ) {
+									$display_time_meta .= ' (' . sanitize_text_field( $calendar_data['timezone_label'] ) . ')';
+								}
+							} elseif ( ! empty( $start_date ) ) {
+								$start_datetime = date_create( $start_date );
 
-								// Default: single-day event.
-								$display_date = date_i18n(
-									get_option( 'date_format' ),
-									$start_datetime->getTimestamp()
-								);
+								if ( $start_datetime instanceof DateTime ) {
 
-								// Multi-day event.
-								if ( ! empty( $end_date ) && $end_date !== $start_date ) {
-									$end_datetime = date_create( $end_date );
+									// Default: single-day event.
+									$display_date = date_i18n(
+										get_option( 'date_format' ),
+										$start_datetime->getTimestamp()
+									);
 
-									if ( $end_datetime instanceof DateTime ) {
-										$display_date =
-											date_i18n( get_option( 'date_format' ), $start_datetime->getTimestamp() )
-											. ' – ' .
-											date_i18n( get_option( 'date_format' ), $end_datetime->getTimestamp() );
+									// Multi-day event.
+									if ( ! empty( $end_date ) && $end_date !== $start_date ) {
+										$end_datetime = date_create( $end_date );
+
+										if ( $end_datetime instanceof DateTime ) {
+											$display_date =
+												date_i18n( get_option( 'date_format' ), $start_datetime->getTimestamp() )
+												. ' – ' .
+												date_i18n( get_option( 'date_format' ), $end_datetime->getTimestamp() );
+										}
 									}
 								}
 							}
-						}
 
-						// If no excerpt, strip tags and get a trimmed version of content.
-						if ( empty( $excerpt ) ) {
-							$content = get_post_field( 'post_content', $event_id );
-							$excerpt = wp_trim_words( $content, 20, '...' );
-						}
-						?>
+							// If no excerpt, strip tags and get a trimmed version of content.
+							if ( empty( $excerpt ) ) {
+								$content = get_post_field( 'post_content', $event_id );
+								$excerpt = wp_trim_words( $content, 20, '...' );
+							}
+							?>
 						<article class="wpfa-past-event-card">
 							<a href="<?php echo esc_url( $event_url ); ?>" class="wpfa-past-event-card-link">
 								<?php if ( $image_url ) : ?>
@@ -240,6 +250,9 @@ $header_vars = array(
 													<path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"></path>
 												</svg>
 												<?php echo esc_html( $display_date ); ?>
+												<?php if ( $display_time_meta ) : ?>
+													<span class="wpfa-past-event-card-time"><?php echo esc_html( ' | ' . $display_time_meta ); ?></span>
+												<?php endif; ?>
 											</div>
 										<?php endif; ?>
 										<?php if ( $location ) : ?>

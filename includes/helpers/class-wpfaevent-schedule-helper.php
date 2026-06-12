@@ -95,30 +95,37 @@ class Wpfaevent_Schedule_Helper {
 	 * @return string
 	 */
 	public static function format_timezone_label( $timezone_string, $primary_timezone_string = '' ) {
-		$label = str_replace( '_', ' ', $timezone_string );
+		unset( $primary_timezone_string );
 
-		if ( $timezone_string === $primary_timezone_string ) {
-			return sprintf(
-				/* translators: %s: primary timezone. */
-				__( 'Event timezone (%s)', 'wpfaevent' ),
-				$label
-			);
+		$label  = trim( (string) $timezone_string );
+		$offset = self::format_timezone_offset( $timezone_string );
+
+		return '' !== $offset ? sprintf( '%1$s (UTC%2$s)', $label, $offset ) : $label;
+	}
+
+	/**
+	 * Format the current UTC offset for a timezone identifier.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $timezone_string Timezone identifier.
+	 * @return string
+	 */
+	public static function format_timezone_offset( $timezone_string ) {
+		try {
+			$timezone = new DateTimeZone( $timezone_string );
+			$datetime = new DateTimeImmutable( 'now', $timezone );
+		} catch ( Exception $exception ) {
+			return '';
 		}
 
-		$site_timezone_string = wp_timezone_string();
-		if ( '' === trim( (string) $site_timezone_string ) ) {
-			$site_timezone_string = wp_timezone()->getName();
-		}
+		$offset  = $timezone->getOffset( $datetime );
+		$sign    = $offset < 0 ? '-' : '+';
+		$offset  = absint( $offset );
+		$hours   = (int) floor( $offset / HOUR_IN_SECONDS );
+		$minutes = (int) floor( ( $offset % HOUR_IN_SECONDS ) / MINUTE_IN_SECONDS );
 
-		if ( $timezone_string === $site_timezone_string ) {
-			return sprintf(
-				/* translators: %s: WordPress site timezone. */
-				__( 'Site timezone (%s)', 'wpfaevent' ),
-				$label
-			);
-		}
-
-		return $label;
+		return sprintf( '%s%02d:%02d', $sign, $hours, $minutes );
 	}
 
 	/**
@@ -238,21 +245,36 @@ class Wpfaevent_Schedule_Helper {
 			$display_timezone = wp_timezone();
 		}
 
-		$datetime = self::get_event_start_datetime( $event_id );
+		$calendar_data = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_calendar_data( $event_id ) : array();
+		$calendar_data = is_wp_error( $calendar_data ) ? array() : $calendar_data;
+		$calendar_url  = ! empty( $calendar_data ) && class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::build_google_calendar_url( $calendar_data ) : '';
+		$all_day       = ! empty( $calendar_data['all_day'] );
+		$datetime      = self::get_event_start_datetime( $event_id );
 
 		if ( $datetime ) {
 			$display_datetime = $datetime->setTimezone( $display_timezone );
+			$date_label       = $all_day && ! empty( $calendar_data['date_label'] )
+				? sanitize_text_field( $calendar_data['date_label'] )
+				: wp_date( get_option( 'date_format' ), $display_datetime->getTimestamp(), $display_timezone );
+			$group_key        = $all_day && ! empty( $calendar_data['start_date'] )
+				? sanitize_text_field( $calendar_data['start_date'] )
+				: $display_datetime->format( 'Y-m-d' );
+			$time_label       = $all_day ? __( 'All day', 'wpfaevent' ) : '';
+
+			if ( ! $all_day ) {
+				$time_label = self::format_event_time_label( $calendar_data, $event_id, $display_timezone );
+			}
 
 			return array(
 				'id'           => $event_id,
 				'sort_key'     => $display_datetime->getTimestamp(),
-				'date_label'   => wp_date( get_option( 'date_format' ), $display_datetime->getTimestamp(), $display_timezone ),
-				'time_label'   => self::format_event_start_time( $event_id, $display_timezone ),
-				'group_key'    => $display_datetime->format( 'Y-m-d' ),
+				'date_label'   => $date_label,
+				'time_label'   => $time_label,
+				'group_key'    => $group_key,
 				'location'     => sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) ),
 				'title'        => get_the_title( $event_id ),
 				'permalink'    => get_permalink( $event_id ),
-				'calendar_url' => class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_google_calendar_url( $event_id ) : '',
+				'calendar_url' => $calendar_url,
 			);
 		}
 
@@ -265,7 +287,31 @@ class Wpfaevent_Schedule_Helper {
 			'location'     => sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) ),
 			'title'        => get_the_title( $event_id ),
 			'permalink'    => get_permalink( $event_id ),
-			'calendar_url' => class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_google_calendar_url( $event_id ) : '',
+			'calendar_url' => $calendar_url,
 		);
+	}
+
+	/**
+	 * Format a timed event's start and end time for schedule display.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array<string, mixed> $calendar_data     Normalized calendar data.
+	 * @param int                  $event_id          Event post ID.
+	 * @param DateTimeZone         $display_timezone  Target timezone.
+	 * @return string
+	 */
+	private static function format_event_time_label( $calendar_data, $event_id, $display_timezone ) {
+		if ( ! empty( $calendar_data['start_datetime'] ) && $calendar_data['start_datetime'] instanceof DateTimeInterface ) {
+			$time_format = get_option( 'time_format' );
+			$start_label = wp_date( $time_format, $calendar_data['start_datetime']->getTimestamp(), $display_timezone );
+			$end_label   = ! empty( $calendar_data['end_datetime'] ) && $calendar_data['end_datetime'] instanceof DateTimeInterface
+				? wp_date( $time_format, $calendar_data['end_datetime']->getTimestamp(), $display_timezone )
+				: '';
+
+			return $end_label && $end_label !== $start_label ? $start_label . ' - ' . $end_label : $start_label;
+		}
+
+		return self::format_event_start_time( $event_id, $display_timezone );
 	}
 }
