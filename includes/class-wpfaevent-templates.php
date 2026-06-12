@@ -651,6 +651,14 @@ class Wpfaevent_Templates {
 			WPFAEVENT_VERSION,
 			'all'
 		);
+
+		wp_register_style(
+			'wpfaevent-events',
+			WPFAEVENT_URL . 'public/css/templates/events.css',
+			array( 'wpfaevent', 'wpfaevent-pagination' ),
+			WPFAEVENT_VERSION,
+			'all'
+		);
 	}
 
 	/**
@@ -663,6 +671,7 @@ class Wpfaevent_Templates {
 	 */
 	private static function get_block_style_handle( $key ) {
 		$handles = array(
+			'events'          => 'wpfaevent-events',
 			'speakers'        => 'wpfaevent-speakers',
 			'past_events'     => 'wpfaevent-past-events',
 			'code_of_conduct' => 'wpfaevent-code-of-conduct',
@@ -699,6 +708,10 @@ class Wpfaevent_Templates {
 
 		if ( 'past_events' === $key ) {
 			wp_enqueue_style( 'wpfaevent-past-events' );
+		}
+
+		if ( 'events' === $key ) {
+			wp_enqueue_style( 'wpfaevent-events' );
 		}
 
 		if ( 'code_of_conduct' === $key ) {
