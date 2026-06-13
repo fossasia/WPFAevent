@@ -228,6 +228,9 @@ class Wpfaevent_Templates {
 					'api_version'     => 2,
 					'editor_script'   => 'wpfaevent-blocks',
 					'style'           => self::get_block_style_handle( $key ),
+					'supports'        => array(
+						'align' => array( 'wide', 'full' ),
+					),
 					'render_callback' => array( __CLASS__, 'render_block' ),
 				)
 			);
@@ -305,8 +308,13 @@ class Wpfaevent_Templates {
 	public static function render_block( $attributes, $content, $block ) {
 		$block_name = ( is_object( $block ) && isset( $block->name ) ) ? $block->name : '';
 		$key        = self::get_template_key_by_block_name( $block_name );
+		$output     = self::render_embed( $key );
 
-		return self::render_embed( $key );
+		if ( '' === $output || ! function_exists( 'get_block_wrapper_attributes' ) ) {
+			return $output;
+		}
+
+		return '<div ' . get_block_wrapper_attributes() . '>' . $output . '</div>';
 	}
 
 	/**
