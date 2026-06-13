@@ -341,7 +341,7 @@ if ( isset( $_GET['return_to'] ) ) {
                 <p>Override the global site logo for this event. If no logo is set here, the global logo will be used.</p>
                 <label for="eventLogo">Logo Image (Recommended: Transparent PNG, max height 36px)</label>
                 <p>Current Logo for this Event:</p>
-                <img id="currentEventLogo" src="<?php echo esc_url($site_settings_data['event_logo_url'] ?? ($global_settings_data['site_logo_url'] ?: WPFAEVENT_URL . 'assets/images/logo.png')); ?>" alt="Current Event Logo" style="max-height: 36px; height: auto; background: #eee; padding: 5px; border-radius: 4px; margin-bottom: 10px;">
+                <img id="currentEventLogo" src="<?php echo htmlentities(esc_url($site_settings_data['event_logo_url'] ?? ($global_settings_data['site_logo_url'] ?: WPFAEVENT_URL . 'assets/images/logo.png'))); ?>" alt="Current Event Logo" style="max-height: 36px; height: auto; background: #eee; padding: 5px; border-radius: 4px; margin-bottom: 10px;">
                 <br>
                 <label>Update Logo (URL or Upload):</label>
                 <input type="text" name="eventLogoURL" placeholder="Enter image URL to override global logo">
