@@ -122,9 +122,6 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-event.php';
 		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-speaker.php';
 
-		// Legacy plugin code (defines the FOSSASIA_Landing_Plugin class).
-		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-landing.php';
-
 		// Admin and Public classes.
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
@@ -138,10 +135,6 @@ class Wpfaevent {
 		if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php' ) ) {
 			require_once plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php';
 		}
-		if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfaevent-uninstaller.php' ) ) {
-			require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-uninstaller.php';
-		}
-
 		$this->loader = new Wpfaevent_Loader();
 	}
 
