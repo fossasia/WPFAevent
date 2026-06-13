@@ -26,6 +26,10 @@ parameters:
         analyseAndScan:
             - admin/partials/admin-dashboard.php
             - admin/partials/wpfaevent-admin-display.php
+            - includes/class-wpfaevent-landing.php
+            - includes/class-wpfaevent-uninstaller.php
+            - public/partials/schedule-page.php
+            - public/partials/wpfaevent-landing-template.php
 
     # IMPORTANT: phpstan/extension-installer auto-loads installed PHPStan extensions
     # and rulesets that expose `extra.phpstan.includes`. php-stubs/wp-cli-stubs is
