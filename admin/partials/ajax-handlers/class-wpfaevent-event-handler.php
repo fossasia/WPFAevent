@@ -91,6 +91,10 @@ class Wpfaevent_Event_Handler {
 			'excerpt'           => $event->post_excerpt,
 			'start_date'        => get_post_meta( $event_id, 'wpfa_event_start_date', true ),
 			'end_date'          => get_post_meta( $event_id, 'wpfa_event_end_date', true ),
+			'start_time'        => get_post_meta( $event_id, 'wpfa_event_start_time', true ),
+			'end_time'          => get_post_meta( $event_id, 'wpfa_event_end_time', true ),
+			'timezone'          => class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_timezone( $event_id ) : wp_timezone_string(),
+			'all_day'           => class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_all_day( $event_id ) : false,
 			'location'          => get_post_meta( $event_id, 'wpfa_event_location', true ),
 			'event_url'         => get_post_meta( $event_id, 'wpfa_event_url', true ),
 			'registration_link' => get_post_meta( $event_id, 'wpfa_event_registration_link', true ),
@@ -197,6 +201,7 @@ class Wpfaevent_Event_Handler {
 		$meta_fields = array(
 			'wpfa_event_start_date'        => 'start_date',
 			'wpfa_event_end_date'          => 'end_date',
+			'wpfa_event_start_time'        => 'time',
 			'wpfa_event_time'              => 'time',
 			'wpfa_event_location'          => 'location',
 			'wpfa_event_lead_text'         => 'lead_text',
@@ -218,6 +223,8 @@ class Wpfaevent_Event_Handler {
 				}
 			}
 		}
+
+		$this->sync_event_datetime_meta( $event_id );
 
 		// Handle featured image upload - now safe since validation passed.
 		require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -338,6 +345,7 @@ class Wpfaevent_Event_Handler {
 		$meta_fields = array(
 			'wpfa_event_start_date'        => 'start_date',
 			'wpfa_event_end_date'          => 'end_date',
+			'wpfa_event_start_time'        => 'time',
 			'wpfa_event_time'              => 'time',
 			'wpfa_event_location'          => 'location',
 			'wpfa_event_lead_text'         => 'lead_text',
@@ -362,6 +370,8 @@ class Wpfaevent_Event_Handler {
 			}
 		}
 
+		$this->sync_event_datetime_meta( $event_id );
+
 		// Handle featured image upload - now safe since validation passed.
 		if ( ! empty( $_FILES['featured_image']['name'] ) ) {
 			require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -384,6 +394,65 @@ class Wpfaevent_Event_Handler {
 		}
 
 		wp_send_json_success();
+	}
+
+	/**
+	 * Keep calendar-aware datetime meta in sync after front-end AJAX saves.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return void
+	 */
+	private function sync_event_datetime_meta( $event_id ) {
+		$event_id = absint( $event_id );
+
+		if ( ! $event_id || ! class_exists( 'Wpfaevent_Meta_Event' ) ) {
+			return;
+		}
+
+		if ( Wpfaevent_Meta_Event::get_event_all_day( $event_id ) ) {
+			delete_post_meta( $event_id, 'wpfa_event_starts_at' );
+			delete_post_meta( $event_id, 'wpfa_event_ends_at' );
+			return;
+		}
+
+		$start_date = Wpfaevent_Meta_Event::sanitize_date_value( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
+		$end_date   = Wpfaevent_Meta_Event::sanitize_date_value( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
+		$start_time = Wpfaevent_Meta_Event::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_start_time', true ) );
+		$end_time   = Wpfaevent_Meta_Event::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_end_time', true ) );
+		$timezone   = Wpfaevent_Meta_Event::get_event_timezone( $event_id );
+
+		if ( '' === $start_time ) {
+			$start_time = Wpfaevent_Meta_Event::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_time', true ) );
+
+			if ( '' !== $start_time ) {
+				update_post_meta( $event_id, 'wpfa_event_start_time', $start_time );
+			}
+		}
+
+		$this->update_or_delete_post_meta( $event_id, 'wpfa_event_time', $start_time );
+		$this->update_or_delete_post_meta( $event_id, 'wpfa_event_starts_at', Wpfaevent_Meta_Event::build_datetime_value( $start_date, $start_time, $timezone ) );
+		$this->update_or_delete_post_meta( $event_id, 'wpfa_event_ends_at', Wpfaevent_Meta_Event::build_datetime_value( '' !== $end_date ? $end_date : $start_date, $end_time, $timezone ) );
+	}
+
+	/**
+	 * Update a meta value or delete it when empty.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $key     Meta key.
+	 * @param string $value   Meta value.
+	 * @return void
+	 */
+	private function update_or_delete_post_meta( $post_id, $key, $value ) {
+		if ( '' === $value ) {
+			delete_post_meta( $post_id, $key );
+			return;
+		}
+
+		update_post_meta( $post_id, $key, $value );
 	}
 
 	/**
