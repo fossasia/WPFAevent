@@ -298,7 +298,14 @@ class Wpfaevent_Templates {
 			$key  = self::normalize_template_key( $atts['template'] );
 		}
 
-		return self::render_embed( $key );
+		$output = self::render_embed( $key );
+
+		if ( '' === $output ) {
+			return $output;
+		}
+
+		$block_slug = isset( self::$templates[ $key ]['block'] ) ? self::$templates[ $key ]['block'] : 'template';
+		return '<div class="wp-block-wpfaevent-' . esc_attr( $block_slug ) . ' alignfull">' . $output . '</div>';
 	}
 
 	/**
