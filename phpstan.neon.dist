@@ -1,5 +1,5 @@
 parameters:
-    level: 2 # TODO: raise level incrementally as codebase is cleaned up
+    level: 3 # TODO: raise level incrementally as codebase is cleaned up
 
     # Target PHP 7.4 specifically to match the plugin's platform requirement
     phpVersion: 70400
