@@ -231,6 +231,12 @@ class Wpfaevent_Templates {
 					'supports'        => array(
 						'align' => array( 'wide', 'full' ),
 					),
+					'attributes'      => array(
+						'align' => array(
+							'type'    => 'string',
+							'default' => 'full',
+						),
+					),
 					'render_callback' => array( __CLASS__, 'render_block' ),
 				)
 			);
