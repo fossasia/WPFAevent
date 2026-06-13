@@ -84,6 +84,12 @@ class Wpfaevent_Event_Handler {
 			wp_send_json_error( esc_html__( 'Event not found', 'wpfaevent' ) );
 		}
 
+		$start_time = get_post_meta( $event_id, 'wpfa_event_start_time', true );
+
+		if ( '' === $start_time ) {
+			$start_time = get_post_meta( $event_id, 'wpfa_event_time', true );
+		}
+
 		$data = array(
 			'id'                => $event_id,
 			'title'             => $event->post_title,
@@ -91,8 +97,9 @@ class Wpfaevent_Event_Handler {
 			'excerpt'           => $event->post_excerpt,
 			'start_date'        => get_post_meta( $event_id, 'wpfa_event_start_date', true ),
 			'end_date'          => get_post_meta( $event_id, 'wpfa_event_end_date', true ),
-			'start_time'        => get_post_meta( $event_id, 'wpfa_event_start_time', true ),
+			'start_time'        => $start_time,
 			'end_time'          => get_post_meta( $event_id, 'wpfa_event_end_time', true ),
+			'time'              => $start_time,
 			'timezone'          => class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_timezone( $event_id ) : wp_timezone_string(),
 			'all_day'           => class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_all_day( $event_id ) : false,
 			'location'          => get_post_meta( $event_id, 'wpfa_event_location', true ),
@@ -134,7 +141,6 @@ class Wpfaevent_Event_Handler {
 		$title             = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
 		$excerpt           = isset( $_POST['excerpt'] ) ? sanitize_text_field( wp_unslash( $_POST['excerpt'] ) ) : '';
 		$start_date        = isset( $_POST['start_date'] ) ? sanitize_text_field( wp_unslash( $_POST['start_date'] ) ) : '';
-		$time              = isset( $_POST['time'] ) ? sanitize_text_field( wp_unslash( $_POST['time'] ) ) : '';
 		$location          = isset( $_POST['location'] ) ? sanitize_text_field( wp_unslash( $_POST['location'] ) ) : '';
 		$lead_text         = isset( $_POST['lead_text'] ) ? sanitize_text_field( wp_unslash( $_POST['lead_text'] ) ) : '';
 		$registration_link = isset( $_POST['registration_link'] ) ? esc_url_raw( wp_unslash( $_POST['registration_link'] ) ) : '';
@@ -144,7 +150,6 @@ class Wpfaevent_Event_Handler {
 			'title'             => $title,
 			'excerpt'           => $excerpt,
 			'start_date'        => $start_date,
-			'time'              => $time,
 			'location'          => $location,
 			'lead_text'         => $lead_text,
 			'registration_link' => $registration_link,
@@ -201,8 +206,6 @@ class Wpfaevent_Event_Handler {
 		$meta_fields = array(
 			'wpfa_event_start_date'        => 'start_date',
 			'wpfa_event_end_date'          => 'end_date',
-			'wpfa_event_start_time'        => 'time',
-			'wpfa_event_time'              => 'time',
 			'wpfa_event_location'          => 'location',
 			'wpfa_event_lead_text'         => 'lead_text',
 			'wpfa_event_registration_link' => 'registration_link',
@@ -224,7 +227,7 @@ class Wpfaevent_Event_Handler {
 			}
 		}
 
-		$this->sync_event_datetime_meta( $event_id );
+		$this->save_event_timing_meta( $event_id, $_POST );
 
 		// Handle featured image upload - now safe since validation passed.
 		require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -288,7 +291,7 @@ class Wpfaevent_Event_Handler {
 		}
 
 		// Validate required fields - must match UI requirements.
-		$required_fields = array( 'title', 'excerpt', 'start_date', 'time', 'location', 'lead_text', 'registration_link' );
+		$required_fields = array( 'title', 'excerpt', 'start_date', 'location', 'lead_text', 'registration_link' );
 		foreach ( $required_fields as $field ) {
 			if ( empty( $_POST[ $field ] ) ) {
 				/* translators: %s: Field name */
@@ -345,8 +348,6 @@ class Wpfaevent_Event_Handler {
 		$meta_fields = array(
 			'wpfa_event_start_date'        => 'start_date',
 			'wpfa_event_end_date'          => 'end_date',
-			'wpfa_event_start_time'        => 'time',
-			'wpfa_event_time'              => 'time',
 			'wpfa_event_location'          => 'location',
 			'wpfa_event_lead_text'         => 'lead_text',
 			'wpfa_event_url'               => 'event_url',
@@ -370,7 +371,7 @@ class Wpfaevent_Event_Handler {
 			}
 		}
 
-		$this->sync_event_datetime_meta( $event_id );
+		$this->save_event_timing_meta( $event_id, $_POST );
 
 		// Handle featured image upload - now safe since validation passed.
 		if ( ! empty( $_FILES['featured_image']['name'] ) ) {
@@ -394,6 +395,68 @@ class Wpfaevent_Event_Handler {
 		}
 
 		wp_send_json_success();
+	}
+
+	/**
+	 * Save front-end event timing fields into calendar-aware event meta.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int   $event_id Event post ID.
+	 * @param array $request  Request data.
+	 * @return void
+	 */
+	private function save_event_timing_meta( $event_id, $request ) {
+		$event_id = absint( $event_id );
+
+		if ( ! $event_id || ! is_array( $request ) ) {
+			return;
+		}
+
+		$has_timing_payload = isset( $request['timezone'] )
+			|| isset( $request['all_day'] )
+			|| isset( $request['start_time'] )
+			|| isset( $request['end_time'] )
+			|| isset( $request['time'] );
+
+		if ( ! $has_timing_payload ) {
+			$this->sync_event_datetime_meta( $event_id );
+			return;
+		}
+
+		if ( isset( $request['timezone'] ) ) {
+			$posted_timezone = sanitize_text_field( wp_unslash( $request['timezone'] ) );
+			$timezone        = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_timezone( $posted_timezone ) : $posted_timezone;
+
+			$this->update_or_delete_post_meta( $event_id, 'wpfa_event_timezone', $timezone );
+		}
+
+		$all_day = isset( $request['all_day'] ) && rest_sanitize_boolean( wp_unslash( $request['all_day'] ) );
+		update_post_meta( $event_id, 'wpfa_event_all_day', $all_day ? '1' : '0' );
+
+		$posted_start_time = isset( $request['start_time'] ) ? sanitize_text_field( wp_unslash( $request['start_time'] ) ) : '';
+		$posted_end_time   = isset( $request['end_time'] ) ? sanitize_text_field( wp_unslash( $request['end_time'] ) ) : '';
+
+		if ( '' === $posted_start_time && isset( $request['time'] ) ) {
+			$posted_start_time = sanitize_text_field( wp_unslash( $request['time'] ) );
+		}
+
+		$start_time = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_time_value( $posted_start_time ) : $posted_start_time;
+		$end_time   = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_time_value( $posted_end_time ) : $posted_end_time;
+
+		if ( $all_day ) {
+			delete_post_meta( $event_id, 'wpfa_event_start_time' );
+			delete_post_meta( $event_id, 'wpfa_event_time' );
+			delete_post_meta( $event_id, 'wpfa_event_end_time' );
+			delete_post_meta( $event_id, 'wpfa_event_starts_at' );
+			delete_post_meta( $event_id, 'wpfa_event_ends_at' );
+			return;
+		}
+
+		$this->update_or_delete_post_meta( $event_id, 'wpfa_event_start_time', $start_time );
+		$this->update_or_delete_post_meta( $event_id, 'wpfa_event_time', $start_time );
+		$this->update_or_delete_post_meta( $event_id, 'wpfa_event_end_time', $end_time );
+		$this->sync_event_datetime_meta( $event_id );
 	}
 
 	/**

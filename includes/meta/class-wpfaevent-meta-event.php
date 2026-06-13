@@ -382,7 +382,9 @@ class Wpfaevent_Meta_Event {
 			return rest_sanitize_boolean( $value );
 		}
 
-		return false;
+		return '' === self::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_start_time', true ) )
+			&& '' === self::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_end_time', true ) )
+			&& '' === self::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_time', true ) );
 	}
 
 	/**
