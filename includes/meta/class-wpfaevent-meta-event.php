@@ -166,6 +166,36 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_custom_tabs',
+			array(
+				'type'              => 'array',
+				'single'            => true,
+				'show_in_rest'      => array(
+					'schema' => array(
+						'type'  => 'array',
+						'items' => array(
+							'type'       => 'object',
+							'properties' => array(
+								'title'   => array(
+									'type' => 'string',
+								),
+								'slug'    => array(
+									'type' => 'string',
+								),
+								'content' => array(
+									'type' => 'string',
+								),
+							),
+						),
+					),
+				),
+				'sanitize_callback' => array( __CLASS__, 'sanitize_custom_tabs' ),
+				'description'       => __( 'Event-specific custom tab sections for attendee information', 'wpfaevent' ),
+			)
+		);
+
 		// Event external URL.
 		register_post_meta(
 			self::$post_type,
@@ -310,6 +340,15 @@ class Wpfaevent_Meta_Event {
 			'wpfa_event_additional_information',
 			__( 'Additional Information', 'wpfaevent' ),
 			array( __CLASS__, 'render_additional_information_meta_box' ),
+			self::$post_type,
+			'normal',
+			'default'
+		);
+
+		add_meta_box(
+			'wpfa_event_custom_tabs',
+			__( 'Custom Tabs', 'wpfaevent' ),
+			array( __CLASS__, 'render_custom_tabs_meta_box' ),
 			self::$post_type,
 			'normal',
 			'default'
@@ -511,6 +550,104 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
+	 * Render the Custom Tabs meta box.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Post $post Event post object.
+	 */
+	public static function render_custom_tabs_meta_box( $post ) {
+		$custom_tabs = self::sanitize_custom_tabs( get_post_meta( $post->ID, 'wpfa_event_custom_tabs', true ) );
+
+		if ( empty( $custom_tabs ) ) {
+			$custom_tabs = array(
+				array(
+					'title'   => __( 'Accommodation', 'wpfaevent' ),
+					'slug'    => '',
+					'content' => '',
+				),
+			);
+		}
+		?>
+		<p class="description">
+			<?php esc_html_e( 'Add event-specific public sections such as accommodation options, travel details, accessibility notes, or attendee resources.', 'wpfaevent' ); ?>
+		</p>
+		<div class="wpfaevent-custom-tabs" data-next-index="<?php echo esc_attr( count( $custom_tabs ) ); ?>">
+			<div class="wpfaevent-custom-tabs-list">
+				<?php foreach ( $custom_tabs as $index => $custom_tab ) : ?>
+					<?php self::render_custom_tab_row( $index, $custom_tab ); ?>
+				<?php endforeach; ?>
+			</div>
+			<p>
+				<button type="button" class="button wpfaevent-add-custom-tab">
+					<?php esc_html_e( 'Add Custom Tab', 'wpfaevent' ); ?>
+				</button>
+			</p>
+			<script type="text/template" class="wpfaevent-custom-tab-template">
+				<?php
+				self::render_custom_tab_row(
+					'{{INDEX}}',
+					array(
+						'title'   => '',
+						'slug'    => '',
+						'content' => '',
+					)
+				);
+				?>
+			</script>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render one custom tab row.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int|string $index Row index.
+	 * @param array      $tab   Custom tab data.
+	 */
+	private static function render_custom_tab_row( $index, $tab ) {
+		$index   = (string) $index;
+		$title   = isset( $tab['title'] ) && is_scalar( $tab['title'] ) ? sanitize_text_field( $tab['title'] ) : '';
+		$slug    = isset( $tab['slug'] ) && is_scalar( $tab['slug'] ) ? sanitize_title( $tab['slug'] ) : '';
+		$content = isset( $tab['content'] ) && is_scalar( $tab['content'] ) ? (string) $tab['content'] : '';
+		?>
+		<div class="wpfaevent-custom-tab-row">
+			<input type="hidden" name="wpfa_event_custom_tabs[<?php echo esc_attr( $index ); ?>][slug]" value="<?php echo esc_attr( $slug ); ?>">
+			<p>
+				<label for="wpfa_event_custom_tabs_<?php echo esc_attr( $index ); ?>_title">
+					<strong><?php esc_html_e( 'Tab Title', 'wpfaevent' ); ?></strong>
+				</label>
+				<input
+					type="text"
+					id="wpfa_event_custom_tabs_<?php echo esc_attr( $index ); ?>_title"
+					name="wpfa_event_custom_tabs[<?php echo esc_attr( $index ); ?>][title]"
+					value="<?php echo esc_attr( $title ); ?>"
+					class="widefat"
+					placeholder="<?php esc_attr_e( 'Accommodation', 'wpfaevent' ); ?>"
+				>
+			</p>
+			<p>
+				<label for="wpfa_event_custom_tabs_<?php echo esc_attr( $index ); ?>_content">
+					<strong><?php esc_html_e( 'Tab Content', 'wpfaevent' ); ?></strong>
+				</label>
+				<textarea
+					id="wpfa_event_custom_tabs_<?php echo esc_attr( $index ); ?>_content"
+					name="wpfa_event_custom_tabs[<?php echo esc_attr( $index ); ?>][content]"
+					rows="6"
+					class="widefat"
+					placeholder="<?php esc_attr_e( 'List recommended hotels, booking links, travel notes, or other useful event details.', 'wpfaevent' ); ?>"
+				><?php echo esc_textarea( $content ); ?></textarea>
+			</p>
+			<button type="button" class="button-link-delete wpfaevent-remove-custom-tab">
+				<?php esc_html_e( 'Remove tab', 'wpfaevent' ); ?>
+			</button>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Save Event Details meta box data.
 	 *
 	 * @since 1.0.0
@@ -578,6 +715,14 @@ class Wpfaevent_Meta_Event {
 
 		if ( isset( $_POST['wpfa_event_venue_information'] ) ) {
 			self::update_or_delete_meta( $post_id, 'wpfa_event_venue_information', wp_kses_post( wp_unslash( $_POST['wpfa_event_venue_information'] ) ) );
+		}
+
+		$posted_custom_tabs = isset( $_POST['wpfa_event_custom_tabs'] ) ? wp_unslash( $_POST['wpfa_event_custom_tabs'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by sanitize_custom_tabs().
+		$custom_tabs        = self::sanitize_custom_tabs( $posted_custom_tabs );
+		if ( ! empty( $custom_tabs ) ) {
+			update_post_meta( $post_id, 'wpfa_event_custom_tabs', $custom_tabs );
+		} else {
+			delete_post_meta( $post_id, 'wpfa_event_custom_tabs' );
 		}
 
 		if ( isset( $_POST['wpfa_event_url'] ) ) {
@@ -967,6 +1112,70 @@ class Wpfaevent_Meta_Event {
 		}
 
 		return array_values( $normalized );
+	}
+
+	/**
+	 * Sanitize event custom tabs.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $tabs Raw tab data.
+	 * @return array<int, array<string, string>>
+	 */
+	public static function sanitize_custom_tabs( $tabs ) {
+		if ( is_string( $tabs ) ) {
+			$decoded_tabs = json_decode( $tabs, true );
+
+			if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded_tabs ) ) {
+				$tabs = $decoded_tabs;
+			}
+		}
+
+		if ( ! is_array( $tabs ) ) {
+			return array();
+		}
+
+		$sanitized_tabs = array();
+		$used_slugs     = array();
+
+		foreach ( $tabs as $tab ) {
+			if ( ! is_array( $tab ) ) {
+				continue;
+			}
+
+			$title   = isset( $tab['title'] ) && is_scalar( $tab['title'] ) ? sanitize_text_field( $tab['title'] ) : '';
+			$content = isset( $tab['content'] ) && is_scalar( $tab['content'] ) ? trim( wp_kses_post( (string) $tab['content'] ) ) : '';
+
+			if ( '' === $title || '' === $content ) {
+				continue;
+			}
+
+			$slug = isset( $tab['slug'] ) && is_scalar( $tab['slug'] ) ? sanitize_title( $tab['slug'] ) : '';
+			if ( '' === $slug ) {
+				$slug = sanitize_title( $title );
+			}
+
+			if ( '' === $slug ) {
+				$slug = 'custom-tab-' . ( count( $sanitized_tabs ) + 1 );
+			}
+
+			$base_slug = $slug;
+			$suffix    = 2;
+			while ( isset( $used_slugs[ $slug ] ) ) {
+				$slug = $base_slug . '-' . $suffix;
+				++$suffix;
+			}
+
+			$used_slugs[ $slug ] = true;
+
+			$sanitized_tabs[] = array(
+				'title'   => $title,
+				'slug'    => $slug,
+				'content' => $content,
+			);
+		}
+
+		return array_values( $sanitized_tabs );
 	}
 
 	/**

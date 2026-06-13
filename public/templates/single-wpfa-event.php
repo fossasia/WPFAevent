@@ -297,6 +297,7 @@ $start_date           = sanitize_text_field( get_post_meta( $event_id, 'wpfa_eve
 $end_date             = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
 $location             = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
 $venue_information    = trim( (string) get_post_meta( $event_id, 'wpfa_event_venue_information', true ) );
+$custom_tabs          = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_custom_tabs( get_post_meta( $event_id, 'wpfa_event_custom_tabs', true ) ) : array();
 $event_languages      = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array();
 $event_language_label = implode( ', ', $event_languages );
 $event_url            = get_post_meta( $event_id, 'wpfa_event_url', true );
@@ -613,6 +614,15 @@ foreach ( $schedule_preview_items as $schedule_item ) {
 
 $schedule_hidden_count = max( 0, count( $schedule_items ) - count( $schedule_preview_items ) );
 $first_schedule        = ! empty( $schedule_items[0] ) ? $schedule_items[0] : array();
+$custom_sections       = array();
+
+foreach ( $custom_tabs as $custom_tab ) {
+	if ( empty( $custom_tab['slug'] ) || empty( $custom_tab['title'] ) || empty( $custom_tab['content'] ) ) {
+		continue;
+	}
+
+	$custom_sections[ $custom_tab['slug'] ] = $custom_tab['title'];
+}
 
 $wpfa_event_nav_context = array(
 	'show_about'      => $show_about,
@@ -626,7 +636,7 @@ $wpfa_event_nav_context = array(
 	'has_sponsors'    => $show_sponsors && ! empty( $visible_sponsor_groups ),
 	'has_exhibitors'  => $show_exhibitors && ! empty( $visible_exhibitors ),
 	'has_venue'       => '' !== trim( wp_strip_all_tags( $venue_information ) ),
-	'custom_sections' => array(),
+	'custom_sections' => $custom_sections,
 );
 $wpfa_event_nav_items   = class_exists( 'Wpfaevent_Event_Navigation_Helper' )
 	? Wpfaevent_Event_Navigation_Helper::build_nav_items( $wpfa_event_nav_context )
@@ -1174,6 +1184,28 @@ $header_vars = array(
 				</div>
 			</section>
 		<?php endif; ?>
+
+		<?php foreach ( $custom_tabs as $custom_tab ) : ?>
+			<?php
+			if ( empty( $custom_tab['slug'] ) || empty( $custom_tab['title'] ) || empty( $custom_tab['content'] ) ) {
+				continue;
+			}
+
+			$custom_tab_title_id = 'wpfa-event-custom-tab-' . sanitize_html_class( $custom_tab['slug'] ) . '-title';
+			?>
+			<section id="custom-section-<?php echo esc_attr( $custom_tab['slug'] ); ?>" class="wpfa-event-section wpfa-event-custom-tab" aria-labelledby="<?php echo esc_attr( $custom_tab_title_id ); ?>">
+				<div class="container">
+					<div class="wpfa-event-section-head">
+						<div>
+							<h2 id="<?php echo esc_attr( $custom_tab_title_id ); ?>"><?php echo esc_html( $custom_tab['title'] ); ?></h2>
+						</div>
+					</div>
+					<div class="wpfa-event-rich-text wpfa-event-custom-tab-content">
+						<?php echo wp_kses_post( wpautop( $custom_tab['content'] ) ); ?>
+					</div>
+				</div>
+			</section>
+		<?php endforeach; ?>
 
 		<?php if ( $show_sponsors && ! empty( $visible_sponsor_groups ) ) : ?>
 			<section id="sponsors" class="wpfa-event-section wpfa-event-sponsors" aria-labelledby="wpfa-event-sponsors-title">

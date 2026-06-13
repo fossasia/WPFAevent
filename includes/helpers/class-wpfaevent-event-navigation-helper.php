@@ -96,7 +96,7 @@ class Wpfaevent_Event_Navigation_Helper {
 		}
 
 		if ( 0 === strpos( $href, '#custom-section-' ) ) {
-			$section_id = substr( $href, strlen( '#custom-section-' ) );
+			$section_id = sanitize_title( substr( $href, strlen( '#custom-section-' ) ) );
 
 			return ! empty( $context['custom_sections'] ) && ! empty( $context['custom_sections'][ $section_id ] );
 		}
@@ -196,14 +196,29 @@ class Wpfaevent_Event_Navigation_Helper {
 				'href' => '#venue',
 				'text' => __( 'Additional Info', 'wpfaevent' ),
 			),
-			array(
-				'href' => '#sponsors',
-				'text' => __( 'Sponsors', 'wpfaevent' ),
-			),
-			array(
-				'href' => '#exhibitors',
-				'text' => __( 'Exhibitors', 'wpfaevent' ),
-			),
+		);
+
+		if ( ! empty( $context['custom_sections'] ) && is_array( $context['custom_sections'] ) ) {
+			foreach ( $context['custom_sections'] as $section_id => $section_label ) {
+				$section_id = sanitize_title( $section_id );
+				if ( '' === $section_id ) {
+					continue;
+				}
+
+				$defaults[] = array(
+					'href' => '#custom-section-' . $section_id,
+					'text' => is_scalar( $section_label ) ? sanitize_text_field( $section_label ) : __( 'Event Info', 'wpfaevent' ),
+				);
+			}
+		}
+
+		$defaults[] = array(
+			'href' => '#sponsors',
+			'text' => __( 'Sponsors', 'wpfaevent' ),
+		);
+		$defaults[] = array(
+			'href' => '#exhibitors',
+			'text' => __( 'Exhibitors', 'wpfaevent' ),
 		);
 
 		foreach ( $defaults as $default_item ) {

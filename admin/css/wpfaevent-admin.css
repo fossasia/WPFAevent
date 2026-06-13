@@ -16,3 +16,29 @@
 .wpfaevent-relationship-select option {
     padding: 2px 2px;
 }
+
+.wpfaevent-custom-tabs-list {
+    display: grid;
+    gap: 14px;
+    margin-top: 12px;
+}
+
+.wpfaevent-custom-tab-row {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 12px;
+}
+
+.wpfaevent-custom-tab-row p {
+    margin-top: 0;
+}
+
+.wpfaevent-custom-tab-row textarea {
+    font-family: inherit;
+    min-height: 120px;
+}
+
+.wpfaevent-custom-tab-row .button-link-delete {
+    margin-top: 2px;
+}

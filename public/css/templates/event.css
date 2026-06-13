@@ -831,6 +831,7 @@
 }
 
 .wpfaevent .wpfa-event-additional-preview,
+.wpfaevent .wpfa-event-custom-tab-content,
 .wpfaevent .wpfa-additional-information-body {
 	max-width: 900px;
 }
