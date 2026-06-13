@@ -7,10 +7,10 @@
   <rule ref="WordPress-Extra"/>
   <rule ref="WordPress-Docs"/>
   <rule ref="WordPress-Core"/>
-    
+
   <!-- WordPress-specific config -->
   <config name="minimum_supported_wp_version" value="5.0"/>
-    
+
   <!-- Arguments for PHPCS -->
   <arg value="sp"/>
   <arg name="extensions" value="php"/>
@@ -19,7 +19,7 @@
 
   <!-- What to scan -->
   <file>.</file>
-    
+
   <!-- Exclude patterns -->
   <exclude-pattern>*/vendor/*</exclude-pattern>
   <exclude-pattern>*/node_modules/*</exclude-pattern>
@@ -29,5 +29,5 @@
     are excluded. Remove each pattern when its file is refactored.
   -->
   <exclude-pattern>*/admin/partials/admin-dashboard.php</exclude-pattern>
-  <exclude-pattern>*/admin/partials/wpfaevent-admin-display.php</exclude-pattern>
+
 </ruleset>
