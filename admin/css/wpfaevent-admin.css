@@ -17,6 +17,30 @@
     padding: 2px 2px;
 }
 
+.wpfaevent-attendee-info {
+    display: grid;
+    gap: 20px;
+}
+
+.wpfaevent-attendee-info-section {
+    border-top: 1px solid #dcdcde;
+    padding-top: 16px;
+}
+
+.wpfaevent-attendee-info-section:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.wpfaevent-attendee-info-section h3 {
+    font-size: 14px;
+    margin: 0 0 6px;
+}
+
+.wpfaevent-attendee-info-section .description {
+    margin-bottom: 12px;
+}
+
 .wpfaevent-custom-tabs-list {
     display: grid;
     gap: 14px;
@@ -41,4 +65,13 @@
 
 .wpfaevent-custom-tab-row .button-link-delete {
     margin-top: 2px;
+}
+
+.wpfaevent-custom-tabs-empty {
+    background: #f6f7f7;
+    border: 1px dashed #c3c4c7;
+    border-radius: 4px;
+    color: #646970;
+    margin: 12px 0;
+    padding: 12px;
 }

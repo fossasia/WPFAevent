@@ -152,11 +152,11 @@ Site administrators assign access under **WPFAEvent → Settings → Event Plugi
 
 Site-wide footer branding remains administrator-only.
 
-## Event Custom Tabs
+## Event Attendee Information
 
-Each `wpfa_event` post includes a **Custom Tabs** meta box. Add a tab title and content for event-specific attendee information such as accommodation options, travel details, accessibility notes, or venue resources.
+Each `wpfa_event` post includes an **Attendee Information** meta box. Use the main editor for general venue and travel notes, then add extra information sections for focused topics such as accommodation options, accessibility notes, or attendee resources.
 
-Saved tabs are stored in the `wpfa_event_custom_tabs` post meta field and render on that event's single event page as separate sections. They are also added to the event section navigation with anchors such as `#custom-section-accommodation`.
+Extra sections are stored in the `wpfa_event_custom_tabs` post meta field and render on that event's single event page as separate sections. They are also added to the event section navigation with anchors such as `#custom-section-accommodation`.
 
 ## Settings And Import Pages
 

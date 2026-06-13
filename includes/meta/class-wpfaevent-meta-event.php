@@ -338,17 +338,8 @@ class Wpfaevent_Meta_Event {
 
 		add_meta_box(
 			'wpfa_event_additional_information',
-			__( 'Additional Information', 'wpfaevent' ),
+			__( 'Attendee Information', 'wpfaevent' ),
 			array( __CLASS__, 'render_additional_information_meta_box' ),
-			self::$post_type,
-			'normal',
-			'default'
-		);
-
-		add_meta_box(
-			'wpfa_event_custom_tabs',
-			__( 'Custom Tabs', 'wpfaevent' ),
-			array( __CLASS__, 'render_custom_tabs_meta_box' ),
 			self::$post_type,
 			'normal',
 			'default'
@@ -532,69 +523,64 @@ class Wpfaevent_Meta_Event {
 	 * @param WP_Post $post Event post object.
 	 */
 	public static function render_additional_information_meta_box( $post ) {
-		$venue_info = get_post_meta( $post->ID, 'wpfa_event_venue_information', true );
-		?>
-		<p class="description">
-			<?php esc_html_e( 'Add attendee-facing details for nearby hotels, transportation, parking, directions, accessibility notes, or other venue information.', 'wpfaevent' ); ?>
-		</p>
-		<?php
-		wp_editor(
-			$venue_info,
-			'wpfa_event_venue_information',
-			array(
-				'textarea_name' => 'wpfa_event_venue_information',
-				'textarea_rows' => 8,
-				'media_buttons' => false,
-			)
-		);
-	}
-
-	/**
-	 * Render the Custom Tabs meta box.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param WP_Post $post Event post object.
-	 */
-	public static function render_custom_tabs_meta_box( $post ) {
+		$venue_info  = get_post_meta( $post->ID, 'wpfa_event_venue_information', true );
 		$custom_tabs = self::sanitize_custom_tabs( get_post_meta( $post->ID, 'wpfa_event_custom_tabs', true ) );
-
-		if ( empty( $custom_tabs ) ) {
-			$custom_tabs = array(
-				array(
-					'title'   => __( 'Accommodation', 'wpfaevent' ),
-					'slug'    => '',
-					'content' => '',
-				),
-			);
-		}
 		?>
 		<p class="description">
-			<?php esc_html_e( 'Add event-specific public sections such as accommodation options, travel details, accessibility notes, or attendee resources.', 'wpfaevent' ); ?>
+			<?php esc_html_e( 'Use this area for attendee-facing information that appears on the event page. Keep the main section for general venue and travel notes, then add extra sections only for topics that need their own navigation item.', 'wpfaevent' ); ?>
 		</p>
-		<div class="wpfaevent-custom-tabs" data-next-index="<?php echo esc_attr( count( $custom_tabs ) ); ?>">
-			<div class="wpfaevent-custom-tabs-list">
-				<?php foreach ( $custom_tabs as $index => $custom_tab ) : ?>
-					<?php self::render_custom_tab_row( $index, $custom_tab ); ?>
-				<?php endforeach; ?>
-			</div>
-			<p>
-				<button type="button" class="button wpfaevent-add-custom-tab">
-					<?php esc_html_e( 'Add Custom Tab', 'wpfaevent' ); ?>
-				</button>
-			</p>
-			<script type="text/template" class="wpfaevent-custom-tab-template">
+		<div class="wpfaevent-attendee-info">
+			<div class="wpfaevent-attendee-info-section">
+				<h3><?php esc_html_e( 'Main Additional Information', 'wpfaevent' ); ?></h3>
+				<p class="description">
+					<?php esc_html_e( 'Shown as the default Additional Info section. Best for venue notes, directions, parking, transport, and accessibility details.', 'wpfaevent' ); ?>
+				</p>
 				<?php
-				self::render_custom_tab_row(
-					'{{INDEX}}',
+				wp_editor(
+					$venue_info,
+					'wpfa_event_venue_information',
 					array(
-						'title'   => '',
-						'slug'    => '',
-						'content' => '',
+						'textarea_name' => 'wpfa_event_venue_information',
+						'textarea_rows' => 8,
+						'media_buttons' => false,
 					)
 				);
 				?>
-			</script>
+			</div>
+
+			<div class="wpfaevent-attendee-info-section">
+				<h3><?php esc_html_e( 'Extra Information Sections', 'wpfaevent' ); ?></h3>
+				<p class="description">
+					<?php esc_html_e( 'Add separate event page sections for focused topics such as accommodation options, travel passes, childcare, or attendee resources.', 'wpfaevent' ); ?>
+				</p>
+				<div class="wpfaevent-custom-tabs" data-next-index="<?php echo esc_attr( count( $custom_tabs ) ); ?>">
+					<div class="wpfaevent-custom-tabs-list">
+						<?php foreach ( $custom_tabs as $index => $custom_tab ) : ?>
+							<?php self::render_custom_tab_row( $index, $custom_tab ); ?>
+						<?php endforeach; ?>
+					</div>
+					<p class="wpfaevent-custom-tabs-empty" <?php echo empty( $custom_tabs ) ? '' : 'hidden="hidden"'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static attribute fragment. ?>>
+						<?php esc_html_e( 'No extra sections yet. Add one only when a topic needs its own tab in the event navigation.', 'wpfaevent' ); ?>
+					</p>
+					<p>
+						<button type="button" class="button wpfaevent-add-custom-tab">
+							<?php esc_html_e( 'Add Information Section', 'wpfaevent' ); ?>
+						</button>
+					</p>
+					<script type="text/template" class="wpfaevent-custom-tab-template">
+						<?php
+						self::render_custom_tab_row(
+							'{{INDEX}}',
+							array(
+								'title'   => '',
+								'slug'    => '',
+								'content' => '',
+							)
+						);
+						?>
+					</script>
+				</div>
+			</div>
 		</div>
 		<?php
 	}
@@ -617,7 +603,7 @@ class Wpfaevent_Meta_Event {
 			<input type="hidden" name="wpfa_event_custom_tabs[<?php echo esc_attr( $index ); ?>][slug]" value="<?php echo esc_attr( $slug ); ?>">
 			<p>
 				<label for="wpfa_event_custom_tabs_<?php echo esc_attr( $index ); ?>_title">
-					<strong><?php esc_html_e( 'Tab Title', 'wpfaevent' ); ?></strong>
+					<strong><?php esc_html_e( 'Section Title', 'wpfaevent' ); ?></strong>
 				</label>
 				<input
 					type="text"
@@ -630,7 +616,7 @@ class Wpfaevent_Meta_Event {
 			</p>
 			<p>
 				<label for="wpfa_event_custom_tabs_<?php echo esc_attr( $index ); ?>_content">
-					<strong><?php esc_html_e( 'Tab Content', 'wpfaevent' ); ?></strong>
+					<strong><?php esc_html_e( 'Section Content', 'wpfaevent' ); ?></strong>
 				</label>
 				<textarea
 					id="wpfa_event_custom_tabs_<?php echo esc_attr( $index ); ?>_content"
