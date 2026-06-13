@@ -64,14 +64,6 @@ class Wpfaevent_Event_Handler {
 			);
 		}
 
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
-				403
-			);
-		}
-
 		$event_id = isset( $_POST['event_id'] ) ? absint( $_POST['event_id'] ) : 0;
 
 		if ( ! $event_id ) {
@@ -80,7 +72,7 @@ class Wpfaevent_Event_Handler {
 
 		$event = get_post( $event_id );
 
-		if ( ! $event || 'wpfa_event' !== $event->post_type ) {
+		if ( ! $event || 'wpfa_event' !== $event->post_type || ! current_user_can( 'edit_post', $event_id ) ) {
 			wp_send_json_error( esc_html__( 'Event not found', 'wpfaevent' ) );
 		}
 
@@ -117,8 +109,7 @@ class Wpfaevent_Event_Handler {
 			);
 		}
 
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'publish_events' ) ) {
 			wp_send_json_error(
 				array(
 					'message' => __( 'Unauthorized', 'wpfaevent' ),
@@ -260,14 +251,6 @@ class Wpfaevent_Event_Handler {
 			);
 		}
 
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
-				403
-			);
-		}
-
 		$event_id = isset( $_POST['event_id'] ) ? absint( $_POST['event_id'] ) : 0;
 
 		if ( ! $event_id ) {
@@ -398,14 +381,6 @@ class Wpfaevent_Event_Handler {
 				array(
 					'message' => esc_html__( 'Invalid nonce', 'wpfaevent' ),
 				),
-				403
-			);
-		}
-
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
 				403
 			);
 		}

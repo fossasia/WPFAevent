@@ -48,7 +48,10 @@ if ( $is_valid_date ) {
 	}
 }
 
-$is_admin = current_user_can( 'manage_options' );
+$can_manage_content  = Wpfaevent_Roles::current_user_can_manage_dashboard();
+$can_delete_content  = Wpfaevent_Roles::current_user_can_delete_content();
+$can_edit_this_event = $can_manage_content && current_user_can( 'edit_post', $event_id );
+$can_delete_event    = $can_delete_content && current_user_can( 'delete_post', $event_id );
 ?>
 
 <div class="event-card"
@@ -63,7 +66,7 @@ $is_admin = current_user_can( 'manage_options' );
 	data-cfs-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_cfs_link', true ) ); ?>"
 	data-time="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_time', true ) ); ?>">
 
-	<?php if ( $is_admin && ( ! $is_valid_date || $is_past_event ) ) : ?>
+	<?php if ( $can_manage_content && ( ! $is_valid_date || $is_past_event ) ) : ?>
 		<div class="wpfaevent-admin-warning">
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="wpfaevent-warning-icon" aria-hidden="true">
 				<path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
@@ -80,7 +83,7 @@ $is_admin = current_user_can( 'manage_options' );
 		</div>
 	<?php endif; ?>
 
-	<?php if ( $is_admin ) : ?>
+	<?php if ( $can_edit_this_event ) : ?>
 	<div class="event-card-actions">
 		<button class="btn-edit-event"
 				data-post-id="<?php echo esc_attr( $event_id ); ?>"
@@ -96,7 +99,9 @@ $is_admin = current_user_can( 'manage_options' );
 			<?php esc_html_e( 'Edit Details', 'wpfaevent' ); ?>
 		</button>
 		<a href="<?php echo esc_url( admin_url( 'post.php?post=' . $event_id . '&action=edit' ) ); ?>" class="btn-edit-content"><?php esc_html_e( 'Edit Content', 'wpfaevent' ); ?></a>
-		<button class="btn-delete-event"><?php esc_html_e( 'Delete', 'wpfaevent' ); ?></button>
+		<?php if ( $can_delete_event ) : ?>
+			<button class="btn-delete-event"><?php esc_html_e( 'Delete', 'wpfaevent' ); ?></button>
+		<?php endif; ?>
 	</div>
 	<?php endif; ?>
 

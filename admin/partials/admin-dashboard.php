@@ -3,7 +3,7 @@
  * Template Name: FOSSASIA Admin Dashboard (Plugin)
  * Description: A template for the admin dashboard to manage speaker submissions.
  */
-if ( ! current_user_can( 'manage_options' ) ) {
+if ( ! Wpfaevent_Roles::current_user_can_manage_settings() ) {
     wp_die( 'You do not have sufficient permissions to access this page.', 'Access Denied', [ 'response' => 403 ] );
 }
 
@@ -15,6 +15,7 @@ $data_dir = $upload_dir['basedir'] . '/fossasia-data';
 
 // Define file paths based on event ID
 $sponsors_file = $event_id ? $data_dir . '/sponsors-' . $event_id . '.json' : '';
+$exhibitors_file = $event_id ? $data_dir . '/exhibitors-' . $event_id . '.json' : '';
 $settings_file = $event_id ? $data_dir . '/site-settings-' . $event_id . '.json' : '';
 $speakers_file = $event_id ? $data_dir . '/speakers-' . $event_id . '.json' : '';
 $schedule_file = $event_id ? $data_dir . '/schedule-' . $event_id . '.json' : '';
@@ -33,7 +34,8 @@ $coc_content_file = $data_dir . '/coc-content.json';
 // Ensure files exist
 if ($event_id) {
     if (!file_exists($sponsors_file)) { file_put_contents($sponsors_file, '[]'); }
-    if (!file_exists($settings_file)) { file_put_contents($settings_file, '{"about_section_content": "", "section_visibility": {"about": true, "speakers": true, "schedule": true, "sponsors": true}}'); }
+    if (!file_exists($exhibitors_file)) { file_put_contents($exhibitors_file, '[]'); }
+    if (!file_exists($settings_file)) { file_put_contents($settings_file, '{"about_section_content": "", "section_visibility": {"about": true, "speakers": true, "schedule": true, "sponsors": true, "exhibitors": true}}'); }
     if (!file_exists($speakers_file)) { file_put_contents($speakers_file, '[]'); }
     if (!file_exists($schedule_file)) { file_put_contents($schedule_file, '{}'); }
     if (!file_exists($theme_settings_file)) { file_put_contents($theme_settings_file, '{"brand_color": "#D51007", "background_color": "#f8f9fa", "text_color": "#0b0b0b"}'); }
@@ -46,6 +48,7 @@ if (!file_exists($coc_content_file)) { file_put_contents($coc_content_file, '{"c
 // Speaker data is needed for the new "Manage Speakers" tab
 $speakers_data = $event_id && file_exists($speakers_file) ? json_decode(file_get_contents($speakers_file), true) : [];
 $sponsors_data = $event_id && file_exists($sponsors_file) ? json_decode(file_get_contents($sponsors_file), true) : [];
+$exhibitors_data = $event_id && file_exists($exhibitors_file) ? json_decode(file_get_contents($exhibitors_file), true) : [];
 $site_settings_data = $event_id && file_exists($settings_file) ? json_decode(file_get_contents($settings_file), true) : [];
 $custom_sections_data = json_decode(file_get_contents($sections_file), true);
 $schedule_data = $event_id && file_exists($schedule_file) ? json_decode(file_get_contents($schedule_file), true) : [];
@@ -341,7 +344,7 @@ if ( isset( $_GET['return_to'] ) ) {
                 <p>Override the global site logo for this event. If no logo is set here, the global logo will be used.</p>
                 <label for="eventLogo">Logo Image (Recommended: Transparent PNG, max height 36px)</label>
                 <p>Current Logo for this Event:</p>
-                <img id="currentEventLogo" src="<?php echo esc_url($site_settings_data['event_logo_url'] ?? ($global_settings_data['site_logo_url'] ?: plugins_url('../assets/images/logo.png', __DIR__ . '/../includes/class-wpfaevent-landing.php'))); ?>" alt="Current Event Logo" style="max-height: 36px; height: auto; background: #eee; padding: 5px; border-radius: 4px; margin-bottom: 10px;">
+                <img id="currentEventLogo" src="<?php echo esc_url($site_settings_data['event_logo_url'] ?? ($global_settings_data['site_logo_url'] ?: WPFAEVENT_URL . 'assets/images/logo.png')); ?>" alt="Current Event Logo" style="max-height: 36px; height: auto; background: #eee; padding: 5px; border-radius: 4px; margin-bottom: 10px;">
                 <br>
                 <label>Update Logo (URL or Upload):</label>
                 <input type="text" name="eventLogoURL" placeholder="Enter image URL to override global logo">
@@ -407,7 +410,7 @@ if ( isset( $_GET['return_to'] ) ) {
                 <h3 style="margin-top: 20px;">Site Logo</h3>
                 <label for="siteLogo">Logo Image (Recommended: Transparent PNG, max height 36px)</label>
                 <p>Current Logo:</p>
-                <img id="currentSiteLogo" src="<?php echo esc_url($global_settings_data['site_logo_url'] ?? plugins_url('../assets/images/logo.png', __DIR__ . '/../includes/class-wpfaevent-landing.php')); ?>" alt="Current Site Logo" style="max-height: 36px; height: auto; background: #eee; padding: 5px; border-radius: 4px; margin-bottom: 10px;">
+                <img id="currentSiteLogo" src="<?php echo esc_url($global_settings_data['site_logo_url'] ?? WPFAEVENT_URL . 'assets/images/logo.png'); ?>" alt="Current Site Logo" style="max-height: 36px; height: auto; background: #eee; padding: 5px; border-radius: 4px; margin-bottom: 10px;">
                 <br>
                 <label>Update Logo (URL or Upload):</label>
                 <input type="text" name="siteLogoURL" placeholder="Enter image URL">
@@ -739,6 +742,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const store = {
         speakers: <?php echo json_encode($speakers_data); ?>,
         sponsors: <?php echo json_encode($sponsors_data); ?>,
+        exhibitors: <?php echo json_encode($exhibitors_data); ?>,
         settings: <?php echo json_encode($site_settings_data); ?>,
         sections: <?php echo json_encode($custom_sections_data); ?>,
         navigation: <?php echo json_encode($navigation_data); ?>,
@@ -875,7 +879,7 @@ document.addEventListener('DOMContentLoaded', function() {
             form.querySelector('[name="regButtonLink"]').value = store.settings.reg_button_link || '';
             form.querySelector('[name="footerText"]').value = store.settings.footer_text || '';
             // The event logo preview needs to check the event-specific setting first. The path was corrected from a non-existent fossasia-landing.php.
-            eventLogoPreview.src = store.settings.event_logo_url || '<?php echo esc_url($global_settings_data['site_logo_url'] ?: plugins_url('../assets/images/logo.png', __DIR__ . '/../includes/class-wpfaevent-landing.php')); ?>';
+            eventLogoPreview.src = store.settings.event_logo_url || '<?php echo esc_url($global_settings_data['site_logo_url'] ?: WPFAEVENT_URL . 'assets/images/logo.png'); ?>';
         };
 
         const handleSettingsSubmit = async (e) => {
@@ -961,7 +965,8 @@ document.addEventListener('DOMContentLoaded', function() {
             { id: 'about', name: 'About Section' },
             { id: 'speakers', name: 'Speakers Section' },
             { id: 'schedule', name: 'Schedule Overview' },
-            { id: 'sponsors', name: 'Sponsors Section' }
+            { id: 'sponsors', name: 'Sponsors Section' },
+            { id: 'exhibitors', name: 'Exhibitors Section' }
         ];
 
         const render = () => {
@@ -1262,8 +1267,9 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('action', 'fossasia_sync_eventyay');
             formData.append('nonce', adminNonce);
             formData.append('event_id', eventId);
+            formData.append('eventyay_api_url', apiUrlInput.value.trim());
 
-            // The PHP backend will now read the saved URL
+            // Send the current URL so sync does not depend on the legacy settings AJAX bridge.
             try {
                 const response = await fetch(ajaxUrl, { method: 'POST', body: formData });
                 const data = await response.json();
@@ -1294,11 +1300,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         syncBtn.addEventListener('click', async () => {
-            if (await saveUrl()) {
-                runSync();
-            } else {
-                customAlert.alert('Could not save the URL. Please try again.', 'Error');
+            if (!apiUrlInput.value.trim()) {
+                customAlert.alert('Please enter an Eventyay API URL before syncing.', 'Error');
+                return;
             }
+
+            const saved = await saveUrl();
+            if (saved) {
+                store.settings.eventyay_api_url = apiUrlInput.value.trim();
+            }
+
+            runSync();
         });
     })();
 
@@ -2116,6 +2128,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const defaultTargets = [
                 { value: '#about', label: 'About Section' }, { value: '#speakers', label: 'Speakers Section' },
                 { value: '#schedule-overview', label: 'Schedule Overview Section' }, { value: '#sponsors', label: 'Sponsors Section' },
+                { value: '#exhibitors', label: 'Exhibitors Section' },
                 { value: '#venue', label: 'Venue Section' }
             ];
             const customTargets = (store.sections || [])
