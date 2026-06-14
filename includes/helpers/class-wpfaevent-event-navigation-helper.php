@@ -83,6 +83,8 @@ class Wpfaevent_Event_Navigation_Helper {
 		switch ( $href ) {
 			case '#about':
 				return ! empty( $context['show_about'] ) && ! empty( $context['has_about'] );
+			case '#tickets':
+				return ! empty( $context['has_tickets'] );
 			case '#speakers':
 				return ! empty( $context['show_speakers'] ) && ! empty( $context['has_speakers'] );
 			case '#schedule-overview':
@@ -183,6 +185,10 @@ class Wpfaevent_Event_Navigation_Helper {
 			array(
 				'href' => '#about',
 				'text' => __( 'Overview', 'wpfaevent' ),
+			),
+			array(
+				'href' => '#tickets',
+				'text' => __( 'Tickets', 'wpfaevent' ),
 			),
 			array(
 				'href' => '#speakers',

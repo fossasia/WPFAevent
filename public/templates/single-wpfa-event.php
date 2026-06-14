@@ -42,6 +42,49 @@ $read_dashboard_json = static function ( $filename, $fallback ) {
 	return ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) ? $decoded : $fallback;
 };
 
+$build_eventyay_widget_assets = static function ( $widget_url ) {
+	$widget_url = trim( (string) $widget_url );
+
+	if ( '' === $widget_url || ! wp_http_validate_url( $widget_url ) ) {
+		return array();
+	}
+
+	$parts = wp_parse_url( $widget_url );
+	if ( empty( $parts['scheme'] ) || empty( $parts['host'] ) ) {
+		return array();
+	}
+
+	$scheme = strtolower( $parts['scheme'] );
+	if ( ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
+		return array();
+	}
+
+	$origin = $scheme . '://' . strtolower( $parts['host'] );
+	if ( isset( $parts['port'] ) ) {
+		$origin .= ':' . absint( $parts['port'] );
+	}
+
+	$path      = ! empty( $parts['path'] ) ? trailingslashit( $parts['path'] ) : '/';
+	$event_url = esc_url_raw( $origin . $path );
+
+	if ( ! wp_http_validate_url( $event_url ) ) {
+		return array();
+	}
+
+	$css_url    = esc_url_raw( trailingslashit( $event_url ) . 'widget/v1.css' );
+	$script_url = esc_url_raw( trailingslashit( $origin ) . 'widget/v1.en.js' );
+
+	if ( ! wp_http_validate_url( $css_url ) || ! wp_http_validate_url( $script_url ) ) {
+		return array();
+	}
+
+	return array(
+		'event_url'  => $event_url,
+		'css_url'    => $css_url,
+		'script_url' => $script_url,
+	);
+};
+
 $normalize_post_id_list = static function ( $post_ids ) {
 	if ( ! is_array( $post_ids ) ) {
 		return array();
@@ -292,19 +335,69 @@ $sponsor_groups     = $read_dashboard_json( 'sponsors-' . absint( $event_id ) . 
 $exhibitors         = $read_dashboard_json( 'exhibitors-' . absint( $event_id ) . '.json', array() );
 $section_visibility = isset( $site_settings['section_visibility'] ) && is_array( $site_settings['section_visibility'] ) ? $site_settings['section_visibility'] : array();
 
-$event_title          = get_the_title( $event_id );
-$start_date           = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
-$end_date             = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
-$location             = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
-$venue_information    = trim( (string) get_post_meta( $event_id, 'wpfa_event_venue_information', true ) );
-$custom_tabs          = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_custom_tabs( get_post_meta( $event_id, 'wpfa_event_custom_tabs', true ) ) : array();
-$event_languages      = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array();
-$event_language_label = implode( ', ', $event_languages );
-$event_url            = get_post_meta( $event_id, 'wpfa_event_url', true );
-$event_url            = $event_url ? esc_url_raw( $event_url ) : '';
-$about_content        = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
-$post_content         = trim( (string) get_post_field( 'post_content', $event_id ) );
-$event_lead           = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
+$event_title            = get_the_title( $event_id );
+$start_date             = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
+$end_date               = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
+$location               = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
+$venue_information      = trim( (string) get_post_meta( $event_id, 'wpfa_event_venue_information', true ) );
+$custom_tabs            = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_custom_tabs( get_post_meta( $event_id, 'wpfa_event_custom_tabs', true ) ) : array();
+$event_languages        = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array();
+$event_language_label   = implode( ', ', $event_languages );
+$event_url              = get_post_meta( $event_id, 'wpfa_event_url', true );
+$event_url              = $event_url ? esc_url_raw( $event_url ) : '';
+$event_header_image_url = get_post_meta( $event_id, 'wpfa_event_header_image_url', true );
+$event_header_image_url = $event_header_image_url ? esc_url_raw( $event_header_image_url ) : '';
+$event_logo_url         = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
+$event_logo_url         = $event_logo_url ? esc_url_raw( $event_logo_url ) : '';
+$ticket_widget_url      = get_post_meta( $event_id, 'wpfa_event_ticket_widget_url', true );
+$ticket_widget_url      = $ticket_widget_url ? esc_url_raw( $ticket_widget_url ) : '';
+$about_content          = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
+$post_content           = trim( (string) get_post_field( 'post_content', $event_id ) );
+$event_lead             = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
+
+if ( ! $event_header_image_url && ! empty( $site_settings['event_header_image_url'] ) ) {
+	$event_header_image_url = esc_url_raw( $site_settings['event_header_image_url'] );
+}
+
+if ( ! $event_logo_url && ! empty( $site_settings['event_logo_url'] ) ) {
+	$event_logo_url = esc_url_raw( $site_settings['event_logo_url'] );
+}
+
+if ( ! $ticket_widget_url && ! empty( $site_settings['ticket_widget_url'] ) ) {
+	$ticket_widget_url = esc_url_raw( $site_settings['ticket_widget_url'] );
+}
+
+if ( ! $ticket_widget_url && $event_url && get_post_meta( $event_id, '_wpfa_eventyay_event_slug', true ) ) {
+	$ticket_widget_url = $event_url;
+}
+
+if ( ! $event_header_image_url ) {
+	$event_header_image_url = get_the_post_thumbnail_url( $event_id, 'full' );
+	$event_header_image_url = $event_header_image_url ? esc_url_raw( $event_header_image_url ) : '';
+}
+
+$ticket_widget_assets = $build_eventyay_widget_assets( $ticket_widget_url );
+$show_ticket_widget   = ! empty( $ticket_widget_assets['event_url'] );
+
+if ( $show_ticket_widget ) {
+	wp_enqueue_style(
+		'wpfaevent-eventyay-widget-' . absint( $event_id ),
+		$ticket_widget_assets['css_url'],
+		array(),
+		WPFAEVENT_VERSION,
+		'all'
+	);
+
+	wp_enqueue_script(
+		'wpfaevent-eventyay-widget-' . absint( $event_id ),
+		$ticket_widget_assets['script_url'],
+		array(),
+		WPFAEVENT_VERSION,
+		true
+	);
+
+	wp_script_add_data( 'wpfaevent-eventyay-widget-' . absint( $event_id ), 'async', true );
+}
 
 $main_speaker_limit             = absint( apply_filters( 'wpfa_event_main_speaker_limit', 20, $event_id ) );
 $main_speaker_limit             = $main_speaker_limit ? $main_speaker_limit : 20;
@@ -354,6 +447,10 @@ $build_event_schedule_view_url = static function ( $view ) use ( $event_id, $eve
 
 $register_text = ! empty( $site_settings['reg_button_text'] ) ? sanitize_text_field( $site_settings['reg_button_text'] ) : __( 'Get Tickets', 'wpfaevent' );
 $register_url  = ! empty( $site_settings['reg_button_link'] ) ? esc_url_raw( $site_settings['reg_button_link'] ) : $event_url;
+
+if ( ! $register_url && $show_ticket_widget ) {
+	$register_url = $ticket_widget_assets['event_url'];
+}
 
 $event_calendar_data = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_calendar_data( $event_id ) : array();
 $event_calendar_data = is_wp_error( $event_calendar_data ) ? array() : $event_calendar_data;
@@ -631,6 +728,7 @@ $wpfa_event_nav_context = array(
 	'show_sponsors'   => $show_sponsors,
 	'show_exhibitors' => $show_exhibitors,
 	'has_about'       => $show_about && '' !== trim( $about_content ),
+	'has_tickets'     => $show_ticket_widget,
 	'has_speakers'    => $show_speakers && ( ! empty( $speaker_ids ) || ! empty( $dashboard_speakers ) ),
 	'has_schedule'    => $show_schedule && ! empty( $schedule_items ),
 	'has_sponsors'    => $show_sponsors && ! empty( $visible_sponsor_groups ),
@@ -647,6 +745,17 @@ if ( empty( $site_logo_url ) ) {
 	$site_logo_url = WPFAEVENT_URL . 'assets/images/logo.png';
 }
 $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
+
+$hero_classes = array( 'wpfa-event-hero' );
+if ( $event_header_image_url ) {
+	$hero_classes[] = 'has-event-header-image';
+}
+
+if ( $event_logo_url && $event_header_image_url && $event_logo_url === $event_header_image_url ) {
+	$event_logo_url = '';
+}
+
+$hero_style_attr = $event_header_image_url ? ' style="' . esc_attr( '--event-header-image: url("' . esc_url_raw( $event_header_image_url ) . '");' ) . '"' : '';
 
 $header_vars = array(
 	'site_logo_url'        => $site_logo_url,
@@ -685,9 +794,17 @@ $header_vars = array(
 	?>
 
 	<main class="wpfa-event-detail" itemscope itemtype="https://schema.org/Event">
-		<section class="wpfa-event-hero">
+		<?php if ( $event_header_image_url ) : ?>
+			<meta itemprop="image" content="<?php echo esc_url( $event_header_image_url ); ?>">
+		<?php endif; ?>
+		<section class="<?php echo esc_attr( implode( ' ', $hero_classes ) ); ?>"<?php echo $hero_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>
 			<div class="container wpfa-event-hero-inner">
 				<div class="wpfa-event-hero-copy">
+					<?php if ( $event_logo_url ) : ?>
+						<div class="wpfa-event-logo-mark">
+							<img src="<?php echo esc_url( $event_logo_url ); ?>" alt="<?php echo esc_attr( $event_title ); ?>" loading="eager">
+						</div>
+					<?php endif; ?>
 					<p class="wpfa-event-kicker"><?php esc_html_e( 'Eventyay Event', 'wpfaevent' ); ?></p>
 					<h1 itemprop="name"><?php echo esc_html( $event_title ); ?></h1>
 						<div class="wpfa-event-meta-list">
@@ -730,7 +847,11 @@ $header_vars = array(
 						<p><?php esc_html_e( 'Registration', 'wpfaevent' ); ?></p>
 						<strong><?php esc_html_e( 'Open', 'wpfaevent' ); ?></strong>
 					</div>
-					<?php if ( $register_url ) : ?>
+					<?php if ( $show_ticket_widget ) : ?>
+						<a class="wpfa-event-register" href="#tickets">
+							<?php echo esc_html( $register_text ); ?>
+						</a>
+					<?php elseif ( $register_url ) : ?>
 						<a class="wpfa-event-register" href="<?php echo esc_url( $register_url ); ?>" target="_blank" rel="noopener">
 							<?php echo esc_html( $register_text ); ?>
 						</a>
@@ -805,6 +926,33 @@ $header_vars = array(
 
 		<?php if ( ! empty( $wpfa_event_nav_items ) ) : ?>
 			<?php include WPFAEVENT_PATH . 'public/partials/event-section-nav.php'; ?>
+		<?php endif; ?>
+
+		<?php if ( $show_ticket_widget ) : ?>
+			<section id="tickets" class="wpfa-event-section wpfa-event-tickets" aria-labelledby="wpfa-event-tickets-title">
+				<div class="container">
+					<div class="wpfa-event-section-head">
+						<div>
+							<h2 id="wpfa-event-tickets-title"><?php esc_html_e( 'Tickets', 'wpfaevent' ); ?></h2>
+							<p><?php esc_html_e( 'Select ticket options and continue checkout through Eventyay.', 'wpfaevent' ); ?></p>
+						</div>
+						<a href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>" target="_blank" rel="noopener">
+							<?php esc_html_e( 'Open on Eventyay', 'wpfaevent' ); ?>
+						</a>
+					</div>
+					<div class="wpfa-event-ticket-widget">
+						<eventyay-widget event="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>"></eventyay-widget>
+						<noscript>
+							<p class="wpfa-event-ticket-fallback">
+								<?php esc_html_e( 'JavaScript is required to show Eventyay tickets here.', 'wpfaevent' ); ?>
+								<a href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>" target="_blank" rel="noopener">
+									<?php esc_html_e( 'Buy tickets on Eventyay', 'wpfaevent' ); ?>
+								</a>
+							</p>
+						</noscript>
+					</div>
+				</div>
+			</section>
 		<?php endif; ?>
 
 		<?php if ( $show_about && '' !== trim( $about_content ) ) : ?>

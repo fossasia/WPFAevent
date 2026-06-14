@@ -57,6 +57,16 @@
 	position: relative;
 }
 
+.wpfaevent .wpfa-event-hero.has-event-header-image {
+	background:
+		linear-gradient(90deg, rgba(19, 27, 38, 0.92) 0%, rgba(19, 27, 38, 0.76) 48%, rgba(19, 27, 38, 0.48) 100%),
+		var(--event-header-image);
+	background-position: center;
+	background-size: cover;
+	padding-bottom: 72px;
+	padding-top: 72px;
+}
+
 .wpfaevent .wpfa-event-hero::before,
 .wpfaevent .wpfa-event-hero::after {
 	background: rgba(255, 255, 255, 0.11);
@@ -79,6 +89,11 @@
 	width: 420px;
 }
 
+.wpfaevent .wpfa-event-hero.has-event-header-image::before,
+.wpfaevent .wpfa-event-hero.has-event-header-image::after {
+	display: none;
+}
+
 .wpfaevent .wpfa-event-hero-inner {
 	align-items: stretch;
 	display: grid;
@@ -91,6 +106,25 @@
 .wpfaevent .wpfa-event-hero-copy {
 	align-self: center;
 	max-width: 820px;
+}
+
+.wpfaevent .wpfa-event-logo-mark {
+	align-items: center;
+	background: rgba(255, 255, 255, 0.96);
+	border-radius: var(--event-radius);
+	display: inline-flex;
+	margin-bottom: 18px;
+	max-width: min(420px, 100%);
+	padding: 12px 16px;
+}
+
+.wpfaevent .wpfa-event-logo-mark img {
+	display: block;
+	height: auto;
+	max-height: 112px;
+	max-width: 100%;
+	object-fit: contain;
+	width: auto;
 }
 
 .wpfaevent .wpfa-event-kicker {
@@ -376,6 +410,35 @@
 	border-radius: 0;
 	display: block;
 	padding: 10px 14px;
+}
+
+.wpfaevent .wpfa-event-tickets {
+	background: #fff;
+}
+
+.wpfaevent .wpfa-event-ticket-widget {
+	background: var(--event-panel);
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	box-shadow: var(--event-shadow);
+	padding: 20px;
+}
+
+.wpfaevent .wpfa-event-ticket-widget eventyay-widget {
+	display: block;
+	min-height: 260px;
+	width: 100%;
+}
+
+.wpfaevent .wpfa-event-ticket-fallback {
+	color: var(--event-muted);
+	font-weight: 700;
+	margin: 0;
+}
+
+.wpfaevent .wpfa-event-ticket-fallback a {
+	color: var(--event-primary-dark);
+	font-weight: 900;
 }
 
 .wpfaevent .wpfa-schedule {
@@ -2889,6 +2952,23 @@
 
 	.wpfaevent .wpfa-event-hero {
 		padding: 40px 0;
+	}
+
+	.wpfaevent .wpfa-event-hero.has-event-header-image {
+		padding: 48px 0;
+	}
+
+	.wpfaevent .wpfa-event-logo-mark {
+		max-width: 100%;
+		padding: 10px 12px;
+	}
+
+	.wpfaevent .wpfa-event-logo-mark img {
+		max-height: 88px;
+	}
+
+	.wpfaevent .wpfa-event-ticket-widget {
+		padding: 14px;
 	}
 
 	.wpfaevent .wpfa-partner-detail-hero {

@@ -2732,6 +2732,136 @@ class Wpfaevent_Eventyay_Importer {
 	}
 
 	/**
+	 * Get a header or hero image URL from likely Eventyay event fields.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event    Eventyay event resource.
+	 * @param array $settings Import settings.
+	 * @return string
+	 */
+	private function eventyay_event_header_image_url( $event, $settings ) {
+		$value = $this->eventyay_event_first_present_raw(
+			$event,
+			array(
+				'header_image_url',
+				'header-image-url',
+				'header_image',
+				'header-image',
+				'header',
+				'banner_image_url',
+				'banner-image-url',
+				'banner_image',
+				'banner-image',
+				'banner',
+				'hero_image_url',
+				'hero-image-url',
+				'hero_image',
+				'hero-image',
+				'hero',
+				'cover_image_url',
+				'cover-image-url',
+				'cover_image',
+				'cover-image',
+				'cover',
+				'background_image_url',
+				'background-image-url',
+				'background_image',
+				'background-image',
+				'frontpage_image_url',
+				'frontpage-image-url',
+				'frontpage_image',
+				'frontpage-image',
+				'image_url',
+				'image-url',
+				'image',
+				'large_image_url',
+				'large-image-url',
+				'original_image_url',
+				'original-image-url',
+			),
+			true
+		);
+
+		return $this->eventyay_url_value( $value, $settings['base_url'] );
+	}
+
+	/**
+	 * Get an Eventyay event logo or ticket shop banner image URL.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event    Eventyay event resource.
+	 * @param array $settings Import settings.
+	 * @return string
+	 */
+	private function eventyay_event_logo_url( $event, $settings ) {
+		$value = $this->eventyay_event_first_present_raw(
+			$event,
+			array(
+				'logo_image_url',
+				'logo-image-url',
+				'logo_image',
+				'logo-image',
+				'logo_url',
+				'logo-url',
+				'event_logo_url',
+				'event-logo-url',
+				'event_logo',
+				'event-logo',
+				'shop_logo_url',
+				'shop-logo-url',
+				'shop_logo',
+				'shop-logo',
+				'logo',
+			),
+			true
+		);
+
+		return $this->eventyay_url_value( $value, $settings['base_url'] );
+	}
+
+	/**
+	 * Get the Eventyay widget URL to use in the ticket purchase embed.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $event      Eventyay event resource.
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return string
+	 */
+	private function eventyay_ticket_widget_url( $event, $settings, $event_slug ) {
+		$url = $this->eventyay_url_value(
+			$this->eventyay_event_first_present_raw(
+				$event,
+				array(
+					'ticket_widget_url',
+					'ticket-widget-url',
+					'widget_url',
+					'widget-url',
+					'tickets_url',
+					'tickets-url',
+					'ticket_url',
+					'ticket-url',
+					'shop_url',
+					'shop-url',
+					'registration_url',
+					'registration-url',
+				),
+				true
+			),
+			$settings['base_url']
+		);
+
+		if ( ! $url ) {
+			$url = $this->eventyay_public_event_url( $event, $settings, $event_slug );
+		}
+
+		return $url ? trailingslashit( esc_url_raw( $url ) ) : '';
+	}
+
+	/**
 	 * Get Eventyay event theme colors from event settings.
 	 *
 	 * @since 1.0.0
@@ -2831,6 +2961,13 @@ class Wpfaevent_Eventyay_Importer {
 		$event_url            = $this->eventyay_public_event_url( $event, $settings, $event_slug );
 		$languages            = $this->eventyay_event_languages( $event );
 		$colors               = $this->eventyay_event_colors( $event );
+		$event_logo_url       = $this->eventyay_event_logo_url( $event, $settings );
+		$event_header_url     = $this->eventyay_event_header_image_url( $event, $settings );
+		$ticket_widget_url    = $this->eventyay_ticket_widget_url( $event, $settings, $event_slug );
+
+		if ( ! $event_header_url && $event_logo_url ) {
+			$event_header_url = $event_logo_url;
+		}
 
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_start_date', $start_date );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_end_date', $end_date );
@@ -2842,6 +2979,10 @@ class Wpfaevent_Eventyay_Importer {
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_ends_at', $normalized_ends_at );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_location', $location );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_url', $event_url );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_registration_link', $event_url );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_header_image_url', $event_header_url );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_logo_url', $event_logo_url );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_ticket_widget_url', $ticket_widget_url );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_languages', $languages );
 
 		if ( ! empty( $colors ) || $this->eventyay_event_has_settings_payload( $event ) ) {
@@ -2859,6 +3000,7 @@ class Wpfaevent_Eventyay_Importer {
 
 		update_post_meta( $saved_id, '_wpfa_eventyay_organizer_slug', sanitize_text_field( $organizer_slug ) );
 		update_post_meta( $saved_id, '_wpfa_eventyay_event_slug', sanitize_text_field( $event_slug ) );
+		update_post_meta( $saved_id, '_wpfa_eventyay_base_url', esc_url_raw( $settings['base_url'] ) );
 		update_post_meta( $saved_id, '_wpfa_eventyay_last_imported_at', current_time( 'mysql', true ) );
 
 		$source_id = $this->eventyay_event_first_present_raw( $event, array( '_eventyay_source_id', 'id', 'code', 'identifier' ), false );
@@ -2898,7 +3040,14 @@ class Wpfaevent_Eventyay_Importer {
 		$dashboard_settings = is_array( $dashboard_settings ) ? $dashboard_settings : array();
 		$description        = $this->eventyay_event_description( $event );
 		$event_url          = $this->eventyay_public_event_url( $event, $settings, $event_slug );
+		$event_logo_url     = $this->eventyay_event_logo_url( $event, $settings );
+		$event_header_url   = $this->eventyay_event_header_image_url( $event, $settings );
+		$ticket_widget_url  = $this->eventyay_ticket_widget_url( $event, $settings, $event_slug );
 		$about_updated      = 0;
+
+		if ( ! $event_header_url && $event_logo_url ) {
+			$event_header_url = $event_logo_url;
+		}
 
 		$default_section_visibility = array(
 			'about'      => true,
@@ -2927,6 +3076,24 @@ class Wpfaevent_Eventyay_Importer {
 
 		if ( $event_url ) {
 			$dashboard_settings['reg_button_link'] = esc_url_raw( $event_url );
+		}
+
+		if ( $event_header_url ) {
+			$dashboard_settings['event_header_image_url'] = esc_url_raw( $event_header_url );
+		} else {
+			unset( $dashboard_settings['event_header_image_url'] );
+		}
+
+		if ( $event_logo_url ) {
+			$dashboard_settings['event_logo_url'] = esc_url_raw( $event_logo_url );
+		} else {
+			unset( $dashboard_settings['event_logo_url'] );
+		}
+
+		if ( $ticket_widget_url ) {
+			$dashboard_settings['ticket_widget_url'] = esc_url_raw( $ticket_widget_url );
+		} else {
+			unset( $dashboard_settings['ticket_widget_url'] );
 		}
 
 		$write_result = $this->write_dashboard_json_file( $settings_file, $dashboard_settings );
@@ -3731,7 +3898,7 @@ class Wpfaevent_Eventyay_Importer {
 	 */
 	private function eventyay_url_value( $value, $base_url ) {
 		if ( is_array( $value ) ) {
-			foreach ( array( 'url', 'href', 'download', 'thumbnail', 'image', 'en', 'default' ) as $key ) {
+			foreach ( array( 'url', 'href', 'download', 'full', 'original', 'large', 'medium', 'small', 'thumbnail', 'image', 'banner', 'logo', 'file', 'en', 'default' ) as $key ) {
 				if ( ! empty( $value[ $key ] ) ) {
 					return $this->eventyay_url_value( $value[ $key ], $base_url );
 				}

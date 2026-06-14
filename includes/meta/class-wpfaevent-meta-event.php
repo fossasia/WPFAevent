@@ -209,6 +209,42 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_header_image_url',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'esc_url_raw',
+				'description'       => __( 'Event-specific header image URL', 'wpfaevent' ),
+			)
+		);
+
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_logo_url',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'esc_url_raw',
+				'description'       => __( 'Event-specific logo or banner image URL', 'wpfaevent' ),
+			)
+		);
+
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_ticket_widget_url',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'esc_url_raw',
+				'description'       => __( 'Eventyay ticket widget event URL', 'wpfaevent' ),
+			)
+		);
+
 		// Event hero section lead text.
 		register_post_meta(
 			self::$post_type,
@@ -366,6 +402,9 @@ class Wpfaevent_Meta_Event {
 		$all_day    = self::get_event_all_day( $post->ID );
 		$location   = get_post_meta( $post->ID, 'wpfa_event_location', true );
 		$url        = get_post_meta( $post->ID, 'wpfa_event_url', true );
+		$header_url = get_post_meta( $post->ID, 'wpfa_event_header_image_url', true );
+		$logo_url   = get_post_meta( $post->ID, 'wpfa_event_logo_url', true );
+		$widget_url = get_post_meta( $post->ID, 'wpfa_event_ticket_widget_url', true );
 		$lead_text  = get_post_meta( $post->ID, 'wpfa_event_lead_text', true );
 		$reg_link   = get_post_meta( $post->ID, 'wpfa_event_registration_link', true );
 		$cfs_link   = get_post_meta( $post->ID, 'wpfa_event_cfs_link', true );
@@ -417,6 +456,27 @@ class Wpfaevent_Meta_Event {
 			<tr>
 				<th><label for="wpfa_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
 				<td><input type="url" id="wpfa_event_url" name="wpfa_event_url" value="<?php echo esc_attr( $url ); ?>" class="regular-text" placeholder="https://"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_header_image_url"><?php esc_html_e( 'Header Image URL', 'wpfaevent' ); ?></label></th>
+				<td>
+					<input type="url" id="wpfa_event_header_image_url" name="wpfa_event_header_image_url" value="<?php echo esc_attr( $header_url ); ?>" class="regular-text" placeholder="https://">
+					<p class="description"><?php esc_html_e( 'Imported from Eventyay header, banner, hero, or cover image fields when available.', 'wpfaevent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_logo_url"><?php esc_html_e( 'Event Logo URL', 'wpfaevent' ); ?></label></th>
+				<td>
+					<input type="url" id="wpfa_event_logo_url" name="wpfa_event_logo_url" value="<?php echo esc_attr( $logo_url ); ?>" class="regular-text" placeholder="https://">
+					<p class="description"><?php esc_html_e( 'Imported from Eventyay logo or shop banner image settings when available.', 'wpfaevent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_ticket_widget_url"><?php esc_html_e( 'Ticket Widget URL', 'wpfaevent' ); ?></label></th>
+				<td>
+					<input type="url" id="wpfa_event_ticket_widget_url" name="wpfa_event_ticket_widget_url" value="<?php echo esc_attr( $widget_url ); ?>" class="regular-text" placeholder="https://eventyay.com/organizer/event/">
+					<p class="description"><?php esc_html_e( 'Used to embed the Eventyay ticket purchasing widget on the event page.', 'wpfaevent' ); ?></p>
+				</td>
 			</tr>
 			<tr>
 				<th><label for="wpfa_event_lead_text"><?php esc_html_e( 'Lead Text', 'wpfaevent' ); ?></label></th>
@@ -713,6 +773,18 @@ class Wpfaevent_Meta_Event {
 
 		if ( isset( $_POST['wpfa_event_url'] ) ) {
 			update_post_meta( $post_id, 'wpfa_event_url', esc_url_raw( wp_unslash( $_POST['wpfa_event_url'] ) ) );
+		}
+
+		if ( isset( $_POST['wpfa_event_header_image_url'] ) ) {
+			self::update_or_delete_meta( $post_id, 'wpfa_event_header_image_url', esc_url_raw( wp_unslash( $_POST['wpfa_event_header_image_url'] ) ) );
+		}
+
+		if ( isset( $_POST['wpfa_event_logo_url'] ) ) {
+			self::update_or_delete_meta( $post_id, 'wpfa_event_logo_url', esc_url_raw( wp_unslash( $_POST['wpfa_event_logo_url'] ) ) );
+		}
+
+		if ( isset( $_POST['wpfa_event_ticket_widget_url'] ) ) {
+			self::update_or_delete_meta( $post_id, 'wpfa_event_ticket_widget_url', esc_url_raw( wp_unslash( $_POST['wpfa_event_ticket_widget_url'] ) ) );
 		}
 
 		if ( isset( $_POST['wpfa_event_lead_text'] ) ) {
