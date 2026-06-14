@@ -38,6 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      checks: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -47,7 +48,7 @@ jobs:
         with:
           php-version: '7.4'
           coverage: none
-          tools: composer, cs2pr
+          tools: composer
 
       - name: Restore PHPStan Result Cache
         id: phpstan-cache-restore
@@ -64,10 +65,7 @@ jobs:
           composer-options: '--prefer-dist --optimize-autoloader --no-scripts'
 
       - name: Run PHPStan Analysis
-        shell: bash
-        run: |
-          set -o pipefail
-          composer phpstan -- --error-format=checkstyle | cs2pr
+        run: composer phpstan -- --error-format=github
 
       - name: Save PHPStan Result Cache
         uses: actions/cache/save@v5
