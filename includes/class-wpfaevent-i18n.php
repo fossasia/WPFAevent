@@ -30,16 +30,4 @@ class Wpfaevent_I18n {
 			dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/'
 		);
 	}
-
-	/**
-	 * Intentional Level 3 failure to test GitHub Actions annotations.
-	 *
-	 * @since    1.0.0
-	 * @param    string $input Dummy input parameter.
-	 * @return   int This says it must return an integer, but it returns a string.
-	 */
-	public function test_phpstan_annotations( string $input ) {
-		// Level 3 validates PHPDocs. It will catch this type mismatch.
-		return 'Testing GitHub Actions inline annotations.';
-	}
 }
