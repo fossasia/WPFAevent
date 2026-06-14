@@ -39,7 +39,6 @@ jobs:
     permissions:
       contents: read
       checks: write
-      pull-requests: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -50,11 +49,6 @@ jobs:
           php-version: '7.4'
           coverage: none
           tools: composer
-
-      - name: Setup Reviewdog
-        uses: reviewdog/action-setup@v1
-        with:
-          reviewdog_version: latest
 
       - name: Restore PHPStan Result Cache
         id: phpstan-cache-restore
@@ -70,11 +64,8 @@ jobs:
         with:
           composer-options: '--prefer-dist --optimize-autoloader --no-scripts'
 
-      - name: Run PHPStan with Reviewdog Comments
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ github.token }}
-        run: |
-          vendor/bin/phpstan analyse --error-format=checkstyle | reviewdog -f=checkstyle -name="phpstan" -reporter=github-pr-check -level=error -fail-level=error
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --error-format=github
 
       - name: Save PHPStan Result Cache
         uses: actions/cache/save@v5
