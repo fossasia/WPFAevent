@@ -3,7 +3,7 @@ name: Run PHPStan
 on:
   push:
     branches: [ main ]
-  pull_request:
+  pull_request_target:  # Changed from pull_request
     branches: [ main ]
 
 concurrency:
