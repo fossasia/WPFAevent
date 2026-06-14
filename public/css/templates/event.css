@@ -421,13 +421,72 @@
 	border: 1px solid var(--event-line);
 	border-radius: var(--event-radius);
 	box-shadow: var(--event-shadow);
+	display: grid;
+	gap: 16px;
 	padding: 20px;
 }
 
-.wpfaevent .wpfa-event-ticket-widget eventyay-widget {
+.wpfaevent .wpfa-event-ticket-widget eventyay-widget,
+.wpfaevent .wpfa-event-ticket-widget pretix-widget,
+.wpfaevent .wpfa-event-ticket-widget .eventyay-widget-compat,
+.wpfaevent .wpfa-event-ticket-widget .pretix-widget-compat {
 	display: block;
-	min-height: 260px;
 	width: 100%;
+}
+
+.wpfaevent .wpfa-event-ticket-widget eventyay-widget:empty,
+.wpfaevent .wpfa-event-ticket-widget pretix-widget:empty,
+.wpfaevent .wpfa-event-ticket-widget .eventyay-widget-compat:empty,
+.wpfaevent .wpfa-event-ticket-widget .pretix-widget-compat:empty {
+	display: none;
+}
+
+.wpfaevent .wpfa-event-ticket-backup {
+	align-items: center;
+	background: #f6fbff;
+	border: 1px solid #cfe2f2;
+	border-radius: var(--event-radius);
+	display: grid;
+	gap: 8px 18px;
+	grid-template-columns: minmax(0, 1fr) auto;
+	padding: 16px;
+}
+
+.wpfaevent .wpfa-event-ticket-backup strong {
+	color: var(--event-ink);
+	font-size: 1.08rem;
+	grid-column: 1;
+	line-height: 1.25;
+}
+
+.wpfaevent .wpfa-event-ticket-backup p {
+	color: var(--event-muted);
+	font-weight: 700;
+	grid-column: 1;
+	margin: 0;
+}
+
+.wpfaevent .wpfa-event-ticket-backup-button {
+	align-items: center;
+	background: var(--event-primary);
+	border-radius: var(--event-radius);
+	color: #fff;
+	display: inline-flex;
+	font-weight: 900;
+	grid-column: 2;
+	grid-row: 1 / span 2;
+	justify-content: center;
+	line-height: 1.2;
+	min-height: 40px;
+	padding: 10px 16px;
+	text-align: center;
+	width: fit-content;
+}
+
+.wpfaevent .wpfa-event-ticket-backup-button:hover,
+.wpfaevent .wpfa-event-ticket-backup-button:focus {
+	background: var(--event-primary-dark);
+	color: #fff;
 }
 
 .wpfaevent .wpfa-event-ticket-fallback {
@@ -2967,13 +3026,23 @@
 		max-height: 88px;
 	}
 
-	.wpfaevent .wpfa-event-ticket-widget {
-		padding: 14px;
-	}
+		.wpfaevent .wpfa-event-ticket-widget {
+			padding: 14px;
+		}
 
-	.wpfaevent .wpfa-partner-detail-hero {
-		padding: 44px 0 72px;
-	}
+		.wpfaevent .wpfa-event-ticket-backup {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.wpfaevent .wpfa-event-ticket-backup-button {
+			grid-column: 1;
+			grid-row: auto;
+			width: 100%;
+		}
+
+		.wpfaevent .wpfa-partner-detail-hero {
+			padding: 44px 0 72px;
+		}
 
 	.wpfaevent .wpfa-partner-detail-hero h1 {
 		font-size: 2.35rem;

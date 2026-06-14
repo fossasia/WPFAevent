@@ -380,8 +380,10 @@ $ticket_widget_assets = $build_eventyay_widget_assets( $ticket_widget_url );
 $show_ticket_widget   = ! empty( $ticket_widget_assets['event_url'] );
 
 if ( $show_ticket_widget ) {
+	$eventyay_widget_handle = 'wpfaevent-eventyay-widget-' . absint( $event_id );
+
 	wp_enqueue_style(
-		'wpfaevent-eventyay-widget-' . absint( $event_id ),
+		$eventyay_widget_handle,
 		$ticket_widget_assets['css_url'],
 		array(),
 		WPFAEVENT_VERSION,
@@ -389,14 +391,15 @@ if ( $show_ticket_widget ) {
 	);
 
 	wp_enqueue_script(
-		'wpfaevent-eventyay-widget-' . absint( $event_id ),
+		$eventyay_widget_handle,
 		$ticket_widget_assets['script_url'],
 		array(),
 		WPFAEVENT_VERSION,
-		true
+		false
 	);
 
-	wp_script_add_data( 'wpfaevent-eventyay-widget-' . absint( $event_id ), 'async', true );
+	wp_script_add_data( $eventyay_widget_handle, 'strategy', 'async' );
+	wp_script_add_data( $eventyay_widget_handle, 'async', true );
 }
 
 $main_speaker_limit             = absint( apply_filters( 'wpfa_event_main_speaker_limit', 20, $event_id ) );
@@ -941,7 +944,15 @@ $header_vars = array(
 						</a>
 					</div>
 					<div class="wpfa-event-ticket-widget">
-						<eventyay-widget event="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>"></eventyay-widget>
+						<div class="wpfa-event-ticket-backup" role="note">
+							<strong><?php esc_html_e( 'Tickets are handled by Eventyay.', 'wpfaevent' ); ?></strong>
+							<p><?php esc_html_e( 'If ticket options do not appear here, open the Eventyay ticket shop directly.', 'wpfaevent' ); ?></p>
+							<a class="wpfa-event-ticket-backup-button" href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>" target="_blank" rel="noopener">
+								<?php esc_html_e( 'Buy tickets on Eventyay', 'wpfaevent' ); ?>
+							</a>
+						</div>
+						<?php // Eventyay's current widget bundle still scans the Pretix compatibility selector. ?>
+						<div class="pretix-widget-compat eventyay-widget-compat" event="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>"></div>
 						<noscript>
 							<p class="wpfa-event-ticket-fallback">
 								<?php esc_html_e( 'JavaScript is required to show Eventyay tickets here.', 'wpfaevent' ); ?>
