@@ -85,7 +85,7 @@ class Wpfaevent_Public {
 			}
 		}
 
-		return is_singular( array( 'wpfa_event', 'wpfa_speaker' ) ) || is_post_type_archive( array( 'wpfa_event', 'wpfa_speaker' ) );
+		return is_post_type_archive( array( 'wpfa_event', 'wpfa_speaker' ) );
 	}
 
 	/**

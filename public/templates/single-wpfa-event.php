@@ -252,9 +252,11 @@ $split_schedule_time_range = static function ( $time ) {
 		$parts = explode( '-', trim( (string) $time ), 2 );
 	}
 
+	$end_time = 2 === count( $parts ) ? trim( $parts[1] ) : '';
+
 	return array(
-		isset( $parts[0] ) ? trim( $parts[0] ) : '',
-		isset( $parts[1] ) ? trim( $parts[1] ) : '',
+		trim( $parts[0] ),
+		$end_time,
 	);
 };
 
@@ -301,7 +303,7 @@ $format_schedule_time = static function ( $start_datetime, $end_datetime, $fallb
 	if ( ! $start_label && $fallback_time ) {
 		$time_parts        = $split_schedule_time_range( $fallback_time );
 		$fallback_start    = $build_schedule_fallback_datetime( $fallback_date, $time_parts[0], $event_timezone );
-		$fallback_end_time = isset( $time_parts[1] ) ? $time_parts[1] : '';
+		$fallback_end_time = $time_parts[1];
 		$fallback_end      = $fallback_end_time ? $build_schedule_fallback_datetime( $fallback_date, $fallback_end_time, $event_timezone ) : null;
 		$start_label       = $fallback_start ? wp_date( get_option( 'time_format' ), $fallback_start->getTimestamp(), $selected_schedule_timezone ) : '';
 		$end_label         = $fallback_end ? wp_date( get_option( 'time_format' ), $fallback_end->getTimestamp(), $selected_schedule_timezone ) : '';
@@ -596,7 +598,7 @@ $build_schedule_calendar_url = static function ( $item ) use ( $build_schedule_f
 	if ( ! $start ) {
 		$start = $build_schedule_fallback_datetime(
 			isset( $item['date'] ) ? $item['date'] : '',
-			isset( $time_parts[0] ) ? $time_parts[0] : '',
+			$time_parts[0],
 			$event_timezone
 		);
 	}
