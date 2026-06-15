@@ -206,6 +206,39 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_languages',
+			array(
+				'type'              => 'array',
+				'single'            => true,
+				'show_in_rest'      => array(
+					'schema' => array(
+						'type'  => 'array',
+						'items' => array(
+							'type' => 'string',
+						),
+					),
+				),
+				'sanitize_callback' => array( __CLASS__, 'sanitize_language_list' ),
+				'description'       => __( 'Event languages', 'wpfaevent' ),
+			)
+		);
+
+		foreach ( self::get_event_color_meta_fields() as $meta_key => $label ) {
+			register_post_meta(
+				self::$post_type,
+				$meta_key,
+				array(
+					'type'              => 'string',
+					'single'            => true,
+					'show_in_rest'      => true,
+					'sanitize_callback' => array( __CLASS__, 'sanitize_color_value' ),
+					'description'       => $label,
+				)
+			);
+		}
+
 		// Event speakers as an array of speaker IDs.
 		register_post_meta(
 			self::$post_type,
@@ -244,6 +277,79 @@ class Wpfaevent_Meta_Event {
 		$speaker_ids = array_filter( $speaker_ids );
 
 		return array_values( array_unique( $speaker_ids ) );
+	}
+
+	/**
+	 * Sync speaker-side event relationship meta after an event is saved.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int        $event_id          Event post ID.
+	 * @param array<int> $previous_speakers Speaker IDs before save.
+	 * @param array<int> $current_speakers  Speaker IDs after save.
+	 */
+	private static function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
+		$event_id          = absint( $event_id );
+		$previous_speakers = self::sanitize_post_id_list(
+			array_merge(
+				self::sanitize_post_id_list( $previous_speakers ),
+				Wpfaevent_Meta_Speaker::get_speakers_linked_to_event( $event_id )
+			)
+		);
+		$current_speakers  = self::sanitize_post_id_list( $current_speakers );
+
+		if ( ! $event_id ) {
+			return;
+		}
+
+		foreach ( array_diff( $previous_speakers, $current_speakers ) as $speaker_id ) {
+			Wpfaevent_Meta_Speaker::remove_event_from_speaker( $speaker_id, $event_id, false );
+		}
+
+		foreach ( $current_speakers as $speaker_id ) {
+			Wpfaevent_Meta_Speaker::add_event_to_speaker( $speaker_id, $event_id, false );
+		}
+	}
+
+	/**
+	 * Sanitize, deduplicate, and reindex a list of post IDs.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $post_ids Raw post IDs.
+	 * @return array<int>
+	 */
+	public static function sanitize_post_id_list( $post_ids ) {
+		if ( is_array( $post_ids ) ) {
+			$normalized_post_ids = $post_ids;
+		} elseif ( is_scalar( $post_ids ) ) {
+			if ( is_string( $post_ids ) ) {
+				$post_ids = trim( $post_ids );
+			}
+
+			if ( '' === $post_ids ) {
+				return array();
+			}
+
+			$decoded_post_ids = is_string( $post_ids ) ? json_decode( $post_ids, true ) : null;
+
+			if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded_post_ids ) ) {
+				$normalized_post_ids = $decoded_post_ids;
+			} elseif ( JSON_ERROR_NONE === json_last_error() && is_scalar( $decoded_post_ids ) ) {
+				$normalized_post_ids = array( $decoded_post_ids );
+			} elseif ( is_string( $post_ids ) && false !== strpos( $post_ids, ',' ) ) {
+				$normalized_post_ids = array_map( 'trim', explode( ',', $post_ids ) );
+			} else {
+				$normalized_post_ids = array( $post_ids );
+			}
+		} else {
+			return array();
+		}
+
+		$post_ids = array_map( 'absint', $normalized_post_ids );
+		$post_ids = array_filter( $post_ids );
+
+		return array_values( array_unique( $post_ids ) );
 	}
 
 	/**
@@ -417,6 +523,119 @@ class Wpfaevent_Meta_Event {
 		}
 
 		return $datetime->format( DATE_ATOM );
+	}
+
+	/**
+	 * Event color meta fields imported from Eventyay settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<string, string>
+	 */
+	public static function get_event_color_meta_fields() {
+		return array(
+			'wpfa_event_primary_color'          => __( 'Primary color', 'wpfaevent' ),
+			'wpfa_event_hover_button_color'     => __( 'Button hover color', 'wpfaevent' ),
+			'wpfa_event_theme_background_color' => __( 'Theme background color', 'wpfaevent' ),
+			'wpfa_event_theme_success_color'    => __( 'Theme success color', 'wpfaevent' ),
+			'wpfa_event_theme_danger_color'     => __( 'Theme danger color', 'wpfaevent' ),
+		);
+	}
+
+	/**
+	 * Sanitize event language values.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $languages Raw language list.
+	 * @return array<string>
+	 */
+	public static function sanitize_language_list( $languages ) {
+		if ( is_string( $languages ) ) {
+			$decoded = json_decode( $languages, true );
+			if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
+				$languages = $decoded;
+			} else {
+				$languages = preg_split( '/[,|]/', $languages );
+			}
+		}
+
+		if ( is_scalar( $languages ) ) {
+			$languages = array( $languages );
+		}
+
+		if ( ! is_array( $languages ) ) {
+			return array();
+		}
+
+		$normalized = array();
+
+		foreach ( $languages as $language ) {
+			if ( is_array( $language ) ) {
+				foreach ( array( 'name', 'label', 'title', 'code', 'locale', 'language' ) as $key ) {
+					if ( ! empty( $language[ $key ] ) && is_scalar( $language[ $key ] ) ) {
+						$language = $language[ $key ];
+						break;
+					}
+				}
+			}
+
+			if ( ! is_scalar( $language ) ) {
+				continue;
+			}
+
+			$language = sanitize_text_field( (string) $language );
+			$language = trim( $language );
+
+			if ( '' !== $language ) {
+				$normalized[] = $language;
+			}
+		}
+
+		return array_values( array_unique( $normalized ) );
+	}
+
+	/**
+	 * Sanitize an imported event color value.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $color Raw color.
+	 * @return string
+	 */
+	public static function sanitize_color_value( $color ) {
+		if ( is_array( $color ) ) {
+			foreach ( array( 'value', 'color', 'hex', 'default' ) as $key ) {
+				if ( isset( $color[ $key ] ) ) {
+					return self::sanitize_color_value( $color[ $key ] );
+				}
+			}
+
+			return '';
+		}
+
+		if ( ! is_scalar( $color ) ) {
+			return '';
+		}
+
+		$color = trim( sanitize_text_field( (string) $color ) );
+		if ( '' === $color ) {
+			return '';
+		}
+
+		if ( preg_match( '/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/', $color ) ) {
+			return strtoupper( $color );
+		}
+
+		if ( preg_match( '/^[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/', $color ) ) {
+			return '#' . strtoupper( $color );
+		}
+
+		if ( preg_match( '/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(\s*,\s*(0|1|0?\.\d+))?\s*\)$/', $color ) ) {
+			return $color;
+		}
+
+		return '';
 	}
 
 	/**
