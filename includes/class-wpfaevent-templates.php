@@ -291,11 +291,20 @@ class Wpfaevent_Templates {
 			$atts = shortcode_atts(
 				array(
 					'template' => 'events',
+					'align'    => '',
 				),
 				$atts,
 				$tag
 			);
 			$key  = self::normalize_template_key( $atts['template'] );
+		} else {
+			$atts = shortcode_atts(
+				array(
+					'align' => '',
+				),
+				$atts,
+				$tag
+			);
 		}
 
 		$output = self::render_embed( $key );
@@ -304,8 +313,13 @@ class Wpfaevent_Templates {
 			return $output;
 		}
 
-		$block_slug = isset( self::$templates[ $key ]['block'] ) ? self::$templates[ $key ]['block'] : 'template';
-		return '<div class="wp-block-wpfaevent-' . esc_attr( $block_slug ) . ' alignfull">' . $output . '</div>';
+		if ( ! empty( $atts['align'] ) && in_array( $atts['align'], array( 'wide', 'full' ), true ) ) {
+			$block_slug = isset( self::$templates[ $key ]['block'] ) ? self::$templates[ $key ]['block'] : 'template';
+			$class_name = 'wp-block-wpfaevent-' . esc_attr( $block_slug ) . ' align' . esc_attr( $atts['align'] );
+			return '<div class="' . $class_name . '">' . $output . '</div>';
+		}
+
+		return $output;
 	}
 
 	/**

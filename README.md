@@ -105,7 +105,9 @@ event-plugin/
 | `[wpfaevent_past_events]`             | Displays the past events archive.                | WPFA template  |
 | `[wpfaevent_schedule]`                | Displays the event schedule.                     | WPFA template  |
 | `[wpfaevent_code_of_conduct]`         | Displays the code of conduct content.            | WPFA template  |
-| `[wpfaevent_template template="events"]` | Embeds a selected WPFA template by template key. | WPFA template  |
+| `[wpfaevent_template template="events"]` | Embeds a selected WPFA template by template key. | WPFA template |
+
+**Note:** All shortcodes now accept an optional `align` attribute (`align="wide"` or `align="full"`). When provided, the shortcode output will be wrapped in a corresponding alignment container, e.g., `[wpfaevent_events align="full"]`. If omitted, the shortcode renders the raw embed without altering the surrounding layout.
 
 The generic `wpfaevent_template` shortcode accepts a `template` attribute. Supported values include `landing`, `speakers`, `events`, `past_events`, `schedule`, and `code_of_conduct`.
 
