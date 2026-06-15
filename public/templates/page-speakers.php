@@ -354,7 +354,7 @@ $header_vars         = array(
 							}
 							$event_filter_url = add_query_arg( $event_filter_args, $speakers_base_url );
 							?>
-							<a href="<?php echo esc_url( $event_filter_url ); ?>"
+							<a href="<?php echo htmlentities(esc_url( $event_filter_url )); ?>"
 								class="wpfa-filter-btn <?php echo esc_attr( absint( $event_filter_post->ID ) === $selected_event_id ? 'active' : '' ); ?>">
 								<?php echo esc_html( get_the_title( $event_filter_post->ID ) ); ?>
 							</a>
