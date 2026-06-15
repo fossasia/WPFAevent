@@ -40,12 +40,14 @@ if ( empty( $sid ) || ! is_numeric( $sid ) ) {
 
 $sid = (int) $sid;
 
-$name         = get_the_title( $sid );
-$org          = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
-$position     = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
-$photo_url    = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
-$speaker_link = get_permalink( $sid );
-$is_admin     = current_user_can( 'manage_options' );
+$name                 = get_the_title( $sid );
+$org                  = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
+$position             = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
+$photo_url            = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
+$speaker_link         = get_permalink( $sid );
+$is_admin             = current_user_can( 'manage_options' );
+$featured_speaker_ids = isset( $wpfa_featured_speaker_ids ) && is_array( $wpfa_featured_speaker_ids ) ? array_map( 'absint', $wpfa_featured_speaker_ids ) : array();
+$is_featured_speaker  = in_array( $sid, $featured_speaker_ids, true );
 
 // Get categories from the taxonomy.
 $speaker_categories = array();
@@ -63,7 +65,7 @@ $talk_time     = get_post_meta( $sid, 'wpfa_speaker_talk_time', true );
 $talk_end_time = get_post_meta( $sid, 'wpfa_speaker_talk_end_time', true );
 $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 ?>
-<article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( $sid ); ?>">
+<article class="wpfa-speaker-card <?php echo esc_attr( $is_featured_speaker ? 'is-featured' : '' ); ?>" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( $sid ); ?>">
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
 			<?php if ( $photo_url ) : ?>
 				<?php /* translators: %s: Speaker name. */ ?>
@@ -85,6 +87,10 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 			</button>
 		<?php endif; ?>
 		
+		<?php if ( $is_featured_speaker ) : ?>
+			<p class="wpfa-speaker-featured-badge"><?php esc_html_e( 'Featured Speaker', 'wpfaevent' ); ?></p>
+		<?php endif; ?>
+
 		<?php if ( ! empty( $speaker_categories ) ) : ?>
 			<p class="pill">
 				<?php echo esc_html( $speaker_categories[0] ); ?>

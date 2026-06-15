@@ -261,6 +261,14 @@ class Wpfaevent_Public {
 		);
 
 		wp_register_style(
+			$this->plugin_name . '-dashboard-speakers',
+			WPFAEVENT_URL . 'public/css/templates/dashboard-speakers.css',
+			array( $this->plugin_name . '-speakers' ),
+			$this->version,
+			'all'
+		);
+
+		wp_register_style(
 			$this->plugin_name . '-past-events',
 			WPFAEVENT_URL . 'public/css/templates/past-events.css',
 			array(
@@ -409,6 +417,7 @@ class Wpfaevent_Public {
 
 		if ( $this->is_wpfa_template_file_active( 'page-speakers.php' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-speakers' );
+			wp_enqueue_style( $this->plugin_name . '-dashboard-speakers' );
 			wp_enqueue_script( $this->plugin_name . '-speakers' );
 		}
 
