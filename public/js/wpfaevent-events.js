@@ -122,6 +122,9 @@ const WPFA_Events = (function() {
 			elements.editEventForm.addEventListener('submit', handleEditEventFormSubmit);
 		}
 
+		setupTimeFormatControls(elements.createEventForm);
+		setupTimeFormatControls(elements.editEventForm);
+
 		// Event card actions delegation
 		if (elements.eventsContainer) {
 			elements.eventsContainer.addEventListener('click', handleCardActions);
@@ -165,6 +168,76 @@ const WPFA_Events = (function() {
 				}
 			}
 		});
+	}
+
+	/**
+	 * Setup all-day toggles for event time inputs
+	 */
+	function setupTimeFormatControls(form) {
+		const allDayField = form?.querySelector('[name="all_day"]');
+
+		if (!allDayField) {
+			return;
+		}
+
+		allDayField.addEventListener('change', () => syncTimeFields(form));
+		form.addEventListener('reset', () => {
+			setTimeout(() => syncTimeFields(form), 0);
+		});
+
+		syncTimeFields(form);
+	}
+
+	/**
+	 * Disable time inputs while an event is marked all-day
+	 */
+	function syncTimeFields(form) {
+		const allDayField = form?.querySelector('[name="all_day"]');
+		const timeFields = form?.querySelector('.wpfaevent-time-fields');
+		const timeInputs = form?.querySelectorAll('[name="start_time"], [name="end_time"]') || [];
+		const isAllDay = Boolean(allDayField?.checked);
+
+		timeFields?.classList.toggle('is-disabled', isAllDay);
+		timeInputs.forEach(input => {
+			input.disabled = isAllDay;
+
+			if (isAllDay) {
+				input.value = '';
+			}
+		});
+	}
+
+	/**
+	 * Select a timezone value without losing the server-rendered default
+	 */
+	function setSelectValue(select, value) {
+		if (!select || !value) {
+			return;
+		}
+
+		const previousValue = select.value;
+		select.value = value;
+
+		if (select.value !== value) {
+			select.value = previousValue;
+		}
+	}
+
+	/**
+	 * Preserve the legacy time payload expected by older handlers
+	 */
+	function appendLegacyTimeAlias(formData) {
+		const startTime = formData.get('start_time') || '';
+
+		if (formData.has('time')) {
+			formData.set('time', formData.get('time') || startTime);
+		} else {
+			formData.append('time', startTime);
+		}
+
+		if (!formData.has('all_day')) {
+			formData.append('all_day', '0');
+		}
 	}
 
 	/**
@@ -279,6 +352,7 @@ const WPFA_Events = (function() {
 
 			// Use the smart function to reset all counters to "0 / max"
 			setupCharacterCounters();
+			syncTimeFields(elements.createEventForm);
 		}
 
 		// Show modal
@@ -304,7 +378,26 @@ const WPFA_Events = (function() {
 		document.getElementById('editEventLeadText').value = card.dataset.leadText || '';
 		document.getElementById('editRegistrationLink').value = card.dataset.registrationLink || '';
 		document.getElementById('editCfsLink').value = card.dataset.cfsLink || '';
-		document.getElementById('editEventTime').value = card.dataset.time || '';
+
+		const editStartTime = document.getElementById('editEventStartTime');
+		const editEndTime = document.getElementById('editEventEndTime');
+		const editAllDay = document.getElementById('editEventAllDay');
+		const editTimezone = document.getElementById('editEventTimezone');
+
+		if (editStartTime) {
+			editStartTime.value = card.dataset.startTime || card.dataset.time || '';
+		}
+
+		if (editEndTime) {
+			editEndTime.value = card.dataset.endTime || '';
+		}
+
+		if (editAllDay) {
+			editAllDay.checked = card.dataset.allDay === '1' || card.dataset.allDay === 'true';
+		}
+
+		setSelectValue(editTimezone, card.dataset.timezone || '');
+		syncTimeFields(elements.editEventForm);
 
 		// Sync all counters at once
 		// This looks for all textareas and updates their specific counters
@@ -329,6 +422,7 @@ const WPFA_Events = (function() {
 
 		const form = e.target;
 		const formData = new FormData(form);
+		appendLegacyTimeAlias(formData);
 		const submitBtn = form.querySelector('button[type="submit"]');
 
 		// Validate required fields - using ACTUAL form field names
@@ -407,6 +501,7 @@ const WPFA_Events = (function() {
 
 		const form = e.target;
 		const formData = new FormData(form);
+		appendLegacyTimeAlias(formData);
 		const submitBtn = form.querySelector('button[type="submit"]');
 
 		// Validate required fields - using ACTUAL form field names
