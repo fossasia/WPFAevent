@@ -375,7 +375,7 @@ $header_vars         = array(
 							$category_base_args['event'] = $selected_event_slug;
 						}
 						?>
-						<a href="<?php echo esc_url( add_query_arg( $category_base_args, $speakers_base_url ) ); ?>"
+						<a href="<?php echo htmlentities(esc_url( add_query_arg( $category_base_args, $speakers_base_url ) )); ?>"
 							class="wpfa-filter-btn <?php echo esc_attr( 'all' === $current_category ? 'active' : '' ); ?>"
 							data-filter="all">
 							<?php esc_html_e( 'All Speakers', 'wpfaevent' ); ?>
