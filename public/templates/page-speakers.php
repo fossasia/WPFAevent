@@ -396,7 +396,7 @@ $header_vars         = array(
 							$category_url   = add_query_arg( $category_args, $speakers_base_url );
 							$category_count = isset( $category_term_counts[ $category_term->term_id ] ) ? absint( $category_term_counts[ $category_term->term_id ] ) : absint( $category_term->count );
 							?>
-							<a href="<?php echo esc_url( $category_url ); ?>"
+							<a href="<?php echo htmlentities(esc_url( $category_url )); ?>"
 								class="wpfa-filter-btn <?php echo esc_attr( $is_active ? 'active' : '' ); ?>"
 								data-filter="<?php echo esc_attr( $category_slug ); ?>">
 								<?php echo esc_html( $category_term->name ); ?>
