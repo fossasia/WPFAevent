@@ -60,6 +60,14 @@
 	padding: 24px;
 }
 
+.wpfa-calendar-action {
+	display: inline-flex;
+	font-size: 0.9rem;
+	font-weight: 700;
+	margin-left: 10px;
+	white-space: nowrap;
+}
+
 /* ==========================================================================
    Footer Styles (MVP Design)
    ========================================================================== */
