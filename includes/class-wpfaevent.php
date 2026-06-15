@@ -80,6 +80,7 @@ class Wpfaevent {
 		$this->version     = WPFAEVENT_VERSION;
 
 		$this->load_dependencies();
+		Wpfaevent_Roles::init();
 		$this->define_cpt_hooks();
 		$this->define_taxonomy_hooks();
 		$this->define_meta_hooks();
@@ -109,6 +110,7 @@ class Wpfaevent {
 
 		// Cache management.
 		require_once plugin_dir_path( __FILE__ ) . 'cache/class-wpfaevent-cache.php';
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-roles.php';
 
 		// Data model classes - Custom Post Types.
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';
@@ -127,6 +129,7 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
 
 		// Admin and Public classes.
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-importer.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
 
@@ -198,6 +201,8 @@ class Wpfaevent {
 
 		// Register settings page.
 		$this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
+		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_plugin_settings' );
+		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_eventyay_import_settings' );
 
 		// Add settings link to the plugins page.
 		$plugin_basename = plugin_basename( dirname( __DIR__ ) . '/wpfaevent.php' );
@@ -227,6 +232,9 @@ class Wpfaevent {
 		// Register AJAX handler for footer text update.
 		$plugin_footer_handler = new Wpfaevent_Footer_Handler();
 		$this->loader->add_action( 'wp_ajax_wpfa_update_footer_text', $plugin_footer_handler, 'ajax_update_footer_text' );
+
+		// Register Eventyay import form handler.
+		$this->loader->add_action( 'admin_post_wpfaevent_import_eventyay_events', $this->plugin_admin, 'handle_eventyay_events_import' );
 	}
 
 	/**

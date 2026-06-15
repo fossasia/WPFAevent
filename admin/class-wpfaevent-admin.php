@@ -40,6 +40,15 @@ class Wpfaevent_Admin {
 	private $version;
 
 	/**
+	 * Eventyay import service.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @var Wpfaevent_Eventyay_Importer
+	 */
+	private $eventyay_importer;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -50,6 +59,21 @@ class Wpfaevent_Admin {
 
 		$this->plugin_name = $plugin_name;
 		$this->version     = $version;
+	}
+
+	/**
+	 * Get the Eventyay import service.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return Wpfaevent_Eventyay_Importer
+	 */
+	private function get_eventyay_importer() {
+		if ( ! $this->eventyay_importer instanceof Wpfaevent_Eventyay_Importer ) {
+			$this->eventyay_importer = new Wpfaevent_Eventyay_Importer();
+		}
+
+		return $this->eventyay_importer;
 	}
 
 	/**
@@ -109,7 +133,14 @@ class Wpfaevent_Admin {
 			esc_url( admin_url( 'admin.php?page=wpfaevent-settings' ) ),
 			esc_html__( 'Settings', 'wpfaevent' )
 		);
-		array_unshift( $links, $settings_link );
+
+		$import_link = sprintf(
+			'<a href="%s">%s</a>',
+			esc_url( admin_url( 'edit.php?post_type=wpfa_event&page=wpfaevent-import-events' ) ),
+			esc_html__( 'Import Events', 'wpfaevent' )
+		);
+
+		array_unshift( $links, $settings_link, $import_link );
 		return $links;
 	}
 
@@ -120,13 +151,40 @@ class Wpfaevent_Admin {
 	 */
 	public function register_settings_page() {
 		add_menu_page(
-			esc_html__( 'FOSSASIA Event Settings', 'wpfaevent' ), // Page title.
-			esc_html__( 'FOSSASIA Event', 'wpfaevent' ), // Menu title.
-			'manage_options', // Capability.
-			'wpfaevent-settings', // Menu slug.
-			array( $this, 'render_settings_page' ), // Callback.
-			'dashicons-calendar-alt', // Icon.
-			30 // Position.
+			esc_html__( 'WPFAEvent Settings', 'wpfaevent' ),
+			esc_html__( 'WPFAEvent', 'wpfaevent' ),
+			Wpfaevent_Roles::CAP_MANAGE_SETTINGS,
+			'wpfaevent-settings',
+			array( $this, 'render_settings_page' ),
+			'dashicons-calendar-alt',
+			30
+		);
+
+		add_submenu_page(
+			'wpfaevent-settings',
+			esc_html__( 'WPFAEvent Settings', 'wpfaevent' ),
+			esc_html__( 'Settings', 'wpfaevent' ),
+			Wpfaevent_Roles::CAP_MANAGE_SETTINGS,
+			'wpfaevent-settings',
+			array( $this, 'render_settings_page' )
+		);
+
+		add_submenu_page(
+			'edit.php?post_type=wpfa_event',
+			esc_html__( 'Import Events from Eventyay', 'wpfaevent' ),
+			esc_html__( 'Import Events', 'wpfaevent' ),
+			Wpfaevent_Roles::CAP_IMPORT_EVENTYAY,
+			'wpfaevent-import-events',
+			array( $this, 'render_eventyay_import_page' )
+		);
+
+		add_submenu_page(
+			'edit.php?post_type=wpfa_event',
+			esc_html__( 'Update Events from Eventyay', 'wpfaevent' ),
+			esc_html__( 'Update Events', 'wpfaevent' ),
+			Wpfaevent_Roles::CAP_IMPORT_EVENTYAY,
+			'wpfaevent-update-events',
+			array( $this, 'render_eventyay_update_page' )
 		);
 	}
 
@@ -137,24 +195,42 @@ class Wpfaevent_Admin {
 	 */
 	public function render_settings_page() {
 		// Check user capabilities.
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Wpfaevent_Roles::current_user_can_manage_settings() ) {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wpfaevent' ) );
 		}
+
+		$can_manage_access = Wpfaevent_Roles::current_user_can_manage_plugin_access();
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			
-			<div class="notice notice-info">
-				<p>
-					<strong><?php esc_html_e( 'Plugin Skeleton Active', 'wpfaevent' ); ?></strong>
-				</p>
-				<p>
-					<?php esc_html_e( 'This is a placeholder settings page. Settings functionality will be implemented in future updates.', 'wpfaevent' ); ?>
-				</p>
-			</div>
+
+			<?php if ( $can_manage_access ) : ?>
+				<?php settings_errors( Wpfaevent_Roles::SETTINGS_GROUP ); ?>
+				<div class="card" style="max-width: 960px;">
+					<h2><?php esc_html_e( 'Event Plugin Access', 'wpfaevent' ); ?></h2>
+					<p><?php esc_html_e( 'Assign Event Organizer or Event Contributor access to existing WordPress users. Their normal WordPress role stays unchanged.', 'wpfaevent' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Administrators always have full plugin access. Organizers can import and publish. Contributors can edit existing event and speaker content only.', 'wpfaevent' ); ?></p>
+
+					<form method="post" action="<?php echo esc_url( admin_url( 'options.php' ) ); ?>">
+						<?php
+						settings_fields( Wpfaevent_Roles::SETTINGS_GROUP );
+						$this->render_user_access_settings_fields();
+						submit_button( __( 'Save Event Plugin Access', 'wpfaevent' ) );
+						?>
+					</form>
+				</div>
+			<?php endif; ?>
 
 			<div class="card">
 				<h2><?php esc_html_e( 'Plugin Information', 'wpfaevent' ); ?></h2>
+				<p><?php esc_html_e( 'This page is reserved for the future WPFAEvent admin dashboard and shared plugin settings.', 'wpfaevent' ); ?></p>
+				<?php if ( Wpfaevent_Roles::current_user_can_import_eventyay() ) : ?>
+					<p>
+						<a class="button button-primary" href="<?php echo esc_url( admin_url( 'edit.php?post_type=wpfa_event&page=wpfaevent-import-events' ) ); ?>">
+							<?php esc_html_e( 'Open Eventyay Import', 'wpfaevent' ); ?>
+						</a>
+					</p>
+				<?php endif; ?>
 				<table class="form-table">
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Version', 'wpfaevent' ); ?></th>
@@ -189,6 +265,190 @@ class Wpfaevent_Admin {
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Register plugin settings stored under WPFAEvent -> Settings.
+	 *
+	 * @since 1.0.0
+	 */
+	public function register_plugin_settings() {
+		register_setting(
+			Wpfaevent_Roles::SETTINGS_GROUP,
+			Wpfaevent_Roles::ACCESS_LEVELS_OPTION,
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( 'Wpfaevent_Roles', 'sanitize_user_access_levels' ),
+				'default'           => array(),
+			)
+		);
+	}
+
+	/**
+	 * Render the per-user plugin access assignment table.
+	 *
+	 * @since 1.0.0
+	 */
+	private function render_user_access_settings_fields() {
+		$access_labels   = Wpfaevent_Roles::get_access_level_labels();
+		$assigned_levels = Wpfaevent_Roles::get_user_access_levels();
+		$users           = get_users(
+			array(
+				'fields'  => 'all',
+				'orderby' => 'display_name',
+				'order'   => 'ASC',
+			)
+		);
+
+		if ( empty( $users ) ) {
+			echo '<p>' . esc_html__( 'No WordPress users are available to assign.', 'wpfaevent' ) . '</p>';
+			return;
+		}
+
+		$this->render_user_access_level_guide();
+		?>
+		<table class="widefat striped">
+			<thead>
+				<tr>
+					<th scope="col"><?php esc_html_e( 'User', 'wpfaevent' ); ?></th>
+					<th scope="col"><?php esc_html_e( 'Email', 'wpfaevent' ); ?></th>
+					<th scope="col"><?php esc_html_e( 'WordPress role', 'wpfaevent' ); ?></th>
+					<th scope="col"><?php esc_html_e( 'Event plugin access', 'wpfaevent' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ( $users as $user ) : ?>
+					<?php
+					$user_id        = absint( $user->ID );
+					$role_names     = array_map( 'translate_user_role', array_filter( (array) $user->roles ) );
+					$wordpress_role = ! empty( $role_names ) ? implode( ', ', $role_names ) : __( 'No role', 'wpfaevent' );
+					$assigned_level = isset( $assigned_levels[ $user_id ] ) ? $assigned_levels[ $user_id ] : '';
+					$field_name     = Wpfaevent_Roles::ACCESS_LEVELS_OPTION . '[' . $user_id . ']';
+					?>
+					<tr>
+						<td><?php echo esc_html( $user->display_name ? $user->display_name : $user->user_login ); ?></td>
+						<td><?php echo esc_html( $user->user_email ); ?></td>
+						<td><?php echo esc_html( $wordpress_role ); ?></td>
+						<td>
+							<?php if ( Wpfaevent_Roles::user_is_site_administrator( $user ) ) : ?>
+								<em><?php esc_html_e( 'Full access (Administrator)', 'wpfaevent' ); ?></em>
+							<?php else : ?>
+								<label class="screen-reader-text" for="<?php echo esc_attr( 'wpfaevent-access-' . $user_id ); ?>">
+									<?php
+									printf(
+										/* translators: %s: user display name. */
+										esc_html__( 'Event plugin access for %s', 'wpfaevent' ),
+										esc_html( $user->display_name )
+									);
+									?>
+								</label>
+								<select id="<?php echo esc_attr( 'wpfaevent-access-' . $user_id ); ?>" name="<?php echo esc_attr( $field_name ); ?>">
+									<?php foreach ( $access_labels as $level => $label ) : ?>
+										<option value="<?php echo esc_attr( $level ); ?>" <?php selected( $assigned_level, $level ); ?>>
+											<?php echo esc_html( $label ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							<?php endif; ?>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Render the access-level reference guide shown above the assignment table.
+	 *
+	 * @since 1.0.0
+	 */
+	private function render_user_access_level_guide() {
+		?>
+		<h3 class="title" style="margin-top: 1.5em;"><?php esc_html_e( 'Access level guide', 'wpfaevent' ); ?></h3>
+		<table class="widefat striped" style="margin-bottom: 1em;">
+			<thead>
+				<tr>
+					<th scope="col" style="width: 28%;"><?php esc_html_e( 'Access level', 'wpfaevent' ); ?></th>
+					<th scope="col"><?php esc_html_e( 'What they can do', 'wpfaevent' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><strong><?php esc_html_e( 'Administrator', 'wpfaevent' ); ?></strong></td>
+					<td><?php esc_html_e( 'Full plugin access automatically. Can import from Eventyay, publish and delete events and speakers, and open WPFAEvent settings.', 'wpfaevent' ); ?></td>
+				</tr>
+				<tr>
+					<td><strong><?php echo esc_html( Wpfaevent_Roles::get_access_level_labels()[ Wpfaevent_Roles::ACCESS_ORGANIZER ] ); ?></strong></td>
+					<td><?php esc_html_e( 'Import and sync events from Eventyay, publish events and speakers, delete content, and open WPFAEvent settings. Does not change their WordPress role.', 'wpfaevent' ); ?></td>
+				</tr>
+				<tr>
+					<td><strong><?php echo esc_html( Wpfaevent_Roles::get_access_level_labels()[ Wpfaevent_Roles::ACCESS_CONTRIBUTOR ] ); ?></strong></td>
+					<td><?php esc_html_e( 'Edit existing event and speaker content only. Cannot import, publish, delete, or change plugin settings.', 'wpfaevent' ); ?></td>
+				</tr>
+				<tr>
+					<td><strong><?php echo esc_html( Wpfaevent_Roles::get_access_level_labels()[''] ); ?></strong></td>
+					<td><?php esc_html_e( 'No access to WPFAEvent features. The user keeps their normal WordPress permissions only.', 'wpfaevent' ); ?></td>
+				</tr>
+			</tbody>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Register Eventyay import options.
+	 *
+	 * @since 1.0.0
+	 */
+	public function register_eventyay_import_settings() {
+		register_setting(
+			'wpfaevent_eventyay_import',
+			'wpfaevent_eventyay_import_settings',
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( $this, 'sanitize_eventyay_import_settings' ),
+				'default'           => $this->get_eventyay_importer()->get_eventyay_import_default_settings(),
+			)
+		);
+	}
+
+	/**
+	 * Sanitize Eventyay import options.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $input Raw option input.
+	 * @return array Sanitized settings.
+	 */
+	public function sanitize_eventyay_import_settings( $input ) {
+		return $this->get_eventyay_importer()->sanitize_eventyay_import_settings( $input );
+	}
+
+	/**
+	 * Render the Eventyay import page.
+	 *
+	 * @since 1.0.0
+	 */
+	public function render_eventyay_import_page() {
+		$this->get_eventyay_importer()->render_settings_page();
+	}
+
+	/**
+	 * Render the Eventyay update page.
+	 *
+	 * @since 1.0.0
+	 */
+	public function render_eventyay_update_page() {
+		$this->get_eventyay_importer()->render_update_events_page();
+	}
+
+	/**
+	 * Handle Eventyay import form submissions.
+	 *
+	 * @since 1.0.0
+	 */
+	public function handle_eventyay_events_import() {
+		$this->get_eventyay_importer()->handle_eventyay_events_import();
 	}
 
 	// ========================================
