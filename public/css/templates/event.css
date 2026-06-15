@@ -426,18 +426,23 @@
 	padding: 20px;
 }
 
-.wpfaevent .wpfa-event-ticket-widget eventyay-widget,
 .wpfaevent .wpfa-event-ticket-widget pretix-widget,
-.wpfaevent .wpfa-event-ticket-widget .eventyay-widget-compat,
 .wpfaevent .wpfa-event-ticket-widget .pretix-widget-compat {
 	display: block;
 	width: 100%;
 }
 
-.wpfaevent .wpfa-event-ticket-widget eventyay-widget:empty,
 .wpfaevent .wpfa-event-ticket-widget pretix-widget:empty,
-.wpfaevent .wpfa-event-ticket-widget .eventyay-widget-compat:empty,
 .wpfaevent .wpfa-event-ticket-widget .pretix-widget-compat:empty {
+	display: none;
+}
+
+.wpfaevent .wpfa-event-ticket-widget.wpfa-event-ticket-widget-failed pretix-widget,
+.wpfaevent .wpfa-event-ticket-widget.wpfa-event-ticket-widget-failed .pretix-widget-compat {
+	display: none;
+}
+
+.wpfaevent .wpfa-event-ticket-widget-loaded .wpfa-event-ticket-backup {
 	display: none;
 }
 

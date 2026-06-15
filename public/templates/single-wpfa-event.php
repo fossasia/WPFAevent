@@ -378,8 +378,10 @@ if ( ! $event_header_image_url ) {
 	$event_header_image_url = $event_header_image_url ? esc_url_raw( $event_header_image_url ) : '';
 }
 
-$ticket_widget_assets = $build_eventyay_widget_assets( $ticket_widget_url );
-$show_ticket_widget   = ! empty( $ticket_widget_assets['event_url'] );
+$ticket_widget_assets   = $build_eventyay_widget_assets( $ticket_widget_url );
+$show_ticket_widget     = ! empty( $ticket_widget_assets['event_url'] );
+$ticket_widget_id       = 'wpfa-event-ticket-widget-' . absint( $event_id );
+$ticket_widget_skip_ssl = ! is_ssl();
 
 if ( $show_ticket_widget ) {
 	$eventyay_widget_handle = 'wpfaevent-eventyay-widget-' . absint( $event_id );
@@ -392,6 +394,23 @@ if ( $show_ticket_widget ) {
 		'all'
 	);
 
+	wp_add_inline_script(
+		$eventyay_widget_handle,
+		implode(
+			'',
+			array(
+				'window.pretixWidgetCallback=function(){',
+				'if(typeof window.PretixWidget==="undefined"){return;}',
+				'window.PretixWidget.addLoadListener(function(){',
+				'var container=document.getElementById(' . wp_json_encode( $ticket_widget_id ) . ');',
+				'if(container){container.classList.add("wpfa-event-ticket-widget-loaded");}',
+				'});',
+				'};',
+			)
+		),
+		'before'
+	);
+
 	wp_enqueue_script(
 		$eventyay_widget_handle,
 		$ticket_widget_assets['script_url'],
@@ -402,6 +421,30 @@ if ( $show_ticket_widget ) {
 
 	wp_script_add_data( $eventyay_widget_handle, 'strategy', 'async' );
 	wp_script_add_data( $eventyay_widget_handle, 'async', true );
+
+	wp_add_inline_script(
+		$eventyay_widget_handle,
+		implode(
+			'',
+			array(
+				'(function(){',
+				'var container=document.getElementById(' . wp_json_encode( $ticket_widget_id ) . ');',
+				'if(!container||typeof MutationObserver==="undefined"){return;}',
+				'var expected=' . wp_json_encode( __( 'The ticket shop could not be loaded.', 'wpfaevent' ) ) . ';',
+				'var markFailed=function(){',
+				'var error=container.querySelector(".pretix-widget-error-message");',
+				'if(!error){return;}',
+				'if(expected&&error.textContent.trim()!==expected){return;}',
+				'container.classList.add("wpfa-event-ticket-widget-failed");',
+				'};',
+				'var observer=new MutationObserver(markFailed);',
+				'observer.observe(container,{childList:true,subtree:true});',
+				'markFailed();',
+				'})();',
+			)
+		),
+		'after'
+	);
 }
 
 $main_speaker_limit             = absint( apply_filters( 'wpfa_event_main_speaker_limit', 20, $event_id ) );
@@ -945,7 +988,7 @@ $header_vars = array(
 							<?php esc_html_e( 'Open on Eventyay', 'wpfaevent' ); ?>
 						</a>
 					</div>
-					<div class="wpfa-event-ticket-widget">
+					<div id="<?php echo esc_attr( $ticket_widget_id ); ?>" class="wpfa-event-ticket-widget">
 						<div class="wpfa-event-ticket-backup" role="note">
 							<strong><?php esc_html_e( 'Tickets are handled by Eventyay.', 'wpfaevent' ); ?></strong>
 							<p><?php esc_html_e( 'If ticket options do not appear here, open the Eventyay ticket shop directly.', 'wpfaevent' ); ?></p>
@@ -953,8 +996,14 @@ $header_vars = array(
 								<?php esc_html_e( 'Buy tickets on Eventyay', 'wpfaevent' ); ?>
 							</a>
 						</div>
-						<?php // Eventyay's current widget bundle still scans the Pretix compatibility selector. ?>
-						<div class="pretix-widget-compat eventyay-widget-compat" event="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>"></div>
+						<?php // Eventyay docs: use div.pretix-widget-compat when custom elements are unavailable. ?>
+						<div
+							class="pretix-widget-compat"
+							event="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>"
+							<?php if ( $ticket_widget_skip_ssl ) : ?>
+								skip-ssl-check
+							<?php endif; ?>
+						></div>
 						<noscript>
 							<p class="wpfa-event-ticket-fallback">
 								<?php esc_html_e( 'JavaScript is required to show Eventyay tickets here.', 'wpfaevent' ); ?>
@@ -1315,7 +1364,7 @@ $header_vars = array(
 								<?php
 								printf(
 									/* translators: 1: shown session count, 2: total session count. */
-									esc_html__( 'Showing the first %1$d of %2$d sessions. Open the full schedule to view every session.', 'wpfaevent' ),
+									esc_html__( 'Showing the first %1$d of %2$d sessions. Open the session schedule to view every session.', 'wpfaevent' ),
 									absint( count( $schedule_preview_items ) ),
 									absint( count( $schedule_items ) )
 								);
