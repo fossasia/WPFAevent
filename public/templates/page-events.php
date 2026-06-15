@@ -22,11 +22,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
-$today              = current_time( 'Y-m-d' );
-$events_per_page    = max( 1, (int) apply_filters( 'wpfa_events_per_page', 10 ) );
-$current_page       = max( 1, (int) get_query_var( 'paged', 1 ) );
-$is_admin           = current_user_can( 'manage_options' );
+$wpfaevent_is_embed  = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+$today               = current_time( 'Y-m-d' );
+$events_per_page     = max( 1, (int) apply_filters( 'wpfa_events_per_page', 10 ) );
+$current_page        = max( 1, (int) get_query_var( 'paged', 1 ) );
+$can_manage_content  = Wpfaevent_Roles::current_user_can_manage_dashboard();
+$can_publish_content = Wpfaevent_Roles::current_user_can_publish_content();
 
 // Pull all published event IDs to replicate upstream's data handling pattern.
 $args = array(
@@ -47,7 +48,7 @@ foreach ( $event_ids as $eid ) {
 	$is_valid = ! empty( $start );
 
 	// Admins can see items even if the start date metadata is missing or broken.
-	if ( ! $is_valid && $is_admin ) {
+	if ( ! $is_valid && $can_manage_content ) {
 		$upcoming_events[] = array(
 			'id'    => (int) $eid,
 			'start' => '',
@@ -178,7 +179,7 @@ $header_vars = array(
 				<div class="main-content">
 					<div class="main-content-header">
 						<h1><?php esc_html_e( 'Events', 'wpfaevent' ); ?></h1>
-						<?php if ( $is_admin ) : ?>
+						<?php if ( $can_publish_content ) : ?>
 							<button id="createEventBtn" class="btn btn-primary">
 								<?php esc_html_e( 'Create Custom Event', 'wpfaevent' ); ?>
 							</button>
@@ -245,20 +246,10 @@ $header_vars = array(
 									$event_description = get_the_excerpt( $event_id );
 									$thumbnail_raw     = get_the_post_thumbnail_url( $event_id, 'large' );
 									$featured_img_url  = ! empty( $thumbnail_raw ) ? $thumbnail_raw : '';
-									$calendar_data     = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_calendar_data( $event_id ) : array();
-									$calendar_data     = is_wp_error( $calendar_data ) ? array() : $calendar_data;
 
 									// Format descriptive timeline layout markers.
-									$formatted_date      = __( 'Date not set', 'wpfaevent' );
-									$formatted_time_meta = '';
-									if ( ! empty( $calendar_data['date_label'] ) ) {
-										$formatted_date      = sanitize_text_field( $calendar_data['date_label'] );
-										$formatted_time_meta = ! empty( $calendar_data['time_label'] ) ? sanitize_text_field( $calendar_data['time_label'] ) : '';
-
-										if ( $formatted_time_meta && empty( $calendar_data['all_day'] ) && ! empty( $calendar_data['timezone_label'] ) ) {
-											$formatted_time_meta .= ' (' . sanitize_text_field( $calendar_data['timezone_label'] ) . ')';
-										}
-									} elseif ( ! empty( $event_date ) ) {
+									$formatted_date = __( 'Date not set', 'wpfaevent' );
+									if ( ! empty( $event_date ) ) {
 										if ( ! empty( $event_end_date ) && $event_end_date !== $event_date ) {
 											$formatted_date = date_i18n( 'M j', strtotime( $event_date ) ) . ' - ' . date_i18n( 'M j, Y', strtotime( $event_end_date ) );
 										} else {
@@ -284,12 +275,9 @@ $header_vars = array(
 												<p>
 													<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
 														<path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"></path>
-														</svg>
-														<?php echo esc_html( $formatted_date ); ?>
-														<?php if ( $formatted_time_meta ) : ?>
-															<span class="event-card-time"><?php echo esc_html( ' | ' . $formatted_time_meta ); ?></span>
-														<?php endif; ?>
-													</p>
+													</svg>
+													<?php echo esc_html( $formatted_date ); ?>
+												</p>
 												<?php if ( ! empty( $event_place ) ) : ?>
 												<p>
 													<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -329,7 +317,7 @@ $header_vars = array(
 					} else {
 						echo '<p class="news-loading-text">' . esc_html__( 'Latest news feed loading...', 'wpfaevent' ) . '</p>';
 
-						if ( current_user_can( 'manage_options' ) ) {
+						if ( $can_manage_content ) {
 							echo '<div class="wpfaevent-admin-warning">';
 								echo '<svg class="wpfaevent-warning-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">';
 									echo '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>';
@@ -356,7 +344,7 @@ $header_vars = array(
 <?php endif; ?>
 
 <?php
-if ( $is_admin ) {
+if ( $can_manage_content ) {
 	include WPFAEVENT_PATH . 'public/partials/events/event-modal.php';
 }
 ?>

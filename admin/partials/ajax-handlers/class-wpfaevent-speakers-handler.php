@@ -19,14 +19,6 @@
 class Wpfaevent_Speakers_Handler {
 
 	/**
-	 * Initialize the class.
-	 *
-	 * @since    1.0.0
-	 */
-	public function __construct() {
-	}
-
-	/**
 	 * Handle AJAX request to get speaker data.
 	 *
 	 * @since    1.0.0
@@ -42,14 +34,6 @@ class Wpfaevent_Speakers_Handler {
 			);
 		}
 
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
-				403
-			);
-		}
-
 		$speaker_id = isset( $_POST['speaker_id'] ) ? absint( $_POST['speaker_id'] ) : 0;
 
 		if ( ! $speaker_id ) {
@@ -58,7 +42,7 @@ class Wpfaevent_Speakers_Handler {
 
 		$speaker = get_post( $speaker_id );
 
-		if ( ! $speaker || 'wpfa_speaker' !== $speaker->post_type ) {
+		if ( ! $speaker || 'wpfa_speaker' !== $speaker->post_type || ! current_user_can( 'edit_post', $speaker_id ) ) {
 			wp_send_json_error( esc_html__( 'Speaker not found', 'wpfaevent' ) );
 		}
 
@@ -110,8 +94,7 @@ class Wpfaevent_Speakers_Handler {
 			);
 		}
 
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'publish_speakers' ) ) {
 			wp_send_json_error(
 				array(
 					'message' => __( 'Unauthorized', 'wpfaevent' ),
@@ -275,14 +258,6 @@ class Wpfaevent_Speakers_Handler {
 			);
 		}
 
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
-				403
-			);
-		}
-
 		$speaker_id = isset( $_POST['speaker_id'] ) ? absint( $_POST['speaker_id'] ) : 0;
 
 		if ( ! $speaker_id ) {
@@ -441,14 +416,6 @@ class Wpfaevent_Speakers_Handler {
 				array(
 					'message' => esc_html__( 'Invalid nonce', 'wpfaevent' ),
 				),
-				403
-			);
-		}
-
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Unauthorized', 'wpfaevent' ) ),
 				403
 			);
 		}

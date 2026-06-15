@@ -15,8 +15,6 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
-
-$wpfaevent_default_timezone = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_timezone( 0 ) : wp_timezone_string();
 ?>
 
 <!-- Create Event Modal -->
@@ -35,26 +33,8 @@ $wpfaevent_default_timezone = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent
 			<label for="eventEndDate"><?php esc_html_e( 'Event End Date (optional):', 'wpfaevent' ); ?></label>
 			<input type="date" id="eventEndDate" name="end_date">
 
-			<label for="eventTimezone"><?php esc_html_e( 'Timezone:', 'wpfaevent' ); ?></label>
-			<select id="eventTimezone" name="timezone">
-				<?php echo wp_timezone_choice( $wpfaevent_default_timezone ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Core escapes timezone option markup. ?>
-			</select>
-
-			<label class="wpfaevent-checkbox-label" for="eventAllDay">
-				<input type="checkbox" id="eventAllDay" name="all_day" value="1">
-				<span><?php esc_html_e( 'All-day event', 'wpfaevent' ); ?></span>
-			</label>
-
-			<div class="wpfaevent-time-fields">
-				<div>
-					<label for="eventStartTime"><?php esc_html_e( 'Start Time:', 'wpfaevent' ); ?></label>
-					<input type="time" id="eventStartTime" name="start_time">
-				</div>
-				<div>
-					<label for="eventEndTime"><?php esc_html_e( 'End Time:', 'wpfaevent' ); ?></label>
-					<input type="time" id="eventEndTime" name="end_time">
-				</div>
-			</div>
+			<label for="eventTime"><?php esc_html_e( 'Event Time:', 'wpfaevent' ); ?></label>
+			<input type="time" id="eventTime" name="time" required>
 
 			<label for="eventPlace"><?php esc_html_e( 'Event Place:', 'wpfaevent' ); ?></label>
 			<input type="text" id="eventPlace" name="location" required>
@@ -98,26 +78,8 @@ $wpfaevent_default_timezone = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent
 			<label for="editEventEndDate"><?php esc_html_e( 'Event End Date (optional):', 'wpfaevent' ); ?></label>
 			<input type="date" id="editEventEndDate" name="end_date">
 
-			<label for="editEventTimezone"><?php esc_html_e( 'Timezone:', 'wpfaevent' ); ?></label>
-			<select id="editEventTimezone" name="timezone">
-				<?php echo wp_timezone_choice( $wpfaevent_default_timezone ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Core escapes timezone option markup. ?>
-			</select>
-
-			<label class="wpfaevent-checkbox-label" for="editEventAllDay">
-				<input type="checkbox" id="editEventAllDay" name="all_day" value="1">
-				<span><?php esc_html_e( 'All-day event', 'wpfaevent' ); ?></span>
-			</label>
-
-			<div class="wpfaevent-time-fields">
-				<div>
-					<label for="editEventStartTime"><?php esc_html_e( 'Start Time:', 'wpfaevent' ); ?></label>
-					<input type="time" id="editEventStartTime" name="start_time">
-				</div>
-				<div>
-					<label for="editEventEndTime"><?php esc_html_e( 'End Time:', 'wpfaevent' ); ?></label>
-					<input type="time" id="editEventEndTime" name="end_time">
-				</div>
-			</div>
+			<label for="editEventTime"><?php esc_html_e( 'Event Time:', 'wpfaevent' ); ?></label>
+			<input type="time" id="editEventTime" name="time" required>
 
 			<label for="editEventPlace"><?php esc_html_e( 'Event Place:', 'wpfaevent' ); ?></label>
 			<input type="text" id="editEventPlace" name="location" required>
