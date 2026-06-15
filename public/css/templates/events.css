@@ -373,14 +373,69 @@
 }
 
 .wpfaevent #createEventForm input,
+.wpfaevent #createEventForm select,
+.wpfaevent #createEventForm textarea,
 .wpfaevent #editEventForm input,
-.wpfaevent #edit-footer-form input {
+.wpfaevent #editEventForm select,
+.wpfaevent #editEventForm textarea,
+.wpfaevent #edit-footer-form input,
+.wpfaevent #edit-footer-form select,
+.wpfaevent #edit-footer-form textarea {
 	width: 100%;
 	padding: 10px;
 	border: 1px solid #ddd;
 	border-radius: 8px;
 	font-family: inherit;
 	font-size: 1rem;
+}
+
+.wpfaevent #createEventForm .wpfaevent-checkbox-label,
+.wpfaevent #editEventForm .wpfaevent-checkbox-label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 0;
+	font-weight: 600;
+}
+
+.wpfaevent #createEventForm .wpfaevent-checkbox-label input,
+.wpfaevent #editEventForm .wpfaevent-checkbox-label input {
+	width: auto;
+	margin: 0;
+	padding: 0;
+}
+
+.wpfaevent #createEventForm .wpfaevent-time-fields,
+.wpfaevent #editEventForm .wpfaevent-time-fields {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.wpfaevent .wpfaevent-time-fields > div {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.wpfaevent #createEventForm .wpfaevent-time-fields label,
+.wpfaevent #editEventForm .wpfaevent-time-fields label {
+	margin-bottom: 0;
+}
+
+.wpfaevent .wpfaevent-time-fields.is-disabled {
+	opacity: 0.55;
+}
+
+.wpfaevent .wpfaevent-time-fields.is-disabled input {
+	cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+	.wpfaevent #createEventForm .wpfaevent-time-fields,
+	.wpfaevent #editEventForm .wpfaevent-time-fields {
+		grid-template-columns: 1fr;
+	}
 }
 
 .wpfaevent .char-counter {
