@@ -401,7 +401,7 @@ $header_vars         = array(
 								data-filter="<?php echo esc_attr( $category_slug ); ?>">
 								<?php echo esc_html( $category_term->name ); ?>
 								<?php if ( $category_count > 0 ) : ?>
-									<span class="wpfa-filter-count">(<?php echo absint( $category_count ); ?>)</span>
+									<span class="wpfa-filter-count">(<?php echo htmlentities(absint( $category_count )); ?>)</span>
 								<?php endif; ?>
 							</a>
 						<?php endforeach; ?>
