@@ -19,33 +19,11 @@
 class Wpfaevent_Event_Handler {
 
 	/**
-	 * The plugin name.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $plugin_name    The plugin name.
-	 */
-	private $plugin_name;
-
-	/**
-	 * The version of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $version    The current version of this plugin.
-	 */
-	private $version;
-
-	/**
 	 * Initialize the class.
 	 *
 	 * @since    1.0.0
-	 * @param    string $plugin_name    The name of this plugin.
-	 * @param    string $version        The version of this plugin.
 	 */
-	public function __construct( $plugin_name, $version ) {
-		$this->plugin_name = $plugin_name;
-		$this->version     = $version;
+	public function __construct() {
 	}
 
 	/**
@@ -195,11 +173,10 @@ class Wpfaevent_Event_Handler {
 			'post_status'  => 'publish',
 		);
 
-		$event_id = wp_insert_post( $event_data );
+		$event_id = wp_insert_post( $event_data, true );
 
-		if ( is_wp_error( $event_id ) || 0 === $event_id ) {
-			$error_message = is_wp_error( $event_id ) ? $event_id->get_error_message() : esc_html__( 'Failed to create event.', 'wpfaevent' );
-			wp_send_json_error( $error_message );
+		if ( is_wp_error( $event_id ) ) {
+			wp_send_json_error( $event_id->get_error_message() );
 		}
 
 		// Save meta fields - using CORRECT form field names.
