@@ -95,29 +95,9 @@ class Wpfaevent_Schedule_Helper {
 	 * @return string
 	 */
 	public static function format_timezone_label( $timezone_string, $primary_timezone_string = '' ) {
-		$label = str_replace( '_', ' ', $timezone_string );
+		unset( $primary_timezone_string );
 
-		if ( $timezone_string === $primary_timezone_string ) {
-			return sprintf(
-				/* translators: %s: primary timezone. */
-				__( 'Event timezone (%s)', 'wpfaevent' ),
-				$label
-			);
-		}
-
-		$site_timezone_string = wp_timezone_string();
-		if ( '' === trim( (string) $site_timezone_string ) ) {
-			$site_timezone_string = wp_timezone()->getName();
-		}
-
-		if ( $timezone_string === $site_timezone_string ) {
-			return sprintf(
-				/* translators: %s: WordPress site timezone. */
-				__( 'Site timezone (%s)', 'wpfaevent' ),
-				$label
-			);
-		}
-
+		$label  = trim( (string) $timezone_string );
 		$offset = self::format_timezone_offset( $timezone_string );
 
 		return '' !== $offset ? sprintf( '%1$s (UTC%2$s)', $label, $offset ) : $label;
