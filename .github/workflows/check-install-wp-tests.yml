@@ -1,0 +1,100 @@
+name: Check install-wp-tests.sh Up-to-date
+
+# ----------------------------------------------------------------------
+# Runs once a month and, if a newer upstream version is detected,
+# commits the updated script on a temporary branch and opens a Pull Request.
+# No direct push to `main` happens.
+# ----------------------------------------------------------------------
+on:
+  schedule:
+    # At 00:00 UTC on the 1st day of each month
+    - cron: '0 0 1 * *'
+  workflow_dispatch:   # allow manual runs from the UI
+
+permissions:
+  contents: write      # needed to push a branch & create PR
+  pull-requests: write
+
+jobs:
+  verify-and-pr:
+    runs-on: ubuntu-latest
+    steps:
+      # --------------------------------------------------------------
+      # 1️⃣ Checkout the repository (full history needed for pushes)
+      # --------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0   # fetch all commits so we can push new branch
+
+      # --------------------------------------------------------------
+      # 2️⃣ Download the latest upstream installer script
+      # --------------------------------------------------------------
+      - name: Download upstream install-wp-tests.sh
+        id: download
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/wp-cli/scaffold-command/master/templates/install-wp-tests.sh \
+            > /tmp/upstream.sh
+          echo "upstream_path=/tmp/upstream.sh" >> $GITHUB_OUTPUT
+
+      # --------------------------------------------------------------
+      # 3️⃣ Compute SHA‑256 checksums and decide if an update is needed
+      # --------------------------------------------------------------
+      - name: Compute checksums
+        id: checksum
+        run: |
+          local_hash=$(sha256sum bin/install-wp-tests.sh | cut -d' ' -f1)
+          upstream_hash=$(sha256sum ${{ steps.download.outputs.upstream_path }} | cut -d' ' -f1)
+
+          echo "local_hash=$local_hash" >> $GITHUB_OUTPUT
+          echo "upstream_hash=$upstream_hash" >> $GITHUB_OUTPUT
+
+          if [ "$local_hash" != "$upstream_hash" ]; then
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+            echo "::notice::A newer version of install-wp-tests.sh is available."
+          else
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+            echo "::notice::install-wp-tests.sh is already up-to-date."
+          fi
+
+      # --------------------------------------------------------------
+      # 4️⃣ If an update is needed → replace the file, commit, push a branch
+      # --------------------------------------------------------------
+      - name: Update script, commit & push branch
+        if: steps.checksum.outputs.needs_update == 'true'
+        env:
+          GIT_AUTHOR_NAME: github-actions
+          GIT_AUTHOR_EMAIL: github-actions@github.com
+          GIT_COMMITTER_NAME: github-actions
+          GIT_COMMITTER_EMAIL: github-actions@github.com
+        run: |
+          # copy the fresh script over the repo version
+          cp ${{ steps.download.outputs.upstream_path }} bin/install-wp-tests.sh
+          chmod +x bin/install-wp-tests.sh
+
+          # create a unique branch name
+          BRANCH="update-install-wp-tests-${{ github.run_id }}"
+          git checkout -b "$BRANCH"
+
+          git add bin/install-wp-tests.sh
+          git commit -m "Update install-wp-tests.sh to latest upstream version"
+
+          # push the branch back to the repository (GITHUB_TOKEN has write rights)
+          git push origin "$BRANCH"
+
+      # --------------------------------------------------------------
+      # 5️⃣ Open a Pull Request (only runs when the branch was created)
+      # --------------------------------------------------------------
+      - name: Create Pull Request
+        if: steps.checksum.outputs.needs_update == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: update-install-wp-tests-${{ github.run_id }}
+          base: main
+          title: "Update install-wp-tests.sh to latest upstream version"
+          body: |
+            This PR updates `bin/install-wp-tests.sh` because the upstream script has changed.
+            The CI job detected a checksum mismatch and automatically prepared this change.
+          delete-branch: true   # clean up after PR is merged/closed
+          draft: false
