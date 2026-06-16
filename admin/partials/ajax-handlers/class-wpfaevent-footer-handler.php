@@ -22,11 +22,8 @@ class Wpfaevent_Footer_Handler {
 	 * Initialize the class.
 	 *
 	 * @since    1.0.0
-	 * @param    string $plugin_name    The name of this plugin.
-	 * @param    string $version        The version of this plugin.
 	 */
-	public function __construct( $plugin_name, $version ) {
-		unset( $plugin_name, $version );
+	public function __construct() {
 	}
 
 	/**

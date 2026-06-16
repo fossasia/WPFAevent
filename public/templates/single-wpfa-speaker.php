@@ -324,15 +324,30 @@ $header_vars = array(
 					<div class="wpfa-linked-events-grid">
 						<?php foreach ( $linked_event_ids as $event_id ) : ?>
 							<?php
-							$event_title = get_the_title( $event_id );
-							$event_start = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
-							$event_end   = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
-							$event_loc   = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
-							$event_url   = get_post_meta( $event_id, 'wpfa_event_url', true );
-							$event_url   = $event_url ? $event_url : get_permalink( $event_id );
-							$event_meta  = array();
+							$event_title   = get_the_title( $event_id );
+							$event_start   = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
+							$event_end     = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
+							$event_loc     = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
+							$event_url     = get_post_meta( $event_id, 'wpfa_event_url', true );
+							$event_url     = $event_url ? $event_url : get_permalink( $event_id );
+							$event_meta    = array();
+							$calendar_data = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_calendar_data( $event_id ) : array();
+							$calendar_data = is_wp_error( $calendar_data ) ? array() : $calendar_data;
 
-							if ( $event_start ) {
+							if ( ! empty( $calendar_data['date_label'] ) ) {
+								$date_time_label = sanitize_text_field( $calendar_data['date_label'] );
+								$time_label      = ! empty( $calendar_data['time_label'] ) ? sanitize_text_field( $calendar_data['time_label'] ) : '';
+
+								if ( $time_label ) {
+									$date_time_label .= ' | ' . $time_label;
+
+									if ( empty( $calendar_data['all_day'] ) && ! empty( $calendar_data['timezone_label'] ) ) {
+										$date_time_label .= ' (' . sanitize_text_field( $calendar_data['timezone_label'] ) . ')';
+									}
+								}
+
+								$event_meta[] = $date_time_label;
+							} elseif ( $event_start ) {
 								$event_meta[] = $event_start . ( $event_end ? ' - ' . $event_end : '' );
 							}
 

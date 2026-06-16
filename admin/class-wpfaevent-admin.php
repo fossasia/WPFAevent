@@ -238,13 +238,21 @@ class Wpfaevent_Admin {
 
 		$start_date = get_post_meta( $post->ID, 'wpfa_event_start_date', true );
 		$end_date   = get_post_meta( $post->ID, 'wpfa_event_end_date', true );
-		$time       = get_post_meta( $post->ID, 'wpfa_event_time', true );
-		$location   = get_post_meta( $post->ID, 'wpfa_event_location', true );
-		$url        = get_post_meta( $post->ID, 'wpfa_event_url', true );
-		$lead_text  = get_post_meta( $post->ID, 'wpfa_event_lead_text', true );
-		$reg_link   = get_post_meta( $post->ID, 'wpfa_event_registration_link', true );
-		$cfs_link   = get_post_meta( $post->ID, 'wpfa_event_cfs_link', true );
-		$speakers   = $this->get_event_speaker_ids( $post->ID );
+		$start_time = get_post_meta( $post->ID, 'wpfa_event_start_time', true );
+		$end_time   = get_post_meta( $post->ID, 'wpfa_event_end_time', true );
+
+		if ( '' === $start_time ) {
+			$start_time = get_post_meta( $post->ID, 'wpfa_event_time', true );
+		}
+
+		$timezone  = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_timezone( $post->ID ) : wp_timezone_string();
+		$all_day   = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_all_day( $post->ID ) : false;
+		$location  = get_post_meta( $post->ID, 'wpfa_event_location', true );
+		$url       = get_post_meta( $post->ID, 'wpfa_event_url', true );
+		$lead_text = get_post_meta( $post->ID, 'wpfa_event_lead_text', true );
+		$reg_link  = get_post_meta( $post->ID, 'wpfa_event_registration_link', true );
+		$cfs_link  = get_post_meta( $post->ID, 'wpfa_event_cfs_link', true );
+		$speakers  = $this->get_event_speaker_ids( $post->ID );
 
 		?>
 		<table class="form-table">
@@ -257,8 +265,31 @@ class Wpfaevent_Admin {
 				<td><input type="date" id="wpfa_event_end_date" name="wpfa_event_end_date" value="<?php echo esc_attr( $end_date ); ?>" class="regular-text"></td>
 			</tr>
 			<tr>
-				<th><label for="wpfa_event_time"><?php esc_html_e( 'Event Time', 'wpfaevent' ); ?></label></th>
-				<td><input type="time" id="wpfa_event_time" name="wpfa_event_time" value="<?php echo esc_attr( $time ); ?>" class="regular-text" placeholder="e.g., 10:00"></td>
+				<th><label for="wpfa_event_timezone"><?php esc_html_e( 'Timezone', 'wpfaevent' ); ?></label></th>
+				<td>
+					<select id="wpfa_event_timezone" name="wpfa_event_timezone" class="regular-text">
+						<?php echo wp_timezone_choice( $timezone ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Core escapes timezone option markup. ?>
+					</select>
+					<p class="description"><?php esc_html_e( 'Used to interpret timed events and calendar exports. Leave as the site timezone when the event does not need a separate timezone.', 'wpfaevent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Time Format', 'wpfaevent' ); ?></th>
+				<td>
+					<label for="wpfa_event_all_day">
+						<input type="checkbox" id="wpfa_event_all_day" name="wpfa_event_all_day" value="1" <?php checked( $all_day ); ?>>
+						<?php esc_html_e( 'All-day event', 'wpfaevent' ); ?>
+					</label>
+					<p class="description"><?php esc_html_e( 'All-day events export as date-only calendar entries. Timed events use the event timezone.', 'wpfaevent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_start_time"><?php esc_html_e( 'Start Time', 'wpfaevent' ); ?></label></th>
+				<td><input type="time" id="wpfa_event_start_time" name="wpfa_event_start_time" value="<?php echo esc_attr( $start_time ); ?>" class="regular-text"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_end_time"><?php esc_html_e( 'End Time', 'wpfaevent' ); ?></label></th>
+				<td><input type="time" id="wpfa_event_end_time" name="wpfa_event_end_time" value="<?php echo esc_attr( $end_time ); ?>" class="regular-text"></td>
 			</tr>
 			<tr>
 				<th><label for="wpfa_event_location"><?php esc_html_e( 'Location', 'wpfaevent' ); ?></label></th>
@@ -425,11 +456,60 @@ class Wpfaevent_Admin {
 			return;
 		}
 
-		// List of all meta fields to save.
+		$posted_start_date = isset( $_POST['wpfa_event_start_date'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_start_date'] ) ) : '';
+		$posted_end_date   = isset( $_POST['wpfa_event_end_date'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_end_date'] ) ) : '';
+		$posted_timezone   = isset( $_POST['wpfa_event_timezone'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_timezone'] ) ) : '';
+		$start_date        = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_date_value( $posted_start_date ) : $posted_start_date;
+		$end_date          = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_date_value( $posted_end_date ) : $posted_end_date;
+		$timezone          = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_timezone( $posted_timezone ) : $posted_timezone;
+
+		if ( isset( $_POST['wpfa_event_start_date'] ) ) {
+			$this->update_or_delete_post_meta( $post_id, 'wpfa_event_start_date', $start_date );
+		}
+
+		if ( isset( $_POST['wpfa_event_end_date'] ) ) {
+			$this->update_or_delete_post_meta( $post_id, 'wpfa_event_end_date', $end_date );
+		}
+
+		if ( '' !== $timezone ) {
+			update_post_meta( $post_id, 'wpfa_event_timezone', $timezone );
+		} else {
+			delete_post_meta( $post_id, 'wpfa_event_timezone' );
+		}
+
+		$all_day = isset( $_POST['wpfa_event_all_day'] );
+		update_post_meta( $post_id, 'wpfa_event_all_day', $all_day ? '1' : '0' );
+
+		$posted_start_time = isset( $_POST['wpfa_event_start_time'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_start_time'] ) ) : '';
+		$posted_end_time   = isset( $_POST['wpfa_event_end_time'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_end_time'] ) ) : '';
+		$start_time        = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_time_value( $posted_start_time ) : $posted_start_time;
+		$end_time          = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_time_value( $posted_end_time ) : $posted_end_time;
+
+		if ( $all_day ) {
+			delete_post_meta( $post_id, 'wpfa_event_start_time' );
+			delete_post_meta( $post_id, 'wpfa_event_time' );
+			delete_post_meta( $post_id, 'wpfa_event_end_time' );
+			delete_post_meta( $post_id, 'wpfa_event_starts_at' );
+			delete_post_meta( $post_id, 'wpfa_event_ends_at' );
+		} else {
+			$end_date_for_datetime = '' !== $end_date ? $end_date : $start_date;
+
+			$this->update_or_delete_post_meta( $post_id, 'wpfa_event_start_time', $start_time );
+			$this->update_or_delete_post_meta( $post_id, 'wpfa_event_time', $start_time );
+			$this->update_or_delete_post_meta( $post_id, 'wpfa_event_end_time', $end_time );
+			$this->update_or_delete_post_meta(
+				$post_id,
+				'wpfa_event_starts_at',
+				class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::build_datetime_value( $start_date, $start_time, $timezone ) : ''
+			);
+			$this->update_or_delete_post_meta(
+				$post_id,
+				'wpfa_event_ends_at',
+				class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::build_datetime_value( $end_date_for_datetime, $end_time, $timezone ) : ''
+			);
+		}
+
 		$meta_fields = array(
-			'wpfa_event_start_date',
-			'wpfa_event_end_date',
-			'wpfa_event_time',
 			'wpfa_event_location',
 			'wpfa_event_lead_text',
 			'wpfa_event_url',
@@ -441,7 +521,6 @@ class Wpfaevent_Admin {
 			if ( isset( $_POST[ $field ] ) ) {
 				$raw_value = sanitize_text_field( wp_unslash( $_POST[ $field ] ) );
 
-				// Special handling for URL fields.
 				if ( in_array( $field, array( 'wpfa_event_url', 'wpfa_event_registration_link', 'wpfa_event_cfs_link' ), true ) ) {
 					$value = esc_url_raw( $raw_value );
 				} else {
@@ -682,6 +761,25 @@ class Wpfaevent_Admin {
 		$event_ids = array_diff( $this->get_speaker_event_ids( $speaker_id ), array( $event_id ) );
 
 		$this->update_post_id_list_meta( $speaker_id, 'wpfa_speaker_events', $event_ids );
+	}
+
+	/**
+	 * Update a meta key when it has content, otherwise delete it.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $key     Meta key.
+	 * @param string $value   Meta value.
+	 * @return void
+	 */
+	private function update_or_delete_post_meta( $post_id, $key, $value ) {
+		if ( '' === $value ) {
+			delete_post_meta( $post_id, $key );
+			return;
+		}
+
+		update_post_meta( $post_id, $key, $value );
 	}
 
 	/**
