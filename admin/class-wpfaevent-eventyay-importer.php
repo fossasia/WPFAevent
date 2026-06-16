@@ -551,7 +551,8 @@ class Wpfaevent_Eventyay_Importer {
 			$seen_urls[ $next_url ] = true;
 			++$page;
 
-			$payload = $this->fetch_eventyay_rest_json( $next_url, $settings['api_token'] );
+			$current_url = $next_url;
+			$payload     = $this->fetch_eventyay_rest_json( $current_url, $settings['api_token'] );
 			if ( is_wp_error( $payload ) ) {
 				return $payload;
 			}
@@ -563,7 +564,7 @@ class Wpfaevent_Eventyay_Importer {
 					}
 				}
 
-				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $settings['base_url'] ) : '';
+				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $current_url ) : '';
 				if ( is_wp_error( $next_url ) ) {
 					return $next_url;
 				}
@@ -1008,25 +1009,25 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $next_url Raw next URL.
-	 * @param string $base_url Configured base URL.
+	 * @param string $next_url      Raw next URL.
+	 * @param string $reference_url Current request URL used to resolve relative next links.
 	 * @return string|WP_Error
 	 */
-	private function normalize_eventyay_next_url( $next_url, $base_url ) {
+	private function normalize_eventyay_next_url( $next_url, $reference_url ) {
 		$next_url = trim( (string) $next_url );
 
 		if ( empty( $next_url ) ) {
 			return '';
 		}
 
-		$base_url = untrailingslashit( esc_url_raw( $base_url ) );
-		if ( empty( $base_url ) || ! wp_http_validate_url( $base_url ) ) {
+		$reference_url = untrailingslashit( esc_url_raw( $reference_url ) );
+		if ( empty( $reference_url ) || ! wp_http_validate_url( $reference_url ) ) {
 			return '';
 		}
 
 		$next_parts = wp_parse_url( $next_url );
 		if ( ! empty( $next_parts['scheme'] ) || ! empty( $next_parts['host'] ) ) {
-			if ( ! $this->eventyay_urls_share_origin( $next_url, $base_url ) ) {
+			if ( ! $this->eventyay_urls_share_origin( $next_url, $reference_url ) ) {
 				return new WP_Error(
 					'wpfaevent_eventyay_untrusted_next_url',
 					esc_html__( 'Eventyay pagination returned a next URL outside the configured Eventyay host.', 'wpfaevent' )
@@ -1044,7 +1045,7 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		if ( 0 === strpos( $next_url, '?' ) ) {
-			$base_path = preg_replace( '/[?#].*$/', '', $base_url );
+			$base_path = preg_replace( '/[?#].*$/', '', $reference_url );
 			$next_url  = $base_path . $next_url;
 
 			if ( ! wp_http_validate_url( $next_url ) ) {
@@ -1057,7 +1058,7 @@ class Wpfaevent_Eventyay_Importer {
 			return esc_url_raw( $next_url );
 		}
 
-		$base_origin = $this->eventyay_url_origin( $base_url );
+		$base_origin = $this->eventyay_url_origin( $reference_url );
 		if ( empty( $base_origin ) ) {
 			return '';
 		}
@@ -1558,6 +1559,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return bool
+	 * @phpstan-ignore method.unused
 	 */
 	private function eventyay_event_has_settings_payload( $event ) {
 		foreach ( array( '_eventyay_settings', 'settings' ) as $settings_key ) {
@@ -1909,6 +1911,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param mixed $value Raw value.
 	 * @return array
+	 * @phpstan-ignore method.unused
 	 */
 	private function eventyay_list_value( $value ) {
 		if ( ! is_array( $value ) ) {
@@ -1950,6 +1953,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @return string
+	 * @phpstan-ignore method.unused
 	 */
 	private function eventyay_resource_identifier( $eventyay_resource ) {
 		foreach ( array( '_eventyay_source_id', 'code', 'id', 'slug' ) as $key ) {
@@ -1984,6 +1988,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @param array $keys              Candidate keys.
 	 * @return string
+	 * @phpstan-ignore method.unused
 	 */
 	private function eventyay_first_present_rich_text( $eventyay_resource, $keys ) {
 		$value = $this->eventyay_first_present_raw( $eventyay_resource, $keys );
@@ -2127,6 +2132,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $jsonapi_resource JSON:API resource.
 	 * @return array
+	 * @phpstan-ignore method.unused
 	 */
 	private function get_jsonapi_attributes( $jsonapi_resource ) {
 		return isset( $jsonapi_resource['attributes'] ) && is_array( $jsonapi_resource['attributes'] ) ? $jsonapi_resource['attributes'] : array();
@@ -2140,6 +2146,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $attributes Attribute map.
 	 * @param array $keys       Candidate keys.
 	 * @return string
+	 * @phpstan-ignore method.unused
 	 */
 	private function attribute_value( $attributes, $keys ) {
 		foreach ( $keys as $key ) {

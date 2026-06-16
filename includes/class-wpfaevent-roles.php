@@ -491,17 +491,9 @@ class Wpfaevent_Roles {
 			'read_event',
 			'edit_event',
 			'edit_events',
-			'edit_others_events',
-			'edit_published_events',
-			'edit_private_events',
-			'read_private_events',
 			'read_speaker',
 			'edit_speaker',
 			'edit_speakers',
-			'edit_others_speakers',
-			'edit_published_speakers',
-			'edit_private_speakers',
-			'read_private_speakers',
 		);
 	}
 
