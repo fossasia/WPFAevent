@@ -354,7 +354,7 @@ $header_vars         = array(
 							}
 							$event_filter_url = add_query_arg( $event_filter_args, $speakers_base_url );
 							?>
-							<a href="<?php echo htmlentities(esc_url( $event_filter_url )); ?>"
+							<a href="<?php echo esc_url( $event_filter_url ); ?>"
 								class="wpfa-filter-btn <?php echo esc_attr( absint( $event_filter_post->ID ) === $selected_event_id ? 'active' : '' ); ?>">
 								<?php echo esc_html( get_the_title( $event_filter_post->ID ) ); ?>
 							</a>
@@ -375,7 +375,7 @@ $header_vars         = array(
 							$category_base_args['event'] = $selected_event_slug;
 						}
 						?>
-						<a href="<?php echo htmlentities(esc_url( add_query_arg( $category_base_args, $speakers_base_url ) )); ?>"
+						<a href="<?php echo esc_url( add_query_arg( $category_base_args, $speakers_base_url ) ); ?>"
 							class="wpfa-filter-btn <?php echo esc_attr( 'all' === $current_category ? 'active' : '' ); ?>"
 							data-filter="all">
 							<?php esc_html_e( 'All Speakers', 'wpfaevent' ); ?>
@@ -396,12 +396,12 @@ $header_vars         = array(
 							$category_url   = add_query_arg( $category_args, $speakers_base_url );
 							$category_count = isset( $category_term_counts[ $category_term->term_id ] ) ? absint( $category_term_counts[ $category_term->term_id ] ) : absint( $category_term->count );
 							?>
-							<a href="<?php echo htmlentities(esc_url( $category_url )); ?>"
+							<a href="<?php echo esc_url( $category_url ); ?>"
 								class="wpfa-filter-btn <?php echo esc_attr( $is_active ? 'active' : '' ); ?>"
 								data-filter="<?php echo esc_attr( $category_slug ); ?>">
 								<?php echo esc_html( $category_term->name ); ?>
 								<?php if ( $category_count > 0 ) : ?>
-									<span class="wpfa-filter-count">(<?php echo htmlentities(absint( $category_count )); ?>)</span>
+									<span class="wpfa-filter-count">(<?php echo absint( $category_count ); ?>)</span>
 								<?php endif; ?>
 							</a>
 						<?php endforeach; ?>
