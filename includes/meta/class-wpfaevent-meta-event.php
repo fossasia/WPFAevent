@@ -1374,7 +1374,7 @@ class Wpfaevent_Meta_Event {
 		 * @param string $timezone Timezone identifier.
 		 * @return string
 		 */
-	private static function build_datetime_value( $date, $time, $timezone ) {
+	public static function build_datetime_value( $date, $time, $timezone ) {
 		$date     = self::sanitize_date_value( $date );
 		$time     = self::sanitize_time_value( $time );
 		$timezone = self::sanitize_timezone( $timezone );

@@ -118,7 +118,9 @@ class Wpfaevent_Schedule_Helper {
 			);
 		}
 
-		return $label;
+		$offset = self::format_timezone_offset( $timezone_string );
+
+		return '' !== $offset ? sprintf( '%1$s (UTC%2$s)', $label, $offset ) : $label;
 	}
 
 	/**
