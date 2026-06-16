@@ -4267,6 +4267,43 @@ class Wpfaevent_Eventyay_Importer {
 	}
 
 	/**
+	 * Ensure a dashboard sync URL targets the configured Eventyay host and API path.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $api_url Raw API URL.
+	 * @return true|WP_Error
+	 */
+	private function validate_eventyay_sync_url( $api_url ) {
+		$settings        = $this->get_eventyay_import_settings();
+		$configured_host = wp_parse_url( $settings['base_url'], PHP_URL_HOST );
+		$sync_host       = wp_parse_url( $api_url, PHP_URL_HOST );
+
+		if (
+			empty( $configured_host ) ||
+			empty( $sync_host ) ||
+			strtolower( (string) $configured_host ) !== strtolower( (string) $sync_host )
+		) {
+			return new WP_Error(
+				'wpfaevent_eventyay_sync_host_not_allowed',
+				esc_html__( 'The Eventyay sync URL must use the configured Eventyay host.', 'wpfaevent' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$path = wp_parse_url( $api_url, PHP_URL_PATH );
+		if ( false === strpos( (string) $path, '/api/' ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_sync_path_not_allowed',
+				esc_html__( 'The Eventyay sync URL must point to an Eventyay API endpoint.', 'wpfaevent' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		return true;
+	}
+
+	/**
 	 * Validate and complete a dashboard Eventyay API URL.
 	 *
 	 * @since 1.0.0
@@ -4294,6 +4331,11 @@ class Wpfaevent_Eventyay_Importer {
 				esc_html__( 'The Eventyay API URL must use HTTP or HTTPS.', 'wpfaevent' ),
 				array( 'status' => 400 )
 			);
+		}
+
+		$host_validation = $this->validate_eventyay_sync_url( $api_url );
+		if ( is_wp_error( $host_validation ) ) {
+			return $host_validation;
 		}
 
 		$path = isset( $parts['path'] ) ? $parts['path'] : '';
