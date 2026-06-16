@@ -19,6 +19,14 @@
 class Wpfaevent_Footer_Handler {
 
 	/**
+	 * Initialize the class.
+	 *
+	 * @since    1.0.0
+	 */
+	public function __construct() {
+	}
+
+	/**
 	 * Handle AJAX request to update footer text.
 	 *
 	 * @since    1.0.0

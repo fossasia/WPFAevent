@@ -39,7 +39,7 @@ class Wpfaevent_Meta_Event {
 				'type'              => 'string',
 				'single'            => true,
 				'show_in_rest'      => true,
-				'sanitize_callback' => 'sanitize_text_field',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_date_value' ),
 				'description'       => __( 'Event start date', 'wpfaevent' ),
 			)
 		);
@@ -51,7 +51,7 @@ class Wpfaevent_Meta_Event {
 				'type'              => 'string',
 				'single'            => true,
 				'show_in_rest'      => true,
-				'sanitize_callback' => 'sanitize_text_field',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_date_value' ),
 				'description'       => __( 'Event end date', 'wpfaevent' ),
 			)
 		);
@@ -68,7 +68,7 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
-		// Legacy single event time used by the event modal.
+		// Legacy single event time used by the front-end event modal.
 		register_post_meta(
 			self::$post_type,
 			'wpfa_event_time',
