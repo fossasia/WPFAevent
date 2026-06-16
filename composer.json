@@ -1,5 +1,4 @@
 {
-
     "name": "fossasia/wpfaevent",
     "description": "WPFA Event WordPress plugin",
     "type": "wordpress-plugin",
@@ -10,23 +9,28 @@
         "php-stubs/wp-cli-stubs": "^2.12",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^9.6",
         "squizlabs/php_codesniffer": "^3.13",
         "szepeviktor/phpstan-wordpress": "^2.0",
-        "wp-coding-standards/wpcs": "^3.3"
+        "wp-coding-standards/wpcs": "^3.3",
+        "yoast/phpunit-polyfills": "^2.0"
     },
 
     "scripts": {
-        "phpcs": "phpcs",
         "phpcbf": "phpcbf",
-        "phpstan": "phpstan analyse --memory-limit=2048M"
+        "phpcs": "phpcs",
+        "phpstan": "phpstan analyse --memory-limit=2048M",
+        "setup-tests": "bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1",
+        "test": "vendor/bin/phpunit"
     },
 
     "scripts-descriptions": {
-        "phpcs": "Run PHP_CodeSniffer to check coding standards",
         "phpcbf": "Run PHP Code Beautifier to fix coding standards",
-        "phpstan": "Run PHPStan static analysis for PHP code quality"
+        "phpcs": "Run PHP_CodeSniffer to check coding standards",
+        "phpstan": "Run PHPStan static analysis for PHP code quality",
+        "test": "Run PHPUnit regression test suite"
     },
-    
+
     "config": {
         "sort-packages": true,
         "allow-plugins": {
