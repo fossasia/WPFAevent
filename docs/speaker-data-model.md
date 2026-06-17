@@ -43,3 +43,21 @@ Speaker profile pages merge `wpfa_speaker_events` with events that reference the
 There is not yet a reusable Session CPT or session relationship model. Until that exists, the speaker profile displays the interim `wpfa_speaker_talk_*` metadata as "Sessions by this speaker".
 
 When a reusable session data model is added, speaker profiles should move from the interim talk fields to a dedicated session relationship and keep these fields only for migration/backward compatibility.
+
+## Eventyay Import Data Ownership
+
+Imported Eventyay data is written to dashboard JSON under `uploads/fossasia-data/`. Reimports follow these ownership rules:
+
+| Data | Reimport behaviour |
+| --- | --- |
+| Eventyay event metadata | Updated from Eventyay |
+| Eventyay speaker (`source = eventyay`) | Updated from Eventyay; post status follows linked event (`publish` only when event is published, otherwise `draft`) |
+| Manual speaker | Preserved and kept linked to the event |
+| Eventyay sponsor group or sponsor (`source = eventyay`) | Replaced on reimport |
+| Manual sponsor group | Preserved across reimport |
+| Eventyay exhibitor (`source = eventyay`) | Replaced on reimport |
+| Manual exhibitor | Preserved across reimport |
+| Featured speaker flag set manually | Preserved; Eventyay featured speakers are merged without removing manual featured selections |
+| Eventyay schedule (`source = eventyay`) | Replaced unless a manual schedule with a different source already exists |
+
+Manual records are identified by the absence of `source = eventyay` on the stored group, sponsor, exhibitor, or speaker post metadata.
