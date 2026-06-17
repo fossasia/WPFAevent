@@ -31,6 +31,7 @@ class Wpfaevent_Activator {
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-speaker.php';
 		require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies.php';
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-roles.php';
 
 		// Register CPTs and taxonomies.
 		Wpfaevent_CPT_Event::register();
@@ -42,6 +43,8 @@ class Wpfaevent_Activator {
 
 		// Grant custom capabilities to administrators.
 		self::add_capabilities();
+		Wpfaevent_Roles::register_roles_and_capabilities();
+		update_option( Wpfaevent_Roles::ROLES_VERSION_OPTION, Wpfaevent_Roles::ROLES_VERSION, false );
 	}
 
 	/**
