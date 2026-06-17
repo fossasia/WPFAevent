@@ -368,7 +368,7 @@ class Wpfaevent_Calendar {
 		$title        = get_the_title( $event_id );
 		$external_url = esc_url_raw( get_post_meta( $event_id, 'wpfa_event_url', true ) );
 		$url          = $external_url ? $external_url : get_permalink( $event_id );
-		$description  = self::plain_text( $post->post_content );
+		$description  = self::get_event_description( $event_id, $post );
 		$location     = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
 
 		return array(
@@ -763,6 +763,33 @@ class Wpfaevent_Calendar {
 	}
 
 	/**
+	 * Resolve the best attendee-facing event description for calendar exports.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int     $event_id Event post ID.
+	 * @param WP_Post $post     Event post.
+	 * @return string
+	 */
+	private static function get_event_description( $event_id, $post ) {
+		$sources = array(
+			$post->post_excerpt,
+			get_post_meta( $event_id, 'wpfa_event_lead_text', true ),
+			$post->post_content,
+		);
+
+		foreach ( $sources as $source ) {
+			$description = self::plain_text( $source );
+
+			if ( '' !== $description ) {
+				return $description;
+			}
+		}
+
+		return '';
+	}
+
+	/**
 	 * Format a display timezone label.
 	 *
 	 * @since 1.0.0
@@ -771,7 +798,11 @@ class Wpfaevent_Calendar {
 	 * @return string
 	 */
 	private static function format_timezone_label( $timezone_string ) {
-		return str_replace( '_', ' ', $timezone_string );
+		if ( class_exists( 'Wpfaevent_Schedule_Helper' ) ) {
+			return Wpfaevent_Schedule_Helper::format_timezone_label( $timezone_string );
+		}
+
+		return $timezone_string;
 	}
 
 	/**

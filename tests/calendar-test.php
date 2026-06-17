@@ -12,6 +12,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', dirname( __DIR__ ) . '/' );
 }
 
+if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
+	define( 'HOUR_IN_SECONDS', 3600 );
+}
+
+if ( ! defined( 'MINUTE_IN_SECONDS' ) ) {
+	define( 'MINUTE_IN_SECONDS', 60 );
+}
+
+
 if ( ! function_exists( 'absint' ) ) {
 	/**
 	 * Minimal absint() fallback for standalone CLI tests.
@@ -122,6 +131,7 @@ if ( ! class_exists( 'WP_Error' ) ) {
 	}
 }
 
+require_once dirname( __DIR__ ) . '/includes/helpers/class-wpfaevent-schedule-helper.php';
 require_once dirname( __DIR__ ) . '/includes/class-wpfaevent-calendar.php';
 
 /**
@@ -193,7 +203,10 @@ wpfaevent_calendar_test_assert_contains( 'https://calendar.google.com/calendar/r
 wpfaevent_calendar_test_assert_same( 'TEMPLATE', $all_day_google_params['action'] ?? '', 'Google Calendar URL should create an event template.' );
 wpfaevent_calendar_test_assert_same( '20260605/20260607', $all_day_google_params['dates'] ?? '', 'Google all-day dates should use an exclusive end date.' );
 wpfaevent_calendar_test_assert_same( $all_day_event['title'], $all_day_google_params['text'] ?? '', 'Google Calendar URL should keep the event title.' );
+wpfaevent_calendar_test_assert_same( $all_day_event['description'] . "\n\n" . $all_day_event['url'], $all_day_google_params['details'] ?? '', 'Google Calendar URL should include the event description and URL.' );
 wpfaevent_calendar_test_assert_same( 'Asia/Colombo', $all_day_google_params['ctz'] ?? '', 'Google Calendar URL should include the event timezone.' );
+wpfaevent_calendar_test_assert_same( '+06:00', Wpfaevent_Schedule_Helper::format_timezone_offset( 'Asia/Dhaka' ), 'Timezone offsets should include hours and minutes.' );
+wpfaevent_calendar_test_assert_same( 'Asia/Dhaka (UTC+06:00)', Wpfaevent_Schedule_Helper::format_timezone_label( 'Asia/Dhaka' ), 'Timezone labels should append the UTC offset.' );
 
 $timezone    = new DateTimeZone( 'Asia/Colombo' );
 $timed_event = array(

@@ -105,7 +105,9 @@ event-plugin/
 | `[wpfaevent_past_events]`             | Displays the past events archive.                | WPFA template  |
 | `[wpfaevent_schedule]`                | Displays the event schedule.                     | WPFA template  |
 | `[wpfaevent_code_of_conduct]`         | Displays the code of conduct content.            | WPFA template  |
-| `[wpfaevent_template template="events"]` | Embeds a selected WPFA template by template key. | WPFA template  |
+| `[wpfaevent_template template="events"]` | Embeds a selected WPFA template by template key. | WPFA template |
+
+**Note:** All shortcodes now accept an optional `align` attribute (`align="wide"` or `align="full"`). When provided, the shortcode output will be wrapped in a corresponding alignment container, e.g., `[wpfaevent_events align="full"]`. If omitted, the shortcode renders the raw embed without altering the surrounding layout.
 
 The generic `wpfaevent_template` shortcode accepts a `template` attribute. Supported values include `landing`, `speakers`, `events`, `past_events`, `schedule`, and `code_of_conduct`.
 
@@ -196,6 +198,22 @@ Event timezone behavior is deterministic:
 * All-day events export date-only `DTSTART` and exclusive date-only `DTEND` values.
 * Timed events are interpreted in the event timezone and exported as UTC `DTSTART`/`DTEND` values.
 * Eventyay imports save the Eventyay `timezone` field when present and preserve normalized source datetime values for calendar rendering/export.
+
+## Calendar Export And Timezones
+
+The schedule page exposes an **Add to calendar** link when an event has a valid start date. The link opens a Google Calendar event template. Individual events can also be downloaded as `.ics` files from `/wp-json/wpfaevent/v1/events/{event_id}/ics`.
+
+Event timezone behavior is deterministic:
+
+* Each event can save an explicit timezone. If it is empty, WPFAevent falls back to the WordPress site timezone.
+* All-day events export date-only `DTSTART` and exclusive date-only `DTEND` values.
+* Timed events are interpreted in the event timezone and exported as UTC `DTSTART`/`DTEND` values.
+
+Run the calendar export checks with:
+
+```bash
+php tests/calendar-test.php
+```
 
 ## Development Notes
 
