@@ -2343,7 +2343,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @since 1.0.0
 	 *
 	 * @param string $url      Candidate URL.
-	 * @param string $reference_url Current request URL used to resolve relative next links.
+	 * @param string $base_url Configured base URL.
 	 * @return bool
 	 */
 	private function eventyay_urls_share_origin( $url, $base_url ) {
