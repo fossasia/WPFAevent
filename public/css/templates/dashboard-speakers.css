@@ -1,0 +1,70 @@
+/* ==========================================================================
+   Dashboard Speakers Landing Template Styles
+   ========================================================================== */
+
+.wpfaevent .wpfa-speakers-list {
+	display: flex;
+	flex-direction: column;
+	gap: 36px;
+	margin-bottom: 40px;
+}
+
+.wpfaevent .wpfa-event-filters {
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 960px;
+}
+
+.wpfaevent .wpfa-speaker-group {
+	scroll-margin-top: 96px;
+}
+
+.wpfaevent .wpfa-speaker-group.is-hidden {
+	display: none;
+}
+
+.wpfaevent .wpfa-speaker-group .wpfa-speakers-grid {
+	margin-bottom: 0;
+}
+
+.wpfaevent .wpfa-speaker-group-head {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	margin: 0 0 18px;
+}
+
+.wpfaevent .wpfa-speaker-group-head h2 {
+	color: var(--text);
+	font-size: 1.6rem;
+	line-height: 1.2;
+	margin: 0;
+}
+
+.wpfaevent .wpfa-featured-speaker-group .wpfa-speaker-group-head h2 {
+	color: var(--brand);
+}
+
+.wpfaevent .wpfa-speaker-card.is-featured {
+	box-shadow: 0 18px 42px rgba(213, 16, 7, 0.16);
+	outline: 2px solid var(--brand, #D51007);
+}
+
+.wpfaevent .wpfa-speaker-card.is-featured:hover {
+	box-shadow: 0 22px 46px rgba(213, 16, 7, 0.2);
+}
+
+.wpfaevent .wpfa-speaker-featured-badge {
+	align-items: center;
+	background: var(--brand, #D51007);
+	border-radius: 3px;
+	color: #fff;
+	display: inline-flex;
+	font-size: 11px;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	line-height: 1;
+	margin: 0 0 8px;
+	padding: 6px 9px;
+	text-transform: uppercase;
+}

@@ -684,6 +684,14 @@ class Wpfaevent_Templates {
 		);
 
 		wp_register_style(
+			'wpfaevent-dashboard-speakers',
+			WPFAEVENT_URL . 'public/css/templates/dashboard-speakers.css',
+			array( 'wpfaevent-speakers' ),
+			WPFAEVENT_VERSION,
+			'all'
+		);
+
+		wp_register_style(
 			'wpfaevent-past-events',
 			WPFAEVENT_URL . 'public/css/templates/past-events.css',
 			array( 'wpfaevent', 'wpfaevent-navigation', 'wpfaevent-pagination' ),
@@ -711,7 +719,7 @@ class Wpfaevent_Templates {
 	private static function get_block_style_handle( $key ) {
 		$handles = array(
 			'events'          => 'wpfaevent-events',
-			'speakers'        => 'wpfaevent-speakers',
+			'speakers'        => 'wpfaevent-dashboard-speakers',
 			'past_events'     => 'wpfaevent-past-events',
 			'code_of_conduct' => 'wpfaevent-code-of-conduct',
 		);
@@ -742,6 +750,7 @@ class Wpfaevent_Templates {
 
 		if ( 'speakers' === $key ) {
 			wp_enqueue_style( 'wpfaevent-speakers' );
+			wp_enqueue_style( 'wpfaevent-dashboard-speakers' );
 			wp_enqueue_script( 'wpfaevent-speakers' );
 		}
 
