@@ -13,14 +13,40 @@
 .wpfaevent .nav-inner {
 	display: flex;
 	align-items: center;
+	gap: 18px;
 	justify-content: space-between;
 	padding: 14px 0;
 }
 
+.wpfaevent .nav-inner > a {
+	flex: 0 0 auto;
+}
+
 .wpfaevent .nav-links {
 	display: flex;
-	gap: 0.6rem;
 	align-items: center;
+	flex: 1 1 auto;
+	gap: 16px;
+	justify-content: space-between;
+	min-width: 0;
+}
+
+.wpfaevent .nav-links-main,
+.wpfaevent .nav-links-secondary {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	min-width: 0;
+}
+
+.wpfaevent .nav-links-main {
+	justify-content: center;
+}
+
+.wpfaevent .nav-links-secondary {
+	justify-content: flex-end;
+	margin-left: auto;
 }
 
 .wpfaevent .nav-links a {
@@ -30,6 +56,7 @@
 	color: #222;
 	font-size: 1rem;
 	line-height: 1.25;
+	white-space: nowrap;
 }
 
 .wpfaevent .nav-links a.active {
@@ -48,6 +75,34 @@
 @media (max-width: 782px) {
 	.admin-bar .wpfaevent .nav {
 		top: 46px;
+	}
+
+	.wpfaevent .nav-inner {
+		align-items: flex-start;
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+
+	.wpfaevent .nav-links {
+		flex-basis: 100%;
+		flex-wrap: wrap;
+		gap: 8px;
+		padding-bottom: 4px;
+		width: 100%;
+	}
+
+	.wpfaevent .nav-links-main,
+	.wpfaevent .nav-links-secondary {
+		flex: 1 1 100%;
+		gap: 8px;
+		justify-content: flex-start;
+		margin-left: 0;
+	}
+
+	.wpfaevent .nav-links a {
+		font-size: 0.88rem;
+		padding-left: 0.5rem;
+		padding-right: 0.5rem;
 	}
 }
 

@@ -56,7 +56,7 @@ class WPFA_CLI {
 	 * Minimal hardcoded seed (2 speakers, 1 event).
 	 */
 	private static function seed_minimal() {
-		$placeholder = 'https://via.placeholder.com/300x300.png?text=Speaker';
+		$placeholder = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
 
 		$speakers = array(
 			array(
@@ -174,7 +174,7 @@ class WPFA_CLI {
 				$meta = array(
 					'wpfa_speaker_organization' => isset( $s['org'] ) ? sanitize_text_field( $s['org'] ) : '',
 					'wpfa_speaker_position'     => isset( $s['position'] ) ? sanitize_text_field( $s['position'] ) : '',
-					'wpfa_speaker_headshot_url' => isset( $s['photo'] ) ? esc_url_raw( $s['photo'] ) : 'https://via.placeholder.com/300x300.png?text=Speaker',
+					'wpfa_speaker_headshot_url' => isset( $s['photo'] ) ? esc_url_raw( $s['photo'] ) : WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg',
 				);
 
 				$id                  = self::upsert_post_by_slug(

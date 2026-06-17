@@ -40,7 +40,7 @@ class Wpfaevent_Admin {
 	private $version;
 
 	/**
-	 * Eventyay import service.
+	 * Eventyay import and dashboard sync service.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -141,11 +141,12 @@ class Wpfaevent_Admin {
 		);
 
 		array_unshift( $links, $settings_link, $import_link );
+
 		return $links;
 	}
 
 	/**
-	 * Register the settings page in WordPress admin.
+	 * Register the plugin settings menu and Eventyay import page.
 	 *
 	 * @since    1.0.0
 	 */
@@ -155,7 +156,7 @@ class Wpfaevent_Admin {
 			esc_html__( 'WPFAEvent', 'wpfaevent' ),
 			Wpfaevent_Roles::CAP_MANAGE_SETTINGS,
 			'wpfaevent-settings',
-			array( $this, 'render_settings_page' ),
+			array( $this, 'render_plugin_settings_page' ),
 			'dashicons-calendar-alt',
 			30
 		);
@@ -166,7 +167,7 @@ class Wpfaevent_Admin {
 			esc_html__( 'Settings', 'wpfaevent' ),
 			Wpfaevent_Roles::CAP_MANAGE_SETTINGS,
 			'wpfaevent-settings',
-			array( $this, 'render_settings_page' )
+			array( $this, 'render_plugin_settings_page' )
 		);
 
 		add_submenu_page(
@@ -175,7 +176,7 @@ class Wpfaevent_Admin {
 			esc_html__( 'Import Events', 'wpfaevent' ),
 			Wpfaevent_Roles::CAP_IMPORT_EVENTYAY,
 			'wpfaevent-import-events',
-			array( $this, 'render_eventyay_import_page' )
+			array( $this, 'render_settings_page' )
 		);
 
 		add_submenu_page(
@@ -184,17 +185,25 @@ class Wpfaevent_Admin {
 			esc_html__( 'Update Events', 'wpfaevent' ),
 			Wpfaevent_Roles::CAP_IMPORT_EVENTYAY,
 			'wpfaevent-update-events',
-			array( $this, 'render_eventyay_update_page' )
+			array( $this, 'render_update_events_page' )
+		);
+
+		add_submenu_page(
+			'edit.php?post_type=wpfa_speaker',
+			esc_html__( 'Event Speaker Lists', 'wpfaevent' ),
+			esc_html__( 'Events', 'wpfaevent' ),
+			'edit_posts',
+			'wpfaevent-speaker-events',
+			array( $this, 'render_speaker_events_page' )
 		);
 	}
 
 	/**
-	 * Render the settings page placeholder.
+	 * Render the plugin settings placeholder page.
 	 *
-	 * @since    1.0.0
+	 * @since 1.0.0
 	 */
-	public function render_settings_page() {
-		// Check user capabilities.
+	public function render_plugin_settings_page() {
 		if ( ! Wpfaevent_Roles::current_user_can_manage_settings() ) {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wpfaevent' ) );
 		}
@@ -221,8 +230,8 @@ class Wpfaevent_Admin {
 				</div>
 			<?php endif; ?>
 
-			<div class="card">
-				<h2><?php esc_html_e( 'Plugin Information', 'wpfaevent' ); ?></h2>
+			<div class="card" style="max-width: 960px;">
+				<h2><?php esc_html_e( 'WPFAEvent Settings', 'wpfaevent' ); ?></h2>
 				<p><?php esc_html_e( 'This page is reserved for the future WPFAEvent admin dashboard and shared plugin settings.', 'wpfaevent' ); ?></p>
 				<?php if ( Wpfaevent_Roles::current_user_can_import_eventyay() ) : ?>
 					<p>
@@ -231,38 +240,125 @@ class Wpfaevent_Admin {
 						</a>
 					</p>
 				<?php endif; ?>
-				<table class="form-table">
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Version', 'wpfaevent' ); ?></th>
-						<td><?php echo esc_html( $this->version ); ?></td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Plugin Name', 'wpfaevent' ); ?></th>
-						<td><code><?php echo esc_html( $this->plugin_name ); ?></code></td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Text Domain', 'wpfaevent' ); ?></th>
-						<td><code>wpfaevent</code></td>
-					</tr>
-				</table>
 			</div>
 
-			<div class="card" style="margin-top: 20px;">
-				<h2><?php esc_html_e( 'Documentation', 'wpfaevent' ); ?></h2>
-				<p>
-					<?php
-					printf(
-						/* translators: %s: GitHub repository link */
-						esc_html__( 'For setup instructions and documentation, visit the %s.', 'wpfaevent' ),
-						sprintf(
-							'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
-							esc_url( 'https://github.com/fossasia/WPFAevent' ),
-							esc_html__( 'GitHub repository', 'wpfaevent' )
-						)
-					);
-					?>
-				</p>
+			<div class="card" style="max-width: 960px;">
+				<h2><?php esc_html_e( 'Where Imported Eventyay Data Appears', 'wpfaevent' ); ?></h2>
+				<table class="widefat striped">
+					<tbody>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Events', 'wpfaevent' ); ?></th>
+							<td><?php esc_html_e( 'Created or updated as Events posts, with date, location, Eventyay URL, and Eventyay source metadata saved as post meta.', 'wpfaevent' ); ?></td>
+						</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></th>
+								<td><?php esc_html_e( 'Created or updated as Speaker posts and linked to the imported event through event-specific relationship meta.', 'wpfaevent' ); ?></td>
+							</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Dashboard files', 'wpfaevent' ); ?></th>
+								<td><?php esc_html_e( 'Event dashboard data is written under uploads/fossasia-data using event-specific files such as speakers-{event_id}.json, schedule-{event_id}.json, sponsors-{event_id}.json, exhibitors-{event_id}.json, and site-settings-{event_id}.json.', 'wpfaevent' ); ?></td>
+							</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Frontend', 'wpfaevent' ); ?></th>
+							<td><?php esc_html_e( 'Imported data appears on the event detail page and on the event-filtered speakers page, for example /speakers/?event={event-slug}.', 'wpfaevent' ); ?></td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render an event chooser under the Speakers admin menu.
+	 *
+	 * @since 1.0.0
+	 */
+	public function render_speaker_events_page() {
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to view event speaker lists.', 'wpfaevent' ) );
+		}
+
+		$events = get_posts(
+			array(
+				'post_type'      => 'wpfa_event',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+				'no_found_rows'  => true,
+			)
+		);
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Event Speaker Lists', 'wpfaevent' ); ?></h1>
+			<p><?php esc_html_e( 'Choose an event to view the speakers linked only to that event.', 'wpfaevent' ); ?></p>
+
+			<?php if ( empty( $events ) ) : ?>
+				<div class="notice notice-info">
+					<p><?php esc_html_e( 'No events found yet.', 'wpfaevent' ); ?></p>
+				</div>
+			<?php else : ?>
+				<table class="widefat striped">
+					<thead>
+						<tr>
+							<th scope="col"><?php esc_html_e( 'Event', 'wpfaevent' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Status', 'wpfaevent' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Actions', 'wpfaevent' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $events as $event ) : ?>
+							<?php
+							$speaker_ids    = $this->get_admin_event_speaker_ids( $event->ID );
+							$speaker_count  = count( $speaker_ids );
+							$speakers_url   = add_query_arg(
+								array(
+									'post_type'          => 'wpfa_speaker',
+									'wpfa_speaker_event' => absint( $event->ID ),
+								),
+								admin_url( 'edit.php' )
+							);
+							$edit_event_url = get_edit_post_link( $event->ID, '' );
+							$status_object  = get_post_status_object( get_post_status( $event ) );
+							$status_label   = $status_object ? $status_object->label : get_post_status( $event );
+							?>
+							<tr>
+								<td>
+									<strong>
+										<a href="<?php echo esc_url( $speakers_url ); ?>">
+											<?php echo esc_html( get_the_title( $event ) ); ?>
+										</a>
+									</strong>
+								</td>
+								<td><?php echo esc_html( $status_label ); ?></td>
+								<td>
+									<?php
+									echo esc_html(
+										sprintf(
+											/* translators: %s: Speaker count. */
+											_n( '%s speaker', '%s speakers', $speaker_count, 'wpfaevent' ),
+											number_format_i18n( $speaker_count )
+										)
+									);
+									?>
+								</td>
+								<td>
+									<a class="button button-small" href="<?php echo esc_url( $speakers_url ); ?>">
+										<?php esc_html_e( 'View Speakers', 'wpfaevent' ); ?>
+									</a>
+									<?php if ( $edit_event_url ) : ?>
+										<a class="button button-small" href="<?php echo esc_url( $edit_event_url ); ?>">
+											<?php esc_html_e( 'Edit Event', 'wpfaevent' ); ?>
+										</a>
+									<?php endif; ?>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -294,7 +390,6 @@ class Wpfaevent_Admin {
 		$assigned_levels = Wpfaevent_Roles::get_user_access_levels();
 		$users           = get_users(
 			array(
-				'fields'  => 'all',
 				'orderby' => 'display_name',
 				'order'   => 'ASC',
 			)
@@ -307,7 +402,7 @@ class Wpfaevent_Admin {
 
 		$this->render_user_access_level_guide();
 		?>
-		<table class="widefat striped">
+		<table class="widefat striped" style="max-width: 960px;">
 			<thead>
 				<tr>
 					<th scope="col"><?php esc_html_e( 'User', 'wpfaevent' ); ?></th>
@@ -320,17 +415,18 @@ class Wpfaevent_Admin {
 				<?php foreach ( $users as $user ) : ?>
 					<?php
 					$user_id        = absint( $user->ID );
+					$is_admin       = Wpfaevent_Roles::user_is_site_administrator( $user );
 					$role_names     = array_map( 'translate_user_role', array_filter( (array) $user->roles ) );
 					$wordpress_role = ! empty( $role_names ) ? implode( ', ', $role_names ) : __( 'No role', 'wpfaevent' );
-					$assigned_level = isset( $assigned_levels[ $user_id ] ) ? $assigned_levels[ $user_id ] : '';
 					$field_name     = Wpfaevent_Roles::ACCESS_LEVELS_OPTION . '[' . $user_id . ']';
+					$current_level  = $is_admin ? '' : ( $assigned_levels[ $user_id ] ?? '' );
 					?>
 					<tr>
-						<td><?php echo esc_html( $user->display_name ? $user->display_name : $user->user_login ); ?></td>
+						<td><strong><?php echo esc_html( $user->display_name ); ?></strong></td>
 						<td><?php echo esc_html( $user->user_email ); ?></td>
 						<td><?php echo esc_html( $wordpress_role ); ?></td>
 						<td>
-							<?php if ( Wpfaevent_Roles::user_is_site_administrator( $user ) ) : ?>
+							<?php if ( $is_admin ) : ?>
 								<em><?php esc_html_e( 'Full access (Administrator)', 'wpfaevent' ); ?></em>
 							<?php else : ?>
 								<label class="screen-reader-text" for="<?php echo esc_attr( 'wpfaevent-access-' . $user_id ); ?>">
@@ -344,7 +440,7 @@ class Wpfaevent_Admin {
 								</label>
 								<select id="<?php echo esc_attr( 'wpfaevent-access-' . $user_id ); ?>" name="<?php echo esc_attr( $field_name ); ?>">
 									<?php foreach ( $access_labels as $level => $label ) : ?>
-										<option value="<?php echo esc_attr( $level ); ?>" <?php selected( $assigned_level, $level ); ?>>
+										<option value="<?php echo esc_attr( $level ); ?>" <?php selected( $current_level, $level ); ?>>
 											<?php echo esc_html( $label ); ?>
 										</option>
 									<?php endforeach; ?>
@@ -366,7 +462,7 @@ class Wpfaevent_Admin {
 	private function render_user_access_level_guide() {
 		?>
 		<h3 class="title" style="margin-top: 1.5em;"><?php esc_html_e( 'Access level guide', 'wpfaevent' ); ?></h3>
-		<table class="widefat striped" style="margin-bottom: 1em;">
+		<table class="widefat striped" style="max-width: 960px; margin-bottom: 1.5em;">
 			<thead>
 				<tr>
 					<th scope="col" style="width: 28%;"><?php esc_html_e( 'Access level', 'wpfaevent' ); ?></th>
@@ -413,6 +509,259 @@ class Wpfaevent_Admin {
 	}
 
 	/**
+	 * Render the event filter on the speaker admin list.
+	 *
+	 * Event-owned speakers are hidden from the default speaker list. This filter
+	 * gives admins an event-scoped way to inspect those records when needed.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $post_type Current list-table post type.
+	 * @return void
+	 */
+	public function render_speaker_event_filter( $post_type ) {
+		if ( 'wpfa_speaker' !== $post_type ) {
+			return;
+		}
+
+		$events = get_posts(
+			array(
+				'post_type'      => 'wpfa_event',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+				'no_found_rows'  => true,
+			)
+		);
+
+		if ( empty( $events ) ) {
+			return;
+		}
+
+		$selected_event_id = $this->get_selected_speaker_admin_event_id();
+		?>
+		<label class="screen-reader-text" for="wpfa_speaker_event">
+			<?php esc_html_e( 'Filter speakers by event', 'wpfaevent' ); ?>
+		</label>
+		<select name="wpfa_speaker_event" id="wpfa_speaker_event">
+			<option value=""><?php esc_html_e( 'Site speakers', 'wpfaevent' ); ?></option>
+			<?php foreach ( $events as $event ) : ?>
+				<option value="<?php echo esc_attr( $event->ID ); ?>" <?php selected( $selected_event_id, $event->ID ); ?>>
+					<?php echo esc_html( sprintf( /* translators: %s: Event title. */ __( 'Event: %s', 'wpfaevent' ), get_the_title( $event ) ) ); ?>
+				</option>
+			<?php endforeach; ?>
+		</select>
+		<?php
+	}
+
+	/**
+	 * Scope the speaker admin list to site speakers or one selected event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Query $query Admin list-table query.
+	 * @return void
+	 */
+	public function filter_speaker_admin_list( $query ) {
+		if ( ! is_admin() || ! $query->is_main_query() ) {
+			return;
+		}
+
+		$post_type = $query->get( 'post_type' );
+		if ( is_array( $post_type ) || 'wpfa_speaker' !== $post_type ) {
+			return;
+		}
+
+		$selected_event_id = $this->get_selected_speaker_admin_event_id();
+
+		if ( $selected_event_id ) {
+			$speaker_ids = $this->get_admin_event_speaker_ids( $selected_event_id );
+			$query->set( 'post__in', ! empty( $speaker_ids ) ? $speaker_ids : array( 0 ) );
+			return;
+		}
+
+		$event_owned_speaker_ids = $this->get_all_event_owned_speaker_ids();
+		if ( ! empty( $event_owned_speaker_ids ) ) {
+			$current_exclusions = $query->get( 'post__not_in' );
+			$current_exclusions = is_array( $current_exclusions ) ? $current_exclusions : array();
+			$query->set( 'post__not_in', Wpfaevent_Meta_Event::sanitize_post_id_list( array_merge( $current_exclusions, $event_owned_speaker_ids ) ) );
+		}
+
+		$existing_meta_query = $query->get( 'meta_query' );
+		$meta_query          = array(
+			'relation' => 'AND',
+			array(
+				'key'     => 'wpfa_speaker_events',
+				'compare' => 'NOT EXISTS',
+			),
+			array(
+				'key'     => '_wpfa_eventyay_speaker_id',
+				'compare' => 'NOT EXISTS',
+			),
+		);
+
+		if ( ! empty( $existing_meta_query ) ) {
+			$meta_query[] = $existing_meta_query;
+		}
+
+		// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Admin list filtering is intentionally based on speaker ownership meta.
+		$query->set( 'meta_query', $meta_query );
+	}
+
+	/**
+	 * Replace raw speaker CPT status tabs with scoped counts.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $views Existing list-table view links.
+	 * @return array Scoped view links.
+	 */
+	public function filter_speaker_admin_views( $views ) {
+		$selected_event_id = $this->get_selected_speaker_admin_event_id();
+		$current_status    = filter_input( INPUT_GET, 'post_status', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$current_status    = $current_status ? sanitize_key( $current_status ) : '';
+		$base_args         = array(
+			'post_type' => 'wpfa_speaker',
+		);
+
+		if ( $selected_event_id ) {
+			$base_args['wpfa_speaker_event'] = $selected_event_id;
+		}
+
+		$scoped_views = array();
+		$view_items   = array(
+			'all'     => array(
+				'label'  => $selected_event_id ? __( 'Event speakers', 'wpfaevent' ) : __( 'Site speakers', 'wpfaevent' ),
+				'status' => '',
+			),
+			'publish' => array(
+				'label'  => __( 'Published', 'wpfaevent' ),
+				'status' => 'publish',
+			),
+			'trash'   => array(
+				'label'  => __( 'Trash', 'wpfaevent' ),
+				'status' => 'trash',
+			),
+		);
+
+		foreach ( $view_items as $view_key => $view_item ) {
+			$count = $this->count_scoped_speaker_admin_posts( $selected_event_id, $view_item['status'] );
+
+			if ( 'trash' === $view_key && 0 === $count && empty( $views['trash'] ) ) {
+				continue;
+			}
+
+			$url_args = $base_args;
+			if ( $view_item['status'] ) {
+				$url_args['post_status'] = $view_item['status'];
+			}
+
+			$is_current = $view_item['status'] === $current_status || ( '' === $view_item['status'] && '' === $current_status );
+
+			$scoped_views[ $view_key ] = sprintf(
+				'<a href="%1$s"%2$s>%3$s <span class="count">(%4$s)</span></a>',
+				esc_url( add_query_arg( $url_args, admin_url( 'edit.php' ) ) ),
+				$is_current ? ' class="current" aria-current="page"' : '',
+				esc_html( $view_item['label'] ),
+				esc_html( number_format_i18n( $count ) )
+			);
+		}
+
+		return $scoped_views;
+	}
+
+	/**
+	 * Read the selected event filter from the speaker admin list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return int Event post ID, or 0 for site speakers.
+	 */
+	private function get_selected_speaker_admin_event_id() {
+		$event_id = filter_input( INPUT_GET, 'wpfa_speaker_event', FILTER_VALIDATE_INT );
+
+		return absint( $event_id );
+	}
+
+	/**
+	 * Get speakers assigned to one event for the admin list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int> Speaker post IDs.
+	 */
+	private function get_admin_event_speaker_ids( $event_id ) {
+		return Wpfaevent_Meta_Event::get_admin_event_speaker_ids( $event_id );
+	}
+
+	/**
+	 * Get every speaker owned by any event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<int> Speaker post IDs.
+	 */
+	private function get_all_event_owned_speaker_ids() {
+		return Wpfaevent_Meta_Event::get_all_event_owned_speaker_ids();
+	}
+
+	/**
+	 * Count speaker admin rows in the current scoped list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $event_id    Selected event ID, or 0 for site speakers.
+	 * @param string $post_status Optional post status.
+	 * @return int
+	 */
+	private function count_scoped_speaker_admin_posts( $event_id, $post_status = '' ) {
+		$event_id    = absint( $event_id );
+		$post_status = sanitize_key( $post_status );
+		$query_args  = array(
+			'post_type'      => 'wpfa_speaker',
+			'post_status'    => $post_status ? $post_status : 'any',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		);
+
+		if ( $event_id ) {
+			$speaker_ids = $this->get_admin_event_speaker_ids( $event_id );
+
+			if ( empty( $speaker_ids ) ) {
+				return 0;
+			}
+
+			$query_args['post__in'] = $speaker_ids;
+		} else {
+			$event_owned_speaker_ids = $this->get_all_event_owned_speaker_ids();
+
+			if ( ! empty( $event_owned_speaker_ids ) ) {
+				$query_args['post__not_in'] = $event_owned_speaker_ids;
+			}
+
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Admin list counts mirror the scoped speaker ownership query.
+			$query_args['meta_query'] = array(
+				'relation' => 'AND',
+				array(
+					'key'     => 'wpfa_speaker_events',
+					'compare' => 'NOT EXISTS',
+				),
+				array(
+					'key'     => '_wpfa_eventyay_speaker_id',
+					'compare' => 'NOT EXISTS',
+				),
+			);
+		}
+
+		$speaker_ids = get_posts( $query_args );
+
+		return count( $speaker_ids );
+	}
+
+	/**
 	 * Sanitize Eventyay import options.
 	 *
 	 * @since 1.0.0
@@ -428,8 +777,9 @@ class Wpfaevent_Admin {
 	 * Render the Eventyay import page.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
-	public function render_eventyay_import_page() {
+	public function render_settings_page() {
 		$this->get_eventyay_importer()->render_settings_page();
 	}
 
@@ -437,8 +787,9 @@ class Wpfaevent_Admin {
 	 * Render the Eventyay update page.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
-	public function render_eventyay_update_page() {
+	public function render_update_events_page() {
 		$this->get_eventyay_importer()->render_update_events_page();
 	}
 
@@ -446,806 +797,472 @@ class Wpfaevent_Admin {
 	 * Handle Eventyay import form submissions.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function handle_eventyay_events_import() {
 		$this->get_eventyay_importer()->handle_eventyay_events_import();
 	}
 
-	// ========================================
-	// META BOXES
-	// ========================================
-
 	/**
-	 * Register meta boxes for Event and Speaker CPTs.
+	 * Show notice when block themes are active.
 	 *
 	 * @since 1.0.0
 	 */
-	public function add_meta_boxes() {
-		// Event meta boxes.
-		add_meta_box(
-			'wpfa_event_details',
-			__( 'Event Details', 'wpfaevent' ),
-			array( $this, 'render_event_meta_box' ),
-			'wpfa_event',
-			'normal',
-			'high'
-		);
-
-		// Speaker meta boxes.
-		add_meta_box(
-			'wpfa_speaker_details',
-			__( 'Speaker Details', 'wpfaevent' ),
-			array( $this, 'render_speaker_meta_box' ),
-			'wpfa_speaker',
-			'normal',
-			'high'
-		);
-
-		// Remove the default Custom Fields meta box to avoid UI clutter.
-		// since we have enabled 'custom-fields' support for REST API visibility.
-		remove_meta_box( 'postcustom', 'wpfa_event', 'normal' );
-		remove_meta_box( 'postcustom', 'wpfa_speaker', 'normal' );
-	}
-
-	/**
-	 * Render Event meta box.
-	 *
-	 * @since 1.0.0
-	 * @param WP_Post $post The post object.
-	 */
-	public function render_event_meta_box( $post ) {
-		wp_nonce_field( 'wpfa_event_meta_nonce', 'wpfa_event_meta_nonce' );
-
-		$start_date = get_post_meta( $post->ID, 'wpfa_event_start_date', true );
-		$end_date   = get_post_meta( $post->ID, 'wpfa_event_end_date', true );
-		$start_time = get_post_meta( $post->ID, 'wpfa_event_start_time', true );
-		$end_time   = get_post_meta( $post->ID, 'wpfa_event_end_time', true );
-
-		if ( '' === $start_time ) {
-			$start_time = get_post_meta( $post->ID, 'wpfa_event_time', true );
-		}
-
-		$timezone  = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_timezone( $post->ID ) : wp_timezone_string();
-		$all_day   = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_all_day( $post->ID ) : false;
-		$location  = get_post_meta( $post->ID, 'wpfa_event_location', true );
-		$url       = get_post_meta( $post->ID, 'wpfa_event_url', true );
-		$lead_text = get_post_meta( $post->ID, 'wpfa_event_lead_text', true );
-		$reg_link  = get_post_meta( $post->ID, 'wpfa_event_registration_link', true );
-		$cfs_link  = get_post_meta( $post->ID, 'wpfa_event_cfs_link', true );
-		$speakers  = $this->get_event_speaker_ids( $post->ID );
-
-		?>
-		<table class="form-table">
-			<tr>
-				<th><label for="wpfa_event_start_date"><?php esc_html_e( 'Start Date', 'wpfaevent' ); ?></label></th>
-				<td><input type="date" id="wpfa_event_start_date" name="wpfa_event_start_date" value="<?php echo esc_attr( $start_date ); ?>" class="regular-text"></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_event_end_date"><?php esc_html_e( 'End Date', 'wpfaevent' ); ?></label></th>
-				<td><input type="date" id="wpfa_event_end_date" name="wpfa_event_end_date" value="<?php echo esc_attr( $end_date ); ?>" class="regular-text"></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_event_timezone"><?php esc_html_e( 'Timezone', 'wpfaevent' ); ?></label></th>
-				<td>
-					<select id="wpfa_event_timezone" name="wpfa_event_timezone" class="regular-text">
-						<?php echo wp_timezone_choice( $timezone ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Core escapes timezone option markup. ?>
-					</select>
-					<p class="description"><?php esc_html_e( 'Used to interpret timed events and calendar exports. Leave as the site timezone when the event does not need a separate timezone.', 'wpfaevent' ); ?></p>
-				</td>
-			</tr>
-			<tr>
-				<th><?php esc_html_e( 'Time Format', 'wpfaevent' ); ?></th>
-				<td>
-					<label for="wpfa_event_all_day">
-						<input type="checkbox" id="wpfa_event_all_day" name="wpfa_event_all_day" value="1" <?php checked( $all_day ); ?>>
-						<?php esc_html_e( 'All-day event', 'wpfaevent' ); ?>
-					</label>
-					<p class="description"><?php esc_html_e( 'All-day events export as date-only calendar entries. Timed events use the event timezone.', 'wpfaevent' ); ?></p>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_event_start_time"><?php esc_html_e( 'Start Time', 'wpfaevent' ); ?></label></th>
-				<td><input type="time" id="wpfa_event_start_time" name="wpfa_event_start_time" value="<?php echo esc_attr( $start_time ); ?>" class="regular-text"></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_event_end_time"><?php esc_html_e( 'End Time', 'wpfaevent' ); ?></label></th>
-				<td><input type="time" id="wpfa_event_end_time" name="wpfa_event_end_time" value="<?php echo esc_attr( $end_time ); ?>" class="regular-text"></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_event_location"><?php esc_html_e( 'Location', 'wpfaevent' ); ?></label></th>
-				<td><input type="text" id="wpfa_event_location" name="wpfa_event_location" value="<?php echo esc_attr( $location ); ?>" class="regular-text"></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_event_lead_text"><?php esc_html_e( 'Lead Text', 'wpfaevent' ); ?></label></th>
-				<td><input type="text" id="wpfa_event_lead_text" name="wpfa_event_lead_text" value="<?php echo esc_attr( $lead_text ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Short description for hero section', 'wpfaevent' ); ?>"></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
-				<td><input type="url" id="wpfa_event_url" name="wpfa_event_url" value="<?php echo esc_attr( $url ); ?>" class="regular-text" placeholder="https://"></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_event_registration_link"><?php esc_html_e( 'Registration Link', 'wpfaevent' ); ?></label></th>
-				<td><input type="url" id="wpfa_event_registration_link" name="wpfa_event_registration_link" value="<?php echo esc_attr( $reg_link ); ?>" class="regular-text" placeholder="https://eventyay.com/e/..."></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_event_cfs_link"><?php esc_html_e( 'Call for Speakers Link', 'wpfaevent' ); ?></label></th>
-				<td><input type="url" id="wpfa_event_cfs_link" name="wpfa_event_cfs_link" value="<?php echo esc_attr( $cfs_link ); ?>" class="regular-text" placeholder="https://eventyay.com/e/.../cfs"></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_event_speakers"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></label></th>
-				<td>
-					<?php
-					$speaker_ids = get_posts(
-						array(
-							'post_type'      => 'wpfa_speaker',
-							'post_status'    => 'any',
-							'posts_per_page' => -1,
-							'orderby'        => 'title',
-							'order'          => 'ASC',
-							'fields'         => 'ids',
-							'no_found_rows'  => true,
-						)
-					);
-					if ( $speaker_ids ) :
-						?>
-						<select name="wpfa_event_speakers[]" id="wpfa_event_speakers" multiple class="wpfaevent-relationship-select wpfaevent-speakers-select">
-							<?php foreach ( $speaker_ids as $speaker_id ) : ?>
-								<?php $is_selected = is_array( $speakers ) && in_array( $speaker_id, $speakers, true ); ?>
-									<option value="<?php echo esc_attr( $speaker_id ); ?>"
-										<?php selected( $is_selected, true ); ?>>
-									<?php echo esc_html( get_the_title( $speaker_id ) ); ?>
-								</option>
-							<?php endforeach; ?>
-						</select>
-						<p class="description">
-							<?php esc_html_e( 'Hold Ctrl (Cmd on Mac) to select multiple speakers.', 'wpfaevent' ); ?>
-						</p>
-					<?php else : ?>
-						<p><?php esc_html_e( 'No speakers found. Create speakers first.', 'wpfaevent' ); ?></p>
-					<?php endif; ?>
-				</td>
-			</tr>
-		</table>
-		<?php
-	}
-
-	/**
-	 * Render Speaker meta box.
-	 *
-	 * @since 1.0.0
-	 * @param WP_Post $post The post object.
-	 */
-	public function render_speaker_meta_box( $post ) {
-		wp_nonce_field( 'wpfa_speaker_meta_nonce', 'wpfa_speaker_meta_nonce' );
-
-		$position     = get_post_meta( $post->ID, 'wpfa_speaker_position', true );
-		$organization = get_post_meta( $post->ID, 'wpfa_speaker_organization', true );
-		$bio          = get_post_meta( $post->ID, 'wpfa_speaker_bio', true );
-		$headshot_url = get_post_meta( $post->ID, 'wpfa_speaker_headshot_url', true );
-		$events       = $this->sanitize_post_id_list(
-			array_merge(
-				$this->get_speaker_event_ids( $post->ID ),
-				$this->get_events_linked_to_speaker( $post->ID )
-			)
-		);
-		?>
-		<table class="form-table">
-			<tr>
-				<th><label for="wpfa_speaker_position"><?php esc_html_e( 'Position/Title', 'wpfaevent' ); ?></label></th>
-				<td><input type="text" id="wpfa_speaker_position" name="wpfa_speaker_position" value="<?php echo esc_attr( $position ); ?>" class="regular-text"></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_speaker_organization"><?php esc_html_e( 'Organization', 'wpfaevent' ); ?></label></th>
-				<td><input type="text" id="wpfa_speaker_organization" name="wpfa_speaker_organization" value="<?php echo esc_attr( $organization ); ?>" class="regular-text"></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_speaker_bio"><?php esc_html_e( 'Biography', 'wpfaevent' ); ?></label></th>
-				<td>
-					<?php
-					wp_editor(
-						$bio,
-						'wpfa_speaker_bio',
-						array(
-							'textarea_name' => 'wpfa_speaker_bio',
-							'textarea_rows' => 10,
-							'media_buttons' => false,
-						)
-					);
-					?>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_speaker_headshot_url"><?php esc_html_e( 'Headshot URL', 'wpfaevent' ); ?></label></th>
-				<td><input type="url" id="wpfa_speaker_headshot_url" name="wpfa_speaker_headshot_url" value="<?php echo esc_attr( $headshot_url ); ?>" class="regular-text" placeholder="https://"></td>
-			</tr>
-			<tr>
-				<th><label for="wpfa_speaker_events"><?php esc_html_e( 'Related Events', 'wpfaevent' ); ?></label></th>
-				<td>
-					<?php
-					$event_ids = get_posts(
-						array(
-							'post_type'      => 'wpfa_event',
-							'post_status'    => 'any',
-							'posts_per_page' => -1,
-							'orderby'        => 'title',
-							'order'          => 'ASC',
-							'fields'         => 'ids',
-							'no_found_rows'  => true,
-						)
-					);
-					if ( $event_ids ) :
-						?>
-						<select name="wpfa_speaker_events[]" id="wpfa_speaker_events" multiple class="wpfaevent-relationship-select wpfaevent-events-select">
-							<?php foreach ( $event_ids as $event_id ) : ?>
-								<?php $is_selected = in_array( $event_id, $events, true ); ?>
-								<option value="<?php echo esc_attr( $event_id ); ?>" <?php selected( $is_selected, true ); ?>>
-									<?php echo esc_html( get_the_title( $event_id ) ); ?>
-								</option>
-							<?php endforeach; ?>
-						</select>
-						<p class="description">
-							<?php esc_html_e( 'Hold Ctrl (Cmd on Mac) to select multiple events.', 'wpfaevent' ); ?>
-						</p>
-					<?php else : ?>
-						<p><?php esc_html_e( 'No events found. Create events first.', 'wpfaevent' ); ?></p>
-					<?php endif; ?>
-				</td>
-			</tr>
-		</table>
-		<?php
-	}
-
-	/**
-	 * Save Event meta box data.
-	 *
-	 * @since 1.0.0
-	 * @param int $post_id The post ID.
-	 */
-	public function save_event_meta( $post_id ) {
-		$event_nonce = isset( $_POST['wpfa_event_meta_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_meta_nonce'] ) ) : '';
-
-		if ( ! $event_nonce || ! wp_verify_nonce( $event_nonce, 'wpfa_event_meta_nonce' ) ) {
+	public function maybe_show_block_theme_notice() {
+		if ( ! function_exists( 'wp_is_block_theme' ) || ! wp_is_block_theme() ) {
 			return;
 		}
 
-		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-			return;
-		}
-
-		if ( ! current_user_can( 'edit_post', $post_id ) ) {
-			return;
-		}
-
-		$posted_start_date = isset( $_POST['wpfa_event_start_date'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_start_date'] ) ) : '';
-		$posted_end_date   = isset( $_POST['wpfa_event_end_date'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_end_date'] ) ) : '';
-		$posted_timezone   = isset( $_POST['wpfa_event_timezone'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_timezone'] ) ) : '';
-		$start_date        = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_date_value( $posted_start_date ) : $posted_start_date;
-		$end_date          = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_date_value( $posted_end_date ) : $posted_end_date;
-		$timezone          = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_timezone( $posted_timezone ) : $posted_timezone;
-
-		if ( isset( $_POST['wpfa_event_start_date'] ) ) {
-			$this->update_or_delete_post_meta( $post_id, 'wpfa_event_start_date', $start_date );
-		}
-
-		if ( isset( $_POST['wpfa_event_end_date'] ) ) {
-			$this->update_or_delete_post_meta( $post_id, 'wpfa_event_end_date', $end_date );
-		}
-
-		if ( '' !== $timezone ) {
-			update_post_meta( $post_id, 'wpfa_event_timezone', $timezone );
-		} else {
-			delete_post_meta( $post_id, 'wpfa_event_timezone' );
-		}
-
-		$all_day = isset( $_POST['wpfa_event_all_day'] );
-		update_post_meta( $post_id, 'wpfa_event_all_day', $all_day ? '1' : '0' );
-
-		$posted_start_time = isset( $_POST['wpfa_event_start_time'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_start_time'] ) ) : '';
-		$posted_end_time   = isset( $_POST['wpfa_event_end_time'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_end_time'] ) ) : '';
-		$start_time        = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_time_value( $posted_start_time ) : $posted_start_time;
-		$end_time          = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_time_value( $posted_end_time ) : $posted_end_time;
-
-		if ( $all_day ) {
-			delete_post_meta( $post_id, 'wpfa_event_start_time' );
-			delete_post_meta( $post_id, 'wpfa_event_time' );
-			delete_post_meta( $post_id, 'wpfa_event_end_time' );
-			delete_post_meta( $post_id, 'wpfa_event_starts_at' );
-			delete_post_meta( $post_id, 'wpfa_event_ends_at' );
-		} else {
-			$end_date_for_datetime = '' !== $end_date ? $end_date : $start_date;
-
-			$this->update_or_delete_post_meta( $post_id, 'wpfa_event_start_time', $start_time );
-			$this->update_or_delete_post_meta( $post_id, 'wpfa_event_time', $start_time );
-			$this->update_or_delete_post_meta( $post_id, 'wpfa_event_end_time', $end_time );
-			$this->update_or_delete_post_meta(
-				$post_id,
-				'wpfa_event_starts_at',
-				class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::build_datetime_value( $start_date, $start_time, $timezone ) : ''
-			);
-			$this->update_or_delete_post_meta(
-				$post_id,
-				'wpfa_event_ends_at',
-				class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::build_datetime_value( $end_date_for_datetime, $end_time, $timezone ) : ''
-			);
-		}
-
-		$meta_fields = array(
-			'wpfa_event_location',
-			'wpfa_event_lead_text',
-			'wpfa_event_url',
-			'wpfa_event_registration_link',
-			'wpfa_event_cfs_link',
+		echo '<div class="notice notice-warning is-dismissible"><p>';
+		echo esc_html__(
+			'WPFA Event page templates require a classic theme. Block themes (e.g., Twenty Twenty-Five) do not support PHP page templates.',
+			'wpfaevent'
 		);
-
-		foreach ( $meta_fields as $field ) {
-			if ( isset( $_POST[ $field ] ) ) {
-				$raw_value = sanitize_text_field( wp_unslash( $_POST[ $field ] ) );
-
-				if ( in_array( $field, array( 'wpfa_event_url', 'wpfa_event_registration_link', 'wpfa_event_cfs_link' ), true ) ) {
-					$value = esc_url_raw( $raw_value );
-				} else {
-					$value = $raw_value;
-				}
-
-				update_post_meta( $post_id, $field, $value );
-			}
-		}
-
-		$previous_speakers = $this->get_event_speaker_ids( $post_id );
-		$speakers          = array();
-
-		// Handle speakers array.
-		if ( isset( $_POST['wpfa_event_speakers'] ) && is_array( $_POST['wpfa_event_speakers'] ) ) {
-			$speakers = $this->sanitize_post_id_list(
-				array_map(
-					'sanitize_text_field',
-					wp_unslash( $_POST['wpfa_event_speakers'] )
-				)
-			);
-		}
-
-		$this->update_post_id_list_meta( $post_id, 'wpfa_event_speakers', $speakers );
-
-		$this->sync_event_speaker_relationships( $post_id, $previous_speakers, $speakers );
+		echo '</p></div>';
 	}
 
 	/**
-	 * Get normalized speaker IDs assigned to an event.
+	 * Handle AJAX request to get speaker data.
 	 *
 	 * @since 1.0.0
-	 *
-	 * @param int $event_id Event post ID.
-	 * @return array<int> Speaker post IDs.
 	 */
-	private function get_event_speaker_ids( $event_id ) {
-		$speaker_ids = get_post_meta( $event_id, 'wpfa_event_speakers', true );
-
-		return $this->sanitize_post_id_list( $speaker_ids );
-	}
-
-	/**
-	 * Get normalized event IDs assigned to a speaker.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $speaker_id Speaker post ID.
-	 * @return array<int> Event post IDs.
-	 */
-	private function get_speaker_event_ids( $speaker_id ) {
-		$event_ids = get_post_meta( $speaker_id, 'wpfa_speaker_events', true );
-
-		return $this->sanitize_post_id_list( $event_ids );
-	}
-
-	/**
-	 * Sanitize, deduplicate, and reindex a list of post IDs.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param mixed $post_ids Raw post IDs.
-	 * @return array<int> Sanitized post IDs.
-	 */
-	private function sanitize_post_id_list( $post_ids ) {
-		if ( ! is_array( $post_ids ) ) {
-			$post_ids = array( $post_ids );
-		}
-
-		$post_ids = array_map( 'absint', $post_ids );
-		$post_ids = array_filter( $post_ids );
-
-		return array_values( array_unique( $post_ids ) );
-	}
-
-	/**
-	 * Save a normalized post ID list as post meta.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int        $post_id  Post ID.
-	 * @param string     $meta_key Meta key.
-	 * @param array<int> $post_ids Post IDs to save.
-	 * @return void
-	 */
-	private function update_post_id_list_meta( $post_id, $meta_key, $post_ids ) {
-		$post_ids = $this->sanitize_post_id_list( $post_ids );
-
-		if ( empty( $post_ids ) ) {
-			delete_post_meta( $post_id, $meta_key );
-			return;
-		}
-
-		update_post_meta( $post_id, $meta_key, $post_ids );
-	}
-
-	/**
-	 * Sync speaker-side event relationship meta after an event is saved.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int        $event_id          Event post ID.
-	 * @param array<int> $previous_speakers Speaker IDs before save.
-	 * @param array<int> $current_speakers  Speaker IDs after save.
-	 * @return void
-	 */
-	private function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
-		$event_id          = absint( $event_id );
-		$previous_speakers = $this->sanitize_post_id_list( $previous_speakers );
-		$current_speakers  = $this->sanitize_post_id_list( $current_speakers );
-
-		if ( ! $event_id ) {
-			return;
-		}
-
-		$previous_speakers = array_values(
-			array_unique(
-				array_merge(
-					$previous_speakers,
-					$this->get_speakers_linked_to_event( $event_id )
-				)
-			)
-		);
-
-		$removed_speakers = array_diff( $previous_speakers, $current_speakers );
-
-		foreach ( $removed_speakers as $speaker_id ) {
-			$this->remove_event_from_speaker( $speaker_id, $event_id );
-		}
-
-		foreach ( $current_speakers as $speaker_id ) {
-			$this->add_event_to_speaker( $speaker_id, $event_id );
-		}
-	}
-
-	/**
-	 * Find speakers whose speaker-side event meta includes an event.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $event_id Event post ID.
-	 * @return array<int> Speaker post IDs.
-	 */
-	private function get_speakers_linked_to_event( $event_id ) {
-		$event_id = absint( $event_id );
-
-		if ( ! $event_id ) {
-			return array();
-		}
-
-		$batch_size   = 100;
-		$current_page = 1;
-		$speaker_ids  = array();
-
-		do {
-			$batch_ids = get_posts(
+	public function ajax_get_speaker() {
+		// Verify nonce.
+		if ( ! check_ajax_referer( 'wpfa_speakers_ajax', 'nonce', false ) ) {
+			wp_send_json_error(
 				array(
-					'post_type'              => 'wpfa_speaker',
-					'post_status'            => 'any',
-					'posts_per_page'         => $batch_size,
-					'paged'                  => $current_page,
-					'fields'                 => 'ids',
-					'no_found_rows'          => true,
-					'orderby'                => 'ID',
-					'order'                  => 'ASC',
-					'update_post_meta_cache' => false,
-					'update_post_term_cache' => false,
-				)
-			);
-
-			if ( empty( $batch_ids ) ) {
-				break;
-			}
-
-			$batch_count = count( $batch_ids );
-			update_meta_cache( 'post', $batch_ids );
-
-			foreach ( $batch_ids as $speaker_id ) {
-				if ( in_array( $event_id, $this->get_speaker_event_ids( $speaker_id ), true ) ) {
-					$speaker_ids[] = $speaker_id;
-				}
-			}
-
-			++$current_page;
-		} while ( $batch_count === $batch_size );
-
-		return $this->sanitize_post_id_list( $speaker_ids );
-	}
-
-	/**
-	 * Add an event ID to a speaker's related events.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $speaker_id Speaker post ID.
-	 * @param int $event_id Event post ID.
-	 * @return void
-	 */
-	private function add_event_to_speaker( $speaker_id, $event_id ) {
-		$speaker_id = absint( $speaker_id );
-		$event_id   = absint( $event_id );
-
-		if ( ! $speaker_id || ! $event_id ) {
-			return;
-		}
-
-		if ( 'wpfa_speaker' !== get_post_type( $speaker_id ) ) {
-			return;
-		}
-
-		$event_ids   = $this->get_speaker_event_ids( $speaker_id );
-		$event_ids[] = $event_id;
-
-		$this->update_post_id_list_meta( $speaker_id, 'wpfa_speaker_events', $event_ids );
-	}
-
-	/**
-	 * Remove an event ID from a speaker's related events.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $speaker_id Speaker post ID.
-	 * @param int $event_id Event post ID.
-	 * @return void
-	 */
-	private function remove_event_from_speaker( $speaker_id, $event_id ) {
-		$speaker_id = absint( $speaker_id );
-		$event_id   = absint( $event_id );
-
-		if ( ! $speaker_id || ! $event_id ) {
-			return;
-		}
-
-		if ( 'wpfa_speaker' !== get_post_type( $speaker_id ) ) {
-			return;
-		}
-
-		$event_ids = array_diff( $this->get_speaker_event_ids( $speaker_id ), array( $event_id ) );
-
-		$this->update_post_id_list_meta( $speaker_id, 'wpfa_speaker_events', $event_ids );
-	}
-
-	/**
-	 * Update a meta key when it has content, otherwise delete it.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int    $post_id Post ID.
-	 * @param string $key     Meta key.
-	 * @param string $value   Meta value.
-	 * @return void
-	 */
-	private function update_or_delete_post_meta( $post_id, $key, $value ) {
-		if ( '' === $value ) {
-			delete_post_meta( $post_id, $key );
-			return;
-		}
-
-		update_post_meta( $post_id, $key, $value );
-	}
-
-	/**
-	 * Save Speaker meta box data.
-	 *
-	 * @since 1.0.0
-	 * @param int $post_id The post ID.
-	 */
-	public function save_speaker_meta( $post_id ) {
-		$speaker_nonce = isset( $_POST['wpfa_speaker_meta_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_speaker_meta_nonce'] ) ) : '';
-
-		if ( ! $speaker_nonce || ! wp_verify_nonce( $speaker_nonce, 'wpfa_speaker_meta_nonce' ) ) {
-			return;
-		}
-
-		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-			return;
-		}
-
-		if ( ! current_user_can( 'edit_post', $post_id ) ) {
-			return;
-		}
-
-		if ( isset( $_POST['wpfa_speaker_position'] ) ) {
-			update_post_meta( $post_id, 'wpfa_speaker_position', sanitize_text_field( wp_unslash( $_POST['wpfa_speaker_position'] ) ) );
-		}
-
-		if ( isset( $_POST['wpfa_speaker_organization'] ) ) {
-			update_post_meta( $post_id, 'wpfa_speaker_organization', sanitize_text_field( wp_unslash( $_POST['wpfa_speaker_organization'] ) ) );
-		}
-
-		if ( isset( $_POST['wpfa_speaker_bio'] ) ) {
-			update_post_meta( $post_id, 'wpfa_speaker_bio', wp_kses_post( wp_unslash( $_POST['wpfa_speaker_bio'] ) ) );
-		}
-
-		if ( isset( $_POST['wpfa_speaker_headshot_url'] ) ) {
-			update_post_meta( $post_id, 'wpfa_speaker_headshot_url', esc_url_raw( wp_unslash( $_POST['wpfa_speaker_headshot_url'] ) ) );
-		}
-
-		$previous_events = $this->get_speaker_event_ids( $post_id );
-		$events          = array();
-
-		if ( isset( $_POST['wpfa_speaker_events'] ) && is_array( $_POST['wpfa_speaker_events'] ) ) {
-			$events = $this->sanitize_post_id_list(
-				array_map(
-					'sanitize_text_field',
-					wp_unslash( $_POST['wpfa_speaker_events'] )
-				)
+					'message' => esc_html__( 'Invalid nonce', 'wpfaevent' ),
+				),
+				403
 			);
 		}
 
-		$this->update_post_id_list_meta( $post_id, 'wpfa_speaker_events', $events );
-		$this->sync_speaker_event_relationships( $post_id, $previous_events, $events );
-	}
-
-	/**
-	 * Sync event-side speaker relationship meta after a speaker is saved.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int        $speaker_id      Speaker post ID.
-	 * @param array<int> $previous_events Event IDs before save.
-	 * @param array<int> $current_events  Event IDs after save.
-	 * @return void
-	 */
-	private function sync_speaker_event_relationships( $speaker_id, $previous_events, $current_events ) {
-		$speaker_id      = absint( $speaker_id );
-		$previous_events = $this->sanitize_post_id_list( $previous_events );
-		$current_events  = $this->sanitize_post_id_list( $current_events );
-
-		if ( ! $speaker_id || 'wpfa_speaker' !== get_post_type( $speaker_id ) ) {
-			return;
-		}
-
-		$previous_events = array_values(
-			array_unique(
-				array_merge(
-					$previous_events,
-					$this->get_events_linked_to_speaker( $speaker_id )
-				)
-			)
-		);
-
-		$removed_events = array_diff( $previous_events, $current_events );
-
-		foreach ( $removed_events as $event_id ) {
-			$this->remove_speaker_from_event( $event_id, $speaker_id );
-		}
-
-		foreach ( $current_events as $event_id ) {
-			$this->add_speaker_to_event( $event_id, $speaker_id );
-		}
-	}
-
-	/**
-	 * Find events whose event-side speaker meta includes a speaker.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $speaker_id Speaker post ID.
-	 * @return array<int> Event post IDs.
-	 */
-	private function get_events_linked_to_speaker( $speaker_id ) {
-		$speaker_id = absint( $speaker_id );
+		$speaker_id = isset( $_POST['speaker_id'] ) ? absint( $_POST['speaker_id'] ) : 0;
 
 		if ( ! $speaker_id ) {
-			return array();
+			wp_send_json_error( esc_html__( 'Invalid speaker ID', 'wpfaevent' ) );
 		}
 
-		$batch_size   = 100;
-		$current_page = 1;
-		$event_ids    = array();
+		$speaker = get_post( $speaker_id );
 
-		do {
-			$batch_ids = get_posts(
+		if ( ! $speaker || 'wpfa_speaker' !== $speaker->post_type || ! current_user_can( 'edit_post', $speaker_id ) ) {
+			wp_send_json_error( esc_html__( 'Speaker not found', 'wpfaevent' ) );
+		}
+
+		// Get category term.
+		$category      = '';
+		$category_slug = '';
+		$terms         = wp_get_object_terms( $speaker_id, 'wpfa_speaker_category' );
+		if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+			$category      = $terms[0]->name;
+			$category_slug = $terms[0]->slug;
+		}
+
+		$data = array(
+			'id'            => $speaker_id,
+			'name'          => $speaker->post_title,
+			'position'      => get_post_meta( $speaker_id, 'wpfa_speaker_position', true ),
+			'organization'  => get_post_meta( $speaker_id, 'wpfa_speaker_organization', true ),
+			'bio'           => get_post_meta( $speaker_id, 'wpfa_speaker_bio', true ),
+			'headshot_url'  => get_post_meta( $speaker_id, 'wpfa_speaker_headshot_url', true ),
+			'linkedin'      => get_post_meta( $speaker_id, 'wpfa_speaker_linkedin', true ),
+			'twitter'       => get_post_meta( $speaker_id, 'wpfa_speaker_twitter', true ),
+			'github'        => get_post_meta( $speaker_id, 'wpfa_speaker_github', true ),
+			'website'       => get_post_meta( $speaker_id, 'wpfa_speaker_website', true ),
+			'category'      => $category,
+			'category_slug' => $category_slug,
+			'talk_title'    => get_post_meta( $speaker_id, 'wpfa_speaker_talk_title', true ),
+			'talk_date'     => get_post_meta( $speaker_id, 'wpfa_speaker_talk_date', true ),
+			'talk_time'     => get_post_meta( $speaker_id, 'wpfa_speaker_talk_time', true ),
+			'talk_end_time' => get_post_meta( $speaker_id, 'wpfa_speaker_talk_end_time', true ),
+			'talk_abstract' => get_post_meta( $speaker_id, 'wpfa_speaker_talk_abstract', true ),
+		);
+
+		wp_send_json_success( $data );
+	}
+
+	/**
+	 * Handle AJAX request to add a new speaker.
+	 *
+	 * @since 1.0.0
+	 */
+	public function ajax_add_speaker() {
+		// Verify nonce.
+		if ( ! check_ajax_referer( 'wpfa_speakers_ajax', 'nonce', false ) ) {
+			wp_send_json_error(
 				array(
-					'post_type'              => 'wpfa_event',
-					'post_status'            => 'any',
-					'posts_per_page'         => $batch_size,
-					'paged'                  => $current_page,
-					'fields'                 => 'ids',
-					'no_found_rows'          => true,
-					'orderby'                => 'ID',
-					'order'                  => 'ASC',
-					'update_post_meta_cache' => false,
-					'update_post_term_cache' => false,
-				)
+					'message' => esc_html__( 'Invalid nonce', 'wpfaevent' ),
+				),
+				403
 			);
+		}
 
-			if ( empty( $batch_ids ) ) {
-				break;
+		if ( ! current_user_can( 'publish_speakers' ) ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'Unauthorized', 'wpfaevent' ),
+				),
+				403
+			);
+		}
+
+		// Validate required fields.
+		$required_fields = array( 'name', 'position', 'bio', 'talk_title', 'talk_date', 'talk_time', 'talk_end_time' );
+		foreach ( $required_fields as $field ) {
+			if ( empty( $_POST[ $field ] ) ) {
+				/* translators: %s: Required field key. */
+				wp_send_json_error( sprintf( esc_html__( 'Missing required field: %s', 'wpfaevent' ), $field ) );
+			}
+		}
+
+		// Create speaker post.
+		$speaker_name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$speaker_data = array(
+			'post_title'   => $speaker_name,
+			'post_type'    => 'wpfa_speaker',
+			'post_status'  => 'publish',
+			'post_content' => '',
+		);
+
+		$speaker_id = wp_insert_post( $speaker_data );
+
+		if ( is_wp_error( $speaker_id ) ) {
+			wp_send_json_error( $speaker_id->get_error_message() );
+		}
+
+		// Handle image upload.
+		$image_url = '';
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- media_handle_upload() requires the raw $_FILES payload.
+		$uploaded_file = ( isset( $_FILES['image_upload'] ) && is_array( $_FILES['image_upload'] ) ) ? $_FILES['image_upload'] : array();
+		if ( ! empty( $uploaded_file['name'] ) ) {
+			// Validate file type.
+			$allowed_types = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
+			$file_type     = isset( $uploaded_file['type'] ) ? sanitize_mime_type( wp_unslash( $uploaded_file['type'] ) ) : '';
+
+			if ( ! in_array( $file_type, $allowed_types, true ) ) {
+				wp_send_json_error( esc_html__( 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'wpfaevent' ) );
 			}
 
-			$batch_count = count( $batch_ids );
-			update_meta_cache( 'post', $batch_ids );
+			// Validate file size (2MB max).
+			$max_size  = 2 * 1024 * 1024; // 2MB in bytes.
+			$file_size = isset( $uploaded_file['size'] ) ? absint( $uploaded_file['size'] ) : 0;
+			if ( $file_size > $max_size ) {
+				wp_send_json_error( esc_html__( 'File size exceeds 2MB limit.', 'wpfaevent' ) );
+			}
 
-			foreach ( $batch_ids as $event_id ) {
-				if ( in_array( $speaker_id, $this->get_event_speaker_ids( $event_id ), true ) ) {
-					$event_ids[] = $event_id;
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+			require_once ABSPATH . 'wp-admin/includes/media.php';
+
+			// Upload and create attachment.
+			$attachment_id = media_handle_upload( 'image_upload', 0 );
+
+			if ( is_wp_error( $attachment_id ) ) {
+				/* translators: %s: Upload error message. */
+				wp_send_json_error( sprintf( esc_html__( 'Image upload failed: %s', 'wpfaevent' ), $attachment_id->get_error_message() ) );
+			}
+
+			$image_url = wp_get_attachment_url( $attachment_id );
+		} elseif ( ! empty( $_POST['image_url'] ) ) {
+			$image_url = esc_url_raw( wp_unslash( $_POST['image_url'] ) );
+		}
+
+		// Save meta fields.
+		$meta_fields = array(
+			'wpfa_speaker_position'     => 'position',
+			'wpfa_speaker_organization' => 'organization',
+			'wpfa_speaker_bio'          => 'bio',
+			'wpfa_speaker_headshot_url' => 'image_url',
+			'wpfa_speaker_linkedin'     => 'linkedin',
+			'wpfa_speaker_twitter'      => 'twitter',
+			'wpfa_speaker_github'       => 'github',
+			'wpfa_speaker_website'      => 'website',
+		);
+
+		foreach ( $meta_fields as $meta_key => $post_key ) {
+			if ( 'image_url' === $post_key && ! empty( $image_url ) ) {
+				// Use uploaded image URL or provided URL.
+				update_post_meta( $speaker_id, $meta_key, $image_url );
+			} elseif ( isset( $_POST[ $post_key ] ) ) {
+				$value = sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) );
+
+				if ( 'bio' === $post_key ) {
+					$value = wp_kses_post( wp_unslash( $_POST[ $post_key ] ) );
+				} elseif ( in_array( $post_key, array( 'linkedin', 'twitter', 'github', 'website' ), true ) ) {
+					$value = esc_url_raw( wp_unslash( $_POST[ $post_key ] ) );
+				} else {
+					$value = sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) );
+				}
+
+				if ( strlen( $value ) === 0 ) {
+					delete_post_meta( $speaker_id, $meta_key );
+				} else {
+					update_post_meta( $speaker_id, $meta_key, $value );
 				}
 			}
+		}
 
-			++$current_page;
-		} while ( $batch_count === $batch_size );
+		$session_fields = array(
+			'wpfa_speaker_talk_title'    => 'talk_title',
+			'wpfa_speaker_talk_date'     => 'talk_date',
+			'wpfa_speaker_talk_time'     => 'talk_time',
+			'wpfa_speaker_talk_end_time' => 'talk_end_time',
+			'wpfa_speaker_talk_abstract' => 'talk_abstract',
+		);
 
-		return $this->sanitize_post_id_list( $event_ids );
+		foreach ( $session_fields as $meta_key => $post_key ) {
+			if ( isset( $_POST[ $post_key ] ) ) {
+
+				if ( 'talk_abstract' === $post_key ) {
+					$value = wp_kses_post( wp_unslash( $_POST[ $post_key ] ) );
+				} else {
+					$value = sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) );
+				}
+
+				if ( strlen( $value ) === 0 ) {
+					delete_post_meta( $speaker_id, $meta_key );
+				} else {
+					update_post_meta( $speaker_id, $meta_key, $value );
+				}
+			}
+		}
+
+		if ( isset( $_POST['category'] ) ) {
+			$category = sanitize_text_field( wp_unslash( $_POST['category'] ) );
+
+			// If it's numeric, it's a term ID.
+			if ( is_numeric( $category ) ) {
+				$term_id = (int) $category;
+				wp_set_object_terms( $speaker_id, $term_id, 'wpfa_speaker_category' );
+			} elseif ( '_custom' === $category && isset( $_POST['category_custom'] ) && ! empty( $_POST['category_custom'] ) ) {
+				// If it's "_custom" with custom value.
+				$category_name = sanitize_text_field( wp_unslash( $_POST['category_custom'] ) );
+				wp_set_object_terms( $speaker_id, $category_name, 'wpfa_speaker_category' );
+			} elseif ( ! empty( $category ) && '_custom' !== $category ) {
+				// If it's a slug or name.
+				wp_set_object_terms( $speaker_id, $category, 'wpfa_speaker_category' );
+			} else {
+				// Empty value.
+				wp_set_object_terms( $speaker_id, array(), 'wpfa_speaker_category' );
+			}
+		}
+
+		wp_send_json_success( array( 'speaker_id' => $speaker_id ) );
 	}
 
 	/**
-	 * Add a speaker ID to an event's related speakers.
+	 * Handle AJAX request to update a speaker.
 	 *
 	 * @since 1.0.0
-	 *
-	 * @param int $event_id   Event post ID.
-	 * @param int $speaker_id Speaker post ID.
-	 * @return void
 	 */
-	private function add_speaker_to_event( $event_id, $speaker_id ) {
-		$event_id   = absint( $event_id );
-		$speaker_id = absint( $speaker_id );
-
-		if ( ! $event_id || ! $speaker_id ) {
-			return;
+	public function ajax_update_speaker() {
+		// Verify nonce.
+		if ( ! check_ajax_referer( 'wpfa_speakers_ajax', 'nonce', false ) ) {
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'Invalid nonce', 'wpfaevent' ),
+				),
+				403
+			);
 		}
 
-		if ( 'wpfa_event' !== get_post_type( $event_id ) ) {
-			return;
+		$speaker_id = isset( $_POST['speaker_id'] ) ? absint( $_POST['speaker_id'] ) : 0;
+
+		if ( ! $speaker_id ) {
+			wp_send_json_error( __( 'Invalid speaker ID', 'wpfaevent' ) );
 		}
 
-		if ( 'wpfa_speaker' !== get_post_type( $speaker_id ) ) {
-			return;
+		// Verify the speaker exists and the user can edit it.
+		$speaker = get_post( $speaker_id );
+		if ( ! $speaker || 'wpfa_speaker' !== $speaker->post_type || ! current_user_can( 'edit_post', $speaker_id ) ) {
+			wp_send_json_error( __( 'Cannot edit this speaker', 'wpfaevent' ) );
 		}
 
-		$speaker_ids   = $this->get_event_speaker_ids( $event_id );
-		$speaker_ids[] = $speaker_id;
+		// Validate required fields.
+		$required_fields = array( 'name', 'position', 'bio', 'talk_title', 'talk_date', 'talk_time', 'talk_end_time' );
+		foreach ( $required_fields as $field ) {
+			if ( empty( $_POST[ $field ] ) ) {
+				/* translators: %s: Required field key. */
+				wp_send_json_error( sprintf( esc_html__( 'Missing required field: %s', 'wpfaevent' ), $field ) );
+			}
+		}
 
-		$this->update_post_id_list_meta( $event_id, 'wpfa_event_speakers', $speaker_ids );
+		// Update post title if the name changed.
+		$speaker_name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		if ( ! empty( $speaker_name ) ) {
+			wp_update_post(
+				array(
+					'ID'         => $speaker_id,
+					'post_title' => $speaker_name,
+				)
+			);
+		}
+
+		// Handle image upload.
+		$image_url = '';
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- media_handle_upload() requires the raw $_FILES payload.
+		$uploaded_file = ( isset( $_FILES['image_upload'] ) && is_array( $_FILES['image_upload'] ) ) ? $_FILES['image_upload'] : array();
+		if ( ! empty( $uploaded_file['name'] ) ) {
+			// Validate file type.
+			$allowed_types = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
+			$file_type     = isset( $uploaded_file['type'] ) ? sanitize_mime_type( wp_unslash( $uploaded_file['type'] ) ) : '';
+
+			if ( ! in_array( $file_type, $allowed_types, true ) ) {
+				wp_send_json_error( esc_html__( 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'wpfaevent' ) );
+			}
+
+			// Validate file size (2MB max).
+			$max_size  = 2 * 1024 * 1024; // 2MB in bytes.
+			$file_size = isset( $uploaded_file['size'] ) ? absint( $uploaded_file['size'] ) : 0;
+			if ( $file_size > $max_size ) {
+				wp_send_json_error( esc_html__( 'File size exceeds 2MB limit.', 'wpfaevent' ) );
+			}
+
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+			require_once ABSPATH . 'wp-admin/includes/media.php';
+
+			// Upload and create attachment.
+			$attachment_id = media_handle_upload( 'image_upload', $speaker_id );
+
+			if ( is_wp_error( $attachment_id ) ) {
+				/* translators: %s: Upload error message. */
+				wp_send_json_error( sprintf( esc_html__( 'Image upload failed: %s', 'wpfaevent' ), $attachment_id->get_error_message() ) );
+			}
+
+			$image_url = wp_get_attachment_url( $attachment_id );
+		} elseif ( ! empty( $_POST['image_url'] ) ) {
+			$image_url = esc_url_raw( wp_unslash( $_POST['image_url'] ) );
+		}
+
+		// Save meta fields.
+		$meta_fields = array(
+			'wpfa_speaker_position'     => 'position',
+			'wpfa_speaker_organization' => 'organization',
+			'wpfa_speaker_bio'          => 'bio',
+			'wpfa_speaker_headshot_url' => 'image_url',
+			'wpfa_speaker_linkedin'     => 'linkedin',
+			'wpfa_speaker_twitter'      => 'twitter',
+			'wpfa_speaker_github'       => 'github',
+			'wpfa_speaker_website'      => 'website',
+		);
+
+		foreach ( $meta_fields as $meta_key => $post_key ) {
+			if ( 'image_url' === $post_key && ! empty( $image_url ) ) {
+				// Use uploaded image URL or provided URL.
+				update_post_meta( $speaker_id, $meta_key, $image_url );
+			} elseif ( isset( $_POST[ $post_key ] ) ) {
+
+				if ( 'bio' === $post_key ) {
+					$value = wp_kses_post( wp_unslash( $_POST[ $post_key ] ) );
+				} elseif ( in_array( $post_key, array( 'linkedin', 'twitter', 'github', 'website' ), true ) ) {
+					$value = esc_url_raw( wp_unslash( $_POST[ $post_key ] ) );
+				} else {
+					$value = sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) );
+				}
+
+				// Delete meta when the field is intentionally cleared to avoid storing empty values.
+				if ( strlen( $value ) === 0 ) {
+					delete_post_meta( $speaker_id, $meta_key );
+				} else {
+					update_post_meta( $speaker_id, $meta_key, $value );
+				}
+			}
+		}
+
+		$session_fields = array(
+			'wpfa_speaker_talk_title'    => 'talk_title',
+			'wpfa_speaker_talk_date'     => 'talk_date',
+			'wpfa_speaker_talk_time'     => 'talk_time',
+			'wpfa_speaker_talk_end_time' => 'talk_end_time',
+			'wpfa_speaker_talk_abstract' => 'talk_abstract',
+		);
+
+		foreach ( $session_fields as $meta_key => $post_key ) {
+			if ( isset( $_POST[ $post_key ] ) ) {
+
+				if ( 'talk_abstract' === $post_key ) {
+					$value = wp_kses_post( wp_unslash( $_POST[ $post_key ] ) );
+				} else {
+					$value = sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) );
+				}
+
+				if ( strlen( $value ) === 0 ) {
+					delete_post_meta( $speaker_id, $meta_key );
+				} else {
+					update_post_meta( $speaker_id, $meta_key, $value );
+				}
+			}
+		}
+
+		if ( isset( $_POST['category'] ) ) {
+			$category = sanitize_text_field( wp_unslash( $_POST['category'] ) );
+
+			// If it's numeric, it's a term ID.
+			if ( is_numeric( $category ) ) {
+				$term_id = (int) $category;
+				wp_set_object_terms( $speaker_id, $term_id, 'wpfa_speaker_category' );
+			} elseif ( '_custom' === $category && isset( $_POST['category_custom'] ) && ! empty( $_POST['category_custom'] ) ) {
+				// If it's "_custom" with a custom value.
+				$category_name = sanitize_text_field( wp_unslash( $_POST['category_custom'] ) );
+				wp_set_object_terms( $speaker_id, $category_name, 'wpfa_speaker_category' );
+			} elseif ( ! empty( $category ) && '_custom' !== $category ) {
+				// If it's a slug or name.
+				wp_set_object_terms( $speaker_id, $category, 'wpfa_speaker_category' );
+			} else {
+				// Empty value.
+				wp_set_object_terms( $speaker_id, array(), 'wpfa_speaker_category' );
+			}
+		}
+
+		wp_send_json_success();
 	}
 
 	/**
-	 * Remove a speaker ID from an event's related speakers.
+	 * Handle AJAX request to delete a speaker.
 	 *
 	 * @since 1.0.0
+	 */
+	public function ajax_delete_speaker() {
+		// Verify nonce.
+		if ( ! check_ajax_referer( 'wpfa_speakers_ajax', 'nonce', false ) ) {
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'Invalid nonce', 'wpfaevent' ),
+				),
+				403
+			);
+		}
+
+		$speaker_id = isset( $_POST['speaker_id'] ) ? absint( $_POST['speaker_id'] ) : 0;
+
+		if ( ! $speaker_id ) {
+			wp_send_json_error( __( 'Invalid speaker ID', 'wpfaevent' ) );
+		}
+
+		// Verify the speaker exists and the user can delete it.
+		$speaker = get_post( $speaker_id );
+		if ( ! $speaker || 'wpfa_speaker' !== $speaker->post_type || ! current_user_can( 'delete_post', $speaker_id ) ) {
+			wp_send_json_error( __( 'Cannot delete this speaker', 'wpfaevent' ) );
+		}
+
+		// Delete the speaker.
+		$result = wp_delete_post( $speaker_id, true );
+
+		if ( ! $result ) {
+			wp_send_json_error( __( 'Failed to delete speaker', 'wpfaevent' ) );
+		}
+
+		wp_send_json_success();
+	}
+
+	/**
+	 * Handle Eventyay JSON:API speaker sync for the admin dashboard.
 	 *
-	 * @param int $event_id   Event post ID.
-	 * @param int $speaker_id Speaker post ID.
+	 * @since 1.0.0
 	 * @return void
 	 */
-	private function remove_speaker_from_event( $event_id, $speaker_id ) {
-		$event_id   = absint( $event_id );
-		$speaker_id = absint( $speaker_id );
-
-		if ( ! $event_id || ! $speaker_id ) {
-			return;
-		}
-
-		if ( 'wpfa_event' !== get_post_type( $event_id ) ) {
-			return;
-		}
-
-		if ( 'wpfa_speaker' !== get_post_type( $speaker_id ) ) {
-			return;
-		}
-
-		$speaker_ids = array_diff( $this->get_event_speaker_ids( $event_id ), array( $speaker_id ) );
-
-		$this->update_post_id_list_meta( $event_id, 'wpfa_event_speakers', $speaker_ids );
+	public function ajax_sync_eventyay() {
+		$this->get_eventyay_importer()->ajax_sync_eventyay();
 	}
 }
