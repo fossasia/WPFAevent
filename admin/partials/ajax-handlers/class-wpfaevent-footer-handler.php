@@ -39,7 +39,7 @@ class Wpfaevent_Footer_Handler {
 		}
 
 		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Wpfaevent_Roles::current_user_can_manage_site_branding() ) {
 			wp_send_json_error( esc_html__( 'Unauthorized', 'wpfaevent' ), 403 );
 		}
 
