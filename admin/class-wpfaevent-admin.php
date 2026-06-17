@@ -40,13 +40,22 @@ class Wpfaevent_Admin {
 	private $version;
 
 	/**
-	 * Eventyay import service.
+	 * Eventyay REST API import service.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 * @var Wpfaevent_Eventyay_Importer
 	 */
 	private $eventyay_importer;
+
+	/**
+	 * Eventyay JSON:API dashboard sync service.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @var Wpfaevent_Eventyay_Ajax_Sync
+	 */
+	private $eventyay_ajax_sync;
 
 	/**
 	 * Initialize the class and set its properties.
@@ -62,7 +71,7 @@ class Wpfaevent_Admin {
 	}
 
 	/**
-	 * Get the Eventyay import service.
+	 * Get the Eventyay REST API import service.
 	 *
 	 * @since 1.0.0
 	 *
@@ -74,6 +83,21 @@ class Wpfaevent_Admin {
 		}
 
 		return $this->eventyay_importer;
+	}
+
+	/**
+	 * Get the Eventyay JSON:API dashboard sync service.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return Wpfaevent_Eventyay_Ajax_Sync
+	 */
+	private function get_eventyay_ajax_sync() {
+		if ( ! $this->eventyay_ajax_sync instanceof Wpfaevent_Eventyay_Ajax_Sync ) {
+			$this->eventyay_ajax_sync = new Wpfaevent_Eventyay_Ajax_Sync();
+		}
+
+		return $this->eventyay_ajax_sync;
 	}
 
 	/**
@@ -440,6 +464,16 @@ class Wpfaevent_Admin {
 	 */
 	public function render_eventyay_update_page() {
 		$this->get_eventyay_importer()->render_update_events_page();
+	}
+
+	/**
+	 * Handle Eventyay JSON:API speaker sync for the admin dashboard.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public function ajax_sync_eventyay() {
+		$this->get_eventyay_ajax_sync()->ajax_sync_eventyay();
 	}
 
 	/**
