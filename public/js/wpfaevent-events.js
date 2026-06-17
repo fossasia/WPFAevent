@@ -42,8 +42,7 @@ const WPFA_Events = (function() {
 		// Setup character counters
 		setupCharacterCounters();
 
-		// Setup admin functionality if user is admin
-		if (config.isAdmin) {
+		if (config.canManageContent) {
 			setupAdminFunctionality();
 		}
 
@@ -494,7 +493,7 @@ const WPFA_Events = (function() {
 	function handleEditEventFormSubmit(e) {
 		e.preventDefault();
 
-		if (!config.isAdmin) {
+		if (!config.canManageContent) {
 			alert(config.i18n.noPermission || 'You do not have permission to perform this action.');
 			return;
 		}
