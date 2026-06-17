@@ -20,6 +20,7 @@ if ( ! defined( 'MINUTE_IN_SECONDS' ) ) {
 	define( 'MINUTE_IN_SECONDS', 60 );
 }
 
+
 if ( ! function_exists( 'absint' ) ) {
 	/**
 	 * Minimal absint() fallback for standalone CLI tests.
