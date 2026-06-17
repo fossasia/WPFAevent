@@ -16,6 +16,9 @@
 					icon: 'calendar-alt',
 					category: 'widgets',
 					description: __( 'Display WPFA event content.', 'wpfaevent' ),
+					supports: {
+						align: [ 'wide', 'full' ],
+					},
 					edit: function() {
 						return el(
 							'div',
