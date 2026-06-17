@@ -127,6 +127,7 @@ class Wpfaevent {
 		// Calendar export support.
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-calendar.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-partner-helper.php';
 
 		// Admin and Public classes.
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-importer.php';
