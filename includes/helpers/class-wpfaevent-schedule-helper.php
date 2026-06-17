@@ -97,28 +97,32 @@ class Wpfaevent_Schedule_Helper {
 	public static function format_timezone_label( $timezone_string, $primary_timezone_string = '' ) {
 		$label = str_replace( '_', ' ', $timezone_string );
 
-		if ( $timezone_string === $primary_timezone_string ) {
-			return sprintf(
-				/* translators: %s: primary timezone. */
-				__( 'Event timezone (%s)', 'wpfaevent' ),
-				$label
-			);
+		if ( '' !== $primary_timezone_string ) {
+			if ( $timezone_string === $primary_timezone_string ) {
+				return sprintf(
+					/* translators: %s: primary timezone. */
+					__( 'Event timezone (%s)', 'wpfaevent' ),
+					$label
+				);
+			}
+
+			$site_timezone_string = wp_timezone_string();
+			if ( '' === trim( (string) $site_timezone_string ) ) {
+				$site_timezone_string = wp_timezone()->getName();
+			}
+
+			if ( $timezone_string === $site_timezone_string ) {
+				return sprintf(
+					/* translators: %s: WordPress site timezone. */
+					__( 'Site timezone (%s)', 'wpfaevent' ),
+					$label
+				);
+			}
 		}
 
-		$site_timezone_string = wp_timezone_string();
-		if ( '' === trim( (string) $site_timezone_string ) ) {
-			$site_timezone_string = wp_timezone()->getName();
-		}
+		$offset = self::format_timezone_offset( $timezone_string );
 
-		if ( $timezone_string === $site_timezone_string ) {
-			return sprintf(
-				/* translators: %s: WordPress site timezone. */
-				__( 'Site timezone (%s)', 'wpfaevent' ),
-				$label
-			);
-		}
-
-		return $label;
+		return $offset ? sprintf( '%s (UTC%s)', $label, $offset ) : $label;
 	}
 
 	/**
