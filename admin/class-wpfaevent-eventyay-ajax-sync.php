@@ -963,7 +963,8 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $speaker Speaker data.
+	 * @param array  $speaker     Speaker data.
+	 * @param string $post_status WordPress post status for the speaker.
 	 * @return array|WP_Error
 	 */
 	private function upsert_eventyay_speaker_post( $speaker, $post_status = 'draft' ) {
@@ -1511,5 +1512,4 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 
 		return substr( $value, 0, 1000 );
 	}
-
 }
