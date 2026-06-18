@@ -288,7 +288,7 @@ class Wpfaevent_Meta_Event {
 	 * @param array<int> $previous_speakers Speaker IDs before save.
 	 * @param array<int> $current_speakers  Speaker IDs after save.
 	 */
-	private static function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
+	public static function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
 		$event_id          = absint( $event_id );
 		$previous_speakers = self::sanitize_post_id_list(
 			array_merge(
@@ -543,6 +543,30 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
+	 * Get all color meta values for a specific event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<string, string> Color meta values mapped by key.
+	 */
+	public static function get_event_colors( $event_id ) {
+		$event_id = absint( $event_id );
+		$colors   = array();
+
+		if ( ! $event_id ) {
+			return $colors;
+		}
+
+		foreach ( self::get_event_color_meta_fields() as $meta_key => $label ) {
+			$color               = get_post_meta( $event_id, $meta_key, true );
+			$colors[ $meta_key ] = self::sanitize_color_value( $color );
+		}
+
+		return $colors;
+	}
+
+	/**
 	 * Sanitize event language values.
 	 *
 	 * @since 1.0.0
@@ -636,6 +660,181 @@ class Wpfaevent_Meta_Event {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Get featured speaker IDs assigned to one event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int>
+	 */
+	public static function get_event_featured_speaker_ids( $event_id ) {
+		return self::sanitize_post_id_list( get_post_meta( $event_id, 'wpfa_event_featured_speakers', true ) );
+	}
+
+	/**
+	 * Resolve featured speaker IDs from event meta, dashboard JSON, and speaker categories.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int               $event_id           Event post ID.
+	 * @param array<int>        $speaker_ids        Linked speaker post IDs.
+	 * @param array<int, array> $dashboard_speakers Imported dashboard speaker rows.
+	 * @return array<int>
+	 */
+	public static function resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers = array() ) {
+		$event_id    = absint( $event_id );
+		$speaker_ids = self::sanitize_post_id_list( $speaker_ids );
+		$featured    = array_values( array_intersect( self::get_event_featured_speaker_ids( $event_id ), $speaker_ids ) );
+
+		if ( is_array( $dashboard_speakers ) && ! empty( $dashboard_speakers ) ) {
+			$eventyay_map = array();
+			$name_map     = array();
+
+			foreach ( $speaker_ids as $speaker_id ) {
+				$eventyay_id = sanitize_text_field( get_post_meta( $speaker_id, '_wpfa_eventyay_speaker_id', true ) );
+
+				if ( '' !== $eventyay_id ) {
+					$eventyay_map[ $eventyay_id ] = $speaker_id;
+				}
+
+				$name_key = sanitize_title( get_the_title( $speaker_id ) );
+
+				if ( '' !== $name_key ) {
+					$name_map[ $name_key ] = $speaker_id;
+				}
+			}
+
+			foreach ( $dashboard_speakers as $dashboard_speaker ) {
+				if ( ! is_array( $dashboard_speaker ) || empty( $dashboard_speaker['featured'] ) ) {
+					continue;
+				}
+
+				$matched_id = 0;
+
+				if ( ! empty( $dashboard_speaker['eventyay_speaker_id'] ) && isset( $eventyay_map[ $dashboard_speaker['eventyay_speaker_id'] ] ) ) {
+					$matched_id = (int) $eventyay_map[ $dashboard_speaker['eventyay_speaker_id'] ];
+				} elseif ( ! empty( $dashboard_speaker['name'] ) ) {
+					$name_key = sanitize_title( $dashboard_speaker['name'] );
+
+					if ( isset( $name_map[ $name_key ] ) ) {
+						$matched_id = (int) $name_map[ $name_key ];
+					}
+				}
+
+				if ( $matched_id && ! in_array( $matched_id, $featured, true ) ) {
+					$featured[] = $matched_id;
+				}
+			}
+		}
+
+		if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
+			foreach ( $speaker_ids as $speaker_id ) {
+				if ( in_array( $speaker_id, $featured, true ) ) {
+					continue;
+				}
+
+				$terms = get_the_terms( $speaker_id, 'wpfa_speaker_category' );
+
+				if ( empty( $terms ) || is_wp_error( $terms ) ) {
+					continue;
+				}
+
+				foreach ( $terms as $term ) {
+					if ( preg_match( '/\b(featured|keynote|plenary|highlight)\b/i', $term->name ) ) {
+						$featured[] = $speaker_id;
+						break;
+					}
+				}
+			}
+		}
+
+		$featured = self::sanitize_post_id_list( $featured );
+		$featured = array_values( array_intersect( $featured, $speaker_ids ) );
+
+		if ( empty( $featured ) && ! empty( $speaker_ids ) ) {
+			$auto_limit = absint(
+				apply_filters(
+					'wpfa_event_auto_featured_speaker_limit',
+					1,
+					$event_id,
+					$speaker_ids,
+					$dashboard_speakers
+				)
+			);
+
+			if ( $auto_limit > 0 ) {
+				$featured = array_slice( $speaker_ids, 0, min( $auto_limit, count( $speaker_ids ) ) );
+			}
+		}
+
+		return apply_filters( 'wpfa_event_featured_speaker_ids', $featured, $event_id, $speaker_ids, $dashboard_speakers );
+	}
+
+	/**
+	 * Sanitize custom tabs.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $tabs Raw custom tabs.
+	 * @return array
+	 */
+	public static function sanitize_custom_tabs( $tabs ) {
+		if ( is_string( $tabs ) ) {
+			$decoded_tabs = json_decode( $tabs, true );
+
+			if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded_tabs ) ) {
+				$tabs = $decoded_tabs;
+			}
+		}
+
+		if ( ! is_array( $tabs ) ) {
+			return array();
+		}
+
+		$sanitized_tabs = array();
+		$used_slugs     = array();
+
+		foreach ( $tabs as $tab ) {
+			if ( ! is_array( $tab ) ) {
+				continue;
+			}
+
+			$title   = isset( $tab['title'] ) && is_scalar( $tab['title'] ) ? sanitize_text_field( $tab['title'] ) : '';
+			$content = isset( $tab['content'] ) && is_scalar( $tab['content'] ) ? trim( wp_kses_post( (string) $tab['content'] ) ) : '';
+
+			if ( '' === $title || '' === $content ) {
+				continue;
+			}
+
+			$slug = isset( $tab['slug'] ) && is_scalar( $tab['slug'] ) ? sanitize_title( $tab['slug'] ) : '';
+			if ( '' === $slug ) {
+				$slug = sanitize_title( $title );
+			}
+
+			if ( '' === $slug ) {
+				$slug = 'custom-tab-' . ( count( $sanitized_tabs ) + 1 );
+			}
+
+			$base_slug = $slug;
+			$suffix    = 2;
+			while ( isset( $used_slugs[ $slug ] ) ) {
+				$slug = $base_slug . '-' . $suffix;
+				++$suffix;
+			}
+
+			$used_slugs[ $slug ] = true;
+
+			$sanitized_tabs[] = array(
+				'title'   => $title,
+				'slug'    => $slug,
+				'content' => $content,
+			);
+		}
+
+		return array_values( $sanitized_tabs );
 	}
 
 	/**
