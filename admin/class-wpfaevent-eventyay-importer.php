@@ -5027,7 +5027,8 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $speaker Speaker data.
+	 * @param array  $speaker     Speaker data.
+	 * @param string $post_status Optional. Post status. Default 'draft'.
 	 * @return array|WP_Error
 	 */
 	private function upsert_eventyay_speaker_post( $speaker, $post_status = 'draft' ) {
