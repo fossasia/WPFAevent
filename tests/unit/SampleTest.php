@@ -11,20 +11,6 @@
 class SampleTest extends WP_UnitTestCase {
 
 	/**
-	 * Set up the test environment.
-	 */
-	protected function setUp(): void {
-		parent::setUp();
-	}
-
-	/**
-	 * Tear down the test environment.
-	 */
-	protected function tearDown(): void {
-		parent::tearDown();
-	}
-
-	/**
 	 * Verify that the baseline setup is working and WordPress functions are accessible.
 	 */
 	public function test_wordpress_environment_boots_successfully() {
