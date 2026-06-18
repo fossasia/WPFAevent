@@ -288,7 +288,7 @@ class Wpfaevent_Meta_Event {
 	 * @param array<int> $previous_speakers Speaker IDs before save.
 	 * @param array<int> $current_speakers  Speaker IDs after save.
 	 */
-	private static function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
+	public static function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
 		$event_id          = absint( $event_id );
 		$previous_speakers = self::sanitize_post_id_list(
 			array_merge(
