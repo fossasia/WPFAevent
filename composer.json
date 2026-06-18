@@ -20,7 +20,7 @@
         "phpcbf": "phpcbf",
         "phpcs": "phpcs",
         "phpstan": "phpstan analyse --memory-limit=2048M",
-        "setup-tests": "bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1",
+        "setup-tests": "bash bin/install-wp-tests.sh wordpress_test ${WP_DB_USER:-wp_test} ${WP_DB_PASS:-test_password} ${WP_DB_HOST:-127.0.0.1}",
         "test": "vendor/bin/phpunit"
     },
 
@@ -28,6 +28,7 @@
         "phpcbf": "Run PHP Code Beautifier to fix coding standards",
         "phpcs": "Run PHP_CodeSniffer to check coding standards",
         "phpstan": "Run PHPStan static analysis for PHP code quality",
+        "setup-tests": "Bootstrap the WordPress test environment (requires WP_DB_USER and WP_DB_PASS env vars)",
         "test": "Run PHPUnit regression test suite"
     },
 

@@ -10,8 +10,11 @@
     verbose="true">
 
     <testsuites>
-        <testsuite name="WPFA Event">
-            <directory suffix="Test.php">./tests/</directory>
+        <testsuite name="Unit">
+            <directory suffix="Test.php">./tests/unit/</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory suffix="IntegrationTest.php">./tests/integration/</directory>
         </testsuite>
     </testsuites>
 

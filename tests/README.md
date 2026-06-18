@@ -7,7 +7,7 @@ This repository contains a **PHPUnit** test suite for the **wpfaevent** WordPres
 - **PHP** >= 8.1 (recommended 8.2)
 - **Composer** installed globally (`composer.phar`)
 - **MySQL** / **MariaDB** server running locally
-- **WP‑CLI** (optional but handy for scaffolding the test environment)
+- **WP-CLI** (optional but handy for scaffolding the test environment)
 
 ## Setting Up the Local Testing Environment
 
@@ -22,7 +22,7 @@ This repository contains a **PHPUnit** test suite for the **wpfaevent** WordPres
    - `WP_DEVELOP_DIR`/`tests/phpunit` (used when you have a local copy of the WordPress source)
    - Fallback to the system temporary directory.
 
-   #### The easiest way is to use the project‑provided script:
+   #### The easiest way is to use the project-provided script:
    ```bash
    composer setup-tests
    ```
@@ -56,7 +56,7 @@ composer test
 vendor/bin/phpunit
 ```
 
-The test suite boots the WordPress testing framework, loads the `wpfaevent.php` plugin, and runs the sample test located in `tests/test-sample.php`.
+The test suite boots the WordPress testing framework, loads the `wpfaevent.php` plugin, and runs the sample test located in `tests/SampleTest.php`.
 
 ## Adding New Tests
 
@@ -66,23 +66,29 @@ The test suite boots the WordPress testing framework, loads the `wpfaevent.php` 
 
 ## Common Issues & Troubleshooting
 
-- **Could not find .../includes/functions.php** – Ensure `WP_TESTS_DIR` points at a valid WordPress test library. Rerun the install script or set `WP_DEVELOP_DIR`.
-- **Database connection errors** – Verify the DB credentials match a MySQL instance that allows a new database to be created.
-- **PHP version mismatch** – This project targets PHPUnit 10, which requires PHP ≥ 8.1. Adjust your PHP version or downgrade the testing deps.
+- **Could not find .../includes/functions.php** - Ensure `WP_TESTS_DIR` points at a valid WordPress test library. Rerun the install script or set `WP_DEVELOP_DIR`.
+- **Database connection errors (ERROR 1698)** - On Ubuntu 20.04+ with MySQL 8.0, the `root` user uses `auth_socket` authentication. The `-p` flag is ignored and password-based login fails. Either switch root to `mysql_native_password` auth, or create a dedicated test user:
 
----
+  ```bash
+  # Option A: Switch root to password auth (for local dev only)
+  sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'your_password';"
+  sudo mysql -e "FLUSH PRIVILEGES;"
 
-### Automated Upstream Script Checks
+  # Option B: Create a dedicated test user (preferred)
+  sudo mysql -e "CREATE USER IF NOT EXISTS 'wp_test'@'localhost' IDENTIFIED BY 'test_password';"
+  sudo mysql -e "GRANT ALL PRIVILEGES ON wordpress_test.* TO 'wp_test'@'localhost';"
+  sudo mysql -e "FLUSH PRIVILEGES;"
 
-This repository includes a GitHub Actions workflow (`.github/workflows/check-install-wp-tests.yml`) that runs **once a month**. It compares the local `bin/install-wp-tests.sh` script against the upstream version from the WP‑CLI scaffold command. If a difference is detected, the workflow automatically creates a commit on a temporary branch and opens a Pull Request, allowing maintainers to review and merge the update. No direct pushes to `main` occur.
+  # Then run with custom credentials:
+  WP_DB_USER=wp_test WP_DB_PASS=test_password composer setup-tests
+  ```
+- **ERROR: Access denied for user 'root'@'localhost'** - Same root cause as above. See the MySQL auth_socket workaround.
+- **gzip: stdin: not in gzip format** - The `WP_VERSION` environment variable may be set in your shell, overriding the script's default (`latest`). Unset it before running:
 
-**How it works:**
-- The workflow fetches the latest upstream script.
-- It computes a SHA‑256 checksum and compares it to the committed script.
-- When a mismatch is found, a PR is opened using `peter-evans/create-pull-request`.
-
-You can also trigger the check manually via **GitHub → Actions → Check install‑wp‑tests → Run workflow**.
-
-For developers who prefer to update the script themselves, simply run `composer setup-tests` which will pull the latest version.
+  ```bash
+  unset WP_VERSION
+  composer setup-tests
+  ```
+- **PHP version mismatch** – This project targets PHPUnit 9.6, which requires PHP ≥ 7.3. Adjust your PHP version or downgrade the testing deps.
 
 Happy testing! 🎉

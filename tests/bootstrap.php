@@ -5,12 +5,12 @@
  * @package Wpfaevent
  */
 
-// 1. Load Composer autoloader for Polyfills & dependencies (Your improvement)
+// 1. Load Composer autoloader for polyfills and dependencies
 if ( file_exists( dirname( __DIR__ ) . '/vendor/autoload.php' ) ) {
 	require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 }
 
-// 2. Determine the WP test framework directory dynamically (Combined fallback)
+// 2. Determine the WP test framework directory dynamically
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
 
 if ( ! $_tests_dir ) {
