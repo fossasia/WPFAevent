@@ -288,7 +288,7 @@ class Wpfaevent_Meta_Event {
 	 * @param array<int> $previous_speakers Speaker IDs before save.
 	 * @param array<int> $current_speakers  Speaker IDs after save.
 	 */
-	private static function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
+	public static function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
 		$event_id          = absint( $event_id );
 		$previous_speakers = self::sanitize_post_id_list(
 			array_merge(
@@ -540,6 +540,30 @@ class Wpfaevent_Meta_Event {
 			'wpfa_event_theme_success_color'    => __( 'Theme success color', 'wpfaevent' ),
 			'wpfa_event_theme_danger_color'     => __( 'Theme danger color', 'wpfaevent' ),
 		);
+	}
+
+	/**
+	 * Get all color meta values for a specific event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<string, string> Color meta values mapped by key.
+	 */
+	public static function get_event_colors( $event_id ) {
+		$event_id = absint( $event_id );
+		$colors   = array();
+
+		if ( ! $event_id ) {
+			return $colors;
+		}
+
+		foreach ( self::get_event_color_meta_fields() as $meta_key => $label ) {
+			$color               = get_post_meta( $event_id, $meta_key, true );
+			$colors[ $meta_key ] = self::sanitize_color_value( $color );
+		}
+
+		return $colors;
 	}
 
 	/**
