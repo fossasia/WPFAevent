@@ -34,7 +34,7 @@ This repository contains a **PHPUnit** test suite for the **wpfaevent** WordPres
 
    If you prefer to run the script manually, you can invoke the bundled installer directly:
    ```bash
-   bin/install-wp-tests.sh wordpress_test root root 127.0.0.1 latest
+   bin/install-wp-tests.sh wordpress_test wp_test test_password 127.0.0.1 latest
    ```
    Adjust the DB credentials as needed. This does the same work as `composer setup-tests` but gives you explicit control over the parameters.
 
@@ -43,8 +43,8 @@ This repository contains a **PHPUnit** test suite for the **wpfaevent** WordPres
    You can override the default DB credentials without editing `phpunit.xml.dist`:
    ```bash
    export WP_DB_NAME=wordpress_test
-   export WP_DB_USER=root
-   export WP_DB_PASS=root
+   export WP_DB_USER=wp_test
+   export WP_DB_PASS=test_password
    export WP_DB_HOST=127.0.0.1
    ```
 
@@ -56,13 +56,14 @@ composer test
 vendor/bin/phpunit
 ```
 
-The test suite boots the WordPress testing framework, loads the `wpfaevent.php` plugin, and runs the sample test located in `tests/SampleTest.php`.
+The test suite boots the WordPress testing framework, loads the `wpfaevent.php` plugin, and runs the sample test located in `tests/unit/SampleTest.php`.
 
 ## Adding New Tests
 
-- Place new test files under the `tests/` directory.
-- Follow the naming convention `test-*.php` (the `<directory>` element in `phpunit.xml.dist` already filters by that pattern).
+- Place unit test files under the `tests/unit/` directory with the `Test.php` suffix (e.g. `MyClassTest.php`).
+- Place integration test files under the `tests/integration/` directory with the `IntegrationTest.php` suffix.
 - Extend `WP_UnitTestCase` for access to factories, REST utilities, and other WordPress testing helpers.
+- Run a specific suite: `vendor/bin/phpunit --testsuite Unit` or `vendor/bin/phpunit --testsuite Integration`.
 
 ## Common Issues & Troubleshooting
 
