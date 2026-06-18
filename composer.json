@@ -29,7 +29,7 @@
         "phpcs": "Run PHP_CodeSniffer to check coding standards",
         "phpstan": "Run PHPStan static analysis for PHP code quality",
         "setup-tests": "Bootstrap the WordPress test environment (requires WP_DB_USER and WP_DB_PASS env vars)",
-        "test": "Run PHPUnit regression test suite"
+        "test": "Run PHPUnit regression test suite (use --testsuite Unit|Integration to filter)"
     },
 
     "config": {
