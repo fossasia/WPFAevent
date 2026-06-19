@@ -118,6 +118,7 @@ class Wpfaevent_Event_Repository {
 				'post_status'    => 'any',
 				'posts_per_page' => 1,
 				'fields'         => 'ids',
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 				'meta_query'     => array(
 					'relation' => 'AND',
 					array(

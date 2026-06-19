@@ -23,26 +23,10 @@ class Wpfaevent_AJAX_Controller {
 	private $client;
 
 	/**
-	 * Parser.
-	 *
-	 * @var Wpfaevent_JSONAPI_Parser
-	 */
-	private $parser;
-
-	/**
-	 * Event Repository.
-	 *
-	 * @var Wpfaevent_Event_Repository
-	 */
-	private $event_repo;
-
-	/**
 	 * Constructor.
 	 */
 	public function __construct() {
-		$this->client     = new Wpfaevent_Eventyay_API_Client();
-		$this->parser     = new Wpfaevent_JSONAPI_Parser();
-		$this->event_repo = new Wpfaevent_Event_Repository();
+		$this->client = new Wpfaevent_Eventyay_API_Client();
 	}
 
 	/**
