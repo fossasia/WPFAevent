@@ -132,6 +132,7 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-jsonapi-parser.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-api-client.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-event-repository.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-post-manager.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-admin-settings-renderer.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-ajax-controller.php';
 

@@ -49,6 +49,7 @@ $event_url        = esc_url_raw( get_post_meta( $event_id, 'wpfa_event_url', tru
 $registration_url = esc_url_raw( get_post_meta( $event_id, 'wpfa_event_registration_link', true ) );
 $cfs_url          = esc_url_raw( get_post_meta( $event_id, 'wpfa_event_cfs_link', true ) );
 $image_url        = get_the_post_thumbnail_url( $event_id, 'large' );
+$image_url        = ! empty( $image_url ) ? $image_url : 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&auto=format&fit=crop&q=80';
 
 $start_label = $format_event_date( $start_date );
 $end_label   = $format_event_date( $end_date );
@@ -67,9 +68,9 @@ $header_vars = array(
 	'site_logo_url'        => $site_logo_url,
 	'event_page_url'       => home_url( '/events/' ),
 	'show_back_button'     => true,
-	'show_register_button' => ! empty( $registration_url ),
+	'show_register_button' => true,
 	'back_button_text'     => __( 'Back to Events', 'wpfaevent' ),
-	'register_button_url'  => $registration_url,
+	'register_button_url'  => ! empty( $registration_url ) ? $registration_url : '#',
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
 );
 ?>
@@ -111,38 +112,40 @@ $header_vars = array(
 					<p><?php echo esc_html( get_the_excerpt( $event_id ) ); ?></p>
 				<?php endif; ?>
 
-				<?php if ( ! empty( $registration_url ) || ! empty( $event_url ) || ! empty( $cfs_url ) ) : ?>
-					<div class="wpfa-single-event-actions">
-						<?php if ( ! empty( $registration_url ) ) : ?>
-							<a class="btn btn-primary" href="<?php echo esc_url( $registration_url ); ?>" target="_blank" rel="noopener">
-								<?php esc_html_e( 'Register', 'wpfaevent' ); ?>
-							</a>
-						<?php endif; ?>
+				<div class="wpfa-single-event-actions">
+					<?php if ( ! empty( $registration_url ) ) : ?>
+						<a class="btn btn-primary" href="<?php echo esc_url( $registration_url ); ?>" target="_blank" rel="noopener">
+							<?php esc_html_e( 'Register', 'wpfaevent' ); ?>
+						</a>
+					<?php else : ?>
+						<a class="btn btn-primary disabled" href="#" onclick="return false;">
+							<?php esc_html_e( 'Registration Closed', 'wpfaevent' ); ?>
+						</a>
+					<?php endif; ?>
 
-						<?php if ( ! empty( $event_url ) ) : ?>
-							<a class="btn btn-secondary" href="<?php echo esc_url( $event_url ); ?>" target="_blank" rel="noopener">
-								<?php esc_html_e( 'Event Website', 'wpfaevent' ); ?>
-							</a>
-						<?php endif; ?>
+					<a class="btn btn-secondary" href="<?php echo ! empty( $event_url ) ? esc_url( $event_url ) : esc_url( get_permalink( $event_id ) ); ?>" <?php echo ! empty( $event_url ) ? 'target="_blank" rel="noopener"' : ''; ?>>
+						<?php esc_html_e( 'Event Website', 'wpfaevent' ); ?>
+					</a>
 
-						<?php if ( ! empty( $cfs_url ) ) : ?>
-							<a class="btn btn-secondary" href="<?php echo esc_url( $cfs_url ); ?>" target="_blank" rel="noopener">
-								<?php esc_html_e( 'Call for Speakers', 'wpfaevent' ); ?>
-							</a>
-						<?php endif; ?>
-					</div>
-				<?php endif; ?>
+					<?php if ( ! empty( $cfs_url ) ) : ?>
+						<a class="btn btn-secondary" href="<?php echo esc_url( $cfs_url ); ?>" target="_blank" rel="noopener">
+							<?php esc_html_e( 'Call for Speakers', 'wpfaevent' ); ?>
+						</a>
+					<?php else : ?>
+						<a class="btn btn-secondary disabled" href="#" onclick="return false;">
+							<?php esc_html_e( 'Call for Speakers Closed', 'wpfaevent' ); ?>
+						</a>
+					<?php endif; ?>
+				</div>
 			</div>
 		</header>
 
 		<div class="container">
 			<div class="wpfa-single-event-layout">
 				<article class="wpfa-single-event-content">
-					<?php if ( ! empty( $image_url ) ) : ?>
-						<figure class="wpfa-single-event-image">
-							<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( get_the_title( $event_id ) ); ?>">
-						</figure>
-					<?php endif; ?>
+					<figure class="wpfa-single-event-image">
+						<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( get_the_title( $event_id ) ); ?>">
+					</figure>
 
 					<div class="wpfa-single-event-body">
 						<?php

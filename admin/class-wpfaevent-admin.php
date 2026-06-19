@@ -432,6 +432,7 @@ class Wpfaevent_Admin {
 				'type'              => 'array',
 				'sanitize_callback' => array( $this, 'sanitize_eventyay_import_settings' ),
 				'default'           => $this->get_eventyay_importer()->get_eventyay_import_default_settings(),
+				'autoload'          => false,
 			)
 		);
 	}

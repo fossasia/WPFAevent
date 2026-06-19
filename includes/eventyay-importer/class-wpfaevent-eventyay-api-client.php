@@ -542,7 +542,7 @@ class Wpfaevent_Eventyay_API_Client {
 			$response = wp_remote_get(
 				$api_url,
 				array(
-					'timeout'     => 30,
+					'timeout'     => 5,
 					'redirection' => 3,
 					'headers'     => $headers,
 				)
