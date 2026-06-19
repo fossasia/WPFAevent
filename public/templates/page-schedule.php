@@ -25,32 +25,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $schedule_data = Wpfaevent_Schedule_Controller::get_schedule_view_data();
 
-$wpfaevent_is_embed              = isset( $schedule_data['wpfaevent_is_embed'] ) ? (bool) $schedule_data['wpfaevent_is_embed'] : false;
-$events_per_page                 = isset( $schedule_data['events_per_page'] ) ? (int) $schedule_data['events_per_page'] : 20;
-$current_page                    = isset( $schedule_data['current_page'] ) ? (int) $schedule_data['current_page'] : 1;
-$schedule_page_url               = isset( $schedule_data['schedule_page_url'] ) ? (string) $schedule_data['schedule_page_url'] : '';
-$current_language                = isset( $schedule_data['current_language'] ) ? (string) $schedule_data['current_language'] : '';
-$current_event_filter            = isset( $schedule_data['current_event_filter'] ) ? (string) $schedule_data['current_event_filter'] : '';
-$current_view                    = isset( $schedule_data['current_view'] ) ? (string) $schedule_data['current_view'] : 'list';
-$selected_event_id               = isset( $schedule_data['selected_event_id'] ) ? (int) $schedule_data['selected_event_id'] : 0;
-$selected_event_slug             = isset( $schedule_data['selected_event_slug'] ) ? (string) $schedule_data['selected_event_slug'] : '';
-$selected_event_title            = isset( $schedule_data['selected_event_title'] ) ? (string) $schedule_data['selected_event_title'] : '';
+$wpfaevent_is_embed             = isset( $schedule_data['wpfaevent_is_embed'] ) ? (bool) $schedule_data['wpfaevent_is_embed'] : false;
+$events_per_page                = isset( $schedule_data['events_per_page'] ) ? (int) $schedule_data['events_per_page'] : 20;
+$current_page                   = isset( $schedule_data['current_page'] ) ? (int) $schedule_data['current_page'] : 1;
+$schedule_page_url              = isset( $schedule_data['schedule_page_url'] ) ? (string) $schedule_data['schedule_page_url'] : '';
+$current_language               = isset( $schedule_data['current_language'] ) ? (string) $schedule_data['current_language'] : '';
+$current_event_filter           = isset( $schedule_data['current_event_filter'] ) ? (string) $schedule_data['current_event_filter'] : '';
+$current_view                   = isset( $schedule_data['current_view'] ) ? (string) $schedule_data['current_view'] : 'list';
+$selected_event_id              = isset( $schedule_data['selected_event_id'] ) ? (int) $schedule_data['selected_event_id'] : 0;
+$selected_event_slug            = isset( $schedule_data['selected_event_slug'] ) ? (string) $schedule_data['selected_event_slug'] : '';
+$selected_event_title           = isset( $schedule_data['selected_event_title'] ) ? (string) $schedule_data['selected_event_title'] : '';
 $selected_schedule_timezone_str = isset( $schedule_data['selected_schedule_timezone_str'] ) ? (string) $schedule_data['selected_schedule_timezone_str'] : '';
-$selected_schedule_timezone      = isset( $schedule_data['selected_schedule_timezone'] ) ? $schedule_data['selected_schedule_timezone'] : null;
+$selected_schedule_timezone     = isset( $schedule_data['selected_schedule_timezone'] ) ? $schedule_data['selected_schedule_timezone'] : null;
 $schedule_timezone_options      = isset( $schedule_data['schedule_timezone_options'] ) && is_array( $schedule_data['schedule_timezone_options'] ) ? $schedule_data['schedule_timezone_options'] : array();
-$event_ids                       = isset( $schedule_data['event_ids'] ) && is_array( $schedule_data['event_ids'] ) ? $schedule_data['event_ids'] : array();
-$schedule_events                 = isset( $schedule_data['schedule_events'] ) && is_array( $schedule_data['schedule_events'] ) ? $schedule_data['schedule_events'] : array();
-$languages                       = isset( $schedule_data['languages'] ) && is_array( $schedule_data['languages'] ) ? $schedule_data['languages'] : array();
-$filtered_event_ids              = isset( $schedule_data['filtered_event_ids'] ) && is_array( $schedule_data['filtered_event_ids'] ) ? $schedule_data['filtered_event_ids'] : array();
-$is_event_schedule               = isset( $schedule_data['is_event_schedule'] ) ? (bool) $schedule_data['is_event_schedule'] : false;
-$event_session_schedule          = isset( $schedule_data['event_session_schedule'] ) && is_array( $schedule_data['event_session_schedule'] ) ? $schedule_data['event_session_schedule'] : array();
-$total_events                    = isset( $schedule_data['total_events'] ) ? (int) $schedule_data['total_events'] : 0;
-$groups                          = isset( $schedule_data['groups'] ) && is_array( $schedule_data['groups'] ) ? $schedule_data['groups'] : array();
-$event_style_attr                = isset( $schedule_data['event_style_attr'] ) ? (string) $schedule_data['event_style_attr'] : '';
-$header_vars                     = isset( $schedule_data['header_vars'] ) && is_array( $schedule_data['header_vars'] ) ? $schedule_data['header_vars'] : array();
-$filter_form_classes             = isset( $schedule_data['filter_form_classes'] ) ? (string) $schedule_data['filter_form_classes'] : '';
-$site_timezone_string            = isset( $schedule_data['site_timezone_string'] ) ? (string) $schedule_data['site_timezone_string'] : '';
-$primary_timezone_string         = isset( $schedule_data['primary_timezone_string'] ) ? (string) $schedule_data['primary_timezone_string'] : '';
+$event_ids                      = isset( $schedule_data['event_ids'] ) && is_array( $schedule_data['event_ids'] ) ? $schedule_data['event_ids'] : array();
+$schedule_events                = isset( $schedule_data['schedule_events'] ) && is_array( $schedule_data['schedule_events'] ) ? $schedule_data['schedule_events'] : array();
+$languages                      = isset( $schedule_data['languages'] ) && is_array( $schedule_data['languages'] ) ? $schedule_data['languages'] : array();
+$filtered_event_ids             = isset( $schedule_data['filtered_event_ids'] ) && is_array( $schedule_data['filtered_event_ids'] ) ? $schedule_data['filtered_event_ids'] : array();
+$is_event_schedule              = isset( $schedule_data['is_event_schedule'] ) ? (bool) $schedule_data['is_event_schedule'] : false;
+$event_session_schedule         = isset( $schedule_data['event_session_schedule'] ) && is_array( $schedule_data['event_session_schedule'] ) ? $schedule_data['event_session_schedule'] : array();
+$total_events                   = isset( $schedule_data['total_events'] ) ? (int) $schedule_data['total_events'] : 0;
+$groups                         = isset( $schedule_data['groups'] ) && is_array( $schedule_data['groups'] ) ? $schedule_data['groups'] : array();
+$event_style_attr               = isset( $schedule_data['event_style_attr'] ) ? (string) $schedule_data['event_style_attr'] : '';
+$header_vars                    = isset( $schedule_data['header_vars'] ) && is_array( $schedule_data['header_vars'] ) ? $schedule_data['header_vars'] : array();
+$filter_form_classes            = isset( $schedule_data['filter_form_classes'] ) ? (string) $schedule_data['filter_form_classes'] : '';
+$site_timezone_string           = isset( $schedule_data['site_timezone_string'] ) ? (string) $schedule_data['site_timezone_string'] : '';
+$primary_timezone_string        = isset( $schedule_data['primary_timezone_string'] ) ? (string) $schedule_data['primary_timezone_string'] : '';
 
 $build_schedule_view_url = static function ( $view ) use ( $schedule_page_url, $selected_event_slug, $current_language, $selected_schedule_timezone_str, $primary_timezone_string ) {
 	return Wpfaevent_Schedule_Controller::build_view_url( $view, $schedule_page_url, $selected_event_slug, $current_language, $selected_schedule_timezone_str, $primary_timezone_string );

@@ -70,7 +70,7 @@ class Wpfaevent_Schedule_Controller {
 			? Wpfaevent_Schedule_Helper::get_timezone_options( $primary_timezone_string )
 			: array( $primary_timezone_string, 'UTC' );
 
-		$event_ids = get_posts(
+		$event_ids              = get_posts(
 			array(
 				'post_type'      => 'wpfa_event',
 				'post_status'    => 'publish',
@@ -207,32 +207,32 @@ class Wpfaevent_Schedule_Controller {
 		}
 
 		return array(
-			'wpfaevent_is_embed'              => $wpfaevent_is_embed,
-			'events_per_page'                 => $events_per_page,
-			'current_page'                    => $current_page,
-			'schedule_page_url'               => $schedule_page_url,
-			'current_language'                => $current_language,
-			'current_event_filter'            => $current_event_filter,
-			'current_view'                    => $current_view,
-			'selected_event_id'               => $selected_event_id,
-			'selected_event_slug'             => $selected_event_slug,
-			'selected_event_title'            => $selected_event_title,
+			'wpfaevent_is_embed'             => $wpfaevent_is_embed,
+			'events_per_page'                => $events_per_page,
+			'current_page'                   => $current_page,
+			'schedule_page_url'              => $schedule_page_url,
+			'current_language'               => $current_language,
+			'current_event_filter'           => $current_event_filter,
+			'current_view'                   => $current_view,
+			'selected_event_id'              => $selected_event_id,
+			'selected_event_slug'            => $selected_event_slug,
+			'selected_event_title'           => $selected_event_title,
 			'selected_schedule_timezone_str' => $selected_schedule_timezone_str,
-			'selected_schedule_timezone'      => $selected_schedule_timezone,
+			'selected_schedule_timezone'     => $selected_schedule_timezone,
 			'schedule_timezone_options'      => $schedule_timezone_options,
-			'event_ids'                       => $event_ids,
-			'schedule_events'                 => $schedule_events,
-			'languages'                       => $languages,
-			'filtered_event_ids'              => $filtered_event_ids,
-			'is_event_schedule'               => $is_event_schedule,
-			'event_session_schedule'          => $event_session_schedule,
-			'total_events'                    => $total_events,
-			'groups'                          => $groups,
-			'event_style_attr'                => $event_style_attr,
-			'header_vars'                     => $header_vars,
-			'filter_form_classes'             => $filter_form_classes,
-			'site_timezone_string'            => $site_timezone_string,
-			'primary_timezone_string'         => $primary_timezone_string,
+			'event_ids'                      => $event_ids,
+			'schedule_events'                => $schedule_events,
+			'languages'                      => $languages,
+			'filtered_event_ids'             => $filtered_event_ids,
+			'is_event_schedule'              => $is_event_schedule,
+			'event_session_schedule'         => $event_session_schedule,
+			'total_events'                   => $total_events,
+			'groups'                         => $groups,
+			'event_style_attr'               => $event_style_attr,
+			'header_vars'                    => $header_vars,
+			'filter_form_classes'            => $filter_form_classes,
+			'site_timezone_string'           => $site_timezone_string,
+			'primary_timezone_string'        => $primary_timezone_string,
 		);
 	}
 
