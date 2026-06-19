@@ -94,6 +94,20 @@ class Wpfaevent_Event_Repository {
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_latitude', $latitude );
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_longitude', $longitude );
 
+		// Import additional metadata fields.
+		$lead_text = $this->parser->eventyay_text_value( $this->parser->eventyay_first_present_raw( $event, array( 'lead_text', 'lead-text', 'subtitle', 'short_description', 'short-description', 'summary' ), true ) );
+		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_lead_text', $lead_text );
+
+		$reg_link = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'ticket_url', 'ticket-url', 'registration_link', 'registration-link', 'register_link', 'register-link' ), true ), $settings['base_url'] );
+		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_registration_link', $reg_link );
+
+		$cfs_link = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'cfs_link', 'cfs-link' ), true ), $settings['base_url'] );
+		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_cfs_link', $cfs_link );
+
+		// Import banner as featured image.
+		$banner_url = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'banner_url', 'banner-url', 'banner', 'logo_url', 'logo-url', 'logo' ), true ), $settings['base_url'] );
+		$this->sideload_event_featured_image( $post_id, $banner_url );
+
 		return array(
 			'post_id' => $post_id,
 			'created' => $is_new ? 1 : 0,
@@ -191,7 +205,7 @@ class Wpfaevent_Event_Repository {
 	 * @return string
 	 */
 	public function eventyay_event_datetime( $event, $type ) {
-		$keys = 'start' === $type ? array( 'starts_at', 'starts-at', 'start_time', 'start-time', 'start_date', 'start-date', 'start' ) : array( 'ends_at', 'ends-at', 'end_time', 'end-time', 'end_date', 'end-date', 'end' );
+		$keys = 'start' === $type ? array( 'starts_at', 'starts-at', 'start_time', 'start-time', 'start_date', 'start-date', 'start', 'date_from', 'date-from' ) : array( 'ends_at', 'ends-at', 'end_time', 'end-time', 'end_date', 'end-date', 'end', 'date_to', 'date-to' );
 
 		return $this->parser->eventyay_scalar_value( $this->parser->eventyay_first_present_raw( $event, $keys, true ) );
 	}
@@ -369,5 +383,69 @@ class Wpfaevent_Event_Repository {
 		}
 
 		update_post_meta( $post_id, $key, $value );
+	}
+
+	/**
+	 * Download a remote image and set it as the post thumbnail.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $post_id    Post ID.
+	 * @param string $image_url  Remote image URL.
+	 * @return int|false Attachment ID or false on failure.
+	 */
+	public function sideload_event_featured_image( $post_id, $image_url ) {
+		$image_url = trim( (string) $image_url );
+		if ( ! $image_url || ! wp_http_validate_url( $image_url ) ) {
+			return false;
+		}
+
+		// Prevent re-downloading if the image URL hasn't changed.
+		$existing_banner = get_post_meta( $post_id, '_eventyay_imported_banner_url', true );
+		if ( $existing_banner === $image_url && has_post_thumbnail( $post_id ) ) {
+			return get_post_thumbnail_id( $post_id );
+		}
+
+		// Include media framework files if not loaded.
+		if ( ! function_exists( 'download_url' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			require_once ABSPATH . 'wp-admin/includes/media.php';
+		}
+
+		// Download the remote URL to a temporary file.
+		$tmp_file = download_url( $image_url );
+		if ( is_wp_error( $tmp_file ) ) {
+			return false;
+		}
+
+		// Extract filename.
+		$file_name = basename( wp_parse_url( $image_url, PHP_URL_PATH ) );
+		if ( ! $file_name ) {
+			$file_name = 'event-banner.jpg';
+		}
+
+		// Construct file array.
+		$file_array = array(
+			'name'     => $file_name,
+			'tmp_name' => $tmp_file,
+		);
+
+		// Upload the file to uploads and create attachment.
+		$attachment_id = media_handle_sideload( $file_array, $post_id );
+
+		// Clean up the temporary file.
+		if ( is_wp_error( $attachment_id ) ) {
+			if ( file_exists( $tmp_file ) ) {
+				wp_delete_file( $tmp_file );
+			}
+			return false;
+		}
+
+		// Set post thumbnail.
+		set_post_thumbnail( $post_id, $attachment_id );
+		update_post_meta( $post_id, '_eventyay_imported_banner_url', $image_url );
+
+		return $attachment_id;
 	}
 }
