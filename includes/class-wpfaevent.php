@@ -133,6 +133,13 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-partner-helper.php';
 
 		// Admin and Public classes.
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-jsonapi-parser.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-partner-json-store.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-event-repository.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-speaker-repository.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-api-client.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-admin-settings-renderer.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-ajax-controller.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-importer.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
@@ -211,8 +218,9 @@ class Wpfaevent {
 		// Instantiate the admin class.
 		$this->plugin_admin = new Wpfaevent_Admin( $this->plugin_name, $this->version );
 
-		// Register admin-specific stylesheet.
+		// Register admin-specific stylesheet and scripts.
 		$this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_styles' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_scripts' );
 
 		// Register settings page.
 		$this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
@@ -247,6 +255,13 @@ class Wpfaevent {
 		// Register AJAX handler for footer text update.
 		$plugin_footer_handler = new Wpfaevent_Footer_Handler();
 		$this->loader->add_action( 'wp_ajax_wpfa_update_footer_text', $plugin_footer_handler, 'ajax_update_footer_text' );
+
+		// Register AJAX handler for Eventyay sync and chunked imports.
+		$eventyay_ajax_controller = new Wpfaevent_AJAX_Controller();
+		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $eventyay_ajax_controller, 'ajax_sync_eventyay' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_get_events', $eventyay_ajax_controller, 'ajax_import_get_events' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_single_event', $eventyay_ajax_controller, 'ajax_import_single_event' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_save_summary', $eventyay_ajax_controller, 'ajax_import_save_summary' );
 
 		// Register Eventyay import form handler.
 		$this->loader->add_action( 'admin_post_wpfaevent_import_eventyay_events', $this->plugin_admin, 'handle_eventyay_events_import' );
