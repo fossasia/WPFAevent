@@ -585,7 +585,7 @@ class Wpfaevent_Admin {
 		if ( ! empty( $event_owned_speaker_ids ) ) {
 			$current_exclusions = $query->get( 'post__not_in' );
 			$current_exclusions = is_array( $current_exclusions ) ? $current_exclusions : array();
-			$query->set( 'post__not_in', Wpfaevent_Meta_Event::sanitize_post_id_list( array_merge( $current_exclusions, $event_owned_speaker_ids ) ) );
+			$query->set( 'post__not_in', Wpfaevent_Event_Speaker_Relation_Manager::sanitize_post_id_list( array_merge( $current_exclusions, $event_owned_speaker_ids ) ) );
 		}
 
 		$existing_meta_query = $query->get( 'meta_query' );
@@ -693,7 +693,7 @@ class Wpfaevent_Admin {
 	 * @return array<int> Speaker post IDs.
 	 */
 	private function get_admin_event_speaker_ids( $event_id ) {
-		return Wpfaevent_Meta_Event::get_admin_event_speaker_ids( $event_id );
+		return Wpfaevent_Event_Speaker_Relation_Manager::get_admin_event_speaker_ids( $event_id );
 	}
 
 	/**
@@ -704,7 +704,7 @@ class Wpfaevent_Admin {
 	 * @return array<int> Speaker post IDs.
 	 */
 	private function get_all_event_owned_speaker_ids() {
-		return Wpfaevent_Meta_Event::get_all_event_owned_speaker_ids();
+		return Wpfaevent_Event_Speaker_Relation_Manager::get_all_event_owned_speaker_ids();
 	}
 
 	/**

@@ -252,6 +252,7 @@ function wpfa_relationship_test_assert_same( $expected, $actual, $message ) {
 	exit( 1 );
 }
 
+require_once dirname( __DIR__ ) . '/includes/class-wpfaevent-event-speaker-relation-manager.php';
 require_once dirname( __DIR__ ) . '/includes/meta/class-wpfaevent-meta-event.php';
 require_once dirname( __DIR__ ) . '/includes/meta/class-wpfaevent-meta-speaker.php';
 
@@ -262,19 +263,19 @@ $GLOBALS['wpfa_relationship_test_meta'][300]['wpfa_event_speakers'] = array( 10 
 
 wpfa_relationship_test_assert_same(
 	array( 100, 200 ),
-	Wpfaevent_Meta_Speaker::get_events_linked_to_speaker( 10, 'publish' ),
+	Wpfaevent_Event_Speaker_Relation_Manager::get_events_linked_to_speaker( 10, 'publish' ),
 	'Speaker profiles should merge speaker-side links with published event-side references.'
 );
 
 wpfa_relationship_test_reset();
-Wpfaevent_Meta_Speaker::add_event_to_speaker( 11, 200 );
+Wpfaevent_Event_Speaker_Relation_Manager::add_event_to_speaker( 11, 200 );
 wpfa_relationship_test_assert_same(
 	'',
 	get_post_meta( 11, 'wpfa_speaker_events', true ),
 	'Public add helper should keep the speaker capability guard by default.'
 );
 
-Wpfaevent_Meta_Speaker::add_event_to_speaker( 11, 200, false );
+Wpfaevent_Event_Speaker_Relation_Manager::add_event_to_speaker( 11, 200, false );
 wpfa_relationship_test_assert_same(
 	array( 200 ),
 	get_post_meta( 11, 'wpfa_speaker_events', true ),
@@ -285,7 +286,7 @@ wpfa_relationship_test_reset();
 $GLOBALS['wpfa_relationship_test_meta'][10]['wpfa_speaker_events'] = array( 100 );
 $GLOBALS['wpfa_relationship_test_meta'][12]['wpfa_speaker_events'] = array( 100 );
 
-$sync_method = new ReflectionMethod( 'Wpfaevent_Meta_Event', 'sync_event_speaker_relationships' );
+$sync_method = new ReflectionMethod( 'Wpfaevent_Event_Speaker_Relation_Manager', 'sync_event_speaker_relationships' );
 if ( PHP_VERSION_ID < 80100 ) {
 	$sync_method->setAccessible( true );
 }
@@ -311,7 +312,7 @@ wpfa_relationship_test_assert_same(
 
 wpfa_relationship_test_assert_same(
 	array( 101, 102 ),
-	Wpfaevent_Meta_Speaker::sanitize_event_ids( '101, 102, invalid, 101' ),
+	Wpfaevent_Event_Speaker_Relation_Manager::sanitize_post_id_list( '101, 102, invalid, 101' ),
 	'Speaker event meta sanitization should accept scalar ID lists consistently.'
 );
 

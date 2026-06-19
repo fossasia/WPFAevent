@@ -69,7 +69,7 @@ if ( $talk_start || $talk_end ) {
 
 $has_session_details = $talk_title || $talk_date || $talk_start || $talk_end || $talk_abstract;
 
-$linked_event_ids = Wpfaevent_Meta_Speaker::get_events_linked_to_speaker( $speaker_id, 'publish' );
+$linked_event_ids = Wpfaevent_Event_Speaker_Relation_Manager::get_events_linked_to_speaker( $speaker_id, 'publish' );
 
 usort(
 	$linked_event_ids,

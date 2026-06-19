@@ -221,7 +221,7 @@ foreach ( $event_ids as $event_id ) {
 	$event_status    = ( $date_key && $date_key < $today ) ? 'past' : 'upcoming';
 	$sort_date       = $start_date ? $start_date : $end_date;
 	$sort_time       = $sort_date ? strtotime( $sort_date ) : PHP_INT_MAX;
-	$speaker_ids     = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_admin_event_speaker_ids( $event_id ) : array();
+	$speaker_ids     = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_admin_event_speaker_ids( $event_id ) : array();
 	$event_slug      = get_post_field( 'post_name', $event_id );
 
 	if ( $location ) {

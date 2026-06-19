@@ -112,6 +112,7 @@ class Wpfaevent {
 		// Cache management.
 		require_once plugin_dir_path( __FILE__ ) . 'cache/class-wpfaevent-cache.php';
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-roles.php';
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-event-speaker-relation-manager.php';
 
 		// Data model classes - Custom Post Types.
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';
