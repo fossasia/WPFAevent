@@ -13,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 $settings         = isset( $settings ) ? $settings : array(
 	'base_url'       => 'https://eventyay.com',
 	'organizer_slug' => '',
-	'event_slug'     => '',
 	'api_token'      => '',
 	'post_status'    => 'draft',
 );
@@ -57,13 +56,7 @@ $notice           = isset( $notice ) ? $notice : false;
 						<input type="text" class="regular-text" id="wpfaevent_eventyay_organizer_slug" name="wpfaevent_eventyay_import_settings[organizer_slug]" value="<?php echo esc_attr( $settings['organizer_slug'] ); ?>" placeholder="bigevents">
 					</td>
 				</tr>
-				<tr>
-					<th scope="row"><label for="wpfaevent_eventyay_event_slug"><?php esc_html_e( 'Event slug', 'wpfaevent' ); ?></label></th>
-					<td>
-						<input type="text" class="regular-text" id="wpfaevent_eventyay_event_slug" name="wpfaevent_eventyay_import_settings[event_slug]" value="<?php echo esc_attr( $settings['event_slug'] ); ?>" placeholder="sampleconf">
-						<p class="description"><?php esc_html_e( 'Leave empty to import all events visible to the token for this organizer.', 'wpfaevent' ); ?></p>
-					</td>
-				</tr>
+
 				<tr>
 					<th scope="row"><label for="wpfaevent_eventyay_api_token"><?php esc_html_e( 'API token', 'wpfaevent' ); ?></label></th>
 					<td>

@@ -125,7 +125,6 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		$settings['organizer_slug'] = isset( $input['organizer_slug'] ) ? $this->sanitize_eventyay_path_segment( $input['organizer_slug'] ) : '';
-		$settings['event_slug']     = isset( $input['event_slug'] ) ? $this->sanitize_eventyay_path_segment( $input['event_slug'] ) : '';
 		$parsed_event_url           = $this->parse_eventyay_public_event_url( $base_url );
 
 		if ( $parsed_event_url ) {
@@ -133,10 +132,6 @@ class Wpfaevent_Eventyay_Importer {
 
 			if ( empty( $settings['organizer_slug'] ) ) {
 				$settings['organizer_slug'] = $parsed_event_url['organizer_slug'];
-			}
-
-			if ( empty( $settings['event_slug'] ) ) {
-				$settings['event_slug'] = $parsed_event_url['event_slug'];
 			}
 		}
 
@@ -387,14 +382,13 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		$segments = array_values( array_filter( explode( '/', $path ) ) );
-		if ( count( $segments ) < 2 ) {
+		if ( empty( $segments ) ) {
 			return array();
 		}
 
 		$organizer_slug = $this->sanitize_eventyay_path_segment( $segments[0] );
-		$event_slug     = $this->sanitize_eventyay_path_segment( $segments[1] );
 
-		if ( empty( $organizer_slug ) || empty( $event_slug ) ) {
+		if ( empty( $organizer_slug ) ) {
 			return array();
 		}
 
@@ -406,7 +400,6 @@ class Wpfaevent_Eventyay_Importer {
 		return array(
 			'base_url'       => esc_url_raw( $base_url ),
 			'organizer_slug' => $organizer_slug,
-			'event_slug'     => $event_slug,
 		);
 	}
 

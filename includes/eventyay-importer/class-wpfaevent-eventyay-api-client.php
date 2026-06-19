@@ -155,65 +155,7 @@ class Wpfaevent_Eventyay_API_Client {
 			return $primary_endpoint;
 		}
 
-		$endpoints = array( $primary_endpoint );
-
-		if ( ! empty( $settings['event_slug'] ) ) {
-			$endpoints = array_merge(
-				$endpoints,
-				$this->build_eventyay_legacy_event_endpoint_candidates( $settings )
-			);
-		}
-
-		return array_values( array_unique( array_filter( $endpoints ) ) );
-	}
-
-	/**
-	 * Build legacy Open Event API endpoints for event-slug imports.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $settings Import settings.
-	 * @return array Endpoint URLs.
-	 */
-	public function build_eventyay_legacy_event_endpoint_candidates( $settings ) {
-		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
-		$base_url   = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
-		$event_slug = $this->sanitize_eventyay_path_segment( $settings['event_slug'] );
-
-		if ( empty( $event_slug ) || empty( $base_url ) || ! wp_http_validate_url( $base_url ) ) {
-			return array();
-		}
-
-		$api_bases   = array( $base_url );
-		$api_bases[] = apply_filters( 'wpfaevent_eventyay_legacy_api_base_url', 'https://api.eventyay.com', $settings );
-		$endpoints   = array();
-
-		foreach ( array_unique( array_filter( $api_bases ) ) as $api_base ) {
-			$api_base = untrailingslashit( esc_url_raw( $api_base ) );
-			if ( empty( $api_base ) || ! wp_http_validate_url( $api_base ) ) {
-				continue;
-			}
-
-			$endpoints[] = esc_url_raw(
-				trailingslashit( $this->trim_eventyay_legacy_api_version_path( $api_base ) ) .
-				'v1/events/' .
-				rawurlencode( $event_slug )
-			);
-		}
-
-		return $endpoints;
-	}
-
-	/**
-	 * Trim a trailing /v1 path before building legacy Open Event API URLs.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $api_base API base URL.
-	 * @return string Base URL without a trailing /v1 path.
-	 */
-	public function trim_eventyay_legacy_api_version_path( $api_base ) {
-		return preg_replace( '#/v1/?$#', '', untrailingslashit( $api_base ) );
+		return array( $primary_endpoint );
 	}
 
 	/**
@@ -300,18 +242,11 @@ class Wpfaevent_Eventyay_API_Client {
 			rawurlencode( $settings['organizer_slug'] )
 		);
 
-		if ( ! empty( $settings['event_slug'] ) ) {
-			$path .= rawurlencode( $settings['event_slug'] ) . '/';
-		}
-
 		$url        = trailingslashit( $base_url ) . $path;
 		$query_args = array(
-			'lang' => 'en',
+			'lang'      => 'en',
+			'page_size' => absint( apply_filters( 'wpfaevent_eventyay_import_page_size', 100 ) ),
 		);
-
-		if ( empty( $settings['event_slug'] ) ) {
-			$query_args['page_size'] = absint( apply_filters( 'wpfaevent_eventyay_import_page_size', 100 ) );
-		}
 
 		return esc_url_raw( add_query_arg( $query_args, $url ) );
 	}
@@ -736,7 +671,6 @@ class Wpfaevent_Eventyay_API_Client {
 		return array(
 			'base_url'       => 'https://eventyay.com',
 			'organizer_slug' => '',
-			'event_slug'     => '',
 			'api_token'      => '',
 			'post_status'    => 'draft',
 		);
