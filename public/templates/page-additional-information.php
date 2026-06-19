@@ -14,102 +14,49 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$additional_information_page_url = get_permalink();
-
-if ( ! $additional_information_page_url && class_exists( 'Wpfaevent_Additional_Information_Helper' ) ) {
-	$additional_information_page_url = Wpfaevent_Additional_Information_Helper::get_additional_information_page_url();
-}
-
-$read_filter_value = static function ( $key ) {
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- These are read-only page filters.
-	if ( ! isset( $_GET[ $key ] ) ) {
-		return '';
+if ( class_exists( 'Wpfaevent_Additional_Information_Helper' ) ) {
+	$page_data = Wpfaevent_Additional_Information_Helper::get_additional_information_page_data();
+} else {
+	$site_logo_url = get_option( 'wpfa_site_logo_url', '' );
+	if ( empty( $site_logo_url ) ) {
+		$site_logo_url = defined( 'WPFAEVENT_URL' ) ? WPFAEVENT_URL . 'assets/images/logo.png' : '';
 	}
+	$site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Value is sanitized below.
-	$value = wp_unslash( $_GET[ $key ] );
-
-	if ( is_array( $value ) ) {
-		return '';
-	}
-
-	return sanitize_text_field( $value );
-};
-
-$resolve_event_filter = static function ( $event_filter ) {
-	$event_filter = trim( (string) $event_filter );
-
-	if ( '' === $event_filter ) {
-		return 0;
-	}
-
-	if ( is_numeric( $event_filter ) ) {
-		$event_id = absint( $event_filter );
-
-		return ( $event_id && 'wpfa_event' === get_post_type( $event_id ) && 'publish' === get_post_status( $event_id ) ) ? $event_id : 0;
-	}
-
-	$events = get_posts(
-		array(
-			'name'           => sanitize_title( $event_filter ),
-			'post_type'      => 'wpfa_event',
-			'post_status'    => 'publish',
-			'posts_per_page' => 1,
-			'fields'         => 'ids',
-			'no_found_rows'  => true,
-		)
+	$page_data = array(
+		'selected_event_id'               => 0,
+		'selected_event_slug'             => '',
+		'selected_event_title'            => '',
+		'selected_event_url'              => '',
+		'venue_information'               => '',
+		'has_information'                 => false,
+		'additional_information_page_url' => get_permalink(),
+		'event_schedule_url'              => home_url( '/full-schedule/' ),
+		'event_additional_url'            => get_permalink(),
+		'event_style_attr'                => '',
+		'header_vars'                     => array(
+			'site_logo_url'        => $site_logo_url,
+			'event_page_url'       => home_url( '/events/' ),
+			'show_back_button'     => true,
+			'show_register_button' => false,
+			'back_button_text'     => __( 'Back to Events', 'wpfaevent' ),
+			'register_button_url'  => '',
+			'register_button_text' => __( 'Register', 'wpfaevent' ),
+		),
 	);
-
-	return ! empty( $events[0] ) ? absint( $events[0] ) : 0;
-};
-
-$current_event_filter = $read_filter_value( 'event' );
-$selected_event_id    = $resolve_event_filter( $current_event_filter );
-$selected_event_slug  = $selected_event_id ? get_post_field( 'post_name', $selected_event_id ) : '';
-$selected_event_title = $selected_event_id ? get_the_title( $selected_event_id ) : '';
-$selected_event_url   = $selected_event_id ? get_permalink( $selected_event_id ) : '';
-$venue_information    = $selected_event_id ? trim( (string) get_post_meta( $selected_event_id, 'wpfa_event_venue_information', true ) ) : '';
-$has_information      = '' !== trim( wp_strip_all_tags( $venue_information ) );
-$schedule_page_url    = class_exists( 'Wpfaevent_Schedule_Helper' ) ? Wpfaevent_Schedule_Helper::get_schedule_page_url() : home_url( '/full-schedule/' );
-$event_schedule_url   = $selected_event_id ? add_query_arg( 'event', $selected_event_slug, $schedule_page_url ) : $schedule_page_url;
-$event_additional_url = $selected_event_id ? add_query_arg( 'event', $selected_event_slug, $additional_information_page_url ) : $additional_information_page_url;
-$event_style_attr     = '';
-
-if ( $selected_event_id && class_exists( 'Wpfaevent_Meta_Event' ) ) {
-	$event_colors        = Wpfaevent_Meta_Event::get_event_colors( $selected_event_id );
-	$event_color_var_map = array(
-		'wpfa_event_primary_color'          => '--event-primary',
-		'wpfa_event_hover_button_color'     => '--event-primary-dark',
-		'wpfa_event_theme_background_color' => '--event-soft',
-		'wpfa_event_theme_success_color'    => '--event-success',
-		'wpfa_event_theme_danger_color'     => '--event-danger',
-	);
-	$event_style_vars    = array();
-
-	foreach ( $event_color_var_map as $meta_key => $css_var ) {
-		if ( ! empty( $event_colors[ $meta_key ] ) ) {
-			$event_style_vars[] = $css_var . ': ' . $event_colors[ $meta_key ];
-		}
-	}
-
-	$event_style_attr = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
 }
 
-$site_logo_url = get_option( 'wpfa_site_logo_url', '' );
-if ( empty( $site_logo_url ) ) {
-	$site_logo_url = WPFAEVENT_URL . 'assets/images/logo.png';
-}
-$site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
-
-$header_vars = array(
-	'site_logo_url'        => $site_logo_url,
-	'event_page_url'       => $selected_event_url ? $selected_event_url : home_url( '/events/' ),
-	'show_back_button'     => true,
-	'show_register_button' => false,
-	'back_button_text'     => $selected_event_url ? __( 'Back to Event', 'wpfaevent' ) : __( 'Back to Events', 'wpfaevent' ),
-	'register_button_url'  => '',
-	'register_button_text' => __( 'Register', 'wpfaevent' ),
-);
+$selected_event_id               = $page_data['selected_event_id'];
+$selected_event_slug             = $page_data['selected_event_slug'];
+$selected_event_title            = $page_data['selected_event_title'];
+$selected_event_url              = $page_data['selected_event_url'];
+$venue_information               = $page_data['venue_information'];
+$has_information                 = $page_data['has_information'];
+$additional_information_page_url = $page_data['additional_information_page_url'];
+$event_schedule_url              = $page_data['event_schedule_url'];
+$event_additional_url            = $page_data['event_additional_url'];
+$event_style_attr                = $page_data['event_style_attr'];
+$header_vars                     = $page_data['header_vars'];
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
