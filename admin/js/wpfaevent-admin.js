@@ -7,7 +7,8 @@
 
 		if ($importForm.length || $updateForm.length) {
 			const $form = $importForm.length ? $importForm : $updateForm;
-			const returnPage = $form.find('input[name="wpfaevent_eventyay_return_page"]').val() || 'wpfaevent-import-events';
+			const rawReturnPage = $form.find('input[name="wpfaevent_eventyay_return_page"]').val();
+			const returnPage = /^[a-zA-Z0-9_-]+$/.test(rawReturnPage || '') ? rawReturnPage : 'wpfaevent-import-events';
 
 			$form.on('submit', function(e) {
 				e.preventDefault();
@@ -138,7 +139,7 @@
 							message: message
 						},
 						complete: function() {
-							window.location.href = 'edit.php?post_type=wpfa_event&page=' + returnPage;
+							window.location.href = 'edit.php?post_type=wpfa_event&page=' + encodeURIComponent(returnPage);
 						}
 					});
 				}
