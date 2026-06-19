@@ -105,7 +105,7 @@
 					const event = events[index];
 					const percent = Math.round((index / events.length) * 100);
 					$bar.css('width', percent + '%');
-					
+
 					const eventTitle = event.name || event.title || event.event_slug || 'Unnamed Event';
 					$status.text('Importing ' + (index + 1) + ' of ' + events.length + ': ' + eventTitle);
 					$details.text('Processing speakers, sessions, schedules, and partners...');
