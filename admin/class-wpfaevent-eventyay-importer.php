@@ -53,6 +53,13 @@ class Wpfaevent_Eventyay_Importer {
 	private $renderer;
 
 	/**
+	 * Cached settings.
+	 *
+	 * @var array|null
+	 */
+	private $cached_settings = null;
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct() {
@@ -98,10 +105,11 @@ class Wpfaevent_Eventyay_Importer {
 	 * @return array Sanitized settings.
 	 */
 	public function sanitize_eventyay_import_settings( $input ) {
-		$input    = is_array( $input ) ? $input : array();
-		$defaults = $this->get_eventyay_import_default_settings();
-		$current  = $this->get_eventyay_import_settings();
-		$settings = $defaults;
+		$this->cached_settings = null;
+		$input                 = is_array( $input ) ? $input : array();
+		$defaults              = $this->get_eventyay_import_default_settings();
+		$current               = $this->get_eventyay_import_settings();
+		$settings              = $defaults;
 
 		$base_url = isset( $input['base_url'] ) ? trim( (string) wp_unslash( $input['base_url'] ) ) : '';
 		$base_url = $base_url ? esc_url_raw( $base_url ) : $defaults['base_url'];
@@ -137,9 +145,10 @@ class Wpfaevent_Eventyay_Importer {
 		if ( ! empty( $input['clear_api_token'] ) ) {
 			$settings['api_token'] = '';
 		} elseif ( isset( $input['api_token'] ) && '' !== trim( (string) wp_unslash( $input['api_token'] ) ) ) {
-			$settings['api_token'] = sanitize_text_field( wp_unslash( $input['api_token'] ) );
+			$settings['api_token'] = $this->encrypt_value( sanitize_text_field( wp_unslash( $input['api_token'] ) ) );
 		} else {
-			$settings['api_token'] = isset( $current['api_token'] ) ? $current['api_token'] : '';
+			$plain_token           = isset( $current['api_token'] ) ? $current['api_token'] : '';
+			$settings['api_token'] = $plain_token ? $this->encrypt_value( $plain_token ) : '';
 		}
 
 		$post_status = isset( $input['post_status'] ) ? sanitize_key( wp_unslash( $input['post_status'] ) ) : $defaults['post_status'];
@@ -256,10 +265,93 @@ class Wpfaevent_Eventyay_Importer {
 	 * @return array
 	 */
 	public function get_eventyay_import_settings() {
+		if ( null !== $this->cached_settings ) {
+			return $this->cached_settings;
+		}
+
 		$settings = get_option( 'wpfaevent_eventyay_import_settings', array() );
 		$settings = is_array( $settings ) ? $settings : array();
 
-		return wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
+		$settings = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
+		if ( ! empty( $settings['api_token'] ) ) {
+			$settings['api_token'] = $this->decrypt_value( $settings['api_token'] );
+		}
+
+		$this->cached_settings = $settings;
+		return $settings;
+	}
+
+	/**
+	 * Encrypt a string value using AUTH_KEY.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $value Plain value.
+	 * @return string Encrypted value.
+	 */
+	private function encrypt_value( $value ) {
+		$value = (string) $value;
+		if ( '' === $value ) {
+			return '';
+		}
+
+		$key       = defined( 'SECURE_AUTH_KEY' ) ? SECURE_AUTH_KEY : ( defined( 'AUTH_KEY' ) ? AUTH_KEY : 'wpfaevent-fallback-key' );
+		$method    = 'aes-256-ctr';
+		$iv_length = openssl_cipher_iv_length( $method );
+		$iv        = openssl_random_pseudo_bytes( $iv_length );
+		$encrypted = openssl_encrypt( $value, $method, $key, 0, $iv );
+
+		if ( false === $encrypted ) {
+			return $value;
+		}
+
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+		return 'enc::' . base64_encode( $iv . $encrypted );
+	}
+
+	/**
+	 * Decrypt a string value using AUTH_KEY.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $value Encrypted value.
+	 * @return string Decrypted value.
+	 */
+	private function decrypt_value( $value ) {
+		$value = (string) $value;
+		if ( '' === $value ) {
+			return '';
+		}
+
+		if ( 0 !== strpos( $value, 'enc::' ) ) {
+			return $value;
+		}
+
+		$encrypted_part = substr( $value, 5 );
+
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
+		$raw = base64_decode( $encrypted_part, true );
+		if ( false === $raw ) {
+			return $value;
+		}
+
+		$key       = defined( 'SECURE_AUTH_KEY' ) ? SECURE_AUTH_KEY : ( defined( 'AUTH_KEY' ) ? AUTH_KEY : 'wpfaevent-fallback-key' );
+		$method    = 'aes-256-ctr';
+		$iv_length = openssl_cipher_iv_length( $method );
+
+		if ( strlen( $raw ) <= $iv_length ) {
+			return $value;
+		}
+
+		$iv        = substr( $raw, 0, $iv_length );
+		$encrypted = substr( $raw, $iv_length );
+
+		$decrypted = openssl_decrypt( $encrypted, $method, $key, 0, $iv );
+		if ( false === $decrypted ) {
+			return $value;
+		}
+
+		return $decrypted;
 	}
 
 	/**
@@ -327,7 +419,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @return array|WP_Error Import result.
 	 */
-	private function import_eventyay_events_from_settings() {
+	public function import_eventyay_events_from_settings() {
 		$settings = $this->get_eventyay_import_settings();
 
 		if ( empty( $settings['organizer_slug'] ) ) {
