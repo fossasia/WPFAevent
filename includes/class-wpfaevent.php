@@ -251,6 +251,9 @@ class Wpfaevent {
 
 		// Register Eventyay import form handler.
 		$this->loader->add_action( 'admin_post_wpfaevent_import_eventyay_events', $this->plugin_admin, 'handle_eventyay_events_import' );
+
+		// Register AJAX handler for dashboard JSON:API sync.
+		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $this->plugin_admin, 'ajax_sync_eventyay' );
 	}
 
 	/**

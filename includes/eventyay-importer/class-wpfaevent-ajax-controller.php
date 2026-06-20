@@ -142,6 +142,13 @@ class Wpfaevent_AJAX_Controller {
 			);
 		}
 
+		$parser     = new Wpfaevent_JSONAPI_Parser();
+		$event_slug = $parser->eventyay_event_slug( $event );
+		if ( $event_slug && ! empty( $result['post_id'] ) ) {
+			$sync_service = new Wpfaevent_Eventyay_Ajax_Sync();
+			$sync_service->sync_speakers_for_event( $result['post_id'], $event_slug, $settings );
+		}
+
 		wp_send_json_success( $result );
 	}
 

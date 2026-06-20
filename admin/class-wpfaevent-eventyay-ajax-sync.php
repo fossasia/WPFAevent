@@ -127,6 +127,9 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 				'session_count'    => $import['session_count'],
 				'created_speakers' => $cpt_result['created'],
 				'updated_speakers' => $cpt_result['updated'],
+				'speakers'         => $dashboard_speakers,
+				'schedule'         => $this->read_dashboard_json_file( 'schedule-' . $event_id . '.json', new stdClass() ),
+				'settings'         => $this->read_dashboard_json_file( 'site-settings-' . $event_id . '.json', new stdClass() ),
 			)
 		);
 	}
@@ -1007,5 +1010,54 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 		}
 
 		update_post_meta( $speaker_id, 'wpfa_speaker_events', $event_ids );
+	}
+
+	/**
+	 * Sync speakers for a given event ID programmatically.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $event_id   Event post ID.
+	 * @param string $event_slug Eventyay event slug.
+	 * @param array  $settings   Import settings.
+	 * @return true|WP_Error
+	 */
+	public function sync_speakers_for_event( $event_id, $event_slug, $settings ) {
+		$event_id = absint( $event_id );
+		if ( ! $event_id ) {
+			return new WP_Error( 'invalid_event_id', __( 'Invalid event ID.', 'wpfaevent' ) );
+		}
+
+		$base_url = ! empty( $settings['base_url'] ) ? $settings['base_url'] : 'https://api.eventyay.com';
+		$api_url  = trailingslashit( $base_url ) . 'v1/events/' . $event_slug . '/sessions?include=speakers,track&page[size]=200';
+
+		$api_url = $this->prepare_eventyay_sync_url( $api_url );
+		if ( is_wp_error( $api_url ) ) {
+			return $api_url;
+		}
+
+		$this->persist_eventyay_sync_url( $event_id, $api_url );
+
+		$payload = $this->fetch_eventyay_json( $api_url );
+		if ( is_wp_error( $payload ) ) {
+			return $payload;
+		}
+
+		$import = $this->parser->normalize_eventyay_payload( $payload );
+		if ( is_wp_error( $import ) ) {
+			return $import;
+		}
+
+		$existing_speakers  = $this->read_dashboard_json_file( 'speakers-' . $event_id . '.json', array() );
+		$dashboard_speakers = $this->merge_dashboard_speaker_state( $import['speakers'], $existing_speakers );
+		$write_result       = $this->write_dashboard_json_file( 'speakers-' . $event_id . '.json', $dashboard_speakers );
+
+		if ( is_wp_error( $write_result ) ) {
+			return $write_result;
+		}
+
+		$this->sync_eventyay_speaker_posts( $import['speakers'], $event_id );
+
+		return true;
 	}
 }

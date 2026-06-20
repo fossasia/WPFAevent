@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /tmp/pr81-fix diff --stat HEAD)",
+      "Bash(git -C /tmp/pr120-fix diff --stat HEAD)",
+      "Bash(git -C /tmp/pr121-fix diff --stat HEAD)",
+      "Bash(git -C \"/Users/nimeshan/Local Sites/gsoc/app/public/wp-content/plugins/event-plugin\" diff --stat HEAD)",
+      "Bash(git -C \"/Users/nimeshan/Local Sites/gsoc/app/public/wp-content/plugins/event-plugin\" log --oneline -5)",
+      "Bash(git -C /tmp/pr120-fix log --oneline -5)",
+      "Bash(git -C /tmp/pr121-fix log --oneline -5)",
+      "Bash(git -C \"/Users/nimeshan/Local Sites/gsoc/app/public/wp-content/plugins/event-plugin\" status --short --branch)",
+      "Bash(git -C /tmp/pr120-fix status --short --branch)",
+      "Bash(git -C /tmp/pr121-fix status --short --branch)",
+      "Bash(git -C /tmp/pr120-fix remote -v)",
+      "Bash(git -C /tmp/pr121-fix remote -v)",
+      "Bash(git -C /tmp/pr120-fix log --oneline origin/split-81-eventyay-related-data-import..HEAD)",
+      "Bash(git -C /tmp/pr121-fix log --oneline origin/split-81-eventyay-frontend-display..HEAD)",
+      "Bash(git -C \"/Users/nimeshan/Local Sites/gsoc/app/public/wp-content/plugins/event-plugin\" log --oneline origin/split-81-eventyay-import-core..HEAD)",
+      "Bash(git -C /tmp/pr81-fix add includes/helpers/class-wpfaevent-schedule-helper.php)",
+      "Bash(git -C /tmp/pr81-fix commit -m ' *)"
+    ]
+  }
+}

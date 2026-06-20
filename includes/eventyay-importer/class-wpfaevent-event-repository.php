@@ -91,7 +91,7 @@ class Wpfaevent_Event_Repository {
 		$post_manager->sync_event_metadata( $post_id, $metadata );
 
 		// Import additional metadata fields.
-		$lead_text = $this->parser->eventyay_text_value( $this->parser->eventyay_first_present_raw( $event, array( 'lead_text', 'lead-text', 'subtitle', 'frontpage_text', 'frontpage-text', 'short_description', 'short-description', 'summary' ), true ) );
+		$lead_text = $this->parser->eventyay_text_value( $this->parser->eventyay_first_present_raw( $event, array( 'headline', 'lead_text', 'lead-text', 'subtitle', 'frontpage_text', 'frontpage-text', 'short_description', 'short-description', 'summary' ), true ) );
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_lead_text', $lead_text );
 
 		// Set the post excerpt as a fallback source for the hero text on the single-event template.
@@ -112,6 +112,10 @@ class Wpfaevent_Event_Repository {
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_registration_link', $reg_link );
 
 		$cfs_link = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'cfs_link', 'cfs-link', 'cfp_link', 'cfp-link', 'cfp_url', 'cfp-url', 'speakers_url', 'speakers-url' ), true ), $settings['base_url'] );
+		if ( empty( $cfs_link ) ) {
+			$public_event_url = $this->eventyay_public_event_url( $event, $settings, $event_slug );
+			$cfs_link         = rtrim( $public_event_url, '/' ) . '/cfs';
+		}
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_cfs_link', $cfs_link );
 
 		// Import banner as featured image.
