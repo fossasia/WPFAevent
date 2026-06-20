@@ -1247,7 +1247,7 @@ class Wpfaevent_Admin {
 			<div class="card" style="margin-top: 20px; max-width: 100%; background: #fff; border: 1px solid #e5e5e5; padding: 20px; border-radius: 4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
 				<h2><?php esc_html_e( 'Category / Track Breakdown', 'wpfaevent' ); ?></h2>
 				<p class="description"><?php esc_html_e( 'Number of speakers assigned to each category/track.', 'wpfaevent' ); ?></p>
-				
+
 				<?php if ( ! empty( $categories ) && ! is_wp_error( $categories ) ) : ?>
 					<table class="wp-list-table widefat fixed striped" style="margin-top: 20px;">
 						<thead>
