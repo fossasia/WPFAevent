@@ -13,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 $settings         = isset( $settings ) ? $settings : array(
 	'base_url'       => 'https://eventyay.com',
 	'organizer_slug' => '',
-	'event_slug'     => '',
 	'api_token'      => '',
 	'post_status'    => 'draft',
 );

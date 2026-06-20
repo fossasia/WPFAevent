@@ -73,7 +73,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @return array|WP_Error Event resources and metadata.
 	 */
 	public function fetch_eventyay_event_resources_from_endpoint( $endpoint, $settings ) {
-		if ( empty( $endpoint ) || ! wp_http_validate_url( $endpoint ) ) {
+		if ( empty( $endpoint ) || ! $this->parser->is_valid_http_url( $endpoint ) ) {
 			return new WP_Error(
 				'wpfaevent_eventyay_invalid_url',
 				esc_html__( 'The Eventyay API URL is invalid.', 'wpfaevent' )
@@ -155,65 +155,7 @@ class Wpfaevent_Eventyay_API_Client {
 			return $primary_endpoint;
 		}
 
-		$endpoints = array( $primary_endpoint );
-
-		if ( ! empty( $settings['event_slug'] ) ) {
-			$endpoints = array_merge(
-				$endpoints,
-				$this->build_eventyay_legacy_event_endpoint_candidates( $settings )
-			);
-		}
-
-		return array_values( array_unique( array_filter( $endpoints ) ) );
-	}
-
-	/**
-	 * Build legacy Open Event API endpoints for event-slug imports.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $settings Import settings.
-	 * @return array Endpoint URLs.
-	 */
-	public function build_eventyay_legacy_event_endpoint_candidates( $settings ) {
-		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
-		$base_url   = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
-		$event_slug = $this->sanitize_eventyay_path_segment( $settings['event_slug'] );
-
-		if ( empty( $event_slug ) || empty( $base_url ) || ! wp_http_validate_url( $base_url ) ) {
-			return array();
-		}
-
-		$api_bases   = array( $base_url );
-		$api_bases[] = apply_filters( 'wpfaevent_eventyay_legacy_api_base_url', 'https://api.eventyay.com', $settings );
-		$endpoints   = array();
-
-		foreach ( array_unique( array_filter( $api_bases ) ) as $api_base ) {
-			$api_base = untrailingslashit( esc_url_raw( $api_base ) );
-			if ( empty( $api_base ) || ! wp_http_validate_url( $api_base ) ) {
-				continue;
-			}
-
-			$endpoints[] = esc_url_raw(
-				trailingslashit( $this->trim_eventyay_legacy_api_version_path( $api_base ) ) .
-				'v1/events/' .
-				rawurlencode( $event_slug )
-			);
-		}
-
-		return $endpoints;
-	}
-
-	/**
-	 * Trim a trailing /v1 path before building legacy Open Event API URLs.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $api_base API base URL.
-	 * @return string Base URL without a trailing /v1 path.
-	 */
-	public function trim_eventyay_legacy_api_version_path( $api_base ) {
-		return preg_replace( '#/v1/?$#', '', untrailingslashit( $api_base ) );
+		return array( $primary_endpoint );
 	}
 
 	/**
@@ -281,7 +223,7 @@ class Wpfaevent_Eventyay_API_Client {
 		$settings = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
 		$base_url = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
 
-		if ( empty( $base_url ) || ! wp_http_validate_url( $base_url ) ) {
+		if ( empty( $base_url ) || ! $this->parser->is_valid_http_url( $base_url ) ) {
 			return new WP_Error(
 				'wpfaevent_eventyay_invalid_base_url',
 				esc_html__( 'The Eventyay API base URL is invalid.', 'wpfaevent' )
@@ -300,18 +242,11 @@ class Wpfaevent_Eventyay_API_Client {
 			rawurlencode( $settings['organizer_slug'] )
 		);
 
-		if ( ! empty( $settings['event_slug'] ) ) {
-			$path .= rawurlencode( $settings['event_slug'] ) . '/';
-		}
-
 		$url        = trailingslashit( $base_url ) . $path;
 		$query_args = array(
-			'lang' => 'en',
+			'lang'      => 'en',
+			'page_size' => absint( apply_filters( 'wpfaevent_eventyay_import_page_size', 100 ) ),
 		);
-
-		if ( empty( $settings['event_slug'] ) ) {
-			$query_args['page_size'] = absint( apply_filters( 'wpfaevent_eventyay_import_page_size', 100 ) );
-		}
 
 		return esc_url_raw( add_query_arg( $query_args, $url ) );
 	}
@@ -326,10 +261,31 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @return string|WP_Error Endpoint URL.
 	 */
 	public function build_eventyay_event_endpoint( $settings, $event_slug ) {
-		$settings               = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
-		$settings['event_slug'] = $this->sanitize_eventyay_path_segment( $event_slug );
+		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
+		$base_url   = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
+		$event_slug = $this->sanitize_eventyay_path_segment( $event_slug );
 
-		return $this->build_eventyay_events_endpoint( $settings );
+		if ( empty( $base_url ) || ! $this->parser->is_valid_http_url( $base_url ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_invalid_base_url',
+				esc_html__( 'The Eventyay API base URL is invalid.', 'wpfaevent' )
+			);
+		}
+
+		if ( empty( $settings['organizer_slug'] ) || empty( $event_slug ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_missing_organizer',
+				esc_html__( 'The Eventyay organizer or event slug is missing.', 'wpfaevent' )
+			);
+		}
+
+		$path = sprintf(
+			'api/v1/organizers/%s/events/%s/',
+			rawurlencode( $settings['organizer_slug'] ),
+			rawurlencode( $event_slug )
+		);
+
+		return esc_url_raw( trailingslashit( $base_url ) . $path );
 	}
 
 	/**
@@ -346,7 +302,7 @@ class Wpfaevent_Eventyay_API_Client {
 		$base_url   = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
 		$event_slug = $this->sanitize_eventyay_path_segment( $event_slug );
 
-		if ( empty( $base_url ) || ! wp_http_validate_url( $base_url ) ) {
+		if ( empty( $base_url ) || ! $this->parser->is_valid_http_url( $base_url ) ) {
 			return new WP_Error(
 				'wpfaevent_eventyay_invalid_base_url',
 				esc_html__( 'The Eventyay API base URL is invalid.', 'wpfaevent' )
@@ -361,7 +317,8 @@ class Wpfaevent_Eventyay_API_Client {
 		}
 
 		$path = sprintf(
-			'api/v1/events/%s/event-settings',
+			'api/v1/organizers/%s/events/%s/settings/',
+			rawurlencode( $settings['organizer_slug'] ),
 			rawurlencode( $event_slug )
 		);
 
@@ -432,6 +389,11 @@ class Wpfaevent_Eventyay_API_Client {
 			return $payload['data']['attributes'];
 		}
 
+		// Eventyay REST settings endpoint returns a flat key-value object, not JSON:API format.
+		if ( is_array( $payload ) && ! empty( $payload ) && ! array_key_exists( 'data', $payload ) ) {
+			return $payload;
+		}
+
 		return array();
 	}
 
@@ -450,7 +412,7 @@ class Wpfaevent_Eventyay_API_Client {
 			return '';
 		}
 
-		if ( ! wp_http_validate_url( $next_url ) ) {
+		if ( ! $this->parser->is_valid_http_url( $next_url ) ) {
 			return new WP_Error(
 				'wpfaevent_eventyay_invalid_next_url',
 				esc_html__( 'Eventyay pagination returned an invalid next page URL.', 'wpfaevent' )
@@ -527,7 +489,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @return array|WP_Error Payload map.
 	 */
 	public function fetch_eventyay_rest_json( $api_url, $api_token = '' ) {
-		if ( empty( $api_url ) || ! wp_http_validate_url( $api_url ) ) {
+		if ( empty( $api_url ) || ! $this->parser->is_valid_http_url( $api_url ) ) {
 			return new WP_Error(
 				'wpfaevent_eventyay_invalid_url',
 				esc_html__( 'The Eventyay API URL is invalid.', 'wpfaevent' )
@@ -736,7 +698,6 @@ class Wpfaevent_Eventyay_API_Client {
 		return array(
 			'base_url'       => 'https://eventyay.com',
 			'organizer_slug' => '',
-			'event_slug'     => '',
 			'api_token'      => '',
 			'post_status'    => 'draft',
 		);

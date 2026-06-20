@@ -122,10 +122,11 @@ $header_vars = array(
 							<?php esc_html_e( 'Registration Closed', 'wpfaevent' ); ?>
 						</a>
 					<?php endif; ?>
-
-					<a class="btn btn-secondary" href="<?php echo ! empty( $event_url ) ? esc_url( $event_url ) : esc_url( get_permalink( $event_id ) ); ?>" <?php echo ! empty( $event_url ) ? 'target="_blank" rel="noopener"' : ''; ?>>
-						<?php esc_html_e( 'Event Website', 'wpfaevent' ); ?>
-					</a>
+					<?php if ( ! empty( $event_url ) && ( empty( $registration_url ) || $event_url !== $registration_url ) ) : ?>
+						<a class="btn btn-secondary" href="<?php echo esc_url( $event_url ); ?>" target="_blank" rel="noopener">
+							<?php esc_html_e( 'Event Website', 'wpfaevent' ); ?>
+						</a>
+					<?php endif; ?>
 
 					<?php if ( ! empty( $cfs_url ) ) : ?>
 						<a class="btn btn-secondary" href="<?php echo esc_url( $cfs_url ); ?>" target="_blank" rel="noopener">
