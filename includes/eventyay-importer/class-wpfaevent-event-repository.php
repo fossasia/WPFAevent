@@ -96,7 +96,7 @@ class Wpfaevent_Event_Repository {
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_longitude', $longitude );
 
 		// Import additional metadata fields.
-		$lead_text = $this->parser->eventyay_text_value( $this->parser->eventyay_first_present_raw( $event, array( 'lead_text', 'lead-text', 'subtitle', 'frontpage_text', 'frontpage-text', 'short_description', 'short-description', 'summary' ), true ) );
+		$lead_text = $this->parser->eventyay_text_value( $this->parser->eventyay_first_present_raw( $event, array( 'headline', 'lead_text', 'lead-text', 'subtitle', 'frontpage_text', 'frontpage-text', 'short_description', 'short-description', 'summary' ), true ) );
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_lead_text', $lead_text );
 
 		// Set the post excerpt as a fallback source for the hero text on the single-event template.

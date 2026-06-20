@@ -162,6 +162,14 @@ class Wpfaevent_Templates {
 			}
 		}
 
+		if ( is_post_type_archive( 'wpfa_event' ) ) {
+			$candidate = WPFAEVENT_PATH . 'public/templates/page-events.php';
+
+			if ( file_exists( $candidate ) ) {
+				return $candidate;
+			}
+		}
+
 		if ( is_singular( 'page' ) ) {
 			$chosen = get_page_template_slug( get_queried_object_id() );
 			$key    = self::get_template_key_by_file( $chosen );

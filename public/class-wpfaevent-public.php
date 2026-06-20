@@ -63,6 +63,10 @@ class Wpfaevent_Public {
 			return true;
 		}
 
+		if ( is_post_type_archive( array( 'wpfa_event', 'wpfa_speaker' ) ) ) {
+			return true;
+		}
+
 		if ( class_exists( 'Wpfaevent_Templates' ) ) {
 			return ! empty( Wpfaevent_Templates::get_active_template_keys() );
 		}
@@ -92,6 +96,10 @@ class Wpfaevent_Public {
 	 * @return   bool    True if template uses pagination.
 	 */
 	private function is_paginated_template() {
+		if ( is_post_type_archive( array( 'wpfa_event', 'wpfa_speaker' ) ) ) {
+			return true;
+		}
+
 		if ( class_exists( 'Wpfaevent_Templates' ) ) {
 			foreach ( Wpfaevent_Templates::get_active_template_keys() as $key ) {
 				if ( Wpfaevent_Templates::template_uses_pagination( $key ) ) {
