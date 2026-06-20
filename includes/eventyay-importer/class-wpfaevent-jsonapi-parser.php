@@ -453,16 +453,37 @@ class Wpfaevent_JSONAPI_Parser {
 			return '';
 		}
 
-		if ( wp_http_validate_url( $value ) ) {
+		if ( $this->is_valid_http_url( $value ) ) {
 			return esc_url_raw( $value );
 		}
 
 		$base_url = untrailingslashit( esc_url_raw( $base_url ) );
-		if ( ! empty( $base_url ) && wp_http_validate_url( $base_url ) && 0 === strpos( $value, '/' ) ) {
+		if ( ! empty( $base_url ) && $this->is_valid_http_url( $base_url ) && 0 === strpos( $value, '/' ) ) {
 			return esc_url_raw( $base_url . $value );
 		}
 
 		return '';
+	}
+
+	/**
+	 * Helper method to validate if a string is a syntactically valid HTTP/HTTPS URL.
+	 * Unlike wp_http_validate_url, it does not reject local hostnames/IPs.
+	 *
+	 * @param string $url URL to validate.
+	 * @return bool
+	 */
+	public function is_valid_http_url( $url ) {
+		$url = trim( (string) $url );
+		if ( '' === $url ) {
+			return false;
+		}
+
+		$parsed = wp_parse_url( $url );
+		if ( empty( $parsed['scheme'] ) || empty( $parsed['host'] ) ) {
+			return false;
+		}
+
+		return in_array( strtolower( $parsed['scheme'] ), array( 'http', 'https' ), true );
 	}
 
 	/**

@@ -114,7 +114,7 @@ class Wpfaevent_Eventyay_Importer {
 		$base_url = isset( $input['base_url'] ) ? trim( (string) wp_unslash( $input['base_url'] ) ) : '';
 		$base_url = $base_url ? esc_url_raw( $base_url ) : $defaults['base_url'];
 
-		if ( ! wp_http_validate_url( $base_url ) ) {
+		if ( ! $this->parser->is_valid_http_url( $base_url ) ) {
 			add_settings_error(
 				'wpfaevent_eventyay_import',
 				'wpfaevent_eventyay_invalid_base_url',

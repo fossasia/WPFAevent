@@ -86,7 +86,7 @@ class Wpfaevent_Event_Repository {
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_end_date', $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'end' ), $timezone ) );
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_end_time', $this->format_eventyay_time( $this->eventyay_event_datetime( $event, 'end' ), $timezone ) );
 
-		$logo = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'logo_url', 'logo-url', 'logo' ), true ), $settings['base_url'] );
+		$logo = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'logo_image', 'logo_url', 'logo-url', 'logo', 'event_logo_image' ), true ), $settings['base_url'] );
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_logo', $logo );
 
 		$latitude  = $this->parser->eventyay_scalar_value( $this->parser->eventyay_first_present_raw( $event, array( 'latitude', 'lat' ), true ) );
@@ -95,17 +95,31 @@ class Wpfaevent_Event_Repository {
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_longitude', $longitude );
 
 		// Import additional metadata fields.
-		$lead_text = $this->parser->eventyay_text_value( $this->parser->eventyay_first_present_raw( $event, array( 'lead_text', 'lead-text', 'subtitle', 'short_description', 'short-description', 'summary' ), true ) );
+		$lead_text = $this->parser->eventyay_text_value( $this->parser->eventyay_first_present_raw( $event, array( 'lead_text', 'lead-text', 'subtitle', 'frontpage_text', 'frontpage-text', 'short_description', 'short-description', 'summary' ), true ) );
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_lead_text', $lead_text );
 
+		// Set the post excerpt as a fallback source for the hero text on the single-event template.
+		if ( ! empty( $lead_text ) ) {
+			wp_update_post(
+				array(
+					'ID'           => $post_id,
+					'post_excerpt' => $lead_text,
+				)
+			);
+		}
+
 		$reg_link = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'ticket_url', 'ticket-url', 'registration_link', 'registration-link', 'register_link', 'register-link' ), true ), $settings['base_url'] );
+		// Eventyay does not expose a separate ticket URL; fall back to the public event page which IS the registration page.
+		if ( empty( $reg_link ) ) {
+			$reg_link = $this->eventyay_public_event_url( $event, $settings, $event_slug );
+		}
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_registration_link', $reg_link );
 
-		$cfs_link = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'cfs_link', 'cfs-link' ), true ), $settings['base_url'] );
+		$cfs_link = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'cfs_link', 'cfs-link', 'cfp_link', 'cfp-link', 'cfp_url', 'cfp-url', 'speakers_url', 'speakers-url' ), true ), $settings['base_url'] );
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_cfs_link', $cfs_link );
 
 		// Import banner as featured image.
-		$banner_url = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'banner_url', 'banner-url', 'banner', 'logo_url', 'logo-url', 'logo' ), true ), $settings['base_url'] );
+		$banner_url = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'banner_url', 'banner-url', 'banner', 'logo_image', 'event_logo_image', 'logo_image_large', 'logo_url', 'logo-url', 'logo' ), true ), $settings['base_url'] );
 		$this->sideload_event_featured_image( $post_id, $banner_url );
 
 		return array(
@@ -396,7 +410,7 @@ class Wpfaevent_Event_Repository {
 	 */
 	public function sideload_event_featured_image( $post_id, $image_url ) {
 		$image_url = trim( (string) $image_url );
-		if ( ! $image_url || ! wp_http_validate_url( $image_url ) ) {
+		if ( ! $image_url ) {
 			return false;
 		}
 
@@ -406,8 +420,16 @@ class Wpfaevent_Event_Repository {
 			return get_post_thumbnail_id( $post_id );
 		}
 
+		// Temporarily allow local hostnames during validation and download.
+		add_filter( 'http_request_host_is_external', '__return_true' );
+
+		if ( ! $this->parser->is_valid_http_url( $image_url ) || ! wp_http_validate_url( $image_url ) ) {
+			remove_filter( 'http_request_host_is_external', '__return_true' );
+			return false;
+		}
+
 		// Include media framework files if not loaded.
-		if ( ! function_exists( 'download_url' ) ) {
+		if ( ! function_exists( 'media_handle_sideload' ) || ! function_exists( 'download_url' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/image.php';
 			require_once ABSPATH . 'wp-admin/includes/file.php';
 			require_once ABSPATH . 'wp-admin/includes/media.php';
@@ -415,6 +437,10 @@ class Wpfaevent_Event_Repository {
 
 		// Download the remote URL to a temporary file.
 		$tmp_file = download_url( $image_url );
+
+		// Remove the temporary host filter.
+		remove_filter( 'http_request_host_is_external', '__return_true' );
+
 		if ( is_wp_error( $tmp_file ) ) {
 			return false;
 		}
