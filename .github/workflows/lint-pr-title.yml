@@ -2,11 +2,16 @@ name: Lint PR Title
 
 on:
   pull_request:
+    branches: [ main ]
     types:
       - opened
       - edited
       - reopened
       - synchronize
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 
 permissions:
   pull-requests: write
@@ -18,7 +23,7 @@ jobs:
     steps:
       - id: lint_pr_title
         name: Validate PR title
-        uses: amannn/action-semantic-pull-request@v5
+        uses: amannn/action-semantic-pull-request@v6
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -37,42 +42,32 @@ jobs:
             revert
           requireScope: false
 
+      # Post or update the warning comment if linting fails
       - name: Comment on PR if title is invalid
         if: steps.lint_pr_title.outcome == 'failure'
-        uses: peter-evans/create-or-update-comment@v4
+        uses: marocchino/sticky-pull-request-comment@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
+          header: pr-title-lint-error
+          message: |
             Hi @${{ github.event.pull_request.user.login }}, 👋
 
-            It looks like your PR title doesn't quite match our project's **Conventional Commits** specification. To keep our codebase clean, maintainable, and ready for automated changelogs, please update your PR title.
+            It looks like your PR title doesn't quite match our project's **Conventional Commits** specification.
+
+            ### ❌ Error Details
+            ```text
+            ${{ steps.lint_pr_title.outputs.error_message }}
+            ```
 
             ### How to Structure Your PR Title
             `type(optional-scope): short description in lowercase`
             * **Example:** `feat(auth): add google OAuth2 login provider`
-            * **Example:** `fix: resolve memory leak on dashboard unmount`
 
-            ---
+            Simply click **Edit** next to your PR title at the top of this page, update the text to match the rules, and save. This comment will disappear automatically once fixed!
 
-            ### Allowed Types
-            | Type | Purpose |
-            | :--- | :--- |
-            | **feat** | A new feature |
-            | **fix** | A bug fix |
-            | **docs** | Documentation changes only |
-            | **style** | Formatting, missing semi-colons, etc. |
-            | **refactor** | Code changes that neither fix a bug nor add a feature |
-            | **perf** | A code change that improves performance |
-            | **test** | Adding or correcting tests |
-            | **build** | Changes affecting the build system or external dependencies |
-            | **ci** | Changes to CI configuration files and scripts |
-            | **chore** | Other changes that don't modify src or test files |
-            | **revert** | Reverts a previous commit |
-
-            ---
-
-            ### Quick Tips for Success
-            * **Use lowercase:** The prefix (`feat`, `fix`, etc.) must always be lowercase.
-            * **Be concise:** Keep the description short and use the imperative mood (e.g., "add variable" instead of "added" or "adds").
-            * **How to fix:** Simply click **Edit** next to your PR title at the top of this page, update the text to match the rules, and save. The check will re-run automatically.
+      # Automatically clean up and delete the comment if the user fixed the title
+      - name: Delete warning comment if title is valid
+        if: steps.lint_pr_title.outcome == 'success'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-title-lint-error
+          delete: true
