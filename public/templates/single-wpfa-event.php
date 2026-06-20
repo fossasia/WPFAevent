@@ -119,7 +119,7 @@ $header_vars = array(
 							</a>
 						<?php endif; ?>
 
-						<?php if ( ! empty( $event_url ) ) : ?>
+						<?php if ( ! empty( $event_url ) && ( empty( $registration_url ) || $event_url !== $registration_url ) ) : ?>
 							<a class="btn btn-secondary" href="<?php echo esc_url( $event_url ); ?>" target="_blank" rel="noopener">
 								<?php esc_html_e( 'Event Website', 'wpfaevent' ); ?>
 							</a>

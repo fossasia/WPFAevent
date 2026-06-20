@@ -58,6 +58,7 @@ class Wpfaevent_Event_Repository {
 			'post_status'  => $post_status ? $post_status : 'draft',
 			'post_title'   => $this->eventyay_event_title( $event ),
 			'post_content' => $this->eventyay_event_description( $event ),
+			'post_name'    => $event_slug,
 		);
 
 		if ( ! $is_new ) {
@@ -140,14 +141,36 @@ class Wpfaevent_Event_Repository {
 	 * @return int Post ID if found, 0 otherwise.
 	 */
 	public function find_eventyay_event_post( $organizer_slug, $event_slug ) {
+		// First try searching by post_name (slug), which is indexed in wp_posts and extremely fast.
 		$posts = get_posts(
 			array(
-				'post_type'      => 'wpfa_event',
-				'post_status'    => 'any',
-				'posts_per_page' => 1,
-				'fields'         => 'ids',
+				'post_type'              => 'wpfa_event',
+				'post_status'            => 'any',
+				'name'                   => $event_slug,
+				'posts_per_page'         => 1,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+			)
+		);
+
+		if ( ! empty( $posts ) ) {
+			return absint( $posts[0] );
+		}
+
+		// Fallback to meta query for backwards compatibility with older imports.
+		$posts = get_posts(
+			array(
+				'post_type'              => 'wpfa_event',
+				'post_status'            => 'any',
+				'posts_per_page'         => 1,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
 				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-				'meta_query'     => array(
+				'meta_query'             => array(
 					'relation' => 'AND',
 					array(
 						'key'   => '_eventyay_organizer_slug',
