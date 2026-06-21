@@ -19,13 +19,15 @@ $today              = current_time( 'Y-m-d' );
 $is_admin           = current_user_can( 'manage_options' );
 
 // Pull all published event IDs.
-$event_ids = get_posts( array(
-	'post_type'      => 'wpfa_event',
-	'post_status'    => 'publish',
-	'posts_per_page' => -1,
-	'fields'         => 'ids',
-	'no_found_rows'  => true,
-) );
+$event_ids = get_posts(
+	array(
+		'post_type'      => 'wpfa_event',
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'no_found_rows'  => true,
+	)
+);
 
 $upcoming_events = array();
 $past_events     = array();
@@ -36,7 +38,12 @@ foreach ( $event_ids as $eid ) {
 	$is_valid = ! empty( $start );
 
 	if ( ! $is_valid && $is_admin ) {
-		$upcoming_events[] = array( 'id' => (int) $eid, 'start' => '', 'end' => $end, 'is_past' => false );
+		$upcoming_events[] = array(
+			'id'      => (int) $eid,
+			'start'   => '',
+			'end'     => $end,
+			'is_past' => false,
+		);
 		continue;
 	}
 	if ( ! $is_valid ) {
@@ -45,36 +52,54 @@ foreach ( $event_ids as $eid ) {
 
 	$is_upcoming = ( $start >= $today || ( ! empty( $end ) && $end >= $today ) );
 	if ( $is_upcoming ) {
-		$upcoming_events[] = array( 'id' => (int) $eid, 'start' => $start, 'end' => $end, 'is_past' => false );
+		$upcoming_events[] = array(
+			'id'      => (int) $eid,
+			'start'   => $start,
+			'end'     => $end,
+			'is_past' => false,
+		);
 	} else {
-		$past_events[] = array( 'id' => (int) $eid, 'start' => $start, 'end' => $end, 'is_past' => true );
+		$past_events[] = array(
+			'id'      => (int) $eid,
+			'start'   => $start,
+			'end'     => $end,
+			'is_past' => true,
+		);
 	}
 }
 
 // Sort upcoming chronologically ascending.
-usort( $upcoming_events, static function ( $a, $b ) {
-	$c = strcmp( $a['start'], $b['start'] );
-	return 0 !== $c ? $c : ( $a['id'] < $b['id'] ? -1 : 1 );
-} );
+usort(
+	$upcoming_events,
+	static function ( $a, $b ) {
+		$c = strcmp( $a['start'], $b['start'] );
+		return 0 !== $c ? $c : ( $a['id'] < $b['id'] ? -1 : 1 );
+	}
+);
 
 // Sort past chronologically descending (most-recent first).
-usort( $past_events, static function ( $a, $b ) {
-	$da = ! empty( $a['end'] ) ? $a['end'] : $a['start'];
-	$db = ! empty( $b['end'] ) ? $b['end'] : $b['start'];
-	$c  = strcmp( $db, $da );
-	return 0 !== $c ? $c : ( $a['id'] > $b['id'] ? -1 : 1 );
-} );
+usort(
+	$past_events,
+	static function ( $a, $b ) {
+		$da = ! empty( $a['end'] ) ? $a['end'] : $a['start'];
+		$db = ! empty( $b['end'] ) ? $b['end'] : $b['start'];
+		$c  = strcmp( $db, $da );
+		return 0 !== $c ? $c : ( $a['id'] > $b['id'] ? -1 : 1 );
+	}
+);
 
 // Merge all events: upcoming first, then past.
 $all_events   = array_merge( $upcoming_events, $past_events );
 $total_events = count( $all_events );
 
 // Track taxonomy terms for filter dropdown.
-$track_terms = get_terms( array(
-	'taxonomy'   => 'wpfa_event_track',
-	'hide_empty' => false,
-	'orderby'    => 'name',
-) );
+$track_terms = get_terms(
+	array(
+		'taxonomy'   => 'wpfa_event_track',
+		'hide_empty' => false,
+		'orderby'    => 'name',
+	)
+);
 $track_terms = is_wp_error( $track_terms ) ? array() : $track_terms;
 
 // Collect unique locations for filter dropdown.
@@ -166,8 +191,8 @@ $header_vars = array(
 							<label for="filterTrack"><?php esc_html_e( 'TRACK', 'wpfaevent' ); ?></label>
 							<select id="filterTrack" class="filter-select">
 								<option value=""><?php esc_html_e( 'All tracks', 'wpfaevent' ); ?></option>
-								<?php foreach ( $track_terms as $term ) : ?>
-									<option value="<?php echo esc_attr( $term->slug ); ?>"><?php echo esc_html( $term->name ); ?></option>
+								<?php foreach ( $track_terms as $track_term ) : ?>
+									<option value="<?php echo esc_attr( $track_term->slug ); ?>"><?php echo esc_html( $track_term->name ); ?></option>
 								<?php endforeach; ?>
 							</select>
 						</div>
@@ -227,10 +252,11 @@ $header_vars = array(
 
 				<div id="events-container">
 					<?php if ( ! empty( $all_events ) ) : ?>
-						<?php foreach ( $all_events as $event ) :
+						<?php
+						foreach ( $all_events as $event ) :
 							$event_id = $event['id'];
 							$_is_past = $event['is_past'];
-							$post = get_post( $event_id ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+							$post     = get_post( $event_id ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 							setup_postdata( $post );
 
 							include WPFAEVENT_PATH . 'public/partials/events/event-card.php';
