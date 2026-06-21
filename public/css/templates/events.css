@@ -14,7 +14,7 @@
 
 .wpfaevent .events-hub-hero {
 	background: #c0392b;
-	padding: 60px 0;
+	padding: 56px 0 80px; /* extra bottom so filter card overlaps nicely */
 }
 
 .wpfaevent .events-hub-hero-inner {
@@ -30,58 +30,63 @@
 }
 
 .wpfaevent .events-hub-eyebrow {
-	color: rgba(255,255,255,0.85);
-	font-size: 0.8rem;
+	display: block;
+	color: rgba(255,255,255,0.75);
+	font-size: 0.75rem;
 	font-weight: 700;
-	letter-spacing: 0.12em;
+	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	margin: 0 0 14px;
+	margin: 0 0 16px;
 }
 
 .wpfaevent .events-hub-hero h1 {
 	color: #fff;
-	font-size: clamp(1.8rem, 4vw, 3rem);
+	font-size: clamp(1.75rem, 3.5vw, 2.75rem);
 	font-weight: 800;
 	line-height: 1.15;
 	margin: 0 0 16px;
 }
 
 .wpfaevent .events-hub-subtitle {
-	color: rgba(255,255,255,0.85);
-	font-size: 1rem;
+	color: rgba(255,255,255,0.82);
+	font-size: 0.95rem;
 	line-height: 1.65;
 	margin: 0;
-	max-width: 60ch;
+	max-width: 56ch;
 }
 
 .wpfaevent .events-hub-stat-box {
 	flex-shrink: 0;
 	background: rgba(255,255,255,0.15);
+	border: 1px solid rgba(255,255,255,0.25);
 	border-radius: 12px;
-	padding: 28px 36px;
+	padding: 28px 40px;
 	text-align: center;
-	min-width: 160px;
+	min-width: 180px;
 }
 
 .wpfaevent .events-hub-stat-number {
 	display: block;
 	color: #fff;
-	font-size: 3rem;
+	font-size: 3.25rem;
 	font-weight: 900;
 	line-height: 1;
 }
 
 .wpfaevent .events-hub-stat-label {
 	display: block;
-	color: rgba(255,255,255,0.8);
-	font-size: 0.72rem;
+	color: rgba(255,255,255,0.75);
+	font-size: 0.7rem;
 	font-weight: 700;
-	letter-spacing: 0.1em;
+	letter-spacing: 0.12em;
 	text-transform: uppercase;
-	margin-top: 6px;
+	margin-top: 8px;
 }
 
 @media (max-width: 680px) {
+	.wpfaevent .events-hub-hero {
+		padding-bottom: 64px;
+	}
 	.wpfaevent .events-hub-hero-inner {
 		flex-direction: column;
 		align-items: flex-start;
@@ -104,9 +109,9 @@
 .wpfaevent .events-filter-card {
 	background: #fff;
 	border-radius: var(--card-radius);
-	box-shadow: var(--shadow);
+	box-shadow: 0 20px 50px rgba(11,11,11,0.12);
 	padding: 32px;
-	margin-top: -28px;
+	margin-top: -52px;
 	position: relative;
 	z-index: 2;
 }
@@ -337,6 +342,11 @@
 	color: #fff;
 }
 
+.wpfaevent .event-badge--speakers {
+	background: #3d4451;
+	color: #fff;
+}
+
 .wpfaevent .event-badge--warning {
 	background: #ffc107;
 	color: #212529;
@@ -359,11 +369,12 @@
 	color: var(--brand);
 }
 
-/* Meta (date / location) */
+/* Meta (date / location) — red to match reference design */
 .wpfaevent .event-card-meta {
 	margin: 0;
-	color: var(--muted);
+	color: var(--brand);
 	font-size: 0.875rem;
+	font-weight: 600;
 	line-height: 1.5;
 }
 

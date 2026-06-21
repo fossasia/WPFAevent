@@ -63,8 +63,16 @@ if ( ! empty( $calendar_data['date_label'] ) ) {
 $event_tracks = get_the_terms( $event_id, 'wpfa_event_track' );
 $track_slugs  = ( ! is_wp_error( $event_tracks ) && $event_tracks ) ? implode( ',', wp_list_pluck( $event_tracks, 'slug' ) ) : '';
 
-$is_admin    = current_user_can( 'manage_options' );
-$event_url   = esc_url( get_permalink( $event_id ) );
+// Speaker count via stored relationship meta.
+$speaker_ids   = (array) get_post_meta( $event_id, 'wpfa_event_speakers', true );
+$speaker_ids   = array_filter( $speaker_ids );
+$speaker_count = count( $speaker_ids );
+
+$is_admin  = current_user_can( 'manage_options' );
+$event_url = esc_url( get_permalink( $event_id ) );
+
+// Speakers page URL — link to /speakers/ filtered by event post ID.
+$speakers_url = esc_url( add_query_arg( 'event_id', $event_id, home_url( '/speakers/' ) ) );
 ?>
 
 <div class="event-card"
@@ -122,6 +130,14 @@ $event_url   = esc_url( get_permalink( $event_id ) );
 			<span class="event-badge event-badge--<?php echo $is_past_event ? 'past' : 'upcoming'; ?>">
 				<?php echo $is_past_event ? esc_html__( 'Past', 'wpfaevent' ) : esc_html__( 'Upcoming', 'wpfaevent' ); ?>
 			</span>
+			<?php if ( $speaker_count > 0 ) : ?>
+				<span class="event-badge event-badge--speakers">
+					<?php echo esc_html(
+						/* translators: %d: number of speakers */
+						sprintf( _n( '%d speaker', '%d speakers', $speaker_count, 'wpfaevent' ), $speaker_count )
+					); ?>
+				</span>
+			<?php endif; ?>
 			<?php if ( $is_admin && ! $is_valid_date ) : ?>
 				<span class="event-badge event-badge--warning"><?php esc_html_e( 'No date', 'wpfaevent' ); ?></span>
 			<?php endif; ?>
@@ -134,7 +150,7 @@ $event_url   = esc_url( get_permalink( $event_id ) );
 		<p class="event-card-meta">
 			<span class="event-card-meta-date"><?php echo esc_html( $formatted_date ); ?></span>
 			<?php if ( ! empty( $event_place ) ) : ?>
-				<span class="event-card-meta-sep" aria-hidden="true"> &nbsp; </span>
+				<span class="event-card-meta-sep" aria-hidden="true">  </span>
 				<span class="event-card-meta-place"><?php echo esc_html( $event_place ); ?></span>
 			<?php endif; ?>
 		</p>
@@ -146,5 +162,8 @@ $event_url   = esc_url( get_permalink( $event_id ) );
 
 	<div class="event-card-cta">
 		<a href="<?php echo $event_url; ?>" class="btn btn-primary btn-sm"><?php esc_html_e( 'View Event', 'wpfaevent' ); ?></a>
+		<?php if ( $speaker_count > 0 ) : ?>
+			<a href="<?php echo $speakers_url; ?>" class="btn btn-outline-primary btn-sm"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></a>
+		<?php endif; ?>
 	</div>
 </div>
