@@ -395,10 +395,21 @@
 	flex-shrink: 0;
 	display: flex;
 	flex-direction: column;
-	align-items: flex-end;
+	align-items: stretch;
 	justify-content: center;
 	gap: 10px;
-	padding: 20px 24px 20px 0;
+	padding: 20px 24px;
+	border-left: 1px solid #f0f0f0;
+	min-width: 140px;
+}
+
+.wpfaevent .event-card-cta .btn {
+	border-radius: 6px;
+	font-size: 0.875rem;
+	font-weight: 700;
+	padding: 9px 16px;
+	text-align: center;
+	white-space: nowrap;
 }
 
 /* Admin bar (replaces old absolute-positioned actions) */
