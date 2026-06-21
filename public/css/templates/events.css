@@ -285,23 +285,28 @@
 /* Thumbnail */
 .wpfaevent .event-card-thumb {
 	flex-shrink: 0;
-	width: 200px;
+	width: 220px;
+	min-height: 200px;
 	background: #e8eaed;
 	display: block;
 	overflow: hidden;
 	text-decoration: none;
 }
 
-.wpfaevent .event-card-thumb img,
-.wpfaevent .event-card-thumb-placeholder {
+.wpfaevent .event-card-thumb img {
 	width: 100%;
 	height: 100%;
+	min-height: 200px;
 	object-fit: cover;
 	display: block;
 }
 
 .wpfaevent .event-card-thumb-placeholder {
+	width: 100%;
+	height: 100%;
+	min-height: 200px;
 	background: linear-gradient(135deg, #e8eaed 0%, #d0d3d8 100%);
+	display: block;
 }
 
 /* Body */
@@ -410,61 +415,6 @@
 	padding: 9px 16px;
 	text-align: center;
 	white-space: nowrap;
-}
-
-/* Admin bar (replaces old absolute-positioned actions) */
-.wpfaevent .event-card-admin-bar {
-	position: absolute;
-	top: 8px;
-	right: 8px;
-	z-index: 5;
-	display: flex;
-	gap: 5px;
-	flex-wrap: wrap;
-}
-
-.wpfaevent .event-card-admin-bar button,
-.wpfaevent .event-card-admin-bar .btn-edit-content {
-	background: rgba(0,0,0,0.65);
-	color: #fff !important;
-	border: none;
-	border-radius: 4px;
-	padding: 4px 8px;
-	font-size: 11px;
-	cursor: pointer;
-	text-decoration: none;
-	font-weight: 600;
-	display: inline-block;
-}
-
-.wpfaevent .event-card-admin-bar button:hover,
-.wpfaevent .event-card-admin-bar .btn-edit-content:hover {
-	background: rgba(0,0,0,0.85);
-}
-
-.wpfaevent .event-card-admin-bar .btn-edit-event {
-	background: #17a2b8;
-}
-
-.wpfaevent .event-card-admin-bar .btn-edit-event:hover {
-	background: #138496;
-}
-
-.wpfaevent .event-card-admin-bar .btn-edit-content {
-	background: #ffc107;
-	color: #212529 !important;
-}
-
-.wpfaevent .event-card-admin-bar .btn-edit-content:hover {
-	background: #e0a800;
-}
-
-.wpfaevent .event-card-admin-bar .btn-delete-event {
-	background: #dc3545;
-}
-
-.wpfaevent .event-card-admin-bar .btn-delete-event:hover {
-	background: #c82333;
 }
 
 /* Responsive card */

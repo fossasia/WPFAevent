@@ -93,29 +93,6 @@ $speakers_url = esc_url( add_query_arg( 'event_id', $event_id, home_url( '/speak
 	data-all-day="<?php echo esc_attr( $event_all_day ? '1' : '0' ); ?>"
 	data-time="<?php echo esc_attr( $event_time_value ); ?>">
 
-	<?php if ( $is_admin ) : ?>
-		<div class="event-card-admin-bar">
-			<button class="btn-edit-event"
-				data-post-id="<?php echo esc_attr( $event_id ); ?>"
-				data-name="<?php echo esc_attr( get_the_title( $event_id ) ); ?>"
-				data-date="<?php echo esc_attr( $event_date ); ?>"
-				data-end-date="<?php echo esc_attr( $event_end_date ); ?>"
-				data-place="<?php echo esc_attr( $event_place ); ?>"
-				data-description="<?php echo esc_attr( $event_description ); ?>"
-				data-lead-text="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_lead_text', true ) ); ?>"
-				data-registration-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_registration_link', true ) ); ?>"
-				data-cfs-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_cfs_link', true ) ); ?>"
-				data-start-time="<?php echo esc_attr( $event_time_value ); ?>"
-				data-end-time="<?php echo esc_attr( $event_end_time ); ?>"
-				data-timezone="<?php echo esc_attr( $event_timezone ); ?>"
-				data-all-day="<?php echo esc_attr( $event_all_day ? '1' : '0' ); ?>"
-				data-time="<?php echo esc_attr( $event_time_value ); ?>">
-				<?php esc_html_e( 'Edit Details', 'wpfaevent' ); ?>
-			</button>
-			<a href="<?php echo esc_url( admin_url( 'post.php?post=' . $event_id . '&action=edit' ) ); ?>" class="btn-edit-content"><?php esc_html_e( 'Edit Content', 'wpfaevent' ); ?></a>
-			<button class="btn-delete-event"><?php esc_html_e( 'Delete', 'wpfaevent' ); ?></button>
-		</div>
-	<?php endif; ?>
 
 	<a href="<?php echo $event_url; ?>" class="event-card-thumb" tabindex="-1" aria-hidden="true">
 		<?php if ( $featured_img_url ) : ?>
