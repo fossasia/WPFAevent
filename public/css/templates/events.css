@@ -13,8 +13,7 @@
    ============================================================ */
 
 .wpfaevent .events-hub-hero {
-	background: #fff;
-	border-bottom: 1px solid #e8eaed;
+	background: var(--brand, #c0392b);
 	padding: 56px 0 80px; /* extra bottom so filter card overlaps nicely */
 }
 
@@ -33,7 +32,7 @@
 
 .wpfaevent .events-hub-eyebrow {
 	display: block;
-	color: var(--brand, #c0392b);
+	color: rgba(255, 255, 255, 0.8);
 	font-size: 0.75rem;
 	font-weight: 700;
 	letter-spacing: 0.14em;
@@ -42,7 +41,7 @@
 }
 
 .wpfaevent .events-hub-hero h1 {
-	color: #1a1a2e;
+	color: #fff;
 	font-size: clamp(1.75rem, 3.5vw, 2.75rem);
 	font-weight: 800;
 	line-height: 1.15;
@@ -50,23 +49,25 @@
 }
 
 .wpfaevent .events-hub-subtitle {
-	color: #5b636a;
+	color: rgba(255, 255, 255, 0.85);
 	font-size: 0.95rem;
 	line-height: 1.65;
 	margin: 0;
 }
 
 .wpfaevent .events-hub-stat-box {
-	background: #fff7f7;
-	border: 2px solid var(--brand, #c0392b);
+	flex-shrink: 0;
+	background: rgba(255, 255, 255, 0.15);
+	border: 1px solid rgba(255, 255, 255, 0.3);
 	border-radius: 12px;
-	padding: 20px 48px;
+	padding: 28px 48px;
 	text-align: center;
+	min-width: 180px;
 }
 
 .wpfaevent .events-hub-stat-number {
 	display: block;
-	color: var(--brand, #c0392b);
+	color: #fff;
 	font-size: 3.25rem;
 	font-weight: 900;
 	line-height: 1;
@@ -74,7 +75,7 @@
 
 .wpfaevent .events-hub-stat-label {
 	display: block;
-	color: #5b636a;
+	color: rgba(255, 255, 255, 0.8);
 	font-size: 0.7rem;
 	font-weight: 700;
 	letter-spacing: 0.12em;
