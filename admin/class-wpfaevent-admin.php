@@ -222,6 +222,30 @@ class Wpfaevent_Admin {
 	}
 
 	/**
+	 * Append a speaker count bubble to the Speakers admin menu item.
+	 *
+	 * @since 1.0.0
+	 */
+	public function update_speaker_menu_count() {
+		global $menu;
+
+		$counts = wp_count_posts( 'wpfa_speaker' );
+		$total  = isset( $counts->publish ) ? (int) $counts->publish : 0;
+
+		if ( $total <= 0 ) {
+			return;
+		}
+
+		foreach ( $menu as $key => $item ) {
+			if ( isset( $item[2] ) && 'edit.php?post_type=wpfa_speaker' === $item[2] ) {
+				/* translators: %s: number of speakers. */
+				$menu[ $key ][0] .= ' <span class="update-plugins count-' . $total . '"><span class="plugin-count">' . number_format_i18n( $total ) . '</span></span>'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+				break;
+			}
+		}
+	}
+
+	/**
 	 * Render the settings page placeholder.
 	 *
 	 * @since    1.0.0
