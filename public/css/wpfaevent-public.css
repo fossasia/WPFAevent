@@ -263,6 +263,22 @@
 	box-shadow: 0 8px 25px rgba(213, 16, 7, 0.2);
 }
 
+.wpfaevent .btn-outline-primary {
+	background: transparent;
+	color: var(--brand);
+	border-color: var(--brand);
+}
+
+.wpfaevent .btn-outline-primary:hover {
+	background: var(--brand);
+	color: #fff;
+}
+
+.wpfaevent .btn-sm {
+	padding: 6px 18px;
+	font-size: 0.875rem;
+}
+
 /* Responsive Footer */
 @media (max-width: 768px) {
 	.wpfaevent .footer .container {
