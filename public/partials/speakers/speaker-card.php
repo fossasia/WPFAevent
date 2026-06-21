@@ -40,7 +40,9 @@ if ( empty( $sid ) || ! is_numeric( $sid ) ) {
 
 $sid = (int) $sid;
 
-$name         = get_the_title( $sid );
+$name = get_the_title( $sid );
+/* translators: %s: Speaker name. */
+$photo_alt    = sprintf( __( 'Photo of %s', 'wpfaevent' ), $name );
 $org          = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
 $position     = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
 $photo_url    = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
@@ -67,10 +69,7 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
 		<?php if ( $photo_url ) : ?>
 			<img src="<?php echo esc_url( $photo_url ); ?>"
-				alt="<?php
-				/* translators: %s: Speaker name. */
-				echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $name ) );
-				?>"
+				alt="<?php echo esc_attr( $photo_alt ); ?>"
 				loading="lazy"
 				itemprop="image"
 				onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />

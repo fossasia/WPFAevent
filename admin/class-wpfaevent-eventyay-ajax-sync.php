@@ -1028,8 +1028,9 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			return new WP_Error( 'invalid_event_id', __( 'Invalid event ID.', 'wpfaevent' ) );
 		}
 
-		$base_url = ! empty( $settings['base_url'] ) ? $settings['base_url'] : 'https://api.eventyay.com';
-		$api_url  = trailingslashit( $base_url ) . 'v1/events/' . $event_slug . '/sessions?include=speakers,track&page[size]=200';
+		$base_url       = ! empty( $settings['base_url'] ) ? $settings['base_url'] : 'https://api.eventyay.com';
+		$organizer_slug = ! empty( $settings['organizer_slug'] ) ? $settings['organizer_slug'] : '';
+		$api_url        = trailingslashit( $base_url ) . 'v1/organizers/' . $organizer_slug . '/events/' . $event_slug . '/sessions?include=speakers,track&page[size]=200';
 
 		$api_url = $this->prepare_eventyay_sync_url( $api_url );
 		if ( is_wp_error( $api_url ) ) {
