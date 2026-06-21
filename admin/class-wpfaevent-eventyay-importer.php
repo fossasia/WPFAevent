@@ -152,6 +152,14 @@ class Wpfaevent_Eventyay_Importer {
 		}
 		$settings['post_status'] = $post_status;
 
+		$settings['auto_sync_enabled'] = ! empty( $input['auto_sync_enabled'] );
+
+		$auto_sync_interval = isset( $input['auto_sync_interval'] ) ? sanitize_key( wp_unslash( $input['auto_sync_interval'] ) ) : $defaults['auto_sync_interval'];
+		if ( ! in_array( $auto_sync_interval, array( 'hourly', 'twicedaily', 'daily' ), true ) ) {
+			$auto_sync_interval = $defaults['auto_sync_interval'];
+		}
+		$settings['auto_sync_interval'] = $auto_sync_interval;
+
 		return $settings;
 	}
 

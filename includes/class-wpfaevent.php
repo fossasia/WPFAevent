@@ -147,6 +147,9 @@ class Wpfaevent {
 		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-event-handler.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-speakers-handler.php';
 
+		// Cron scheduler for auto-sync.
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-cron-scheduler.php';
+
 		// Optional utilities if present.
 		if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php' ) ) {
 			require_once plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php';
@@ -254,6 +257,12 @@ class Wpfaevent {
 
 		// Register AJAX handler for dashboard JSON:API sync.
 		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $this->plugin_admin, 'ajax_sync_eventyay' );
+
+		// Scheduled auto-sync cron callback.
+		$this->loader->add_action( Wpfaevent_Cron_Scheduler::HOOK, 'Wpfaevent_Cron_Scheduler', 'run' );
+
+		// Re-schedule when import settings are saved.
+		$this->loader->add_action( 'update_option_wpfaevent_eventyay_import_settings', 'Wpfaevent_Cron_Scheduler', 'handle_settings_update', 10, 2 );
 	}
 
 	/**

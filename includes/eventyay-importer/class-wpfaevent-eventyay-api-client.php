@@ -696,10 +696,12 @@ class Wpfaevent_Eventyay_API_Client {
 	 */
 	public function get_eventyay_import_default_settings() {
 		return array(
-			'base_url'       => 'https://eventyay.com',
-			'organizer_slug' => '',
-			'api_token'      => '',
-			'post_status'    => 'draft',
+			'base_url'          => 'https://eventyay.com',
+			'organizer_slug'    => '',
+			'api_token'         => '',
+			'post_status'       => 'draft',
+			'auto_sync_enabled' => false,
+			'auto_sync_interval' => 'daily',
 		);
 	}
 
