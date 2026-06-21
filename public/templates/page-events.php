@@ -203,11 +203,6 @@ $header_vars = array(
 							<button class="date-filter-btn" data-filter="upcoming"><?php esc_html_e( 'Upcoming', 'wpfaevent' ); ?></button>
 							<button class="date-filter-btn" data-filter="past"><?php esc_html_e( 'Past', 'wpfaevent' ); ?></button>
 						</div>
-						<?php if ( $is_admin ) : ?>
-							<button id="createEventBtn" class="btn btn-secondary btn-sm">
-								<?php esc_html_e( 'Create Custom Event', 'wpfaevent' ); ?>
-							</button>
-						<?php endif; ?>
 						<button id="searchEventsBtn" class="btn btn-primary">
 							<?php esc_html_e( 'Search Events', 'wpfaevent' ); ?>
 						</button>
