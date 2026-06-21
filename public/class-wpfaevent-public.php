@@ -291,6 +291,14 @@ class Wpfaevent_Public {
 			'all'
 		);
 
+		wp_register_style(
+			$this->plugin_name . '-single-event',
+			WPFAEVENT_URL . 'public/css/templates/single-event.css',
+			array( $this->plugin_name, $this->plugin_name . '-navigation' ),
+			$this->version,
+			'all'
+		);
+
 		wp_register_script(
 			$this->plugin_name . '-speakers',
 			plugin_dir_url( __FILE__ ) . 'js/wpfaevent-speakers.js',
@@ -445,7 +453,7 @@ class Wpfaevent_Public {
 		}
 
 		if ( is_singular( 'wpfa_event' ) ) {
-			wp_enqueue_style( $this->plugin_name . '-events' );
+			wp_enqueue_style( $this->plugin_name . '-single-event' );
 		}
 
 		/**
