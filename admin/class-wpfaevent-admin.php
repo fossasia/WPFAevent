@@ -515,6 +515,18 @@ class Wpfaevent_Admin {
 			'high'
 		);
 
+		// Eventyay sync meta box on event edit screen (visible to importers only).
+		if ( Wpfaevent_Roles::current_user_can_import_eventyay() ) {
+			add_meta_box(
+				'wpfa_eventyay_sync',
+				__( 'Eventyay Speaker Sync', 'wpfaevent' ),
+				array( $this, 'render_eventyay_sync_meta_box' ),
+				'wpfa_event',
+				'side',
+				'default'
+			);
+		}
+
 		// Speaker meta boxes.
 		add_meta_box(
 			'wpfa_speaker_details',
@@ -650,6 +662,86 @@ class Wpfaevent_Admin {
 				</td>
 			</tr>
 		</table>
+		<?php
+	}
+
+	/**
+	 * Render the Eventyay speaker sync meta box on the event edit screen.
+	 *
+	 * @since 1.0.0
+	 * @param WP_Post $post The post object.
+	 */
+	public function render_eventyay_sync_meta_box( $post ) {
+		$eventyay_id = get_post_meta( $post->ID, '_eventyay_event_slug', true );
+		$synced_at   = get_post_meta( $post->ID, '_wpfa_eventyay_speakers_synced_at', true );
+		?>
+		<p class="description" style="margin-bottom:10px;">
+			<?php esc_html_e( 'Re-sync speakers and sessions for this event from the Eventyay API.', 'wpfaevent' ); ?>
+		</p>
+		<?php if ( $eventyay_id ) : ?>
+			<p style="margin-bottom:10px;">
+				<strong><?php esc_html_e( 'Eventyay slug:', 'wpfaevent' ); ?></strong>
+				<?php echo esc_html( $eventyay_id ); ?>
+			</p>
+		<?php endif; ?>
+		<?php if ( $synced_at ) : ?>
+			<p class="description" style="margin-bottom:10px;">
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: %s: human-readable time difference */
+						__( 'Last synced %s ago.', 'wpfaevent' ),
+						human_time_diff( absint( $synced_at ) )
+					)
+				);
+				?>
+			</p>
+		<?php endif; ?>
+		<button type="button" id="wpfa-eventyay-sync-btn" class="button button-secondary" data-event-id="<?php echo esc_attr( $post->ID ); ?>" style="width:100%;">
+			<?php esc_html_e( 'Sync Speakers from Eventyay', 'wpfaevent' ); ?>
+		</button>
+		<p id="wpfa-eventyay-sync-status" style="margin-top:8px;font-weight:bold;display:none;"></p>
+		<script>
+		(function() {
+			var btn = document.getElementById('wpfa-eventyay-sync-btn');
+			var status = document.getElementById('wpfa-eventyay-sync-status');
+			if (!btn) return;
+			btn.addEventListener('click', function() {
+				btn.disabled = true;
+				btn.textContent = <?php echo wp_json_encode( __( 'Syncing…', 'wpfaevent' ) ); ?>;
+				status.style.display = 'none';
+				var data = new FormData();
+				data.append('action', 'fossasia_sync_eventyay');
+				data.append('nonce', <?php echo wp_json_encode( wp_create_nonce( 'fossasia_admin_nonce' ) ); ?>);
+				data.append('event_id', btn.dataset.eventId);
+				fetch(<?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>, { method: 'POST', body: data })
+					.then(function(r) { return r.json(); })
+					.then(function(r) {
+						status.style.display = 'block';
+						if (r.success) {
+							status.style.color = '#00a32a';
+							var d = r.data || {};
+							status.textContent = d.message || <?php echo wp_json_encode( __( 'Sync complete.', 'wpfaevent' ) ); ?>;
+							<?php if ( $synced_at ) : ?>
+							document.querySelector('.description[style*="Last synced"]') && (document.querySelector('.description[style*="Last synced"]').textContent = <?php echo wp_json_encode( __( 'Last synced just now.', 'wpfaevent' ) ); ?>);
+							<?php endif; ?>
+						} else {
+							status.style.color = '#d63638';
+							status.textContent = (r.data && r.data.message) || <?php echo wp_json_encode( __( 'Sync failed.', 'wpfaevent' ) ); ?>;
+						}
+					})
+					.catch(function() {
+						status.style.display = 'block';
+						status.style.color = '#d63638';
+						status.textContent = <?php echo wp_json_encode( __( 'Network error.', 'wpfaevent' ) ); ?>;
+					})
+					.finally(function() {
+						btn.disabled = false;
+						btn.textContent = <?php echo wp_json_encode( __( 'Sync Speakers from Eventyay', 'wpfaevent' ) ); ?>;
+					});
+			});
+		}());
+		</script>
 		<?php
 	}
 

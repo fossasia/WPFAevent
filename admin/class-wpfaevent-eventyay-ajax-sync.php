@@ -191,6 +191,18 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			}
 		}
 
+		// Fall back to building the URL from the event's Eventyay slug and saved import settings.
+		if ( empty( $api_url ) && $event_id ) {
+			$event_slug      = get_post_meta( absint( $event_id ), '_eventyay_event_slug', true );
+			$import_settings = get_option( 'wpfaevent_eventyay_import_settings', array() );
+			$base_url        = ! empty( $import_settings['base_url'] ) ? $import_settings['base_url'] : '';
+			$organizer_slug  = ! empty( $import_settings['organizer_slug'] ) ? $import_settings['organizer_slug'] : '';
+
+			if ( $event_slug && $base_url && $organizer_slug ) {
+				$api_url = trailingslashit( $base_url ) . 'api/v1/organizers/' . rawurlencode( $organizer_slug ) . '/events/' . rawurlencode( $event_slug ) . '/sessions?include=speakers,track&page[size]=200';
+			}
+		}
+
 		/**
 		 * Filters the Eventyay Open API URL used by dashboard sync.
 		 *
@@ -1030,7 +1042,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 
 		$base_url       = ! empty( $settings['base_url'] ) ? $settings['base_url'] : 'https://api.eventyay.com';
 		$organizer_slug = ! empty( $settings['organizer_slug'] ) ? $settings['organizer_slug'] : '';
-		$api_url        = trailingslashit( $base_url ) . 'v1/organizers/' . $organizer_slug . '/events/' . $event_slug . '/sessions?include=speakers,track&page[size]=200';
+		$api_url        = trailingslashit( $base_url ) . 'api/v1/organizers/' . $organizer_slug . '/events/' . $event_slug . '/sessions?include=speakers,track&page[size]=200';
 
 		$api_url = $this->prepare_eventyay_sync_url( $api_url );
 		if ( is_wp_error( $api_url ) ) {
@@ -1058,6 +1070,8 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 		}
 
 		$this->sync_eventyay_speaker_posts( $import['speakers'], $event_id );
+
+		update_post_meta( $event_id, '_wpfa_eventyay_speakers_synced_at', time() );
 
 		return true;
 	}
