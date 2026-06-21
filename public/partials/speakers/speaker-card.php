@@ -65,16 +65,14 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 ?>
 <article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( $sid ); ?>">
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
-		<?php if ( $photo_url ) : ?>
-			<?php /* translators: %s: Speaker name. */ ?>
-			<img src="<?php echo esc_url( $photo_url ); ?>"
-				alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $name ) ); ?>"
-				loading="lazy"
-				itemprop="image"
-				onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-			<span class="wpfa-speaker-placeholder" style="display:none;" aria-hidden="true"></span>
+			<?php if ( $photo_url ) : ?>
+				<?php /* translators: %s: Speaker name. */ ?>
+				<img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $name ) ); ?>" loading="lazy" itemprop="image" />
 		<?php else : ?>
-			<span class="wpfa-speaker-placeholder" aria-hidden="true"></span>
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" class="wpfa-placeholder-svg">
+				<rect width="100%" height="100%" fill="#eee" />
+				<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#999">Speaker</text>
+			</svg>
 		<?php endif; ?>
 	</a>
 	<div class="wpfa-speaker-meta">
