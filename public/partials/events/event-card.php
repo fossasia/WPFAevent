@@ -35,8 +35,9 @@ $event_timezone    = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Eve
 $event_all_day     = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_all_day( $event_id ) : false;
 $event_place       = get_post_meta( $event_id, 'wpfa_event_location', true );
 $event_description = get_the_excerpt( $event_id );
-$featured_img_url  = get_the_post_thumbnail_url( $event_id, 'large' ) ?: '';
-$event_time_value  = $event_start_time ?: $event_legacy_time;
+$featured_img_url  = get_the_post_thumbnail_url( $event_id, 'large' );
+$featured_img_url  = $featured_img_url ? $featured_img_url : '';
+$event_time_value  = $event_start_time ? $event_start_time : $event_legacy_time;
 
 $calendar_data = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_calendar_data( $event_id ) : array();
 $calendar_data = is_wp_error( $calendar_data ) ? array() : $calendar_data;
@@ -94,7 +95,7 @@ $speakers_url = esc_url( add_query_arg( 'event_id', $event_id, home_url( '/speak
 	data-time="<?php echo esc_attr( $event_time_value ); ?>">
 
 
-	<a href="<?php echo $event_url; ?>" class="event-card-thumb" tabindex="-1" aria-hidden="true">
+	<a href="<?php echo esc_url( $event_url ); ?>" class="event-card-thumb" tabindex="-1" aria-hidden="true">
 		<?php if ( $featured_img_url ) : ?>
 			<img src="<?php echo esc_url( $featured_img_url ); ?>" alt="<?php echo esc_attr( get_the_title( $event_id ) ); ?>" loading="lazy">
 		<?php else : ?>
@@ -109,10 +110,10 @@ $speakers_url = esc_url( add_query_arg( 'event_id', $event_id, home_url( '/speak
 			</span>
 			<?php if ( $speaker_count > 0 ) : ?>
 				<span class="event-badge event-badge--speakers">
-					<?php echo esc_html(
-						/* translators: %d: number of speakers */
-						sprintf( _n( '%d speaker', '%d speakers', $speaker_count, 'wpfaevent' ), $speaker_count )
-					); ?>
+					<?php
+					/* translators: %d: number of speakers */
+					echo esc_html( sprintf( _n( '%d speaker', '%d speakers', $speaker_count, 'wpfaevent' ), $speaker_count ) );
+					?>
 				</span>
 			<?php endif; ?>
 			<?php if ( $is_admin && ! $is_valid_date ) : ?>
@@ -121,7 +122,7 @@ $speakers_url = esc_url( add_query_arg( 'event_id', $event_id, home_url( '/speak
 		</div>
 
 		<h3 class="event-card-title">
-			<a href="<?php echo $event_url; ?>"><?php echo esc_html( get_the_title( $event_id ) ); ?></a>
+			<a href="<?php echo esc_url( $event_url ); ?>"><?php echo esc_html( get_the_title( $event_id ) ); ?></a>
 		</h3>
 
 		<p class="event-card-meta">
@@ -138,9 +139,9 @@ $speakers_url = esc_url( add_query_arg( 'event_id', $event_id, home_url( '/speak
 	</div>
 
 	<div class="event-card-cta">
-		<a href="<?php echo $event_url; ?>" class="btn btn-primary btn-sm"><?php esc_html_e( 'View Event', 'wpfaevent' ); ?></a>
+		<a href="<?php echo esc_url( $event_url ); ?>" class="btn btn-primary btn-sm"><?php esc_html_e( 'View Event', 'wpfaevent' ); ?></a>
 		<?php if ( $speaker_count > 0 ) : ?>
-			<a href="<?php echo $speakers_url; ?>" class="btn btn-outline-primary btn-sm"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></a>
+			<a href="<?php echo esc_url( $speakers_url ); ?>" class="btn btn-outline-primary btn-sm"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></a>
 		<?php endif; ?>
 	</div>
 </div>
