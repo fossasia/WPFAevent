@@ -438,8 +438,8 @@ class Wpfaevent_Public {
 			wp_enqueue_style( $this->plugin_name . '-past-events' );
 		}
 
-		// Events template.
-		if ( $this->is_wpfa_template_file_active( 'page-events.php' ) ) {
+		// Events template (page template or CPT archive).
+		if ( $this->is_wpfa_template_file_active( 'page-events.php' ) || is_post_type_archive( 'wpfa_event' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-events' );
 			wp_enqueue_script( $this->plugin_name . '-events' );
 		}
