@@ -13,25 +13,26 @@
    ============================================================ */
 
 .wpfaevent .events-hub-hero {
-	background: #c0392b;
+	background: #fff;
+	border-bottom: 1px solid #e8eaed;
 	padding: 56px 0 80px; /* extra bottom so filter card overlaps nicely */
 }
 
 .wpfaevent .events-hub-hero-inner {
 	display: flex;
+	flex-direction: column;
 	align-items: center;
-	justify-content: space-between;
-	gap: 40px;
+	gap: 32px;
+	text-align: center;
 }
 
 .wpfaevent .events-hub-hero-text {
-	flex: 1 1 0;
-	min-width: 0;
+	max-width: 680px;
 }
 
 .wpfaevent .events-hub-eyebrow {
 	display: block;
-	color: rgba(255,255,255,0.75);
+	color: var(--brand, #c0392b);
 	font-size: 0.75rem;
 	font-weight: 700;
 	letter-spacing: 0.14em;
@@ -40,7 +41,7 @@
 }
 
 .wpfaevent .events-hub-hero h1 {
-	color: #fff;
+	color: #1a1a2e;
 	font-size: clamp(1.75rem, 3.5vw, 2.75rem);
 	font-weight: 800;
 	line-height: 1.15;
@@ -48,26 +49,23 @@
 }
 
 .wpfaevent .events-hub-subtitle {
-	color: rgba(255,255,255,0.82);
+	color: #5b636a;
 	font-size: 0.95rem;
 	line-height: 1.65;
 	margin: 0;
-	max-width: 56ch;
 }
 
 .wpfaevent .events-hub-stat-box {
-	flex-shrink: 0;
-	background: rgba(255,255,255,0.15);
-	border: 1px solid rgba(255,255,255,0.25);
+	background: #fff7f7;
+	border: 2px solid var(--brand, #c0392b);
 	border-radius: 12px;
-	padding: 28px 40px;
+	padding: 20px 48px;
 	text-align: center;
-	min-width: 180px;
 }
 
 .wpfaevent .events-hub-stat-number {
 	display: block;
-	color: #fff;
+	color: var(--brand, #c0392b);
 	font-size: 3.25rem;
 	font-weight: 900;
 	line-height: 1;
@@ -75,7 +73,7 @@
 
 .wpfaevent .events-hub-stat-label {
 	display: block;
-	color: rgba(255,255,255,0.75);
+	color: #5b636a;
 	font-size: 0.7rem;
 	font-weight: 700;
 	letter-spacing: 0.12em;
@@ -87,12 +85,7 @@
 	.wpfaevent .events-hub-hero {
 		padding-bottom: 64px;
 	}
-	.wpfaevent .events-hub-hero-inner {
-		flex-direction: column;
-		align-items: flex-start;
-	}
 	.wpfaevent .events-hub-stat-box {
-		min-width: 0;
 		width: 100%;
 	}
 }
@@ -723,22 +716,35 @@
 	min-height: 42px;
 }
 
+.wpfaevent .wpfa-single-event-hero {
+	background: #fff;
+	border-bottom: 1px solid #e8eaed;
+	padding: 60px 0;
+	text-align: center;
+}
+
 .wpfaevent .wpfa-single-event-hero .container {
 	position: relative;
 	z-index: 1;
+	max-width: 800px;
 }
 
 .wpfaevent .wpfa-single-event-hero h1 {
+	color: #1a1a2e;
 	font-size: clamp(2.5rem, 5vw, 4.75rem);
 	font-weight: 800;
 	letter-spacing: 0;
 	line-height: 1;
+	margin-bottom: 16px;
 }
 
 .wpfaevent .wpfa-single-event-hero p {
+	color: #5b636a;
 	font-size: 1.1rem;
 	font-weight: 400;
 	line-height: 1.65;
+	margin: 0 auto 0;
+	max-width: 60ch;
 }
 
 .wpfaevent .wpfa-single-event-actions {
