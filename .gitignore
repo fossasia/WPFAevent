@@ -1,6 +1,5 @@
 # Node/Composer caches (in case added later)
 node_modules/
-package-lock.json
 
 # OS/editor junk
 .DS_Store

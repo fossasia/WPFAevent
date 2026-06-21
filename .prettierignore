@@ -1,0 +1,5 @@
+node_modules
+vendor
+build
+assets/dist
+*.min.js

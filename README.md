@@ -1,7 +1,8 @@
 # WordPress FOSSASIA Event Plugin (WPFAevent)
 
-The **FOSSASIA Event Plugin** provides WordPress integrations for [Eventyay](https://eventyay.com)-based events.
-It lets you display event landing pages, speakers, events, past events, schedules, and code of conduct content using classic page templates, Gutenberg blocks, or shortcodes. Shortcodes and blocks use embedded template rendering so WPFA content can live inside existing theme pages without the standalone template header/footer.
+![Node version](https://img.shields.io/badge/node-%3E%3D24-brightgreen)
+
+The **FOSSASIA Event Plugin** provides WordPress integrations for [Eventyay](https://eventyay.com)-based events. It lets you display event landing pages, speakers, events, past events, schedules, and code of conduct content using classic page templates, Gutenberg blocks, or shortcodes. Shortcodes and blocks use embedded template rendering so WPFA content can live inside existing theme pages without the standalone template header/footer.
 
 This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible with the **eventyay** platform.
 
@@ -14,9 +15,9 @@ This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible 
 - Provides Gutenberg **blocks** for the landing, speakers, events, past events, schedule, and code of conduct templates.
 - Uses embedded template output for shortcodes and blocks so templates work in classic and block themes.
 - Built with modern WordPress development practices:
-  - Class-based structure
+  - Class‑based structure
   - Hooks and actions
-  - Internationalization (translation-ready)
+  - Internationalization (translation‑ready)
 - Includes **placeholder data** for local development and testing.
 - Easily extendable with custom templates, endpoints, or additional shortcodes.
 
@@ -24,29 +25,30 @@ This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible 
 
 ## Requirements
 
-- WordPress **5.8** or higher  
-- PHP **7.4** or newer  
-- HTTPS-enabled server (for API calls)
+- WordPress **5.8** or higher
+- PHP **7.4** or newer
+- **Node.js >= 24** (required for the npm development toolchain)
+- HTTPS‑enabled server (for API calls)
 - The WordPress REST API and `wp_remote_get()` must be available
 
 ## Installation
 
-1. Download or clone this plugin into your WordPress `wp-content/plugins/` directory:
+1. **Clone the repository** into your WordPress `wp-content/plugins/` directory:
    ```bash
    git clone https://github.com/fossasia/WPFAevent.git event-plugin
-
-
-2. Activate **Event Plugin** in your WordPress Admin under
-   `Plugins → Installed Plugins → Event Plugin → Activate`.
-
-3. Configure your API endpoints:
-
-   * Go to **Settings → Event Plugin** in the WordPress Admin.
-   * Enter the URLs of your Eventyay API endpoints for **Speakers**, **Sessions**, and **Schedule**.
-   * Optionally adjust the **cache time (TTL)** in seconds.
-
-4. Add WPFA template shortcodes to your pages or posts, for example:
-
+   ```
+2. **Install the JavaScript tooling** (Node 24 required):
+   ```bash
+   # If you use nvm:
+   nvm install 24 && nvm use 24
+   npm install
+   ```
+3. Activate **Event Plugin** in the WordPress Admin under `Plugins → Installed Plugins → Event Plugin → Activate`.
+4. Configure your API endpoints:
+   - Go to **Settings → Event Plugin** in the WordPress Admin.
+   - Enter the URLs of your Eventyay API endpoints for **Speakers**, **Sessions**, and **Schedule**.
+   - Optionally adjust the **cache time (TTL)** in seconds.
+5. Add WPFA template shortcodes to your pages or posts, for example:
    ```text
    [wpfaevent_landing]
    [wpfaevent_speakers]
@@ -57,6 +59,20 @@ This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible 
    ```
 
    You can also add the matching WPFA blocks in the block editor.
+
+## Development
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `npm run lint` | `eslint .` | Lint all JavaScript files using the WordPress ESLint config |
+| `npm run lint:fix` | `eslint . --fix` | Auto‑fix fixable lint errors |
+| `npm run format` | `prettier --write "**/*.{js,json}"` | Apply Prettier formatting |
+| `npm run phpcs` | `composer phpcs` | Run PHP_CodeSniffer on PHP files |
+| `npm run phpcb` | `composer phpcb` | Auto‑fix PHP coding‑standard violations |
+| `npm run phpstan` | `composer phpstan` | Run PHPStan static analysis |
+| `npm run test` | `npm run lint && npm run phpcs && npm run phpstan` | One‑command quality check (JS + PHP) |
+
+> **Tip:** Before opening a Pull Request, run `npm run test` locally to ensure both JavaScript and PHP code meet the project’s standards.
 
 ## Directory Structure
 
@@ -218,6 +234,7 @@ Contributions are welcome!
 
 Before submitting:
 
+* Run `npm run test` to ensure both JS and PHP quality checks pass.
 * Run `phpcs` with the WordPress standard
 * Avoid committing binary or large files
 * Test locally with caching disabled
