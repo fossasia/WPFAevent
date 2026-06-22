@@ -95,7 +95,10 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			$this->send_eventyay_ajax_error( $settings_write );
 		}
 
-		$payload = $this->fetch_eventyay_json( $api_url );
+		$import_settings = get_option( 'wpfaevent_eventyay_import_settings', array() );
+		$api_token       = ! empty( $import_settings['api_token'] ) ? $this->decrypt_value( $import_settings['api_token'] ) : '';
+
+		$payload = $this->fetch_eventyay_json( $api_url, $api_token );
 		if ( is_wp_error( $payload ) ) {
 			$this->send_eventyay_ajax_error( $payload );
 		}
@@ -943,7 +946,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @param int    $event_id   Event post ID.
 	 * @param string $event_slug Eventyay event slug.
 	 * @param array  $settings   Import settings.
-	 * @return true|WP_Error
+	 * @return array|WP_Error
 	 */
 	public function sync_speakers_for_event( $event_id, $event_slug, $settings ) {
 		$event_id  = absint( $event_id );
@@ -989,10 +992,59 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			return $write_result;
 		}
 
-		$this->sync_eventyay_speaker_posts( $import['speakers'], $event_id );
+		$cpt_result = $this->sync_eventyay_speaker_posts( $import['speakers'], $event_id );
 
 		update_post_meta( $event_id, '_wpfa_eventyay_speakers_synced_at', time() );
 
-		return true;
+		return array(
+			'speakers'         => count( $import['speakers'] ),
+			'created_speakers' => $cpt_result['created'],
+			'updated_speakers' => $cpt_result['updated'],
+		);
+	}
+
+	/**
+	 * Decrypt a string value using AUTH_KEY.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $value Encrypted value.
+	 * @return string Decrypted value.
+	 */
+	private function decrypt_value( $value ) {
+		$value = (string) $value;
+		if ( '' === $value ) {
+			return '';
+		}
+
+		if ( 0 !== strpos( $value, 'enc::' ) ) {
+			return $value;
+		}
+
+		$encrypted_part = substr( $value, 5 );
+
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
+		$raw = base64_decode( $encrypted_part, true );
+		if ( false === $raw ) {
+			return $value;
+		}
+
+		$key       = defined( 'SECURE_AUTH_KEY' ) ? SECURE_AUTH_KEY : ( defined( 'AUTH_KEY' ) ? AUTH_KEY : 'wpfaevent-fallback-key' );
+		$method    = 'aes-256-ctr';
+		$iv_length = openssl_cipher_iv_length( $method );
+
+		if ( strlen( $raw ) <= $iv_length ) {
+			return $value;
+		}
+
+		$iv        = substr( $raw, 0, $iv_length );
+		$encrypted = substr( $raw, $iv_length );
+
+		$decrypted = openssl_decrypt( $encrypted, $method, $key, 0, $iv );
+		if ( false === $decrypted ) {
+			return $value;
+		}
+
+		return $decrypted;
 	}
 }

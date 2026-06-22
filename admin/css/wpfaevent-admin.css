@@ -245,8 +245,7 @@
 
 .wpfaevent-settings-card input[type="text"],
 .wpfaevent-settings-card input[type="url"],
-.wpfaevent-settings-card input[type="password"],
-.wpfaevent-settings-card select {
+.wpfaevent-settings-card input[type="password"] {
 	border: 1px solid #cbd5e1 !important;
 	border-radius: 6px !important;
 	padding: 8px 12px !important;
@@ -255,9 +254,25 @@
 	transition: all 0.2s ease-in-out !important;
 }
 
+.wpfaevent-settings-card select {
+	border: 1px solid #cbd5e1 !important;
+	border-radius: 6px !important;
+	padding: 8px 32px 8px 12px !important;
+	font-size: 14px !important;
+	color: #0f172a !important;
+	transition: all 0.2s ease-in-out !important;
+	width: 25em !important;
+	max-width: 100% !important;
+}
+
 .wpfaevent-settings-card input[type="text"]:focus,
 .wpfaevent-settings-card input[type="url"]:focus,
-.wpfaevent-settings-card input[type="password"]:focus,
+.wpfaevent-settings-card input[type="password"]:focus {
+	border-color: #6366f1 !important;
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+	outline: none !important;
+}
+
 .wpfaevent-settings-card select:focus {
 	border-color: #6366f1 !important;
 	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
