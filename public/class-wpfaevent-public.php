@@ -453,8 +453,13 @@ class Wpfaevent_Public {
 			wp_enqueue_script( $this->plugin_name . '-events' );
 		}
 
+		if ( is_singular( 'wpfa_speaker' ) || is_singular( 'wpfa_event' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-speakers' );
+		}
+
 		if ( is_singular( 'wpfa_event' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-single-event' );
+			wp_enqueue_style( $this->plugin_name . '-events' );
 		}
 
 		/**
