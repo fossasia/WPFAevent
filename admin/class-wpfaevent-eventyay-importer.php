@@ -450,6 +450,8 @@ class Wpfaevent_Eventyay_Importer {
 			'skipped' => 0,
 		);
 
+		$sync_service = new Wpfaevent_Eventyay_Ajax_Sync();
+
 		foreach ( $events as $event ) {
 			$upsert = $this->event_repo->upsert_eventyay_event_post( $event, $settings );
 
@@ -458,10 +460,8 @@ class Wpfaevent_Eventyay_Importer {
 				continue;
 			}
 
-			$parser     = new Wpfaevent_JSONAPI_Parser();
-			$event_slug = $parser->eventyay_event_slug( $event );
+			$event_slug = $this->parser->eventyay_event_slug( $event );
 			if ( $event_slug && ! empty( $upsert['post_id'] ) ) {
-				$sync_service = new Wpfaevent_Eventyay_Ajax_Sync();
 				$sync_service->sync_speakers_for_event( $upsert['post_id'], $event_slug, $settings );
 			}
 
