@@ -447,7 +447,7 @@ class Wpfaevent_Event_Repository {
 		// Temporarily allow local hostnames during validation and download.
 		add_filter( 'http_request_host_is_external', '__return_true' );
 
-		if ( ! $this->parser->is_valid_http_url( $image_url ) || ! wp_http_validate_url( $image_url ) ) {
+		if ( ! $this->parser->is_valid_http_url( $image_url ) ) {
 			remove_filter( 'http_request_host_is_external', '__return_true' );
 			return false;
 		}

@@ -247,7 +247,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	private function prepare_eventyay_sync_url( $api_url ) {
 		$api_url = trim( $api_url );
 
-		if ( empty( $api_url ) || ! wp_http_validate_url( $api_url ) ) {
+		if ( empty( $api_url ) || ! $this->parser->is_valid_http_url( $api_url ) ) {
 			return new WP_Error(
 				'eventyay_invalid_url',
 				esc_html__( 'The Eventyay API URL is not a valid HTTP(S) URL.', 'wpfaevent' ),
@@ -294,103 +294,28 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @return array|WP_Error
 	 */
 	private function fetch_eventyay_json( $api_url ) {
-		$response = wp_remote_get(
-			$api_url,
-			array(
-				'timeout'     => 20,
-				'redirection' => 3,
-				'headers'     => array(
-					'Accept' => 'application/vnd.api+json, application/json',
-				),
-			)
-		);
+		$importer  = new Wpfaevent_Eventyay_Importer();
+		$settings  = $importer->get_eventyay_import_settings();
+		$api_token = isset( $settings['api_token'] ) ? $settings['api_token'] : '';
 
-		if ( is_wp_error( $response ) ) {
-			return new WP_Error(
-				'eventyay_request_failed',
-				esc_html__( 'Eventyay request failed.', 'wpfaevent' ),
-				array(
-					'status'  => 502,
-					'details' => $response->get_error_message(),
-				)
-			);
+		$client  = new Wpfaevent_Eventyay_API_Client();
+		$decoded = $client->fetch_eventyay_rest_json( $api_url, $api_token );
+
+		if ( is_wp_error( $decoded ) ) {
+			return $decoded;
 		}
 
-		$status = absint( wp_remote_retrieve_response_code( $response ) );
-		$body   = wp_remote_retrieve_body( $response );
-
-		if ( $status < 200 || $status >= 300 ) {
-			return new WP_Error(
-				'eventyay_http_error',
-				sprintf(
-					/* translators: %d: HTTP status code. */
-					esc_html__( 'Eventyay API returned HTTP %d.', 'wpfaevent' ),
-					$status
-				),
-				array(
-					'status'      => ( $status >= 400 && $status <= 599 ) ? $status : 502,
-					'http_status' => $status,
-					'body'        => $this->decode_eventyay_error_body( $body ),
-				)
-			);
-		}
-
-		if ( '' === trim( $body ) ) {
-			return new WP_Error(
-				'eventyay_empty_response',
-				esc_html__( 'Eventyay API returned an empty response.', 'wpfaevent' ),
-				array(
-					'status'      => 502,
-					'http_status' => $status,
-				)
-			);
-		}
-
-		$decoded = json_decode( $body, true );
-		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) {
-			return new WP_Error(
-				'eventyay_malformed_json',
-				esc_html__( 'Eventyay API returned malformed JSON.', 'wpfaevent' ),
-				array(
-					'status'          => 502,
-					'http_status'     => $status,
-					'json_error'      => json_last_error_msg(),
-					'response_sample' => $this->truncate_string( $body ),
-				)
-			);
-		}
-
-		if ( ! array_key_exists( 'data', $decoded ) ) {
+		if ( ! is_array( $decoded ) || ! array_key_exists( 'data', $decoded ) ) {
 			return new WP_Error(
 				'eventyay_invalid_jsonapi',
 				esc_html__( 'Eventyay API response does not contain a JSON:API data member.', 'wpfaevent' ),
 				array(
-					'status'      => 502,
-					'http_status' => $status,
-					'body'        => $decoded,
+					'status' => 502,
 				)
 			);
 		}
 
 		return $decoded;
-	}
-
-	/**
-	 * Decode Eventyay error response body.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $body Error response body.
-	 * @return mixed
-	 */
-	private function decode_eventyay_error_body( $body ) {
-		$decoded = json_decode( $body, true );
-
-		if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
-			return $decoded;
-		}
-
-		return $this->truncate_string( $body );
 	}
 
 	/**
@@ -621,24 +546,6 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 		}
 
 		return $wp_filesystem;
-	}
-
-	/**
-	 * Truncate a string for error message display.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $value String value.
-	 * @return string
-	 */
-	private function truncate_string( $value ) {
-		$value = wp_strip_all_tags( (string) $value );
-
-		if ( function_exists( 'mb_substr' ) ) {
-			return mb_substr( $value, 0, 1000 );
-		}
-
-		return substr( $value, 0, 1000 );
 	}
 
 	/**
