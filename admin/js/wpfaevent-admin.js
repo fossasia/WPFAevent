@@ -151,7 +151,7 @@
 		if (!event) {
 			return 'Unnamed Event';
 		}
-		
+
 		// Helper to extract string from localized object/array
 		function getStringValue(val) {
 			if (typeof val === 'string' && val.trim() !== '') {
