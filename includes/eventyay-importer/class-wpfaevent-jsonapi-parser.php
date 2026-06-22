@@ -580,12 +580,20 @@ class Wpfaevent_JSONAPI_Parser {
 	/**
 	 * Normalize Eventyay JSON:API sessions or speakers into dashboard speaker data.
 	 *
+	 * Handles both JSON:API format ({"data":[...],"included":[...]}) and the
+	 * Eventyay/Pretix REST paginated format ({"count":N,"results":[...]}).
+	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $payload JSON:API document.
+	 * @param array $payload JSON:API document or Eventyay REST paginated response.
 	 * @return array|WP_Error
 	 */
 	public function normalize_eventyay_payload( $payload ) {
+		// Eventyay REST API (Pretix-based) returns {"count":N,"results":[...]} instead of JSON:API.
+		if ( ! array_key_exists( 'data', $payload ) && array_key_exists( 'results', $payload ) && is_array( $payload['results'] ) ) {
+			return $this->normalize_eventyay_rest_speakers_payload( $payload['results'] );
+		}
+
 		$data = isset( $payload['data'] ) ? $payload['data'] : array();
 
 		if ( $this->is_jsonapi_resource( $data ) ) {
@@ -661,6 +669,76 @@ class Wpfaevent_JSONAPI_Parser {
 		return array(
 			'speakers'      => $speakers,
 			'session_count' => $session_count,
+		);
+	}
+
+	/**
+	 * Normalize Eventyay REST API paginated speakers ({"count":N,"results":[...]}) into
+	 * the internal speaker format.
+	 *
+	 * The Pretix-based Eventyay API returns speaker resources with fields:
+	 * code, name, biography, avatar, answers.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $results Raw results array from the Eventyay REST API.
+	 * @return array
+	 */
+	public function normalize_eventyay_rest_speakers_payload( $results ) {
+		$speakers = array();
+
+		foreach ( $results as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$name = sanitize_text_field( isset( $item['name'] ) ? (string) $item['name'] : '' );
+			if ( '' === $name ) {
+				continue;
+			}
+
+			$code      = isset( $item['code'] ) ? sanitize_text_field( (string) $item['code'] ) : '';
+			$source_id = $code ? $code : sanitize_title( $name );
+
+			$avatar = '';
+			if ( ! empty( $item['avatar'] ) && is_string( $item['avatar'] ) ) {
+				$avatar = esc_url_raw( $item['avatar'] );
+			}
+
+			$bio = '';
+			if ( ! empty( $item['biography'] ) ) {
+				$bio = wp_kses_post( (string) $item['biography'] );
+			}
+
+			$speaker = array(
+				'id'                  => 'eventyay-' . sanitize_key( $source_id ),
+				'eventyay_speaker_id' => $source_id,
+				'name'                => $name,
+				'title'               => '',
+				'position'            => '',
+				'organization'        => '',
+				'category'            => '',
+				'image'               => $avatar,
+				'bio'                 => $bio,
+				'social'              => array(
+					'linkedin' => '',
+					'twitter'  => '',
+					'github'   => '',
+					'website'  => '',
+				),
+				'featured'            => false,
+				'featured_order'      => 0,
+				'sessions'            => array(),
+				'source'              => 'eventyay',
+			);
+
+			$key              = 'eventyay:' . $source_id;
+			$speakers[ $key ] = $speaker;
+		}
+
+		return array(
+			'speakers'      => array_values( $speakers ),
+			'session_count' => 0,
 		);
 	}
 
