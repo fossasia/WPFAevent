@@ -103,7 +103,8 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			$this->send_eventyay_ajax_error( $payload );
 		}
 
-		$import = $this->parser->normalize_eventyay_payload( $payload );
+		$event_slug = get_post_meta( absint( $event_id ), '_eventyay_event_slug', true );
+		$import     = $this->parser->normalize_eventyay_payload( $payload, $import_settings, $event_slug );
 		if ( is_wp_error( $import ) ) {
 			$this->send_eventyay_ajax_error( $import );
 		}
@@ -282,6 +283,24 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 
 			if ( empty( $query_args['page']['size'] ) ) {
 				$api_url = add_query_arg( 'page[size]', 200, $api_url );
+			}
+		}
+
+		if ( false !== strpos( $path, '/speakers' ) && false !== strpos( $path, '/organizers/' ) ) {
+			$query_args = array();
+			if ( ! empty( $parts['query'] ) ) {
+				wp_parse_str( $parts['query'], $query_args );
+			}
+
+			if ( empty( $query_args['expand'] ) ) {
+				$api_url = add_query_arg(
+					array(
+						'expand'    => 'submissions,submissions.track,submissions.submission_type,submissions.slots.room',
+						'lang'      => 'en',
+						'page_size' => absint( apply_filters( 'wpfaevent_eventyay_speaker_import_page_size', 50 ) ),
+					),
+					$api_url
+				);
 			}
 		}
 
@@ -964,6 +983,14 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 		// Fall back to the old Open Event JSON:API path (api.eventyay.com) when no organizer slug.
 		if ( $organizer_slug ) {
 			$speakers_url = trailingslashit( $base_url ) . 'api/v1/organizers/' . $organizer_slug . '/events/' . rawurlencode( $event_slug ) . '/speakers/';
+			$speakers_url = add_query_arg(
+				array(
+					'expand'    => 'submissions,submissions.track,submissions.submission_type,submissions.slots.room',
+					'lang'      => 'en',
+					'page_size' => absint( apply_filters( 'wpfaevent_eventyay_speaker_import_page_size', 50 ) ),
+				),
+				$speakers_url
+			);
 		} else {
 			$speakers_url = trailingslashit( $base_url ) . 'v1/events/' . rawurlencode( $event_slug ) . '/speakers?page[size]=200';
 			if ( false !== strpos( $base_url, 'eventyay.com' ) && false === strpos( $base_url, 'api.eventyay.com' ) ) {
@@ -978,7 +1005,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			return $payload;
 		}
 
-		$import = $this->parser->normalize_eventyay_payload( $payload );
+		$import = $this->parser->normalize_eventyay_payload( $payload, $settings, $event_slug );
 
 		if ( is_wp_error( $import ) ) {
 			return $import;
