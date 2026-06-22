@@ -11,11 +11,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $settings         = isset( $settings ) ? $settings : array(
-	'base_url'          => 'https://eventyay.com',
-	'organizer_slug'    => '',
-	'api_token'         => '',
-	'post_status'       => 'draft',
-	'auto_sync_enabled' => false,
+	'base_url'           => 'https://eventyay.com',
+	'organizer_slug'     => '',
+	'api_token'          => '',
+	'post_status'        => 'draft',
+	'auto_sync_enabled'  => false,
 	'auto_sync_interval' => 'daily',
 );
 $auto_sync_next   = class_exists( 'Wpfaevent_Cron_Scheduler' ) ? Wpfaevent_Cron_Scheduler::get_next_scheduled() : false;

@@ -639,6 +639,142 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
+	 * Read all event color meta fields and return them as a keyed array.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<string, string>
+	 */
+	public static function get_event_colors( $event_id ) {
+		$event_id = absint( $event_id );
+		$colors   = array();
+
+		foreach ( array_keys( self::get_event_color_meta_fields() ) as $meta_key ) {
+			$value = get_post_meta( $event_id, $meta_key, true );
+			$value = self::sanitize_color_value( $value );
+			if ( '' !== $value ) {
+				$colors[ $meta_key ] = $value;
+			}
+		}
+
+		return $colors;
+	}
+
+	/**
+	 * Sanitize custom tab data stored in wpfa_event_custom_tabs meta.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $tabs JSON string or array of tab data.
+	 * @return array<int, array<string, string>>
+	 */
+	public static function sanitize_custom_tabs( $tabs ) {
+		if ( is_string( $tabs ) ) {
+			$decoded = json_decode( $tabs, true );
+			if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
+				$tabs = $decoded;
+			} else {
+				return array();
+			}
+		}
+
+		if ( ! is_array( $tabs ) ) {
+			return array();
+		}
+
+		$sanitized = array();
+
+		foreach ( $tabs as $tab ) {
+			if ( ! is_array( $tab ) ) {
+				continue;
+			}
+
+			$title   = isset( $tab['title'] ) ? sanitize_text_field( (string) $tab['title'] ) : '';
+			$content = isset( $tab['content'] ) ? wp_kses_post( (string) $tab['content'] ) : '';
+
+			if ( '' === $title && '' === $content ) {
+				continue;
+			}
+
+			$sanitized[] = array(
+				'title'   => $title,
+				'content' => $content,
+			);
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Resolve featured speaker post IDs for an event.
+	 *
+	 * Reads wpfa_event_featured_speaker_ids post meta (array of post IDs), filters
+	 * them to only include IDs present in $speaker_ids, and also cross-references
+	 * $dashboard_speakers to find additional featured speakers via the `featured` flag.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int                              $event_id          Event post ID.
+	 * @param array<int>                       $speaker_ids       All linked speaker post IDs.
+	 * @param array<int, array<string, mixed>> $dashboard_speakers Dashboard speaker list.
+	 * @return array<int>
+	 */
+	public static function resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers ) {
+		$event_id    = absint( $event_id );
+		$speaker_ids = array_map( 'absint', (array) $speaker_ids );
+		$speaker_ids = array_filter( $speaker_ids );
+
+		// Start with explicitly pinned featured IDs stored in meta.
+		$pinned_raw   = get_post_meta( $event_id, 'wpfa_event_featured_speaker_ids', true );
+		$pinned_ids   = self::sanitize_post_id_list( $pinned_raw );
+		$featured_ids = array_values( array_intersect( $pinned_ids, $speaker_ids ) );
+
+		// Build a quick lookup: eventyay_id => post_id and post_id list from meta.
+		$speaker_id_set = array_flip( $speaker_ids );
+
+		// Cross-reference dashboard speakers for those flagged as featured.
+		if ( is_array( $dashboard_speakers ) ) {
+			foreach ( $dashboard_speakers as $dashboard_speaker ) {
+				if ( empty( $dashboard_speaker['featured'] ) ) {
+					continue;
+				}
+
+				// Match by explicit post_id.
+				if ( ! empty( $dashboard_speaker['post_id'] ) ) {
+					$post_id = absint( $dashboard_speaker['post_id'] );
+					if ( $post_id && isset( $speaker_id_set[ $post_id ] ) && ! in_array( $post_id, $featured_ids, true ) ) {
+						$featured_ids[] = $post_id;
+					}
+					continue;
+				}
+
+				// Match by eventyay_id stored in speaker meta.
+				$eventyay_id = '';
+				if ( ! empty( $dashboard_speaker['eventyay_speaker_id'] ) ) {
+					$eventyay_id = sanitize_text_field( (string) $dashboard_speaker['eventyay_speaker_id'] );
+				} elseif ( ! empty( $dashboard_speaker['eventyay_id'] ) ) {
+					$eventyay_id = sanitize_text_field( (string) $dashboard_speaker['eventyay_id'] );
+				}
+
+				if ( '' !== $eventyay_id ) {
+					foreach ( $speaker_ids as $sid ) {
+						$stored_id = get_post_meta( $sid, '_wpfa_eventyay_speaker_id', true );
+						if ( ! $stored_id ) {
+							$stored_id = get_post_meta( $sid, 'wpfa_eventyay_speaker_id', true );
+						}
+						if ( $stored_id && $stored_id === $eventyay_id && ! in_array( $sid, $featured_ids, true ) ) {
+							$featured_ids[] = $sid;
+						}
+					}
+				}
+			}
+		}
+
+		return array_values( array_unique( array_map( 'absint', $featured_ids ) ) );
+	}
+
+	/**
 	 * Normalize old WordPress UTC offset labels into DateTimeZone-compatible offsets.
 	 *
 	 * @since 1.0.0

@@ -457,7 +457,7 @@ class Wpfaevent_Public {
 			wp_enqueue_style( $this->plugin_name . '-speakers' );
 		}
 
-		if ( is_singular( 'wpfa_event' ) ) {
+		if ( is_singular( 'wpfa_event' ) || $this->is_wpfa_template_file_active( 'page-schedule.php' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-single-event' );
 			wp_enqueue_style( $this->plugin_name . '-events' );
 		}
