@@ -3083,7 +3083,6 @@
 		max-width: 350px;
 		width: calc(100vw - 40px);
 	}
-=======
 }
 
 .wpfaevent .wpfa-single-event {
@@ -3230,5 +3229,4 @@
 	.wpfaevent .wpfa-single-event-details {
 		padding: 20px;
 	}
->>>>>>> origin/main
 }

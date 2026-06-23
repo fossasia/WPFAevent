@@ -95,8 +95,8 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			$this->send_eventyay_ajax_error( $settings_write );
 		}
 
-		$import_settings = get_option( 'wpfaevent_eventyay_import_settings', array() );
-		$api_token       = ! empty( $import_settings['api_token'] ) ? $this->decrypt_value( $import_settings['api_token'] ) : '';
+		$import_settings              = get_option( 'wpfaevent_eventyay_import_settings', array() );
+		$api_token                    = ! empty( $import_settings['api_token'] ) ? $this->decrypt_value( $import_settings['api_token'] ) : '';
 		$import_settings['api_token'] = $api_token;
 
 		$event_slug = get_post_meta( absint( $event_id ), '_eventyay_event_slug', true );
