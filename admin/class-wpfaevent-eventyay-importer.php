@@ -220,12 +220,15 @@ class Wpfaevent_Eventyay_Importer {
 				array(
 					'type'    => 'success',
 					'message' => sprintf(
-						/* translators: 1: fetched events, 2: created events, 3: updated events, 4: skipped events. */
-						esc_html__( 'Fetched %1$d Eventyay event(s). Created %2$d, updated %3$d, skipped %4$d.', 'wpfaevent' ),
+						/* translators: 1: fetched events, 2: created events, 3: updated events, 4: skipped events, 5: sessions, 6: speakers, 7: schedule rows. */
+						esc_html__( 'Fetched %1$d Eventyay event(s). Created %2$d, updated %3$d, skipped %4$d. Imported %5$d session(s), %6$d speaker(s), and %7$d schedule row(s).', 'wpfaevent' ),
 						absint( $result['fetched'] ),
 						absint( $result['created'] ),
 						absint( $result['updated'] ),
-						absint( $result['skipped'] )
+						absint( $result['skipped'] ),
+						absint( isset( $result['sessions'] ) ? $result['sessions'] : 0 ),
+						absint( isset( $result['speakers'] ) ? $result['speakers'] : 0 ),
+						absint( isset( $result['schedule_rows'] ) ? $result['schedule_rows'] : 0 )
 					),
 				),
 				MINUTE_IN_SECONDS
@@ -444,10 +447,13 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		$result = array(
-			'fetched' => count( $events ),
-			'created' => 0,
-			'updated' => 0,
-			'skipped' => 0,
+			'fetched'       => count( $events ),
+			'created'       => 0,
+			'updated'       => 0,
+			'skipped'       => 0,
+			'sessions'      => 0,
+			'speakers'      => 0,
+			'schedule_rows' => 0,
 		);
 
 		$sync_service = new Wpfaevent_Eventyay_Ajax_Sync();
@@ -462,7 +468,12 @@ class Wpfaevent_Eventyay_Importer {
 
 			$event_slug = $this->parser->eventyay_event_slug( $event );
 			if ( $event_slug && ! empty( $upsert['post_id'] ) ) {
-				$sync_service->sync_speakers_for_event( $upsert['post_id'], $event_slug, $settings );
+				$sync_result = $sync_service->sync_speakers_for_event( $upsert['post_id'], $event_slug, $settings );
+				if ( ! is_wp_error( $sync_result ) && is_array( $sync_result ) ) {
+					$result['sessions']      += isset( $sync_result['sessions'] ) ? $sync_result['sessions'] : 0;
+					$result['speakers']      += isset( $sync_result['speakers'] ) ? $sync_result['speakers'] : 0;
+					$result['schedule_rows'] += isset( $sync_result['schedule_rows'] ) ? $sync_result['schedule_rows'] : 0;
+				}
 			}
 
 			if ( ! empty( $upsert['created'] ) ) {

@@ -609,6 +609,7 @@ class Wpfaevent_JSONAPI_Parser {
 
 		$included      = $this->index_jsonapi_resources( isset( $payload['included'] ) ? $payload['included'] : array() );
 		$speakers      = array();
+		$sessions      = array();
 		$session_count = 0;
 
 		foreach ( $data as $resource ) {
@@ -632,8 +633,9 @@ class Wpfaevent_JSONAPI_Parser {
 
 			++$session_count;
 
-			$session      = $this->normalize_eventyay_session_resource( $resource, $included );
-			$speaker_refs = $this->get_jsonapi_relationship_resources( $resource, 'speakers' );
+			$session       = $this->normalize_eventyay_session_resource( $resource, $included );
+			$speaker_refs  = $this->get_jsonapi_relationship_resources( $resource, 'speakers' );
+			$speaker_names = array();
 
 			foreach ( $speaker_refs as $speaker_ref ) {
 				$speaker_resource = $this->resolve_jsonapi_resource( $speaker_ref, $included );
@@ -647,12 +649,17 @@ class Wpfaevent_JSONAPI_Parser {
 					continue;
 				}
 
+				$speaker_names[] = $speaker['name'];
+
 				if ( empty( $speaker['category'] ) && ! empty( $session['track'] ) ) {
 					$speaker['category'] = $session['track'];
 				}
 
 				$this->merge_eventyay_speaker( $speakers, $speaker, $session );
 			}
+
+			$session['speakers'] = array_values( array_unique( $speaker_names ) );
+			$sessions            = $this->merge_eventyay_session_payload( $sessions, $session );
 		}
 
 		$speakers = array_values( $speakers );
@@ -667,6 +674,7 @@ class Wpfaevent_JSONAPI_Parser {
 
 		return array(
 			'speakers'      => $speakers,
+			'sessions'      => array_values( $sessions ),
 			'session_count' => $session_count,
 		);
 	}
@@ -692,6 +700,7 @@ class Wpfaevent_JSONAPI_Parser {
 		if ( ! is_array( $results ) ) {
 			return array(
 				'speakers'      => array(),
+				'sessions'      => array(),
 				'session_count' => 0,
 			);
 		}
@@ -725,16 +734,17 @@ class Wpfaevent_JSONAPI_Parser {
 					continue;
 				}
 
-				$session                    = $this->normalize_eventyay_submission_session( $this->normalize_eventyay_api_resource( $session_resource ) );
-				$session['speakers']        = array_values( array_unique( array( $speaker['name'] ) ) );
-				$speaker['category']        = empty( $speaker['category'] ) && ! empty( $session['track'] ) ? $session['track'] : $speaker['category'];
-				$sessions[ $session['id'] ] = $session;
+				$session             = $this->normalize_eventyay_submission_session( $this->normalize_eventyay_api_resource( $session_resource ) );
+				$session['speakers'] = array_values( array_unique( array( $speaker['name'] ) ) );
+				$speaker['category'] = empty( $speaker['category'] ) && ! empty( $session['track'] ) ? $session['track'] : $speaker['category'];
+				$sessions            = $this->merge_eventyay_session_payload( $sessions, $session );
 				$this->merge_eventyay_speaker( $speakers, $speaker, $session );
 			}
 		}
 
 		return array(
 			'speakers'      => array_values( $speakers ),
+			'sessions'      => array_values( $sessions ),
 			'session_count' => count( $sessions ),
 		);
 	}
@@ -1493,5 +1503,51 @@ class Wpfaevent_JSONAPI_Parser {
 		}
 
 		return $date->format( DATE_ATOM );
+	}
+
+	/**
+	 * Determine whether a normalized Eventyay session has displayable content.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $session Normalized session.
+	 * @return bool
+	 */
+	public function eventyay_session_has_content( $session ) {
+		foreach ( array( 'title', 'date', 'time', 'end_time', 'abstract', 'track', 'room' ) as $key ) {
+			if ( ! empty( $session[ $key ] ) ) {
+				return true;
+			}
+		}
+
+		return ! empty( $session['speakers'] );
+	}
+
+	/**
+	 * Merge an Eventyay session into a session list, combining duplicate speaker names.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $sessions Session list.
+	 * @param array $session  Session payload.
+	 * @return array
+	 */
+	public function merge_eventyay_session_payload( $sessions, $session ) {
+		if ( ! $this->eventyay_session_has_content( $session ) ) {
+			return $sessions;
+		}
+
+		$key = ! empty( $session['id'] ) ? 'id:' . sanitize_key( $session['id'] ) : 'title:' . sanitize_title( ( isset( $session['title'] ) ? $session['title'] : '' ) . '-' . ( isset( $session['date'] ) ? $session['date'] : '' ) . '-' . ( isset( $session['time'] ) ? $session['time'] : '' ) );
+		if ( empty( $sessions[ $key ] ) ) {
+			$sessions[ $key ] = $session;
+			return $sessions;
+		}
+
+		if ( ! empty( $session['speakers'] ) && is_array( $session['speakers'] ) ) {
+			$existing_speakers            = isset( $sessions[ $key ]['speakers'] ) && is_array( $sessions[ $key ]['speakers'] ) ? $sessions[ $key ]['speakers'] : array();
+			$sessions[ $key ]['speakers'] = array_values( array_unique( array_merge( $existing_speakers, $session['speakers'] ) ) );
+		}
+
+		return $sessions;
 	}
 }

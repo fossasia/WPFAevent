@@ -662,28 +662,7 @@ class Wpfaevent_Meta_Event {
 		return '';
 	}
 
-	/**
-	 * Read all event color meta fields and return them as a keyed array.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $event_id Event post ID.
-	 * @return array<string, string>
-	 */
-	public static function get_event_colors( $event_id ) {
-		$event_id = absint( $event_id );
-		$colors   = array();
 
-		foreach ( array_keys( self::get_event_color_meta_fields() ) as $meta_key ) {
-			$value = get_post_meta( $event_id, $meta_key, true );
-			$value = self::sanitize_color_value( $value );
-			if ( '' !== $value ) {
-				$colors[ $meta_key ] = $value;
-			}
-		}
-
-		return $colors;
-	}
 
 	/**
 	 * Sanitize custom tab data stored in wpfa_event_custom_tabs meta.
