@@ -119,11 +119,16 @@ $current_schedule_view                    = $event_data['current_schedule_view']
 							<?php if ( $event_time_label ) : ?>
 								<span><?php echo esc_html( $event_time_label ); ?></span>
 							<?php endif; ?>
-							<?php if ( $location ) : ?>
+						<?php if ( $location ) : ?>
 								<span itemprop="location"><?php echo esc_html( $location ); ?></span>
 						<?php endif; ?>
 						<?php if ( $event_language_label ) : ?>
 							<span><?php echo esc_html( $event_language_label ); ?></span>
+						<?php endif; ?>
+						<?php if ( ! empty( $event_url ) && ( empty( $register_url ) || $event_url !== $register_url ) ) : ?>
+							<a class="btn btn-secondary" href="<?php echo esc_url( $event_url ); ?>" target="_blank" rel="noopener">
+								<?php esc_html_e( 'Event Website', 'wpfaevent' ); ?>
+							</a>
 						<?php endif; ?>
 						<?php if ( ! empty( $schedule_items ) ) : ?>
 							<span>

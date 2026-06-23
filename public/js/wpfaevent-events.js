@@ -55,14 +55,16 @@ const WPFA_Events = (function() {
 	 */
 	function cacheElements() {
 		elements = {
-			// Search
-			searchForm: document.querySelector('.wpfa-search-form'),
+			// Search & filters
 			searchInput: document.getElementById('eventSearchInput'),
+			filterTrack: document.getElementById('filterTrack'),
+			filterLocation: document.getElementById('filterLocation'),
+			searchBtn: document.getElementById('searchEventsBtn'),
 
-			// Admin buttons - Using MVP IDs
+			// Admin buttons
 			createEventBtn: document.getElementById('createEventBtn'),
 
-			// Modals - Using MVP IDs
+			// Modals
 			createEventModal: document.getElementById('createEventModal'),
 			editEventModal: document.getElementById('editEventModal'),
 
@@ -70,14 +72,14 @@ const WPFA_Events = (function() {
 			closeCreateEventModal: document.querySelector('#createEventModal .close-btn'),
 			closeEditEventModal: document.querySelector('#editEventModal .close-btn'),
 
-			// Forms - Using MVP IDs
+			// Forms
 			createEventForm: document.getElementById('createEventForm'),
 			editEventForm: document.getElementById('editEventForm'),
 
 			// Events container
 			eventsContainer: document.getElementById('events-container'),
-			resultsInfo: document.querySelector('.results-info'),
 			resultsCount: document.getElementById('resultsCount'),
+			totalCount: document.getElementById('totalCount'),
 		};
 	}
 
@@ -124,7 +126,7 @@ const WPFA_Events = (function() {
 		setupTimeFormatControls(elements.createEventForm);
 		setupTimeFormatControls(elements.editEventForm);
 
-		// Event card actions delegation
+		// Event card actions delegation (admin only)
 		if (elements.eventsContainer) {
 			elements.eventsContainer.addEventListener('click', handleCardActions);
 		}
@@ -245,53 +247,67 @@ const WPFA_Events = (function() {
 	function setupSearch() {
 		if (elements.searchInput) {
 			elements.searchInput.addEventListener('keyup', filterEvents);
+			elements.searchInput.addEventListener('search', filterEvents);
 		}
+		if (elements.filterTrack) {
+			elements.filterTrack.addEventListener('change', filterEvents);
+		}
+		if (elements.filterLocation) {
+			elements.filterLocation.addEventListener('change', filterEvents);
+		}
+		if (elements.searchBtn) {
+			elements.searchBtn.addEventListener('click', filterEvents);
+		}
+
+		// Date filter tabs
+		document.querySelectorAll('.date-filter-btn').forEach(btn => {
+			btn.addEventListener('click', function() {
+				document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active'));
+				this.classList.add('active');
+				filterEvents();
+			});
+		});
 	}
 
 	/**
-	 * Filter events based on search input
+	 * Filter events based on all active filter controls.
 	 */
 	function filterEvents() {
-		const searchTerm = elements.searchInput.value.toLowerCase().trim();
-		const upcomingCards = elements.eventsContainer.querySelectorAll('.event-card');
-		const pastEventsContainer = document.getElementById('past-events-container');
-		const pastCards = pastEventsContainer ? pastEventsContainer.querySelectorAll('.event-card') : [];
+		if (!elements.eventsContainer) return;
 
-		let upcomingVisibleCount = 0;
-		let pastVisibleCount = 0;
+		const searchTerm   = (elements.searchInput ? elements.searchInput.value : '').toLowerCase().trim();
+		const track        = elements.filterTrack ? elements.filterTrack.value : '';
+		const location     = elements.filterLocation ? elements.filterLocation.value.toLowerCase() : '';
+		const activeDateBtn = document.querySelector('.date-filter-btn.active');
+		const dateFilter   = activeDateBtn ? activeDateBtn.dataset.filter : 'all';
 
-		// Filter upcoming events
-		upcomingCards.forEach(card => {
-			const name = card.dataset.name.toLowerCase();
-			const place = card.dataset.place.toLowerCase();
-			const description = card.dataset.description.toLowerCase();
-			const isVisible = name.includes(searchTerm) || place.includes(searchTerm) || description.includes(searchTerm);
+		const allCards  = elements.eventsContainer.querySelectorAll('.event-card');
+		let visibleCount = 0;
 
+		allCards.forEach(card => {
+			const name        = (card.dataset.name        || '').toLowerCase();
+			const place       = (card.dataset.place       || '').toLowerCase();
+			const description = (card.dataset.description || '').toLowerCase();
+			const cardTrack   = (card.dataset.track       || '').toLowerCase();
+			const isPast      = card.dataset.isPast === '1';
+
+			const textMatch     = !searchTerm || name.includes(searchTerm) || place.includes(searchTerm) || description.includes(searchTerm);
+			const trackMatch    = !track     || cardTrack.split(',').some(s => s.trim() === track.toLowerCase());
+			const locationMatch = !location  || place === location;
+			const dateMatch     = dateFilter === 'all'
+				|| (dateFilter === 'past'     &&  isPast)
+				|| (dateFilter === 'upcoming' && !isPast);
+
+			const isVisible = textMatch && trackMatch && locationMatch && dateMatch;
 			card.style.display = isVisible ? '' : 'none';
-			if (isVisible) {
-				upcomingVisibleCount++;
-			}
+			if (isVisible) visibleCount++;
 		});
 
-		// Filter past events if they exist
-		pastCards.forEach(card => {
-			const name = card.dataset.name.toLowerCase();
-			const place = card.dataset.place.toLowerCase();
-			const description = card.dataset.description.toLowerCase();
-			const isVisible = name.includes(searchTerm) || place.includes(searchTerm) || description.includes(searchTerm);
-
-			card.style.display = isVisible ? '' : 'none';
-			if (isVisible) {
-				pastVisibleCount++;
-			}
-		});
-
-		if (searchTerm) {
-			elements.resultsInfo.style.display = 'block';
-			elements.resultsCount.textContent = upcomingVisibleCount + pastVisibleCount;
-		} else {
-			elements.resultsInfo.style.display = 'none';
-			elements.resultsCount.textContent = upcomingCards.length;
+		if (elements.resultsCount) {
+			elements.resultsCount.textContent = visibleCount;
+		}
+		if (elements.totalCount) {
+			elements.totalCount.textContent = allCards.length;
 		}
 	}
 

@@ -128,12 +128,18 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-calendar.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-partner-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-navigation-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-template-controller.php';
 
 		// Admin and Public classes.
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-importer.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-ajax-sync.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
+
+		// Eventyay importer support classes.
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-post-manager.php';
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-cron-scheduler.php';
 
 		// AJAX handler classes.
 		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-footer-handler.php';
@@ -234,6 +240,16 @@ class Wpfaevent {
 		// Register AJAX handler for footer text update.
 		$plugin_footer_handler = new Wpfaevent_Footer_Handler();
 		$this->loader->add_action( 'wp_ajax_wpfa_update_footer_text', $plugin_footer_handler, 'ajax_update_footer_text' );
+
+		// Register AJAX actions for Eventyay import sync.
+		$eventyay_ajax = new Wpfaevent_AJAX_Controller();
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_get_events', $eventyay_ajax, 'ajax_import_get_events' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_single_event', $eventyay_ajax, 'ajax_import_single_event' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_save_summary', $eventyay_ajax, 'ajax_import_save_summary' );
+
+		// Register cron/scheduler hooks for Eventyay auto-sync.
+		$this->loader->add_action( Wpfaevent_Cron_Scheduler::HOOK, 'Wpfaevent_Cron_Scheduler', 'run' );
+		$this->loader->add_action( 'update_option_wpfaevent_eventyay_import_settings', 'Wpfaevent_Cron_Scheduler', 'handle_settings_update', 10, 2 );
 
 		// Register Eventyay import form handler.
 		$this->loader->add_action( 'admin_post_wpfaevent_import_eventyay_events', $this->plugin_admin, 'handle_eventyay_events_import' );
