@@ -979,13 +979,13 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @return array<string, int>
 	 */
 	private function sync_eventyay_partner_data( $event_id, $event_slug, $settings ) {
-		$event_id  = absint( $event_id );
+		$event_id   = absint( $event_id );
 		$event_slug = sanitize_title( (string) $event_slug );
-		$settings  = is_array( $settings ) ? $settings : array();
+		$settings   = is_array( $settings ) ? $settings : array();
 
 		$result = array(
-			'sponsors'      => 0,
-			'exhibitors'    => 0,
+			'sponsors'        => 0,
+			'exhibitors'      => 0,
 			'partner_skipped' => 0,
 		);
 
@@ -1044,13 +1044,13 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			return array();
 		}
 
-		$settings = wp_parse_args(
+		$settings   = wp_parse_args(
 			is_array( $settings ) ? $settings : array(),
 			$this->get_eventyay_partner_import_defaults()
 		);
-		$base_url = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
+		$base_url   = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
 		$event_slug = sanitize_title( (string) $event_slug );
-		$endpoints = array();
+		$endpoints  = array();
 
 		if ( ! empty( $settings['organizer_slug'] ) && ! empty( $event_slug ) ) {
 			$modern_endpoint = $this->build_eventyay_modern_partner_endpoint( $settings, $event_slug, $resource_type );
@@ -1096,12 +1096,12 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @return string|WP_Error
 	 */
 	private function build_eventyay_modern_partner_endpoint( $settings, $event_slug, $resource_type ) {
-		$settings = wp_parse_args(
+		$settings      = wp_parse_args(
 			is_array( $settings ) ? $settings : array(),
 			$this->get_eventyay_partner_import_defaults()
 		);
-		$base_url = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
-		$event_slug = sanitize_title( (string) $event_slug );
+		$base_url      = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
+		$event_slug    = sanitize_title( (string) $event_slug );
 		$resource_type = sanitize_key( $resource_type );
 
 		if ( empty( $base_url ) || ! $this->parser->is_valid_http_url( $base_url ) ) {
@@ -1166,7 +1166,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 				return $fetched;
 			}
 
-			if ( ! $this->client->eventyay_error_has_http_status( $fetched, 404 ) ) {
+			if ( ! $this->eventyay_error_has_http_status( $fetched, 404 ) ) {
 				return $fetched;
 			}
 
@@ -1184,7 +1184,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 				'http_status' => 404,
 				'errors'      => array_map(
 					static function ( $error ) {
-						return is_wp_error( $error ) ? $error->get_error_message() : '';
+						return $error->get_error_message();
 					},
 					$not_found_errors
 				),
@@ -1204,10 +1204,10 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 */
 	private function fetch_eventyay_partner_resources( $endpoint, $settings, $resource_type ) {
 		$resources = array();
-		$next_url   = $endpoint;
-		$page       = 0;
-		$seen_urls  = array();
-		$max_pages  = absint( apply_filters( 'wpfaevent_eventyay_partner_import_max_pages', 20, $resource_type ) );
+		$next_url  = $endpoint;
+		$page      = 0;
+		$seen_urls = array();
+		$max_pages = absint( apply_filters( 'wpfaevent_eventyay_partner_import_max_pages', 20, $resource_type ) );
 
 		if ( ! $max_pages ) {
 			$max_pages = 20;
@@ -1565,6 +1565,27 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	}
 
 	/**
+	 * Check whether a WP_Error represents an HTTP status code.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Error $error       Error object.
+	 * @param int      $http_status HTTP status code.
+	 * @return bool
+	 */
+	private function eventyay_error_has_http_status( $error, $http_status ) {
+		if ( ! is_wp_error( $error ) ) {
+			return false;
+		}
+
+		$data = $error->get_error_data();
+
+		return is_array( $data )
+			&& isset( $data['http_status'] )
+			&& absint( $data['http_status'] ) === absint( $http_status );
+	}
+
+	/**
 	 * Normalize a paginated partner next URL.
 	 *
 	 * @since 1.0.0
@@ -1741,7 +1762,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			'updated_speakers' => $cpt_result['updated'],
 			'sponsors'         => isset( $partner_result['sponsors'] ) ? $partner_result['sponsors'] : 0,
 			'exhibitors'       => isset( $partner_result['exhibitors'] ) ? $partner_result['exhibitors'] : 0,
-			'partner_skipped'   => isset( $partner_result['partner_skipped'] ) ? $partner_result['partner_skipped'] : 0,
+			'partner_skipped'  => isset( $partner_result['partner_skipped'] ) ? $partner_result['partner_skipped'] : 0,
 			'sessions'         => isset( $import['session_count'] ) ? $import['session_count'] : count( $import['sessions'] ),
 			'schedule_rows'    => $schedule_rows,
 		);
