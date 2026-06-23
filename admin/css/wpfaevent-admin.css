@@ -267,12 +267,7 @@
 
 .wpfaevent-settings-card input[type="text"]:focus,
 .wpfaevent-settings-card input[type="url"]:focus,
-.wpfaevent-settings-card input[type="password"]:focus {
-	border-color: #6366f1 !important;
-	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
-	outline: none !important;
-}
-
+.wpfaevent-settings-card input[type="password"]:focus,
 .wpfaevent-settings-card select:focus {
 	border-color: #6366f1 !important;
 	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;

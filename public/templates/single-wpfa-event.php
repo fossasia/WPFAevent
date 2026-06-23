@@ -708,6 +708,12 @@ $header_vars = array(
 						<?php if ( $event_language_label ) : ?>
 							<span><?php echo esc_html( $event_language_label ); ?></span>
 						<?php endif; ?>
+
+						<?php if ( ! empty( $event_url ) && ( empty( $registration_url ) || $event_url !== $registration_url ) ) : ?>
+							<a class="btn btn-secondary" href="<?php echo esc_url( $event_url ); ?>" target="_blank" rel="noopener">
+								<?php esc_html_e( 'Event Website', 'wpfaevent' ); ?>
+							</a>
+						<?php endif; ?>
 						<?php if ( ! empty( $schedule_items ) ) : ?>
 							<span>
 								<?php

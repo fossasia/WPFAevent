@@ -176,7 +176,6 @@ class Wpfaevent_Templates {
 				return $candidate;
 			}
 		}
-
 		if ( is_post_type_archive( 'wpfa_event' ) ) {
 			$candidate = WPFAEVENT_PATH . 'public/templates/page-events.php';
 
