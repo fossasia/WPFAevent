@@ -16,3 +16,250 @@
 .wpfaevent-relationship-select option {
     padding: 2px 2px;
 }
+
+.wpfaevent-attendee-info {
+    display: grid;
+    gap: 20px;
+}
+
+.wpfaevent-attendee-info-section {
+    border-top: 1px solid #dcdcde;
+    padding-top: 16px;
+}
+
+.wpfaevent-attendee-info-section:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.wpfaevent-attendee-info-section h3 {
+    font-size: 14px;
+    margin: 0 0 6px;
+}
+
+.wpfaevent-attendee-info-section .description {
+    margin-bottom: 12px;
+}
+
+.wpfaevent-custom-tabs-list {
+    display: grid;
+    gap: 14px;
+    margin-top: 12px;
+}
+
+.wpfaevent-custom-tab-row {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 12px;
+}
+
+.wpfaevent-custom-tab-row p {
+    margin-top: 0;
+}
+
+.wpfaevent-custom-tab-row textarea {
+    font-family: inherit;
+    min-height: 120px;
+}
+
+.wpfaevent-custom-tab-row .button-link-delete {
+    margin-top: 2px;
+}
+
+.wpfaevent-custom-tabs-empty {
+    background: #f6f7f7;
+    border: 1px dashed #c3c4c7;
+    border-radius: 4px;
+    color: #646970;
+    margin: 12px 0;
+    padding: 12px;
+}
+
+/**
+ * Eventyay Importer Premium Styling
+ */
+
+/* Progress Overlay container */
+#wpfaevent-import-progress-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(15, 23, 42, 0.75);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	z-index: 999999;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	display: none; /* Controlled by JS setting display: flex */
+}
+
+/* Card layout */
+#wpfaevent-import-progress-overlay .wpfaevent-progress-card {
+	background: rgba(30, 41, 59, 0.95);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 20px;
+	padding: 40px;
+	width: 480px;
+	box-sizing: border-box;
+	text-align: center;
+	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+				inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	color: #f8fafc;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	transform: translateY(20px);
+	animation: wpfaevent-modal-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes wpfaevent-modal-slide-in {
+	to {
+		transform: translateY(0);
+	}
+}
+
+/* Title text */
+#wpfaevent-progress-title {
+	margin-top: 0 !important;
+	margin-bottom: 24px !important;
+	color: #ffffff !important;
+	font-size: 22px !important;
+	font-weight: 600 !important;
+	letter-spacing: -0.5px !important;
+	background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+/* Progress bar wrapper */
+.wpfaevent-progress-bar-wrapper {
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	border-radius: 12px;
+	height: 12px;
+	width: 100%;
+	margin: 24px 0;
+	overflow: hidden;
+	position: relative;
+	box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Progress bar inside */
+#wpfaevent-progress-bar {
+	background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+	background-size: 200% auto;
+	animation: wpfaevent-shimmer 2s linear infinite;
+	width: 0%;
+	height: 100%;
+	border-radius: 12px;
+	transition: width 0.4s cubic-bezier(0.1, 0.8, 0.1, 1);
+	box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
+}
+
+@keyframes wpfaevent-shimmer {
+	0% { background-position: 0% 50%; }
+	50% { background-position: 100% 50%; }
+	100% { background-position: 0% 50%; }
+}
+
+/* Spinner indicator */
+.wpfaevent-spinner-container {
+	display: flex;
+	justify-content: center;
+	margin-bottom: 24px;
+}
+
+.wpfaevent-spinner {
+	width: 48px;
+	height: 48px;
+	border: 3px solid rgba(99, 102, 241, 0.1);
+	border-top: 3px solid #6366f1;
+	border-right: 3px solid #a855f7;
+	border-radius: 50%;
+	animation: wpfaevent-spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+	filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.3));
+}
+
+@keyframes wpfaevent-spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+
+/* Status & Details styling */
+#wpfaevent-progress-status {
+	font-size: 15px !important;
+	color: #e2e8f0 !important;
+	margin-bottom: 8px !important;
+	font-weight: 500 !important;
+}
+
+#wpfaevent-progress-details {
+	font-size: 12px !important;
+	color: #94a3b8 !important;
+	margin-top: 0 !important;
+	line-height: 1.5 !important;
+}
+
+/* Importer settings card and info card visual styling */
+.wpfaevent-settings-card,
+.wpfaevent-info-card {
+	max-width: 960px !important;
+	background: #ffffff;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 12px !important;
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+	padding: 32px !important;
+	margin-top: 24px !important;
+	box-sizing: border-box;
+}
+
+.wpfaevent-settings-card h2,
+.wpfaevent-info-card h2 {
+	font-size: 20px !important;
+	font-weight: 600 !important;
+	color: #0f172a !important;
+	margin-top: 0 !important;
+	margin-bottom: 12px !important;
+}
+
+.wpfaevent-settings-card h3 {
+	font-size: 16px !important;
+	font-weight: 600 !important;
+	color: #334155 !important;
+	margin-top: 24px !important;
+	margin-bottom: 12px !important;
+}
+
+.wpfaevent-settings-card .form-table th {
+	font-weight: 500 !important;
+	color: #475569 !important;
+	width: 220px !important;
+	padding: 16px 10px 16px 0 !important;
+}
+
+.wpfaevent-settings-card .form-table td {
+	padding: 12px 10px !important;
+}
+
+.wpfaevent-settings-card input[type="text"],
+.wpfaevent-settings-card input[type="url"],
+.wpfaevent-settings-card input[type="password"],
+.wpfaevent-settings-card select {
+	border: 1px solid #cbd5e1 !important;
+	border-radius: 6px !important;
+	padding: 8px 12px !important;
+	font-size: 14px !important;
+	color: #0f172a !important;
+	transition: all 0.2s ease-in-out !important;
+}
+
+.wpfaevent-settings-card input[type="text"]:focus,
+.wpfaevent-settings-card input[type="url"]:focus,
+.wpfaevent-settings-card input[type="password"]:focus,
+.wpfaevent-settings-card select:focus {
+	border-color: #6366f1 !important;
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+	outline: none !important;
+}
