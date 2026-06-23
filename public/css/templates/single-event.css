@@ -1150,7 +1150,6 @@
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-photo {
 	background: #eaf1f8;
-	height: 190px;
 }
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-meta {
@@ -1164,13 +1163,6 @@
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-name a {
 	color: var(--event-ink);
-}
-
-.wpfaevent .wpfa-event-detail .wpfa-speaker-expand {
-	background: #fff;
-	max-height: none;
-	opacity: 1;
-	padding: 0 18px 18px;
 }
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-bio {

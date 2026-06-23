@@ -97,14 +97,10 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 
 		$import_settings = get_option( 'wpfaevent_eventyay_import_settings', array() );
 		$api_token       = ! empty( $import_settings['api_token'] ) ? $this->decrypt_value( $import_settings['api_token'] ) : '';
-
-		$payload = $this->fetch_eventyay_json( $api_url, $api_token );
-		if ( is_wp_error( $payload ) ) {
-			$this->send_eventyay_ajax_error( $payload );
-		}
+		$import_settings['api_token'] = $api_token;
 
 		$event_slug = get_post_meta( absint( $event_id ), '_eventyay_event_slug', true );
-		$import     = $this->parser->normalize_eventyay_payload( $payload, $import_settings, $event_slug );
+		$import     = $this->fetch_speakers_with_fallback( $event_id, $event_slug, $import_settings, $api_url );
 		if ( is_wp_error( $import ) ) {
 			$this->send_eventyay_ajax_error( $import );
 		}
@@ -321,6 +317,10 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			$importer  = new Wpfaevent_Eventyay_Importer();
 			$settings  = $importer->get_eventyay_import_settings();
 			$api_token = isset( $settings['api_token'] ) ? $settings['api_token'] : '';
+		}
+
+		if ( 0 === strpos( (string) $api_token, 'enc::' ) ) {
+			$api_token = $this->decrypt_value( $api_token );
 		}
 
 		$client  = new Wpfaevent_Eventyay_API_Client();
@@ -1000,12 +1000,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 
 		$this->persist_eventyay_sync_url( $event_id, $speakers_url );
 
-		$payload = $this->fetch_eventyay_json( $speakers_url, $api_token );
-		if ( is_wp_error( $payload ) ) {
-			return $payload;
-		}
-
-		$import = $this->parser->normalize_eventyay_payload( $payload, $settings, $event_slug );
+		$import = $this->fetch_speakers_with_fallback( $event_id, $event_slug, $settings, $speakers_url );
 
 		if ( is_wp_error( $import ) ) {
 			return $import;
@@ -1028,6 +1023,76 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			'created_speakers' => $cpt_result['created'],
 			'updated_speakers' => $cpt_result['updated'],
 		);
+	}
+
+	/**
+	 * Fetch speakers payload with schedule slots fallback if primary endpoint returns 0.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $event_id   Event post ID.
+	 * @param string $event_slug Event slug.
+	 * @param array  $settings   Import settings.
+	 * @param string $api_url    Primary speakers API URL.
+	 * @return array|WP_Error Normalized import payload.
+	 */
+	private function fetch_speakers_with_fallback( $event_id, $event_slug, $settings, $api_url ) {
+		$api_token = ! empty( $settings['api_token'] ) ? $settings['api_token'] : '';
+		$payload   = $this->fetch_eventyay_json( $api_url, $api_token );
+		$import    = null;
+
+		if ( ! is_wp_error( $payload ) ) {
+			$import = $this->parser->normalize_eventyay_payload( $payload, $settings, $event_slug );
+		}
+
+		$client              = new Wpfaevent_Eventyay_API_Client();
+		$should_try_fallback = is_wp_error( $payload ) && $client->eventyay_error_has_http_status( $payload, 404 );
+		if ( ! $should_try_fallback && ! is_wp_error( $payload ) ) {
+			$should_try_fallback = is_wp_error( $import ) || empty( $import['speakers'] );
+		}
+
+		if ( $should_try_fallback ) {
+			$base_url       = ! empty( $settings['base_url'] ) ? $settings['base_url'] : 'https://api.eventyay.com';
+			$organizer_slug = ! empty( $settings['organizer_slug'] ) ? rawurlencode( $settings['organizer_slug'] ) : '';
+			$slots_url      = '';
+
+			if ( $organizer_slug ) {
+				$slots_url = trailingslashit( $base_url ) . 'api/v1/organizers/' . $organizer_slug . '/events/' . rawurlencode( $event_slug ) . '/slots/';
+			} else {
+				$slots_url = trailingslashit( $base_url ) . 'v1/events/' . rawurlencode( $event_slug ) . '/slots?page[size]=200';
+				if ( false !== strpos( $base_url, 'eventyay.com' ) && false === strpos( $base_url, 'api.eventyay.com' ) ) {
+					$slots_url = trailingslashit( $base_url ) . 'api/v1/events/' . rawurlencode( $event_slug ) . '/slots?page[size]=200';
+				}
+			}
+
+			$slots_url = add_query_arg(
+				array(
+					'expand'    => 'room,submission,submission.speakers',
+					'lang'      => 'en',
+					'page_size' => absint( apply_filters( 'wpfaevent_eventyay_speaker_import_page_size', 50 ) ),
+				),
+				$slots_url
+			);
+
+			$slots_payload = $this->fetch_eventyay_json( $slots_url, $api_token );
+			if ( ! is_wp_error( $slots_payload ) && isset( $slots_payload['results'] ) && is_array( $slots_payload['results'] ) ) {
+				$transformed_payload = $this->parser->transform_slots_to_speakers_payload( $slots_payload['results'] );
+				$fallback_import     = $this->parser->normalize_eventyay_payload( $transformed_payload, $settings, $event_slug );
+				if ( ! is_wp_error( $fallback_import ) && ! empty( $fallback_import['speakers'] ) ) {
+					return $fallback_import;
+				}
+			}
+		}
+
+		if ( is_wp_error( $payload ) ) {
+			return $payload;
+		}
+
+		if ( is_wp_error( $import ) ) {
+			return $import;
+		}
+
+		return $import;
 	}
 
 	/**

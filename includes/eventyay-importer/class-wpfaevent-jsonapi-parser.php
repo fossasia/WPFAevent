@@ -740,6 +740,92 @@ class Wpfaevent_JSONAPI_Parser {
 	}
 
 	/**
+	 * Transform expanded slots schedule payload into the standard speakers list format.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $slots Raw slots array from the Eventyay slots API.
+	 * @return array Reconstructed speakers payload in Pretix REST format.
+	 */
+	public function transform_slots_to_speakers_payload( $slots ) {
+		$speakers_map = array();
+
+		if ( ! is_array( $slots ) ) {
+			return array(
+				'count'    => 0,
+				'next'     => null,
+				'previous' => null,
+				'results'  => array(),
+			);
+		}
+
+		foreach ( $slots as $slot ) {
+			if ( empty( $slot['submission'] ) || ! is_array( $slot['submission'] ) ) {
+				continue;
+			}
+
+			$submission    = $slot['submission'];
+			$speakers      = isset( $submission['speakers'] ) ? $submission['speakers'] : array();
+			$submission_id = isset( $submission['code'] ) ? $submission['code'] : ( isset( $submission['id'] ) ? $submission['id'] : '' );
+
+			if ( empty( $submission_id ) ) {
+				continue;
+			}
+
+			// Reconstruct slot resource to nest inside submission.
+			$embedded_slot = array(
+				'id'       => isset( $slot['id'] ) ? $slot['id'] : '',
+				'start'    => isset( $slot['start'] ) ? $slot['start'] : '',
+				'end'      => isset( $slot['end'] ) ? $slot['end'] : '',
+				'duration' => isset( $slot['duration'] ) ? $slot['duration'] : 0,
+			);
+
+			if ( ! empty( $slot['room'] ) ) {
+				$embedded_slot['room'] = $slot['room'];
+			}
+
+			$submission['slots'] = array( $embedded_slot );
+			$submission['slot']  = $embedded_slot;
+
+			foreach ( $speakers as $spk ) {
+				if ( ! is_array( $spk ) || empty( $spk['code'] ) ) {
+					continue;
+				}
+
+				$code = sanitize_text_field( (string) $spk['code'] );
+
+				if ( ! isset( $speakers_map[ $code ] ) ) {
+					$speakers_map[ $code ] = array(
+						'code'           => $code,
+						'name'           => isset( $spk['fullname'] ) ? $spk['fullname'] : ( isset( $spk['name'] ) ? $spk['name'] : '' ),
+						'biography'      => isset( $spk['biography'] ) ? $spk['biography'] : '',
+						'avatar'         => isset( $spk['avatar_url'] ) ? $spk['avatar_url'] : ( isset( $spk['avatar'] ) ? $spk['avatar'] : '' ),
+						'position'       => isset( $spk['position'] ) ? $spk['position'] : '',
+						'organization'   => isset( $spk['organization'] ) ? $spk['organization'] : '',
+						'category'       => isset( $spk['category'] ) ? $spk['category'] : '',
+						'linkedin'       => isset( $spk['linkedin'] ) ? $spk['linkedin'] : '',
+						'twitter'        => isset( $spk['twitter'] ) ? $spk['twitter'] : '',
+						'github'         => isset( $spk['github'] ) ? $spk['github'] : '',
+						'website'        => isset( $spk['website'] ) ? $spk['website'] : '',
+						'featured'       => isset( $spk['featured'] ) ? (bool) $spk['featured'] : false,
+						'featured_order' => isset( $spk['featured_order'] ) ? (int) $spk['featured_order'] : 0,
+						'submissions'    => array(),
+					);
+				}
+
+				$speakers_map[ $code ]['submissions'][] = $submission;
+			}
+		}
+
+		return array(
+			'count'    => count( $speakers_map ),
+			'next'     => null,
+			'previous' => null,
+			'results'  => array_values( $speakers_map ),
+		);
+	}
+
+	/**
 	 * Normalize a single Eventyay submission speaker resource.
 	 *
 	 * @since 1.0.0
