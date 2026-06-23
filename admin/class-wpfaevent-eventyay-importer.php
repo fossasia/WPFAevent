@@ -220,14 +220,16 @@ class Wpfaevent_Eventyay_Importer {
 				array(
 					'type'    => 'success',
 					'message' => sprintf(
-						/* translators: 1: fetched events, 2: created events, 3: updated events, 4: skipped events, 5: sessions, 6: speakers, 7: schedule rows. */
-						esc_html__( 'Fetched %1$d Eventyay event(s). Created %2$d, updated %3$d, skipped %4$d. Imported %5$d session(s), %6$d speaker(s), and %7$d schedule row(s).', 'wpfaevent' ),
+						/* translators: 1: fetched events, 2: created events, 3: updated events, 4: skipped events, 5: sessions, 6: speakers, 7: sponsors, 8: exhibitors, 9: schedule rows. */
+						esc_html__( 'Fetched %1$d Eventyay event(s). Created %2$d, updated %3$d, skipped %4$d. Imported %5$d session(s), %6$d speaker(s), %7$d sponsor(s), %8$d exhibitor(s), and %9$d schedule row(s).', 'wpfaevent' ),
 						absint( $result['fetched'] ),
 						absint( $result['created'] ),
 						absint( $result['updated'] ),
 						absint( $result['skipped'] ),
 						absint( isset( $result['sessions'] ) ? $result['sessions'] : 0 ),
 						absint( isset( $result['speakers'] ) ? $result['speakers'] : 0 ),
+						absint( isset( $result['sponsors'] ) ? $result['sponsors'] : 0 ),
+						absint( isset( $result['exhibitors'] ) ? $result['exhibitors'] : 0 ),
 						absint( isset( $result['schedule_rows'] ) ? $result['schedule_rows'] : 0 )
 					),
 				),
@@ -453,6 +455,8 @@ class Wpfaevent_Eventyay_Importer {
 			'skipped'       => 0,
 			'sessions'      => 0,
 			'speakers'      => 0,
+			'sponsors'      => 0,
+			'exhibitors'    => 0,
 			'schedule_rows' => 0,
 		);
 
@@ -472,6 +476,8 @@ class Wpfaevent_Eventyay_Importer {
 				if ( ! is_wp_error( $sync_result ) && is_array( $sync_result ) ) {
 					$result['sessions']      += isset( $sync_result['sessions'] ) ? $sync_result['sessions'] : 0;
 					$result['speakers']      += isset( $sync_result['speakers'] ) ? $sync_result['speakers'] : 0;
+					$result['sponsors']      += isset( $sync_result['sponsors'] ) ? $sync_result['sponsors'] : 0;
+					$result['exhibitors']    += isset( $sync_result['exhibitors'] ) ? $sync_result['exhibitors'] : 0;
 					$result['schedule_rows'] += isset( $sync_result['schedule_rows'] ) ? $sync_result['schedule_rows'] : 0;
 				}
 			}

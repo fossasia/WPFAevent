@@ -24,6 +24,8 @@
 				let created = 0;
 				let updated = 0;
 				let skipped = 0;
+				let sponsors = 0;
+				let exhibitors = 0;
 
 				// Show overlay
 				const $overlay = $('#wpfaevent-import-progress-overlay');
@@ -85,7 +87,7 @@
 					if (index >= events.length) {
 						$status.text('Finalizing sync...');
 						$bar.css('width', '100%');
-						const message = 'Fetched ' + fetched + ' Eventyay event(s). Created ' + created + ', updated ' + updated + ', skipped ' + skipped + '.';
+						const message = 'Fetched ' + fetched + ' Eventyay event(s). Created ' + created + ', updated ' + updated + ', skipped ' + skipped + '. Imported ' + sponsors + ' sponsor(s) and ' + exhibitors + ' exhibitor(s).';
 						saveSummaryAndRedirect('success', message, returnPage, nonce);
 						return;
 					}
@@ -112,6 +114,8 @@
 								created += res.created || 0;
 								updated += res.updated || 0;
 								skipped += res.skipped || 0;
+								sponsors += res.sponsors || 0;
+								exhibitors += res.exhibitors || 0;
 							} else {
 								skipped++;
 							}

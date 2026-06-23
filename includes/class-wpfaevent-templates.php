@@ -71,6 +71,13 @@ class Wpfaevent_Templates {
 			'block'     => 'schedule',
 			'title'     => 'WPFA Schedule',
 		),
+		'partner'         => array(
+			'file'      => 'page-partner.php',
+			'label'     => 'WPFA - Partner',
+			'shortcode' => 'wpfaevent_partner',
+			'block'     => 'partner',
+			'title'     => 'WPFA Partner',
+		),
 		'code_of_conduct' => array(
 			'file'      => 'page-code-of-conduct.php',
 			'label'     => 'WPFA - Code of Conduct',
