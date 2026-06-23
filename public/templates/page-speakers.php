@@ -23,7 +23,24 @@ $wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
  */
 $current_page = max( 1, (int) get_query_var( 'paged', 1 ) );
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only front-end search filtering via query args.
+$current_event_filter = isset( $_GET['event'] ) ? sanitize_text_field( wp_unslash( $_GET['event'] ) ) : ( isset( $_GET['event_id'] ) ? sanitize_text_field( wp_unslash( $_GET['event_id'] ) ) : '' );
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only front-end search filtering via query args.
 $search_term = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
+
+$selected_event_id = 0;
+if ( '' !== trim( $current_event_filter ) ) {
+	if ( is_numeric( $current_event_filter ) ) {
+		$candidate_event_id = absint( $current_event_filter );
+		if ( $candidate_event_id && 'wpfa_event' === get_post_type( $candidate_event_id ) ) {
+			$selected_event_id = $candidate_event_id;
+		}
+	} else {
+		$candidate_event = get_page_by_path( sanitize_title( $current_event_filter ), OBJECT, 'wpfa_event' );
+		if ( $candidate_event instanceof WP_Post ) {
+			$selected_event_id = absint( $candidate_event->ID );
+		}
+	}
+}
 
 // Query speakers from the CPT.
 $speakers_per_page = max( 1, (int) apply_filters( 'wpfa_speakers_per_page', 24 ) );
@@ -37,6 +54,19 @@ $args              = array(
 	's'              => $search_term,
 	'fields'         => 'ids',
 );
+
+if ( $selected_event_id ) {
+	$speaker_ids = get_post_meta( $selected_event_id, 'wpfa_event_speakers', true );
+	if ( ! is_array( $speaker_ids ) ) {
+		$speaker_ids = array();
+	}
+	$speaker_ids = array_filter( array_map( 'absint', $speaker_ids ) );
+	if ( empty( $speaker_ids ) ) {
+		$args['post__in'] = array( 0 );
+	} else {
+		$args['post__in'] = $speaker_ids;
+	}
+}
 
 // Add the category filter if it is set.
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only front-end category filtering via query args.
