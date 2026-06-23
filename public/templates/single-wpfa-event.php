@@ -709,7 +709,7 @@ $header_vars = array(
 							<span><?php echo esc_html( $event_language_label ); ?></span>
 						<?php endif; ?>
 
-						<?php if ( ! empty( $event_url ) && ( empty( $registration_url ) || $event_url !== $registration_url ) ) : ?>
+						<?php if ( ! empty( $event_url ) && ( empty( $register_url ) || $event_url !== $register_url ) ) : ?>
 							<a class="btn btn-secondary" href="<?php echo esc_url( $event_url ); ?>" target="_blank" rel="noopener">
 								<?php esc_html_e( 'Event Website', 'wpfaevent' ); ?>
 							</a>
@@ -1281,42 +1281,64 @@ $header_vars = array(
 					<div class="wpfa-event-exhibitor-grid">
 						<?php foreach ( $visible_exhibitors as $exhibitor ) : ?>
 							<?php
-							$exhibitor_name        = sanitize_text_field( $exhibitor['name'] );
-							$exhibitor_logo        = ! empty( $exhibitor['logo'] ) ? esc_url_raw( $exhibitor['logo'] ) : '';
-							$exhibitor_banner      = ! empty( $exhibitor['banner'] ) ? esc_url_raw( $exhibitor['banner'] ) : '';
-							$exhibitor_initial     = $exhibitor_name ? strtoupper( substr( $exhibitor_name, 0, 1 ) ) : '';
-							$exhibitor_card_class  = 'wpfa-event-exhibitor-card';
+							$exhibitor_name       = sanitize_text_field( $exhibitor['name'] );
+							$exhibitor_logo       = ! empty( $exhibitor['logo'] ) ? esc_url_raw( $exhibitor['logo'] ) : '';
+							$exhibitor_banner     = ! empty( $exhibitor['banner'] ) ? esc_url_raw( $exhibitor['banner'] ) : '';
+							$exhibitor_initial    = $exhibitor_name ? strtoupper( substr( $exhibitor_name, 0, 1 ) ) : '';
+							$exhibitor_card_class = 'wpfa-event-exhibitor-card';
 							$exhibitor_card_class .= $exhibitor_banner ? ' has-banner' : ' no-banner';
 							$exhibitor_card_class .= $exhibitor_logo ? ' has-logo' : ' no-logo';
-							$exhibitor_detail_url  = class_exists( 'Wpfaevent_Partner_Helper' )
-								? Wpfaevent_Partner_Helper::get_partner_detail_url( $event_id, 'exhibitor', $exhibitor )
-								: '';
+							$exhibitor_has_links  = ! empty( $exhibitor['link'] ) || ! empty( $exhibitor['video'] ) || ! empty( $exhibitor['slides'] ) || ! empty( $exhibitor['contact_link'] ) || ! empty( $exhibitor['contact_email'] );
 							?>
-							<a class="<?php echo esc_attr( $exhibitor_card_class ); ?> wpfa-event-exhibitor-card-link" href="<?php echo esc_url( $exhibitor_detail_url ? $exhibitor_detail_url : '#' ); ?>">
+							<details class="<?php echo esc_attr( $exhibitor_card_class ); ?>">
 								<?php if ( $exhibitor_banner ) : ?>
 									<img class="wpfa-event-exhibitor-banner" src="<?php echo esc_url( $exhibitor_banner ); ?>" alt="<?php echo esc_attr( $exhibitor_name ); ?>" loading="lazy">
 								<?php endif; ?>
-								<span class="wpfa-event-exhibitor-summary">
-									<span class="wpfa-event-exhibitor-main">
+								<summary class="wpfa-event-exhibitor-summary">
+									<div class="wpfa-event-exhibitor-main">
 										<?php if ( $exhibitor_logo ) : ?>
-											<span class="wpfa-event-exhibitor-logo">
+											<div class="wpfa-event-exhibitor-logo">
 												<img src="<?php echo esc_url( $exhibitor_logo ); ?>" alt="<?php echo esc_attr( $exhibitor_name ); ?>" loading="lazy">
-											</span>
+											</div>
 										<?php else : ?>
-											<span class="wpfa-event-exhibitor-placeholder" aria-hidden="true">
+											<div class="wpfa-event-exhibitor-placeholder" aria-hidden="true">
 												<?php echo esc_html( $exhibitor_initial ); ?>
-											</span>
+											</div>
 										<?php endif; ?>
-										<span class="wpfa-event-exhibitor-copy">
-											<span class="wpfa-event-exhibitor-eyebrow"><?php esc_html_e( 'Exhibitor', 'wpfaevent' ); ?></span>
-											<span class="wpfa-event-exhibitor-name"><?php echo esc_html( $exhibitor_name ); ?></span>
-										</span>
-									</span>
+										<div class="wpfa-event-exhibitor-copy">
+											<p class="wpfa-event-exhibitor-eyebrow"><?php esc_html_e( 'Exhibitor', 'wpfaevent' ); ?></p>
+											<h3 class="wpfa-event-exhibitor-name"><?php echo esc_html( $exhibitor_name ); ?></h3>
+										</div>
+									</div>
 									<span class="wpfa-event-exhibitor-toggle">
 										<span class="wpfa-event-exhibitor-toggle-closed"><?php esc_html_e( 'View details', 'wpfaevent' ); ?></span>
+										<span class="wpfa-event-exhibitor-toggle-open"><?php esc_html_e( 'Hide details', 'wpfaevent' ); ?></span>
 									</span>
-								</span>
-							</a>
+								</summary>
+								<div class="wpfa-event-exhibitor-body">
+									<?php if ( ! empty( $exhibitor['description'] ) ) : ?>
+										<div class="wpfa-event-partner-description"><?php echo wp_kses_post( wpautop( $exhibitor['description'] ) ); ?></div>
+									<?php endif; ?>
+									<?php if ( $exhibitor_has_links ) : ?>
+										<div class="wpfa-event-exhibitor-links">
+											<?php if ( ! empty( $exhibitor['link'] ) ) : ?>
+												<a href="<?php echo esc_url( $exhibitor['link'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Website', 'wpfaevent' ); ?></a>
+											<?php endif; ?>
+											<?php if ( ! empty( $exhibitor['video'] ) ) : ?>
+												<a href="<?php echo esc_url( $exhibitor['video'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Video', 'wpfaevent' ); ?></a>
+											<?php endif; ?>
+											<?php if ( ! empty( $exhibitor['slides'] ) ) : ?>
+												<a href="<?php echo esc_url( $exhibitor['slides'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Slides', 'wpfaevent' ); ?></a>
+											<?php endif; ?>
+											<?php if ( ! empty( $exhibitor['contact_link'] ) ) : ?>
+												<a href="<?php echo esc_url( $exhibitor['contact_link'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Contact', 'wpfaevent' ); ?></a>
+											<?php elseif ( ! empty( $exhibitor['contact_email'] ) ) : ?>
+												<a href="<?php echo esc_url( 'mailto:' . sanitize_email( $exhibitor['contact_email'] ) ); ?>"><?php esc_html_e( 'Contact', 'wpfaevent' ); ?></a>
+											<?php endif; ?>
+										</div>
+									<?php endif; ?>
+								</div>
+							</details>
 						<?php endforeach; ?>
 					</div>
 				</div>
