@@ -175,16 +175,23 @@
 	background: #fff;
 	border: 1px solid var(--event-line, #dfe6ee);
 	border-radius: 12px;
-	display: flex;
-	flex-wrap: wrap;
+	display: grid;
+	grid-template-columns:
+		minmax(0, 1fr)
+		minmax(112px, max-content)
+		minmax(112px, max-content)
+		minmax(112px, max-content)
+		minmax(112px, max-content)
+		minmax(140px, max-content);
 	align-items: center;
-	gap: 8px 14px;
+	column-gap: 14px;
+	row-gap: 8px;
 	margin-bottom: 10px;
 	padding: 14px 16px;
 }
 
 .wpfaevent .wpfa-schedule-item > strong {
-	flex: 1 1 260px;
+	grid-column: 1;
 	min-width: 0;
 }
 
@@ -202,17 +209,19 @@
 }
 
 .wpfaevent .wpfa-schedule-item .wpfa-calendar-action {
-	margin-left: 10px;
+	grid-column: 6;
+	justify-self: end;
+	margin-left: 0;
 }
 
 .wpfaevent .wpfa-schedule-actions {
 	align-items: center;
 	display: flex;
 	gap: 10px;
-	margin-left: auto;
+	grid-column: 5;
 	min-width: 0;
 	justify-content: flex-end;
-	flex: 0 0 auto;
+	justify-self: end;
 }
 
 .wpfaevent .wpfa-schedule-actions a {
@@ -220,6 +229,34 @@
 	justify-content: flex-end;
 	color: var(--event-primary-dark);
 	font-weight: 800;
+}
+
+.wpfaevent .wpfa-schedule-item > .wpfa-schedule-time {
+	grid-column: 2;
+}
+
+.wpfaevent .wpfa-schedule-item > .wpfa-schedule-location {
+	grid-column: 3;
+}
+
+.wpfaevent .wpfa-schedule-item > .wpfa-schedule-language {
+	grid-column: 4;
+}
+
+@media (max-width: 760px) {
+	.wpfaevent .wpfa-schedule-item {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.wpfaevent .wpfa-schedule-item > strong,
+	.wpfaevent .wpfa-schedule-item > .wpfa-schedule-time,
+	.wpfaevent .wpfa-schedule-item > .wpfa-schedule-location,
+	.wpfaevent .wpfa-schedule-item > .wpfa-schedule-language,
+	.wpfaevent .wpfa-schedule-item .wpfa-schedule-actions,
+	.wpfaevent .wpfa-schedule-item .wpfa-calendar-action {
+		grid-column: 1;
+		justify-self: start;
+	}
 }
 
 .wpfaevent .wpfa-schedule-calendar {
