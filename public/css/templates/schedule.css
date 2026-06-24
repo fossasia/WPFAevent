@@ -196,16 +196,21 @@
 }
 
 .wpfaevent .wpfa-schedule-item .wpfa-calendar-action {
-	margin-left: auto;
+	margin-left: 0;
 }
 
 .wpfaevent .wpfa-schedule-actions {
-	display: inline-flex;
+	align-items: center;
+	display: flex;
 	gap: 10px;
 	margin-left: auto;
+	min-width: 0;
+	justify-content: flex-end;
 }
 
 .wpfaevent .wpfa-schedule-actions a {
+	display: inline-flex;
+	justify-content: flex-end;
 	color: var(--event-primary-dark);
 	font-weight: 800;
 }
