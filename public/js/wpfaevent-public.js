@@ -29,4 +29,44 @@
 	 * practising this, we should strive to set a better example in our own work.
 	 */
 
+	$(function() {
+		$('.wpfa-event-timezone-select').on('change', function() {
+			if (this.form) {
+				this.form.submit();
+			}
+		});
+
+		const settings = window.wpfaeventPublic || {};
+		const speakerPlaceholderSrc = typeof settings.speakerPlaceholderUrl === 'string' && settings.speakerPlaceholderUrl.trim()
+			? settings.speakerPlaceholderUrl.trim()
+			: '';
+
+		const getSpeakerPlaceholderAlt = function() {
+			if (typeof settings.speakerPlaceholderAlt === 'string' && settings.speakerPlaceholderAlt.trim()) {
+				return settings.speakerPlaceholderAlt;
+			}
+
+			return 'Speaker photo placeholder';
+		};
+
+		const applySpeakerPlaceholder = function() {
+			if (!this || !speakerPlaceholderSrc || this.classList.contains('wpfa-speaker-placeholder-img') || this.src === speakerPlaceholderSrc) {
+				return;
+			}
+
+			this.removeAttribute('srcset');
+			this.removeAttribute('sizes');
+			this.classList.add('wpfa-speaker-placeholder-img');
+			this.alt = getSpeakerPlaceholderAlt();
+			this.src = speakerPlaceholderSrc;
+		};
+
+		$('.wpfa-speaker-photo img:not(.wpfa-speaker-placeholder-img), .wpfa-speaker-profile-photo img:not(.wpfa-speaker-placeholder-img)')
+			.on('error', applySpeakerPlaceholder)
+			.each(function() {
+				if (this.complete && this.naturalWidth === 0) {
+					applySpeakerPlaceholder.call(this);
+				}
+			});
+	});
 })( jQuery );

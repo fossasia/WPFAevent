@@ -78,7 +78,6 @@ class Wpfaevent_Public {
 			'page-schedule.php',
 			'page-speakers.php',
 			'page-landing.php',
-			'admin-dashboard.php',
 		);
 
 		foreach ( $wpfa_templates as $template ) {
@@ -516,5 +515,13 @@ class Wpfaevent_Public {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-public.js', array( 'jquery' ), $this->version, false );
+		wp_localize_script(
+			$this->plugin_name,
+			'wpfaeventPublic',
+			array(
+				'speakerPlaceholderAlt' => __( 'Speaker photo placeholder', 'wpfaevent' ),
+				'speakerPlaceholderUrl' => WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg',
+			)
+		);
 	}
 }

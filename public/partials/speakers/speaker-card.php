@@ -40,9 +40,10 @@ if ( empty( $sid ) || ! is_numeric( $sid ) ) {
 
 $sid = (int) $sid;
 
-$name = get_the_title( $sid );
+$name         = get_the_title( $sid );
 /* translators: %s: Speaker name. */
 $photo_alt    = sprintf( __( 'Photo of %s', 'wpfaevent' ), $name );
+$placeholder_url = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
 $org          = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
 $position     = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
 $photo_url    = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
@@ -71,11 +72,13 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 			<img src="<?php echo esc_url( $photo_url ); ?>"
 				alt="<?php echo esc_attr( $photo_alt ); ?>"
 				loading="lazy"
-				itemprop="image"
-				onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-			<span class="wpfa-speaker-placeholder" style="display:none;" aria-hidden="true"></span>
+				itemprop="image" />
 		<?php else : ?>
-			<span class="wpfa-speaker-placeholder" aria-hidden="true"></span>
+			<img src="<?php echo esc_url( $placeholder_url ); ?>"
+				alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>"
+				loading="lazy"
+				itemprop="image"
+				class="wpfa-speaker-placeholder-img" />
 		<?php endif; ?>
 	</a>
 	<div class="wpfa-speaker-meta">
