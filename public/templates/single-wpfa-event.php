@@ -337,31 +337,31 @@ $show_about = ! array_key_exists( 'about', $section_visibility ) || ! empty( $se
 $show_speakers = ! array_key_exists( 'speakers', $section_visibility ) || ! empty( $section_visibility['speakers'] );
 $show_schedule = ! array_key_exists( 'schedule', $section_visibility ) || ! empty( $section_visibility['schedule'] );
 $show_sponsors = ! array_key_exists( 'sponsors', $section_visibility ) || ! empty( $section_visibility['sponsors'] );
-$show_exhibitors = ! array_key_exists( 'exhibitors', $section_visibility ) || ! empty( $section_visibility['exhibitors'] );
-$schedule_rows = isset( $schedule_table['data'] ) && is_array( $schedule_table['data'] ) ? $schedule_table['data'] : array();
-$schedule_meta = isset( $schedule_table['sessions'] ) && is_array( $schedule_table['sessions'] ) ? $schedule_table['sessions'] : array();
-$schedule_head = ! empty( $schedule_rows[0] ) && is_array( $schedule_rows[0] ) ? $schedule_rows[0] : array();
-$schedule_body = ! empty( $schedule_head ) ? array_slice( $schedule_rows, 1 ) : $schedule_rows;
-$speaker_count = count( $speaker_ids );
+$show_exhibitors        = ! array_key_exists( 'exhibitors', $section_visibility ) || ! empty( $section_visibility['exhibitors'] );
+$schedule_rows          = isset( $schedule_table['data'] ) && is_array( $schedule_table['data'] ) ? $schedule_table['data'] : array();
+$schedule_meta          = isset( $schedule_table['sessions'] ) && is_array( $schedule_table['sessions'] ) ? $schedule_table['sessions'] : array();
+$schedule_head          = ! empty( $schedule_rows[0] ) && is_array( $schedule_rows[0] ) ? $schedule_rows[0] : array();
+$schedule_body          = ! empty( $schedule_head ) ? array_slice( $schedule_rows, 1 ) : $schedule_rows;
+$speaker_count          = count( $speaker_ids );
 $featured_speaker_count = count( $featured_speaker_ids );
 $visible_sponsor_groups = array();
-$sponsor_count = 0;
-$visible_exhibitors = array();
-$schedule_items = array();
+$sponsor_count           = 0;
+$visible_exhibitors      = array();
+$schedule_items          = array();
 $schedule_preview_items = array();
 $schedule_preview_day_groups = array();
-$schedule_hidden_count = 0;
-$first_schedule = array();
-$custom_sections = array();
-$event_colors = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_colors( $event_id ) : array();
-$event_color_var_map = array(
+$schedule_hidden_count    = 0;
+$first_schedule           = array();
+$custom_sections          = array();
+$event_colors             = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_colors( $event_id ) : array();
+$event_color_var_map      = array(
 	'wpfa_event_primary_color'          => '--event-primary',
 	'wpfa_event_hover_button_color'     => '--event-primary-dark',
 	'wpfa_event_theme_background_color' => '--event-soft',
 	'wpfa_event_theme_success_color'    => '--event-success',
 	'wpfa_event_theme_danger_color'     => '--event-danger',
 );
-$event_style_vars = array();
+$event_style_vars         = array();
 
 foreach ( $event_color_var_map as $meta_key => $css_var ) {
 	if ( ! empty( $event_colors[ $meta_key ] ) ) {
@@ -420,9 +420,9 @@ foreach ( $dashboard_speakers as $dashboard_speaker ) {
 	$dashboard_regular_speakers[] = $dashboard_speaker;
 }
 
-$main_dashboard_speakers = array_slice( $dashboard_speakers, 0, $main_speaker_limit );
-$main_dashboard_regular_speakers = array_slice( $dashboard_regular_speakers, 0, $main_speaker_limit );
-$dashboard_speaker_overflow_count = max( 0, count( $dashboard_speakers ) - count( $main_dashboard_speakers ) );
+$main_dashboard_speakers                  = array_slice( $dashboard_speakers, 0, $main_speaker_limit );
+$main_dashboard_regular_speakers          = array_slice( $dashboard_regular_speakers, 0, $main_speaker_limit );
+$dashboard_speaker_overflow_count         = max( 0, count( $dashboard_speakers ) - count( $main_dashboard_speakers ) );
 $dashboard_regular_speaker_overflow_count = max( 0, count( $dashboard_regular_speakers ) - count( $main_dashboard_regular_speakers ) );
 
 if ( ! empty( $dashboard_featured_speakers ) ) {
@@ -449,11 +449,11 @@ if ( '' === $about_content ) {
 	$about_content = '' !== $post_content ? $post_content : $event_lead;
 }
 
-$date_label = ! empty( $event_calendar_data['date_label'] ) ? sanitize_text_field( $event_calendar_data['date_label'] ) : $format_event_date( $start_date );
-$event_time_label = ! empty( $event_calendar_data['time_label'] ) ? sanitize_text_field( $event_calendar_data['time_label'] ) : '';
+$date_label           = ! empty( $event_calendar_data['date_label'] ) ? sanitize_text_field( $event_calendar_data['date_label'] ) : $format_event_date( $start_date );
+$event_time_label     = ! empty( $event_calendar_data['time_label'] ) ? sanitize_text_field( $event_calendar_data['time_label'] ) : '';
 $event_timezone_label = ! empty( $event_calendar_data['timezone_label'] ) ? sanitize_text_field( $event_calendar_data['timezone_label'] ) : str_replace( '_', ' ', $event_timezone_string );
-$event_start_content = ! empty( $event_calendar_data['start_content'] ) ? sanitize_text_field( $event_calendar_data['start_content'] ) : $start_date;
-$event_end_content = ! empty( $event_calendar_data['end_content'] ) ? sanitize_text_field( $event_calendar_data['end_content'] ) : $end_date;
+$event_start_content  = ! empty( $event_calendar_data['start_content'] ) ? sanitize_text_field( $event_calendar_data['start_content'] ) : $start_date;
+$event_end_content    = ! empty( $event_calendar_data['end_content'] ) ? sanitize_text_field( $event_calendar_data['end_content'] ) : $end_date;
 
 if ( empty( $event_calendar_data['date_label'] ) && $end_date && $end_date !== $start_date ) {
 	$date_label .= $date_label ? ' - ' . $format_event_date( $end_date ) : $format_event_date( $end_date );
@@ -473,8 +473,8 @@ $build_event_schedule_view_url = static function ( $view ) use ( $event_id, $eve
 	return add_query_arg( $args, get_permalink( $event_id ) ) . '#wpfa-event-schedule-title';
 };
 
-$event_schedule_url = class_exists( 'Wpfaevent_Schedule_Helper' ) ? Wpfaevent_Schedule_Helper::get_schedule_page_url() : home_url( '/full-schedule/' );
-$event_schedule_args = array(
+$event_schedule_url       = class_exists( 'Wpfaevent_Schedule_Helper' ) ? Wpfaevent_Schedule_Helper::get_schedule_page_url() : home_url( '/full-schedule/' );
+$event_schedule_args      = array(
 	'event' => $event_slug,
 );
 
@@ -486,10 +486,10 @@ if ( $selected_schedule_timezone_string && $selected_schedule_timezone_string !=
 	$event_schedule_args['schedule_tz'] = $selected_schedule_timezone_string;
 }
 
-$event_schedule_url = add_query_arg( $event_schedule_args, $event_schedule_url );
-$event_additional_url = class_exists( 'Wpfaevent_Additional_Information_Helper' ) ? Wpfaevent_Additional_Information_Helper::get_additional_information_page_url() : home_url( '/additional-information/' );
+$event_schedule_url       = add_query_arg( $event_schedule_args, $event_schedule_url );
+$event_additional_url     = class_exists( 'Wpfaevent_Additional_Information_Helper' ) ? Wpfaevent_Additional_Information_Helper::get_additional_information_page_url() : home_url( '/additional-information/' );
 $event_additional_url = add_query_arg( 'event', $event_slug, $event_additional_url );
-$registration_url = $register_url;
+$registration_url         = $register_url;
 
 $build_schedule_calendar_url = static function ( $item ) use ( $build_schedule_fallback_datetime, $event_timezone, $event_timezone_string, $event_title, $event_url, $location, $parse_schedule_datetime, $split_schedule_time_range ) {
 	if ( ! class_exists( 'Wpfaevent_Calendar' ) ) {
