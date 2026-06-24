@@ -113,7 +113,7 @@ $get_timezone_object = static function ( $timezone_string, $fallback_timezone ) 
 	}
 };
 
-$site_timezone        = wp_timezone();
+$site_timezone = wp_timezone();
 $site_timezone_string = wp_timezone_string();
 
 if ( '' === trim( (string) $site_timezone_string ) ) {
@@ -121,7 +121,7 @@ if ( '' === trim( (string) $site_timezone_string ) ) {
 }
 
 $event_timezone_string = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_timezone_string( $event_id ) : $site_timezone_string;
-$event_timezone        = $get_timezone_object( $event_timezone_string, $site_timezone );
+$event_timezone = $get_timezone_object( $event_timezone_string, $site_timezone );
 
 $selected_schedule_timezone_string = $event_timezone_string;
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only timezone converter for the public schedule.
@@ -140,7 +140,7 @@ if ( isset( $_GET['schedule_tz'] ) ) {
 }
 
 $selected_schedule_timezone = $get_timezone_object( $selected_schedule_timezone_string, $site_timezone );
-$schedule_timezone_options  = array_values(
+$schedule_timezone_options = array_values(
 	array_unique(
 		array_merge(
 			array(
@@ -287,81 +287,81 @@ $parse_schedule_datetime = static function ( $datetime ) {
 	}
 };
 
-$site_settings      = $read_dashboard_json( 'site-settings-' . absint( $event_id ) . '.json', array() );
+$site_settings = $read_dashboard_json( 'site-settings-' . absint( $event_id ) . '.json', array() );
 $dashboard_speakers = $read_dashboard_json( 'speakers-' . absint( $event_id ) . '.json', array() );
 
-$event_title       = get_the_title( $event_id );
-$start_date        = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
-$end_date          = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
-$location          = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
+$event_title = get_the_title( $event_id );
+$start_date = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
+$end_date = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
+$location = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
 $venue_information = trim( (string) get_post_meta( $event_id, 'wpfa_event_venue_information', true ) );
-$custom_tabs       = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_custom_tabs( get_post_meta( $event_id, 'wpfa_event_custom_tabs', true ) ) : array();
-$event_languages   = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array();
+$custom_tabs = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_custom_tabs( get_post_meta( $event_id, 'wpfa_event_custom_tabs', true ) ) : array();
+$event_languages = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array();
 $event_language_label = implode( ', ', $event_languages );
-$event_url         = get_post_meta( $event_id, 'wpfa_event_url', true );
-$event_url         = $event_url ? esc_url_raw( $event_url ) : '';
-$about_content     = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
-$post_content      = trim( (string) get_post_field( 'post_content', $event_id ) );
-$event_lead        = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
+$event_url = get_post_meta( $event_id, 'wpfa_event_url', true );
+$event_url = $event_url ? esc_url_raw( $event_url ) : '';
+$about_content = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
+$post_content = trim( (string) get_post_field( 'post_content', $event_id ) );
+$event_lead = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
 
-$main_speaker_limit   = absint( apply_filters( 'wpfa_event_main_speaker_limit', 20, $event_id ) );
-$main_speaker_limit   = $main_speaker_limit ? $main_speaker_limit : 20;
-$speaker_ids          = $get_linked_speaker_ids( $event_id );
+$main_speaker_limit = absint( apply_filters( 'wpfa_event_main_speaker_limit', 20, $event_id ) );
+$main_speaker_limit = $main_speaker_limit ? $main_speaker_limit : 20;
+$speaker_ids = $get_linked_speaker_ids( $event_id );
 $featured_speaker_ids = class_exists( 'Wpfaevent_Meta_Event' )
 	? Wpfaevent_Meta_Event::resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers )
 	: array();
-$regular_speaker_ids  = array_values( array_diff( $speaker_ids, $featured_speaker_ids ) );
-$main_speaker_ids     = array_slice( $speaker_ids, 0, $main_speaker_limit );
+$regular_speaker_ids = array_values( array_diff( $speaker_ids, $featured_speaker_ids ) );
+$main_speaker_ids = array_slice( $speaker_ids, 0, $main_speaker_limit );
 $main_regular_speaker_ids = array_slice( $regular_speaker_ids, 0, $main_speaker_limit );
 $main_speaker_overflow_count = max( 0, count( $speaker_ids ) - count( $main_speaker_ids ) );
 $regular_speaker_overflow_count = max( 0, count( $regular_speaker_ids ) - count( $main_regular_speaker_ids ) );
 
-$event_slug              = get_post_field( 'post_name', $event_id );
+$event_slug = get_post_field( 'post_name', $event_id );
 $speaker_placeholder_url = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
-$speakers_url            = add_query_arg( 'event', $event_slug, home_url( '/speakers/' ) );
+$speakers_url = add_query_arg( 'event', $event_slug, home_url( '/speakers/' ) );
 
 $register_text = ! empty( $site_settings['reg_button_text'] ) ? sanitize_text_field( $site_settings['reg_button_text'] ) : __( 'Get Tickets', 'wpfaevent' );
-$register_url  = ! empty( $site_settings['reg_button_link'] ) ? esc_url_raw( $site_settings['reg_button_link'] ) : $event_url;
+$register_url = ! empty( $site_settings['reg_button_link'] ) ? esc_url_raw( $site_settings['reg_button_link'] ) : $event_url;
 
 $event_calendar_data = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_calendar_data( $event_id ) : array();
 $event_calendar_data = is_wp_error( $event_calendar_data ) ? array() : $event_calendar_data;
-$event_calendar_url  = ! empty( $event_calendar_data ) && class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_ics_url( $event_id ) : '';
-$event_google_url    = ! empty( $event_calendar_data ) && class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::build_google_calendar_url( $event_calendar_data ) : '';
+$event_calendar_url = ! empty( $event_calendar_data ) && class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_ics_url( $event_id ) : '';
+$event_google_url = ! empty( $event_calendar_data ) && class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::build_google_calendar_url( $event_calendar_data ) : '';
 
-$schedule_table         = $read_dashboard_json( 'schedule-' . absint( $event_id ) . '.json', array() );
-$sponsor_groups         = $read_dashboard_json( 'sponsors-' . absint( $event_id ) . '.json', array() );
-$exhibitors             = $read_dashboard_json( 'exhibitors-' . absint( $event_id ) . '.json', array() );
-$section_visibility     = isset( $site_settings['section_visibility'] ) && is_array( $site_settings['section_visibility'] ) ? $site_settings['section_visibility'] : array();
+$schedule_table = $read_dashboard_json( 'schedule-' . absint( $event_id ) . '.json', array() );
+$sponsor_groups = $read_dashboard_json( 'sponsors-' . absint( $event_id ) . '.json', array() );
+$exhibitors = $read_dashboard_json( 'exhibitors-' . absint( $event_id ) . '.json', array() );
+$section_visibility = isset( $site_settings['section_visibility'] ) && is_array( $site_settings['section_visibility'] ) ? $site_settings['section_visibility'] : array();
 
-$show_about             = ! array_key_exists( 'about', $section_visibility ) || ! empty( $section_visibility['about'] );
-$show_speakers          = ! array_key_exists( 'speakers', $section_visibility ) || ! empty( $section_visibility['speakers'] );
-$show_schedule          = ! array_key_exists( 'schedule', $section_visibility ) || ! empty( $section_visibility['schedule'] );
-$show_sponsors          = ! array_key_exists( 'sponsors', $section_visibility ) || ! empty( $section_visibility['sponsors'] );
-$show_exhibitors        = ! array_key_exists( 'exhibitors', $section_visibility ) || ! empty( $section_visibility['exhibitors'] );
-$schedule_rows          = isset( $schedule_table['data'] ) && is_array( $schedule_table['data'] ) ? $schedule_table['data'] : array();
-$schedule_meta          = isset( $schedule_table['sessions'] ) && is_array( $schedule_table['sessions'] ) ? $schedule_table['sessions'] : array();
-$schedule_head          = ! empty( $schedule_rows[0] ) && is_array( $schedule_rows[0] ) ? $schedule_rows[0] : array();
-$schedule_body          = ! empty( $schedule_head ) ? array_slice( $schedule_rows, 1 ) : $schedule_rows;
-$speaker_count          = count( $speaker_ids );
+$show_about = ! array_key_exists( 'about', $section_visibility ) || ! empty( $section_visibility['about'] );
+$show_speakers = ! array_key_exists( 'speakers', $section_visibility ) || ! empty( $section_visibility['speakers'] );
+$show_schedule = ! array_key_exists( 'schedule', $section_visibility ) || ! empty( $section_visibility['schedule'] );
+$show_sponsors = ! array_key_exists( 'sponsors', $section_visibility ) || ! empty( $section_visibility['sponsors'] );
+$show_exhibitors = ! array_key_exists( 'exhibitors', $section_visibility ) || ! empty( $section_visibility['exhibitors'] );
+$schedule_rows = isset( $schedule_table['data'] ) && is_array( $schedule_table['data'] ) ? $schedule_table['data'] : array();
+$schedule_meta = isset( $schedule_table['sessions'] ) && is_array( $schedule_table['sessions'] ) ? $schedule_table['sessions'] : array();
+$schedule_head = ! empty( $schedule_rows[0] ) && is_array( $schedule_rows[0] ) ? $schedule_rows[0] : array();
+$schedule_body = ! empty( $schedule_head ) ? array_slice( $schedule_rows, 1 ) : $schedule_rows;
+$speaker_count = count( $speaker_ids );
 $featured_speaker_count = count( $featured_speaker_ids );
 $visible_sponsor_groups = array();
-$sponsor_count           = 0;
-$visible_exhibitors      = array();
-$schedule_items          = array();
+$sponsor_count = 0;
+$visible_exhibitors = array();
+$schedule_items = array();
 $schedule_preview_items = array();
 $schedule_preview_day_groups = array();
-$schedule_hidden_count    = 0;
-$first_schedule           = array();
-$custom_sections          = array();
-$event_colors             = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_colors( $event_id ) : array();
-$event_color_var_map      = array(
+$schedule_hidden_count = 0;
+$first_schedule = array();
+$custom_sections = array();
+$event_colors = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_colors( $event_id ) : array();
+$event_color_var_map = array(
 	'wpfa_event_primary_color'          => '--event-primary',
 	'wpfa_event_hover_button_color'     => '--event-primary-dark',
 	'wpfa_event_theme_background_color' => '--event-soft',
 	'wpfa_event_theme_success_color'    => '--event-success',
 	'wpfa_event_theme_danger_color'     => '--event-danger',
 );
-$event_style_vars         = array();
+$event_style_vars = array();
 
 foreach ( $event_color_var_map as $meta_key => $css_var ) {
 	if ( ! empty( $event_colors[ $meta_key ] ) ) {
@@ -369,7 +369,7 @@ foreach ( $event_color_var_map as $meta_key => $css_var ) {
 	}
 }
 
-$event_style_attr         = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
+$event_style_attr = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
 
 foreach ( $sponsor_groups as $sponsor_group ) {
 	if ( ! is_array( $sponsor_group ) ) {
@@ -420,9 +420,9 @@ foreach ( $dashboard_speakers as $dashboard_speaker ) {
 	$dashboard_regular_speakers[] = $dashboard_speaker;
 }
 
-$main_dashboard_speakers                  = array_slice( $dashboard_speakers, 0, $main_speaker_limit );
-$main_dashboard_regular_speakers          = array_slice( $dashboard_regular_speakers, 0, $main_speaker_limit );
-$dashboard_speaker_overflow_count         = max( 0, count( $dashboard_speakers ) - count( $main_dashboard_speakers ) );
+$main_dashboard_speakers = array_slice( $dashboard_speakers, 0, $main_speaker_limit );
+$main_dashboard_regular_speakers = array_slice( $dashboard_regular_speakers, 0, $main_speaker_limit );
+$dashboard_speaker_overflow_count = max( 0, count( $dashboard_speakers ) - count( $main_dashboard_speakers ) );
 $dashboard_regular_speaker_overflow_count = max( 0, count( $dashboard_regular_speakers ) - count( $main_dashboard_regular_speakers ) );
 
 if ( ! empty( $dashboard_featured_speakers ) ) {
@@ -449,11 +449,11 @@ if ( '' === $about_content ) {
 	$about_content = '' !== $post_content ? $post_content : $event_lead;
 }
 
-$date_label           = ! empty( $event_calendar_data['date_label'] ) ? sanitize_text_field( $event_calendar_data['date_label'] ) : $format_event_date( $start_date );
-$event_time_label     = ! empty( $event_calendar_data['time_label'] ) ? sanitize_text_field( $event_calendar_data['time_label'] ) : '';
+$date_label = ! empty( $event_calendar_data['date_label'] ) ? sanitize_text_field( $event_calendar_data['date_label'] ) : $format_event_date( $start_date );
+$event_time_label = ! empty( $event_calendar_data['time_label'] ) ? sanitize_text_field( $event_calendar_data['time_label'] ) : '';
 $event_timezone_label = ! empty( $event_calendar_data['timezone_label'] ) ? sanitize_text_field( $event_calendar_data['timezone_label'] ) : str_replace( '_', ' ', $event_timezone_string );
-$event_start_content  = ! empty( $event_calendar_data['start_content'] ) ? sanitize_text_field( $event_calendar_data['start_content'] ) : $start_date;
-$event_end_content    = ! empty( $event_calendar_data['end_content'] ) ? sanitize_text_field( $event_calendar_data['end_content'] ) : $end_date;
+$event_start_content = ! empty( $event_calendar_data['start_content'] ) ? sanitize_text_field( $event_calendar_data['start_content'] ) : $start_date;
+$event_end_content = ! empty( $event_calendar_data['end_content'] ) ? sanitize_text_field( $event_calendar_data['end_content'] ) : $end_date;
 
 if ( empty( $event_calendar_data['date_label'] ) && $end_date && $end_date !== $start_date ) {
 	$date_label .= $date_label ? ' - ' . $format_event_date( $end_date ) : $format_event_date( $end_date );
