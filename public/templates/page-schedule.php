@@ -401,8 +401,10 @@ $format_timezone_label = static function ( $timezone_string ) use ( $primary_tim
 												<span class="wpfa-schedule-language"><?php echo esc_html( $schedule_event['language_label'] ); ?></span>
 											<?php endif; ?>
 										</div>
-										<div class="wpfa-schedule-actions">
-											<a class="wpfa-schedule-action" href="<?php echo esc_url( $schedule_event['schedule_url'] ); ?>"><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></a>
+										<div class="wpfa-schedule-item-actions">
+											<div class="wpfa-schedule-actions">
+												<a class="wpfa-schedule-action" href="<?php echo esc_url( $schedule_event['schedule_url'] ); ?>"><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></a>
+											</div>
 											<?php if ( ! empty( $schedule_event['calendar_url'] ) ) : ?>
 												<?php
 												$calendar_label = sprintf(
