@@ -40,15 +40,15 @@ if ( empty( $sid ) || ! is_numeric( $sid ) ) {
 
 $sid = (int) $sid;
 
-$name         = get_the_title( $sid );
+$name = get_the_title( $sid );
 /* translators: %s: Speaker name. */
-$photo_alt    = sprintf( __( 'Photo of %s', 'wpfaevent' ), $name );
+$photo_alt       = sprintf( __( 'Photo of %s', 'wpfaevent' ), $name );
 $placeholder_url = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
-$org          = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
-$position     = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
-$photo_url    = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
-$speaker_link = get_permalink( $sid );
-$is_admin     = current_user_can( 'manage_options' );
+$org             = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
+$position        = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
+$photo_url       = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
+$speaker_link    = get_permalink( $sid );
+$is_admin        = current_user_can( 'manage_options' );
 
 // Get categories from the taxonomy.
 $speaker_categories = array();
