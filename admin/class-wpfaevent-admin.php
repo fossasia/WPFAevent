@@ -142,6 +142,19 @@ class Wpfaevent_Admin {
 		 */
 
 		wp_enqueue_script( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'js/wpfaevent-admin.js', array( 'jquery' ), $this->version, false );
+		wp_localize_script(
+			$this->plugin_name . '-admin',
+			'wpfaeventAdmin',
+			array(
+				'ajaxUrl'               => admin_url( 'admin-ajax.php' ),
+				'syncingText'           => __( 'Syncing...', 'wpfaevent' ),
+				'syncCompleteText'      => __( 'Sync complete.', 'wpfaevent' ),
+				'syncFailedText'        => __( 'Sync failed.', 'wpfaevent' ),
+				'networkErrorText'      => __( 'Network error.', 'wpfaevent' ),
+				'syncButtonText'        => __( 'Sync Speakers from Eventyay', 'wpfaevent' ),
+				'lastSyncedJustNowText' => __( 'Last synced just now.', 'wpfaevent' ),
+			)
+		);
 	}
 
 	/**
@@ -666,17 +679,18 @@ class Wpfaevent_Admin {
 		$eventyay_id = get_post_meta( $post->ID, '_eventyay_event_slug', true );
 		$synced_at   = get_post_meta( $post->ID, '_wpfa_eventyay_speakers_synced_at', true );
 		?>
-		<p class="description" style="margin-bottom:10px;">
+		<div class="wpfa-eventyay-sync-meta-box">
+		<p class="description wpfa-eventyay-sync-meta-box__description">
 			<?php esc_html_e( 'Re-sync speakers and sessions for this event from the Eventyay API.', 'wpfaevent' ); ?>
 		</p>
 		<?php if ( $eventyay_id ) : ?>
-			<p style="margin-bottom:10px;">
+			<p class="wpfa-eventyay-sync-meta-box__slug">
 				<strong><?php esc_html_e( 'Eventyay slug:', 'wpfaevent' ); ?></strong>
 				<?php echo esc_html( $eventyay_id ); ?>
 			</p>
 		<?php endif; ?>
 		<?php if ( $synced_at ) : ?>
-			<p class="description" style="margin-bottom:10px;">
+			<p class="description wpfa-eventyay-sync-meta-box__synced-at" data-wpfa-eventyay-synced-at>
 				<?php
 				echo esc_html(
 					sprintf(
@@ -688,51 +702,17 @@ class Wpfaevent_Admin {
 				?>
 			</p>
 		<?php endif; ?>
-		<button type="button" id="wpfa-eventyay-sync-btn" class="button button-secondary" data-event-id="<?php echo esc_attr( $post->ID ); ?>" style="width:100%;">
+		<button
+			type="button"
+			id="wpfa-eventyay-sync-btn"
+			class="button button-secondary wpfa-eventyay-sync-meta-box__button"
+			data-event-id="<?php echo esc_attr( $post->ID ); ?>"
+			data-nonce="<?php echo esc_attr( wp_create_nonce( 'fossasia_admin_nonce' ) ); ?>"
+		>
 			<?php esc_html_e( 'Sync Speakers from Eventyay', 'wpfaevent' ); ?>
 		</button>
-		<p id="wpfa-eventyay-sync-status" style="margin-top:8px;font-weight:bold;display:none;"></p>
-		<script>
-		(function() {
-			var btn = document.getElementById('wpfa-eventyay-sync-btn');
-			var status = document.getElementById('wpfa-eventyay-sync-status');
-			if (!btn) return;
-			btn.addEventListener('click', function() {
-				btn.disabled = true;
-				btn.textContent = <?php echo wp_json_encode( __( 'Syncing…', 'wpfaevent' ) ); ?>;
-				status.style.display = 'none';
-				var data = new FormData();
-				data.append('action', 'fossasia_sync_eventyay');
-				data.append('nonce', <?php echo wp_json_encode( wp_create_nonce( 'fossasia_admin_nonce' ) ); ?>);
-				data.append('event_id', btn.dataset.eventId);
-				fetch(<?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>, { method: 'POST', body: data })
-					.then(function(r) { return r.json(); })
-					.then(function(r) {
-						status.style.display = 'block';
-						if (r.success) {
-							status.style.color = '#00a32a';
-							var d = r.data || {};
-							status.textContent = d.message || <?php echo wp_json_encode( __( 'Sync complete.', 'wpfaevent' ) ); ?>;
-							<?php if ( $synced_at ) : ?>
-							document.querySelector('.description[style*="Last synced"]') && (document.querySelector('.description[style*="Last synced"]').textContent = <?php echo wp_json_encode( __( 'Last synced just now.', 'wpfaevent' ) ); ?>);
-							<?php endif; ?>
-						} else {
-							status.style.color = '#d63638';
-							status.textContent = (r.data && r.data.message) || <?php echo wp_json_encode( __( 'Sync failed.', 'wpfaevent' ) ); ?>;
-						}
-					})
-					.catch(function() {
-						status.style.display = 'block';
-						status.style.color = '#d63638';
-						status.textContent = <?php echo wp_json_encode( __( 'Network error.', 'wpfaevent' ) ); ?>;
-					})
-					.finally(function() {
-						btn.disabled = false;
-						btn.textContent = <?php echo wp_json_encode( __( 'Sync Speakers from Eventyay', 'wpfaevent' ) ); ?>;
-					});
-			});
-		}());
-		</script>
+		<p id="wpfa-eventyay-sync-status" class="wpfa-eventyay-sync-meta-box__status" aria-live="polite"></p>
+		</div>
 		<?php
 	}
 

@@ -2,6 +2,70 @@
 	'use strict';
 
 	$(function() {
+		const eventyaySyncConfig = window.wpfaeventAdmin || {};
+		const $eventyaySyncButton = $('#wpfa-eventyay-sync-btn');
+		const $eventyaySyncStatus = $('#wpfa-eventyay-sync-status');
+
+		if ($eventyaySyncButton.length && $eventyaySyncStatus.length) {
+			$eventyaySyncButton.on('click', function() {
+				const $button = $(this);
+				const nonce = $button.data('nonce');
+
+				if (!nonce) {
+					$eventyaySyncStatus
+						.text(eventyaySyncConfig.syncFailedText || 'Sync failed.')
+						.addClass('is-error')
+						.removeClass('is-success')
+						.show();
+					return;
+				}
+
+				$button.prop('disabled', true);
+				$button.text(eventyaySyncConfig.syncingText || 'Syncing...');
+				$eventyaySyncStatus.hide().removeClass('is-error is-success');
+
+				const data = new FormData();
+				data.append('action', 'fossasia_sync_eventyay');
+				data.append('nonce', nonce);
+				data.append('event_id', $button.data('eventId'));
+
+				fetch(eventyaySyncConfig.ajaxUrl || ajaxurl, { method: 'POST', body: data })
+					.then((response) => response.json())
+					.then((response) => {
+						$eventyaySyncStatus.show();
+
+						if (response.success) {
+							$eventyaySyncStatus
+								.text((response.data && response.data.message) || eventyaySyncConfig.syncCompleteText || 'Sync complete.')
+								.addClass('is-success')
+								.removeClass('is-error');
+
+							const $syncedAt = $('[data-wpfa-eventyay-synced-at]');
+							if ($syncedAt.length) {
+								$syncedAt.text(eventyaySyncConfig.lastSyncedJustNowText || 'Last synced just now.');
+							}
+							return;
+						}
+
+						$eventyaySyncStatus
+							.text((response.data && response.data.message) || eventyaySyncConfig.syncFailedText || 'Sync failed.')
+							.addClass('is-error')
+							.removeClass('is-success');
+					})
+					.catch(() => {
+						$eventyaySyncStatus
+							.text(eventyaySyncConfig.networkErrorText || 'Network error.')
+							.addClass('is-error')
+							.removeClass('is-success')
+							.show();
+					})
+					.finally(() => {
+						$button.prop('disabled', false);
+						$button.text(eventyaySyncConfig.syncButtonText || 'Sync Speakers from Eventyay');
+					});
+			});
+		}
+
 		const $importForm = $('#wpfaevent-import-events-form');
 		const $updateForm = $('#wpfaevent-update-events-form');
 
