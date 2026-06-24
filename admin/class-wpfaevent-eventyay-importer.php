@@ -18,6 +18,17 @@
  */
 class Wpfaevent_Eventyay_Importer {
 	/**
+	 * Get the Eventyay API client used for endpoint building and fetches.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return Wpfaevent_Eventyay_API_Client
+	 */
+	public function get_client() {
+		return new Wpfaevent_Eventyay_API_Client();
+	}
+
+	/**
 	 * Sanitize Eventyay import options.
 	 *
 	 * @since 1.0.0
@@ -77,6 +88,19 @@ class Wpfaevent_Eventyay_Importer {
 		$settings['post_status'] = $post_status;
 
 		return $settings;
+	}
+
+	/**
+	 * Import a single Eventyay event record.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event    Event data.
+	 * @param array $settings Import settings.
+	 * @return array|WP_Error
+	 */
+	public function import_single_eventyay_event( $event, $settings ) {
+		return $this->upsert_eventyay_event_post( $event, $settings );
 	}
 
 	/**
@@ -363,7 +387,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @return array
 	 */
-	private function get_eventyay_import_settings() {
+	public function get_eventyay_import_settings() {
 		$settings = get_option( 'wpfaevent_eventyay_import_settings', array() );
 		$settings = is_array( $settings ) ? $settings : array();
 
