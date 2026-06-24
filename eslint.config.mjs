@@ -6,6 +6,9 @@ export default [
 		languageOptions: {
 			globals: {
 				wp: 'readonly',
+				ajaxurl: 'readonly',
+				wpfaeventSpeakersConfig: 'readonly',
+				WPFA_Speakers: 'readonly',
 			},
 		},
 	},
