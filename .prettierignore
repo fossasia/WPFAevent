@@ -1,0 +1,8 @@
+node_modules
+vendor
+build
+assets/dist
+*.min.js
+composer.lock
+tests/
+*.css

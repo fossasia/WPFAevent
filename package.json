@@ -1,0 +1,40 @@
+{
+	"name": "wpfaevent",
+	"description": "WPFA Event WordPress plugin",
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/fossasia/WPFAevent.git"
+	},
+	"engines": {
+		"node": ">=24"
+	},
+	"files": [
+		"admin/**",
+		"assets/**",
+		"includes/**",
+		"languages/**",
+		"public/**",
+		"wpfaevent.php",
+		"readme.txt",
+		"uninstall.php",
+		"index.php",
+		"README.md"
+	],
+	"scripts": {
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"format": "prettier --write \"**/*.{js,json}\"",
+		"phpcs": "composer phpcs",
+		"phpcbf": "composer phpcb",
+		"phpstan": "composer phpstan",
+		"test": "npm run lint && npm run phpcs && npm run phpstan"
+	},
+	"devDependencies": {
+		"@wordpress/eslint-plugin": "^25.4.1",
+		"@wordpress/prettier-config": "^4.48.1",
+		"eslint": "^9.39.4",
+		"prettier": "^3.8.4"
+	},
+	"prettier": "@wordpress/prettier-config"
+}

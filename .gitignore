@@ -1,6 +1,5 @@
 # Node/Composer caches (in case added later)
 node_modules/
-package-lock.json
 
 # OS/editor junk
 .DS_Store
@@ -16,3 +15,6 @@ tmp/
 
 # Local PHPStan overrides (allows developers to test stricter local settings without touching the .dist config)
 phpstan.neon
+
+# PHPUnit
+.phpunit.result.cache
