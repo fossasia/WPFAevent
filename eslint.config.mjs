@@ -16,6 +16,8 @@ export default [
 			'build/**',
 			'assets/dist/**',
 			'**/*.min.js',
+			'tests/**',
+			'languages/**',
 		],
 	},
 ];

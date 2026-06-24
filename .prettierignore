@@ -3,3 +3,6 @@ vendor
 build
 assets/dist
 *.min.js
+composer.lock
+tests/
+*.css
