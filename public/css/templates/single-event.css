@@ -261,6 +261,53 @@
 	color: var(--event-primary-dark);
 }
 
+.wpfaevent .wpfa-event-share {
+	border-top: 1px solid var(--event-line);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	justify-content: space-between;
+	margin-top: 16px;
+	padding-top: 16px;
+}
+
+.wpfaevent .wpfa-event-share-label {
+	color: var(--event-muted);
+	font-size: 0.78rem;
+	font-weight: 800;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.wpfaevent .wpfa-event-share-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.wpfaevent .wpfa-event-share-link {
+	align-items: center;
+	background: #f8f9fa;
+	border: 1px solid rgba(36, 52, 71, 0.08);
+	border-radius: 999px;
+	color: var(--event-ink);
+	display: inline-flex;
+	font-size: 0.82rem;
+	font-weight: 700;
+	justify-content: center;
+	padding: 8px 12px;
+	text-decoration: none;
+	transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.wpfaevent .wpfa-event-share-link:hover,
+.wpfaevent .wpfa-event-share-link:focus {
+	background: var(--event-primary);
+	border-color: var(--event-primary);
+	color: #fff;
+	transform: translateY(-1px);
+}
+
 .wpfaevent .wpfa-event-facts {
 	border-top: 1px solid var(--event-line);
 	display: grid;
@@ -2696,6 +2743,10 @@
 
 	.wpfaevent .wpfa-event-ticket-panel {
 		align-self: stretch;
+	}
+
+	.wpfaevent .wpfa-event-share {
+		justify-content: flex-start;
 	}
 
 	.wpfaevent .wpfa-partner-detail-hero-meta {

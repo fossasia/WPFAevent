@@ -361,6 +361,41 @@ $event_calendar_data = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar
 $event_calendar_data = is_wp_error( $event_calendar_data ) ? array() : $event_calendar_data;
 $event_calendar_url  = ! empty( $event_calendar_data ) && class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_ics_url( $event_id ) : '';
 $event_google_url    = ! empty( $event_calendar_data ) && class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::build_google_calendar_url( $event_calendar_data ) : '';
+$share_url           = apply_filters( 'wpfa_event_share_url', get_permalink( $event_id ), $event_id );
+$share_url           = esc_url_raw( $share_url );
+$share_text          = apply_filters(
+	'wpfa_event_share_text',
+	sprintf(
+		/* translators: %s: event title */
+		__( 'Check out this event: %s', 'wpfaevent' ),
+		$event_title
+	),
+	$event_id,
+	$event_title
+);
+$share_text          = wp_strip_all_tags( $share_text );
+$share_links         = array();
+
+if ( ! empty( $share_url ) ) {
+	$share_links = array(
+		array(
+			'label' => __( 'Facebook', 'wpfaevent' ),
+			'url'   => 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode( $share_url ),
+		),
+		array(
+			'label' => __( 'X', 'wpfaevent' ),
+			'url'   => 'https://twitter.com/intent/tweet?url=' . rawurlencode( $share_url ) . '&text=' . rawurlencode( $share_text ),
+		),
+		array(
+			'label' => __( 'LinkedIn', 'wpfaevent' ),
+			'url'   => 'https://www.linkedin.com/sharing/share-offsite/?url=' . rawurlencode( $share_url ),
+		),
+		array(
+			'label' => __( 'WhatsApp', 'wpfaevent' ),
+			'url'   => 'https://api.whatsapp.com/send?text=' . rawurlencode( $share_text . ' ' . $share_url ),
+		),
+	);
+}
 
 $show_about             = ! array_key_exists( 'about', $section_visibility ) || ! empty( $section_visibility['about'] );
 $show_speakers          = ! array_key_exists( 'speakers', $section_visibility ) || ! empty( $section_visibility['speakers'] );
@@ -748,12 +783,29 @@ $header_vars = array(
 							<?php esc_html_e( 'Add to calendar', 'wpfaevent' ); ?>
 						</a>
 					<?php endif; ?>
-					<?php if ( $event_calendar_url ) : ?>
-						<a class="wpfa-event-calendar-download" href="<?php echo esc_url( $event_calendar_url ); ?>">
-							<?php esc_html_e( 'Download .ics', 'wpfaevent' ); ?>
-						</a>
-					<?php endif; ?>
-					<dl class="wpfa-event-facts">
+						<?php if ( $event_calendar_url ) : ?>
+							<a class="wpfa-event-calendar-download" href="<?php echo esc_url( $event_calendar_url ); ?>">
+								<?php esc_html_e( 'Download .ics', 'wpfaevent' ); ?>
+							</a>
+						<?php endif; ?>
+						<?php if ( ! empty( $share_links ) ) : ?>
+							<div class="wpfa-event-share" aria-label="<?php echo esc_attr__( 'Share this event', 'wpfaevent' ); ?>">
+								<span class="wpfa-event-share-label"><?php esc_html_e( 'Share', 'wpfaevent' ); ?></span>
+								<div class="wpfa-event-share-links">
+									<?php foreach ( $share_links as $share_link ) : ?>
+										<a
+											class="wpfa-event-share-link"
+											href="<?php echo esc_url( $share_link['url'] ); ?>"
+											target="_blank"
+											rel="noopener noreferrer"
+										>
+											<?php echo esc_html( $share_link['label'] ); ?>
+										</a>
+									<?php endforeach; ?>
+								</div>
+							</div>
+						<?php endif; ?>
+						<dl class="wpfa-event-facts">
 							<?php if ( $date_label ) : ?>
 								<div>
 									<dt><?php esc_html_e( 'When', 'wpfaevent' ); ?></dt>
