@@ -85,6 +85,13 @@ class Wpfaevent_Templates {
 			'block'     => 'code-of-conduct',
 			'title'     => 'WPFA Code of Conduct',
 		),
+		'admin_dashboard' => array(
+			'file'      => 'admin-dashboard.php',
+			'label'     => 'WPFA - Admin Dashboard',
+			'shortcode' => 'wpfaevent_admin_dashboard',
+			'block'     => 'admin-dashboard',
+			'title'     => 'WPFA Admin Dashboard',
+		),
 	);
 
 	/**

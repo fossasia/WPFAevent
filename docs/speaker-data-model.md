@@ -38,8 +38,6 @@ The Speaker edit screen also exposes the same relationship from the speaker side
 
 Speaker profile pages merge `wpfa_speaker_events` with events that reference the speaker through `wpfa_event_speakers`, so older one-sided data can still render linked published events.
 
-For CLI-based refreshes, `wp wpfa import` updates the existing imported events and speakers in place, including the speaker-event relationship data that the public templates read.
-
 ## Session Data
 
 There is not yet a reusable Session CPT or session relationship model. Until that exists, the speaker profile displays the interim `wpfa_speaker_talk_*` metadata as "Sessions by this speaker".
