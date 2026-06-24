@@ -1,6 +1,6 @@
 <?php
 /**
- * Single Event Template.
+ * Single Event Template for Eventyay imports.
  *
  * Displays imported Eventyay event data, event-specific speakers, and schedule.
  *
