@@ -39,6 +39,7 @@ $photo_alt     = sprintf(
 	__( 'Photo of %s', 'wpfaevent' ),
 	$speaker_name
 );
+$placeholder_url = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
 
 if ( empty( $bio ) ) {
 	$bio = get_post_field( 'post_content', $speaker_id );
@@ -194,26 +195,12 @@ $header_vars = array(
 							itemprop="image"
 						>
 					<?php else : ?>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 300 300"
-							class="wpfa-placeholder-svg"
-							role="img"
-							aria-label="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>"
+						<img
+							src="<?php echo esc_url( $placeholder_url ); ?>"
+							alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>"
+							itemprop="image"
+							class="wpfa-speaker-placeholder-img"
 						>
-							<rect width="100%" height="100%" fill="#eee" />
-							<text
-								x="50%"
-								y="50%"
-								dominant-baseline="middle"
-								text-anchor="middle"
-								font-family="sans-serif"
-								font-size="20"
-								fill="#999"
-							>
-								<?php esc_html_e( 'Speaker', 'wpfaevent' ); ?>
-							</text>
-						</svg>
 					<?php endif; ?>
 				</div>
 

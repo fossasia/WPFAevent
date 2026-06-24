@@ -81,7 +81,6 @@ class Wpfaevent_Public {
 			'public/partials/additional-information-page.php',
 			'page-speakers.php',
 			'page-landing.php',
-			'admin-dashboard.php',
 		);
 
 		foreach ( $wpfa_templates as $template ) {
@@ -543,6 +542,7 @@ class Wpfaevent_Public {
 			'wpfaeventPublic',
 			array(
 				'speakerPlaceholderAlt' => __( 'Speaker photo placeholder', 'wpfaevent' ),
+				'speakerPlaceholderUrl' => WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg',
 			)
 		);
 	}

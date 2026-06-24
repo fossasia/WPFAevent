@@ -278,11 +278,21 @@ class Wpfaevent_Meta_Speaker {
 				'posts_per_page' => -1,
 				'fields'         => 'ids',
 				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Speaker ownership is stored in post meta.
-				'meta_key'       => 'wpfa_speaker_events',
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_compare -- Speaker ownership is stored in post meta.
-				'meta_compare'   => 'EXISTS',
 			)
+		);
+
+		if ( empty( $speaker_ids ) ) {
+			return array();
+		}
+
+		$speaker_ids = array_filter(
+			array_map(
+				'absint',
+				$speaker_ids
+			),
+			static function ( $speaker_id ) {
+				return ! empty( self::get_speaker_event_ids( $speaker_id ) );
+			}
 		);
 
 		return Wpfaevent_Meta_Event::sanitize_post_id_list( $speaker_ids );
