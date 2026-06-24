@@ -176,7 +176,13 @@
 	border: 1px solid var(--event-line, #dfe6ee);
 	border-radius: 12px;
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) minmax(140px, max-content) minmax(140px, max-content);
+	grid-template-columns:
+		minmax(0, 1fr)
+		minmax(112px, max-content)
+		minmax(112px, max-content)
+		minmax(112px, max-content)
+		minmax(112px, max-content)
+		minmax(140px, max-content);
 	align-items: center;
 	column-gap: 14px;
 	row-gap: 8px;
@@ -187,6 +193,7 @@
 .wpfaevent .wpfa-schedule-details {
 	align-items: center;
 	display: flex;
+	grid-column: 1;
 	flex-wrap: wrap;
 	gap: 8px 14px;
 	min-width: 0;
@@ -206,11 +213,15 @@
 }
 
 .wpfaevent .wpfa-schedule-actions {
-	display: contents;
+	align-items: center;
+	display: flex;
+	grid-column: 5;
+	justify-content: flex-end;
+	justify-self: end;
+	min-width: 0;
 }
 
-.wpfaevent .wpfa-schedule-action,
-.wpfaevent .wpfa-schedule-actions .wpfa-calendar-action {
+.wpfaevent .wpfa-schedule-action {
 	align-items: center;
 	display: inline-flex;
 	justify-content: flex-end;
@@ -219,14 +230,25 @@
 }
 
 .wpfaevent .wpfa-schedule-action {
-	grid-column: 2;
+	margin-left: 0;
+}
+
+.wpfaevent .wpfa-calendar-action {
+	grid-column: 6;
+	margin-left: 0;
 	justify-self: end;
 }
 
-.wpfaevent .wpfa-schedule-actions .wpfa-calendar-action {
+.wpfaevent .wpfa-schedule-item > .wpfa-schedule-time {
+	grid-column: 2;
+}
+
+.wpfaevent .wpfa-schedule-item > .wpfa-schedule-location {
 	grid-column: 3;
-	margin-left: 0;
-	justify-self: end;
+}
+
+.wpfaevent .wpfa-schedule-item > .wpfa-schedule-language {
+	grid-column: 4;
 }
 
 @media (max-width: 760px) {
@@ -236,11 +258,18 @@
 	}
 
 	.wpfaevent .wpfa-schedule-details,
-	.wpfaevent .wpfa-schedule-action,
-	.wpfaevent .wpfa-schedule-actions .wpfa-calendar-action {
+	.wpfaevent .wpfa-schedule-item > .wpfa-schedule-time,
+	.wpfaevent .wpfa-schedule-item > .wpfa-schedule-location,
+	.wpfaevent .wpfa-schedule-item > .wpfa-schedule-language,
+	.wpfaevent .wpfa-schedule-item .wpfa-schedule-actions,
+	.wpfaevent .wpfa-calendar-action {
 		grid-column: 1;
 		justify-self: start;
 		margin-left: 0;
+	}
+
+	.wpfaevent .wpfa-schedule-actions {
+		justify-content: flex-start;
 	}
 }
 

@@ -401,27 +401,27 @@ $format_timezone_label = static function ( $timezone_string ) use ( $primary_tim
 												<span class="wpfa-schedule-language"><?php echo esc_html( $schedule_event['language_label'] ); ?></span>
 											<?php endif; ?>
 										</div>
-										<div class="wpfa-schedule-actions">
+										<span class="wpfa-schedule-actions">
 											<a class="wpfa-schedule-action" href="<?php echo esc_url( $schedule_event['schedule_url'] ); ?>"><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></a>
-											<?php if ( ! empty( $schedule_event['calendar_url'] ) ) : ?>
-												<?php
-												$calendar_label = sprintf(
-													/* translators: %s: event title. */
-													__( 'Add %s to Google Calendar', 'wpfaevent' ),
-													$schedule_event['title']
-												);
-												?>
-												<a
-													class="wpfa-calendar-action"
-													href="<?php echo esc_url( $schedule_event['calendar_url'] ); ?>"
-													target="_blank"
-													rel="noopener"
-													aria-label="<?php echo esc_attr( $calendar_label ); ?>"
-												>
-													<?php esc_html_e( 'Add to calendar', 'wpfaevent' ); ?>
-												</a>
-											<?php endif; ?>
-										</div>
+										</span>
+										<?php if ( ! empty( $schedule_event['calendar_url'] ) ) : ?>
+											<?php
+											$calendar_label = sprintf(
+												/* translators: %s: event title. */
+												__( 'Add %s to Google Calendar', 'wpfaevent' ),
+												$schedule_event['title']
+											);
+											?>
+											<a
+												class="wpfa-calendar-action"
+												href="<?php echo esc_url( $schedule_event['calendar_url'] ); ?>"
+												target="_blank"
+												rel="noopener"
+												aria-label="<?php echo esc_attr( $calendar_label ); ?>"
+											>
+												<?php esc_html_e( 'Add to calendar', 'wpfaevent' ); ?>
+											</a>
+										<?php endif; ?>
 									</li>
 								<?php endforeach; ?>
 							</ul>
