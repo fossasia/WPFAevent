@@ -473,8 +473,8 @@ $build_event_schedule_view_url = static function ( $view ) use ( $event_id, $eve
 	return add_query_arg( $args, get_permalink( $event_id ) ) . '#wpfa-event-schedule-title';
 };
 
-$event_schedule_url       = class_exists( 'Wpfaevent_Schedule_Helper' ) ? Wpfaevent_Schedule_Helper::get_schedule_page_url() : home_url( '/full-schedule/' );
-$event_schedule_args      = array(
+$event_schedule_url = class_exists( 'Wpfaevent_Schedule_Helper' ) ? Wpfaevent_Schedule_Helper::get_schedule_page_url() : home_url( '/full-schedule/' );
+$event_schedule_args = array(
 	'event' => $event_slug,
 );
 
@@ -486,10 +486,10 @@ if ( $selected_schedule_timezone_string && $selected_schedule_timezone_string !=
 	$event_schedule_args['schedule_tz'] = $selected_schedule_timezone_string;
 }
 
-$event_schedule_url       = add_query_arg( $event_schedule_args, $event_schedule_url );
-$event_additional_url     = class_exists( 'Wpfaevent_Additional_Information_Helper' ) ? Wpfaevent_Additional_Information_Helper::get_additional_information_page_url() : home_url( '/additional-information/' );
+$event_schedule_url = add_query_arg( $event_schedule_args, $event_schedule_url );
+$event_additional_url = class_exists( 'Wpfaevent_Additional_Information_Helper' ) ? Wpfaevent_Additional_Information_Helper::get_additional_information_page_url() : home_url( '/additional-information/' );
 $event_additional_url = add_query_arg( 'event', $event_slug, $event_additional_url );
-$registration_url         = $register_url;
+$registration_url = $register_url;
 
 $build_schedule_calendar_url = static function ( $item ) use ( $build_schedule_fallback_datetime, $event_timezone, $event_timezone_string, $event_title, $event_url, $location, $parse_schedule_datetime, $split_schedule_time_range ) {
 	if ( ! class_exists( 'Wpfaevent_Calendar' ) ) {
