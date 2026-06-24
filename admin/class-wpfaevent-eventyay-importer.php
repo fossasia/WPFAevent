@@ -18,6 +18,13 @@
  */
 class Wpfaevent_Eventyay_Importer {
 	/**
+	 * API client.
+	 *
+	 * @var Wpfaevent_Eventyay_API_Client|null
+	 */
+	private $client = null;
+
+	/**
 	 * Sanitize Eventyay import options.
 	 *
 	 * @since 1.0.0
@@ -357,13 +364,28 @@ class Wpfaevent_Eventyay_Importer {
 	}
 
 	/**
+	 * Get the Eventyay API client.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return Wpfaevent_Eventyay_API_Client
+	 */
+	public function get_client() {
+		if ( ! $this->client instanceof Wpfaevent_Eventyay_API_Client ) {
+			$this->client = new Wpfaevent_Eventyay_API_Client();
+		}
+
+		return $this->client;
+	}
+
+	/**
 	 * Get Eventyay import settings with defaults applied.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @return array
 	 */
-	private function get_eventyay_import_settings() {
+	public function get_eventyay_import_settings() {
 		$settings = get_option( 'wpfaevent_eventyay_import_settings', array() );
 		$settings = is_array( $settings ) ? $settings : array();
 
@@ -517,6 +539,63 @@ class Wpfaevent_Eventyay_Importer {
 			$result['created_speakers'] += absint( $program['created_speakers'] );
 			$result['updated_speakers'] += absint( $program['updated_speakers'] );
 			$result['schedule_rows']    += absint( $program['schedule_rows'] );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Import a single Eventyay event payload and its related data.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event    Raw Eventyay event payload.
+	 * @param array $settings  Import settings.
+	 * @return array|WP_Error
+	 */
+	public function import_single_eventyay_event( $event, $settings ) {
+		$event    = is_array( $event ) ? $event : array();
+		$settings = wp_parse_args( is_array( $settings ) ? $settings : array(), $this->get_eventyay_import_default_settings() );
+
+		if ( empty( $event ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_invalid_event',
+				esc_html__( 'The Eventyay event payload is invalid.', 'wpfaevent' )
+			);
+		}
+
+		$upsert = $this->upsert_eventyay_event_post( $event, $settings );
+		if ( is_wp_error( $upsert ) ) {
+			return $upsert;
+		}
+
+		$result = array(
+			'post_id'    => absint( $upsert['id'] ),
+			'created'    => ! empty( $upsert['created'] ),
+			'updated'    => empty( $upsert['created'] ),
+			'event_slug' => isset( $upsert['event_slug'] ) ? $upsert['event_slug'] : '',
+		);
+
+		$dashboard = $this->sync_eventyay_event_dashboard_data( $upsert['id'], $event, $settings, $upsert['event_slug'] );
+		if ( is_wp_error( $dashboard ) ) {
+			return $dashboard;
+		}
+
+		$result['about_updated'] = isset( $dashboard['about_updated'] ) ? absint( $dashboard['about_updated'] ) : 0;
+
+		$partners = $this->import_eventyay_event_partner_data( $upsert['id'], $event, $settings, $upsert['event_slug'] );
+		if ( ! is_wp_error( $partners ) ) {
+			$result['sponsors']   = isset( $partners['sponsor_count'] ) ? absint( $partners['sponsor_count'] ) : 0;
+			$result['exhibitors'] = isset( $partners['exhibitor_count'] ) ? absint( $partners['exhibitor_count'] ) : 0;
+		}
+
+		$program = $this->import_eventyay_event_program( $upsert['id'], $settings, $upsert['event_slug'] );
+		if ( ! is_wp_error( $program ) ) {
+			$result['sessions']         = isset( $program['session_count'] ) ? absint( $program['session_count'] ) : 0;
+			$result['speakers']         = isset( $program['speaker_count'] ) ? absint( $program['speaker_count'] ) : 0;
+			$result['created_speakers'] = isset( $program['created_speakers'] ) ? absint( $program['created_speakers'] ) : 0;
+			$result['updated_speakers'] = isset( $program['updated_speakers'] ) ? absint( $program['updated_speakers'] ) : 0;
+			$result['schedule_rows']    = isset( $program['schedule_rows'] ) ? absint( $program['schedule_rows'] ) : 0;
 		}
 
 		return $result;

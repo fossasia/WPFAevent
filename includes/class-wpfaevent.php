@@ -248,7 +248,7 @@ class Wpfaevent {
 		$this->loader->add_action( 'wp_ajax_wpfaevent_import_save_summary', $eventyay_ajax, 'ajax_import_save_summary' );
 
 		// Register cron/scheduler hooks for Eventyay auto-sync.
-		$this->loader->add_action( Wpfaevent_Cron_Scheduler::HOOK, 'Wpfaevent_Cron_Scheduler', 'run' );
+		$this->loader->add_action( 'wpfaevent_auto_sync', 'Wpfaevent_Cron_Scheduler', 'run' );
 		$this->loader->add_action( 'update_option_wpfaevent_eventyay_import_settings', 'Wpfaevent_Cron_Scheduler', 'handle_settings_update', 10, 2 );
 
 		// Register Eventyay import form handler.
