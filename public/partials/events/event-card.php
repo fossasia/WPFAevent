@@ -75,7 +75,7 @@ $can_delete_content  = class_exists( 'Wpfaevent_Roles' ) ? Wpfaevent_Roles::curr
 $can_edit_this_event = $can_manage_content && current_user_can( 'edit_post', $event_id );
 $can_delete_event    = $can_delete_content && current_user_can( 'delete_post', $event_id );
 $is_admin            = current_user_can( 'manage_options' );
-$event_url = esc_url( get_permalink( $event_id ) );
+$event_url           = esc_url( get_permalink( $event_id ) );
 
 // Speakers page URL — link to /speakers/ filtered by event post ID.
 $speakers_url = esc_url( add_query_arg( 'event_id', $event_id, home_url( '/speakers/' ) ) );
