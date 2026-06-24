@@ -292,6 +292,14 @@ class Wpfaevent_Public {
 		);
 
 		wp_register_style(
+			$this->plugin_name . '-event',
+			WPFAEVENT_URL . 'public/css/templates/event.css',
+			array( $this->plugin_name ),
+			$this->version,
+			'all'
+		);
+
+		wp_register_style(
 			$this->plugin_name . '-single-event',
 			WPFAEVENT_URL . 'public/css/templates/single-event.css',
 			array( $this->plugin_name, $this->plugin_name . '-navigation' ),
@@ -449,7 +457,13 @@ class Wpfaevent_Public {
 		// Events template (page template or CPT archive).
 		if ( $this->is_wpfa_template_file_active( 'page-events.php' ) || is_post_type_archive( 'wpfa_event' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-events' );
+			wp_enqueue_style( $this->plugin_name . '-event' );
 			wp_enqueue_script( $this->plugin_name . '-events' );
+		}
+
+		// Schedule template (separate from the single event detail view).
+		if ( $this->is_wpfa_template_file_active( 'page-schedule.php' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-event' );
 		}
 
 		if ( is_singular( 'wpfa_speaker' ) || is_singular( 'wpfa_event' ) ) {
@@ -457,9 +471,8 @@ class Wpfaevent_Public {
 			wp_enqueue_script( $this->plugin_name . '-speakers' );
 		}
 
-		if ( is_singular( 'wpfa_event' ) || $this->is_wpfa_template_file_active( 'page-schedule.php' ) ) {
+		if ( is_singular( 'wpfa_event' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-single-event' );
-			wp_enqueue_style( $this->plugin_name . '-events' );
 		}
 
 		/**
