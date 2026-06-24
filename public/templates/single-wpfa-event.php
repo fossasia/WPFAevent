@@ -373,8 +373,8 @@ $share_text          = apply_filters(
 	$event_id,
 	$event_title
 );
-$share_text          = wp_strip_all_tags( $share_text );
-$share_links         = array();
+$share_text  = wp_strip_all_tags( $share_text );
+$share_links = array();
 
 if ( ! empty( $share_url ) ) {
 	$share_links = array(
@@ -1333,14 +1333,14 @@ $header_vars = array(
 					<div class="wpfa-event-exhibitor-grid">
 						<?php foreach ( $visible_exhibitors as $exhibitor ) : ?>
 							<?php
-							$exhibitor_name       = sanitize_text_field( $exhibitor['name'] );
-							$exhibitor_logo       = ! empty( $exhibitor['logo'] ) ? esc_url_raw( $exhibitor['logo'] ) : '';
-							$exhibitor_banner     = ! empty( $exhibitor['banner'] ) ? esc_url_raw( $exhibitor['banner'] ) : '';
-							$exhibitor_initial    = $exhibitor_name ? strtoupper( substr( $exhibitor_name, 0, 1 ) ) : '';
-							$exhibitor_card_class = 'wpfa-event-exhibitor-card';
+							$exhibitor_name        = sanitize_text_field( $exhibitor['name'] );
+							$exhibitor_logo        = ! empty( $exhibitor['logo'] ) ? esc_url_raw( $exhibitor['logo'] ) : '';
+							$exhibitor_banner      = ! empty( $exhibitor['banner'] ) ? esc_url_raw( $exhibitor['banner'] ) : '';
+							$exhibitor_initial     = $exhibitor_name ? strtoupper( substr( $exhibitor_name, 0, 1 ) ) : '';
+							$exhibitor_card_class  = 'wpfa-event-exhibitor-card';
 							$exhibitor_card_class .= $exhibitor_banner ? ' has-banner' : ' no-banner';
 							$exhibitor_card_class .= $exhibitor_logo ? ' has-logo' : ' no-logo';
-							$exhibitor_has_links = ! empty( $exhibitor['link'] ) || ! empty( $exhibitor['video'] ) || ! empty( $exhibitor['slides'] ) || ! empty( $exhibitor['contact_link'] ) || ! empty( $exhibitor['contact_email'] );
+							$exhibitor_has_links   = ! empty( $exhibitor['link'] ) || ! empty( $exhibitor['video'] ) || ! empty( $exhibitor['slides'] ) || ! empty( $exhibitor['contact_link'] ) || ! empty( $exhibitor['contact_email'] );
 							?>
 							<details class="<?php echo esc_attr( $exhibitor_card_class ); ?>">
 								<?php if ( $exhibitor_banner ) : ?>
