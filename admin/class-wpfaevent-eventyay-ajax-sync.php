@@ -1902,5 +1902,4 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 
 		return $decrypted;
 	}
-
 }
