@@ -13,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 $settings         = isset( $settings ) ? $settings : array(
 	'base_url'       => 'https://eventyay.com',
 	'organizer_slug' => '',
-	'event_slug'     => '',
 	'api_token'      => '',
 	'post_status'    => 'draft',
 );
@@ -57,13 +56,7 @@ $notice           = isset( $notice ) ? $notice : false;
 						<input type="text" class="regular-text" id="wpfaevent_eventyay_organizer_slug" name="wpfaevent_eventyay_import_settings[organizer_slug]" value="<?php echo esc_attr( $settings['organizer_slug'] ); ?>" placeholder="bigevents">
 					</td>
 				</tr>
-				<tr>
-					<th scope="row"><label for="wpfaevent_eventyay_event_slug"><?php esc_html_e( 'Event slug', 'wpfaevent' ); ?></label></th>
-					<td>
-						<input type="text" class="regular-text" id="wpfaevent_eventyay_event_slug" name="wpfaevent_eventyay_import_settings[event_slug]" value="<?php echo esc_attr( $settings['event_slug'] ); ?>" placeholder="sampleconf">
-						<p class="description"><?php esc_html_e( 'Leave empty to import all events visible to the token for this organizer.', 'wpfaevent' ); ?></p>
-					</td>
-				</tr>
+
 				<tr>
 					<th scope="row"><label for="wpfaevent_eventyay_api_token"><?php esc_html_e( 'API token', 'wpfaevent' ); ?></label></th>
 					<td>
@@ -122,10 +115,8 @@ $notice           = isset( $notice ) ? $notice : false;
 		<h2><?php esc_html_e( 'Where Imported Data Shows Up', 'wpfaevent' ); ?></h2>
 		<ul>
 			<li><?php esc_html_e( 'Events are saved as Events posts with Eventyay source metadata for repeat imports.', 'wpfaevent' ); ?></li>
-			<li><?php esc_html_e( 'Speakers are saved as Speaker posts and linked only to the event they came from.', 'wpfaevent' ); ?></li>
-			<li><?php esc_html_e( 'Sponsors and exhibitors are imported into event-specific dashboard JSON files.', 'wpfaevent' ); ?></li>
-			<li><?php esc_html_e( 'Dashboard JSON is written to uploads/fossasia-data using event-specific file names.', 'wpfaevent' ); ?></li>
-			<li><?php esc_html_e( 'Frontend rendering for imported data is handled by the follow-up display PR.', 'wpfaevent' ); ?></li>
+			<li><?php esc_html_e( 'Event title, description, dates, timezone, location, and Eventyay URL are updated from the Eventyay API.', 'wpfaevent' ); ?></li>
+			<li><?php esc_html_e( 'Speaker, schedule, sponsor, and exhibitor imports are handled by the follow-up Eventyay data import PR.', 'wpfaevent' ); ?></li>
 		</ul>
 	</div>
 </div>

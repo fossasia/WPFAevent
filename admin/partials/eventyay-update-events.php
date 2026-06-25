@@ -13,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 $settings         = isset( $settings ) ? $settings : array(
 	'base_url'       => 'https://eventyay.com',
 	'organizer_slug' => '',
-	'event_slug'     => '',
 	'api_token'      => '',
 	'post_status'    => 'draft',
 );
@@ -35,7 +34,7 @@ $notice           = isset( $notice ) ? $notice : false;
 		<h2><?php esc_html_e( 'Update Events from Eventyay', 'wpfaevent' ); ?></h2>
 		<p><?php esc_html_e( 'Run this when Eventyay data changes after events have already been imported.', 'wpfaevent' ); ?></p>
 		<p class="description">
-			<?php esc_html_e( 'Existing Eventyay-owned event posts, speakers, schedules, sponsors, exhibitors, and event Info content are updated in place.', 'wpfaevent' ); ?>
+			<?php esc_html_e( 'Existing Eventyay-owned event posts are updated in place while source metadata is preserved for future imports.', 'wpfaevent' ); ?>
 		</p>
 
 		<?php if ( is_wp_error( $endpoint_preview ) ) : ?>

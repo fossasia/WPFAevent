@@ -1,6 +1,6 @@
 <?php
 /**
- * Eventyay Admin Settings Renderer.
+ * Eventyay Importer Settings Renderer.
  *
  * @package    Wpfaevent
  * @subpackage Wpfaevent/includes/eventyay-importer
@@ -11,12 +11,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Renders admin layout partial templates.
+ * Handles rendering the Import and Update dashboard settings screens.
  */
 class Wpfaevent_Admin_Settings_Renderer {
 
 	/**
-	 * Importer instance.
+	 * Facade Importer instance.
 	 *
 	 * @var Wpfaevent_Eventyay_Importer
 	 */
@@ -25,14 +25,14 @@ class Wpfaevent_Admin_Settings_Renderer {
 	/**
 	 * Constructor.
 	 *
-	 * @param Wpfaevent_Eventyay_Importer $importer Importer instance.
+	 * @param Wpfaevent_Eventyay_Importer $importer Importer orchestrator.
 	 */
 	public function __construct( $importer ) {
 		$this->importer = $importer;
 	}
 
 	/**
-	 * Render the settings page.
+	 * Render the settings configuration and import page.
 	 *
 	 * @since 1.0.0
 	 */
@@ -50,11 +50,11 @@ class Wpfaevent_Admin_Settings_Renderer {
 			delete_transient( $notice_key );
 		}
 
-		require_once plugin_dir_path( dirname( __DIR__ ) ) . 'admin/partials/eventyay-import-settings.php';
+		require_once dirname( __DIR__, 2 ) . '/admin/partials/eventyay-import-settings.php';
 	}
 
 	/**
-	 * Render the Eventyay update page.
+	 * Render the update events dashboard module.
 	 *
 	 * @since 1.0.0
 	 */
@@ -72,6 +72,6 @@ class Wpfaevent_Admin_Settings_Renderer {
 			delete_transient( $notice_key );
 		}
 
-		require_once plugin_dir_path( dirname( __DIR__ ) ) . 'admin/partials/eventyay-update-events.php';
+		require_once dirname( __DIR__, 2 ) . '/admin/partials/eventyay-update-events.php';
 	}
 }
