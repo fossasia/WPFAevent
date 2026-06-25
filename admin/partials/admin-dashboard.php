@@ -924,8 +924,6 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', handleSettingsSubmit);
 
         render();
-
-        document.addEventListener('wpfaevent_settings_updated', render);
     })();
     // --- About Section Logic ---
     (() => {
@@ -1001,8 +999,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         render();
-
-        document.addEventListener('wpfaevent_settings_updated', render);
     })();
     // --- Schedule Table Management, Data Sync, Speaker Management, etc. would go here inside the if(eventId > 0) block ---
     }
@@ -1202,8 +1198,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         render();
-
-        document.addEventListener('wpfaevent_schedule_updated', render);
     })();
 
     // --- Sample Data Import Logic ---
@@ -1274,58 +1268,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response = await fetch(ajaxUrl, { method: 'POST', body: formData });
                 const data = await response.json();
                 if (data.success) {
-                    if (data.data.speakers) {
-                        store.speakers = data.data.speakers;
-                    }
-                    if (data.data.schedule) {
-                        store.schedule = data.data.schedule;
-                    }
-                    if (data.data.settings) {
-                        store.settings = data.data.settings;
-                    }
-
-                    // Dispatch custom events to re-render other components
-                    document.dispatchEvent(new CustomEvent('wpfaevent_speakers_updated'));
-                    document.dispatchEvent(new CustomEvent('wpfaevent_schedule_updated'));
-                    document.dispatchEvent(new CustomEvent('wpfaevent_settings_updated'));
-
-                    // Show success banner
-                    const existingNotice = document.querySelector('.wpfaevent-sync-notice');
-                    if (existingNotice) {
-                        existingNotice.remove();
-                    }
-
-                    const notice = document.createElement('div');
-                    notice.className = 'notice notice-success is-dismissible wpfaevent-sync-notice';
-                    notice.style.background = '#d4edda';
-                    notice.style.color = '#155724';
-                    notice.style.border = '1px solid #c3e6cb';
-                    notice.style.padding = '15px';
-                    notice.style.borderRadius = '8px';
-                    notice.style.marginBottom = '20px';
-                    notice.style.display = 'flex';
-                    notice.style.justifyContent = 'space-between';
-                    notice.style.alignItems = 'center';
-                    notice.style.marginTop = '20px';
-
-                    notice.innerHTML = `
-                        <div><strong>Success:</strong> ${escapeHTML(data.data.message)}</div>
-                        <button type="button" class="notice-dismiss" style="background: none; border: none; cursor: pointer; font-size: 20px; color: #155724;">&times;</button>
-                    `;
-
-                    notice.querySelector('.notice-dismiss').addEventListener('click', () => {
-                        notice.remove();
-                    });
-
-                    const header = document.querySelector('.dashboard-header');
-                    if (header) {
-                        header.parentNode.insertBefore(notice, header.nextSibling);
-                    }
-
-                    syncStatus.textContent = data.data.message;
+                    syncStatus.textContent = data.data.message + ' The page will now reload.';
                     syncStatus.style.color = 'green';
-                    syncBtn.disabled = false;
-                    syncForm.querySelector('button[type="submit"]').disabled = false;
+                    setTimeout(() => window.location.reload(), 2000);
                 } else {
                     syncStatus.textContent = 'Error: ' + data.data;
                     syncStatus.style.color = 'red';
@@ -1354,10 +1299,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 customAlert.alert('Could not save the URL. Please try again.', 'Error');
             }
-        });
-
-        document.addEventListener('wpfaevent_settings_updated', () => {
-            apiUrlInput.value = store.settings.eventyay_api_url || '';
         });
     })();
 
@@ -1650,8 +1591,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 processNewSpeaker(formData.get('image_url'));
             }
         });
-
-        document.addEventListener('wpfaevent_speakers_updated', render);
     })();
 
     // --- Sponsor Management Logic ---
