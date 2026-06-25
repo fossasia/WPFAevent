@@ -1,47 +1,150 @@
 (function( $ ) {
 	'use strict';
 
-	$( function() {
-		$( '.wpfaevent-custom-tabs' ).each( function() {
-			var $box = $( this );
-			var $list = $box.find( '.wpfaevent-custom-tabs-list' );
-			var $empty = $box.find( '.wpfaevent-custom-tabs-empty' );
-			var $template = $box.find( '.wpfaevent-custom-tab-template' );
-			var toggleEmptyState = function() {
-				$empty.prop( 'hidden', $list.find( '.wpfaevent-custom-tab-row' ).length > 0 );
-			};
+	$(function() {
+		const $importForm = $('#wpfaevent-import-events-form');
+		const $updateForm = $('#wpfaevent-update-events-form');
 
-			$box.on( 'click', '.wpfaevent-add-custom-tab', function( event ) {
-				var nextIndex = parseInt( $box.attr( 'data-next-index' ), 10 );
-				var templateHtml = $template.html();
-				var $newRow;
+		if ($importForm.length || $updateForm.length) {
+			const $form = $importForm.length ? $importForm : $updateForm;
+			const rawReturnPage = $form.find('input[name="wpfaevent_eventyay_return_page"]').val();
+			const returnPage = /^[a-zA-Z0-9_-]+$/.test(rawReturnPage || '') ? rawReturnPage : 'wpfaevent-import-events';
 
-				event.preventDefault();
+			$form.on('submit', function(e) {
+				e.preventDefault();
 
-				if ( isNaN( nextIndex ) ) {
-					nextIndex = $list.find( '.wpfaevent-custom-tab-row' ).length;
-				}
-
-				if ( ! templateHtml ) {
+				const nonce = $form.find('input[name="_wpnonce"]').val();
+				if (!nonce) {
+					alert('Security validation failed: Nonce missing.');
 					return;
 				}
 
-				$list.append( templateHtml.replace( /\{\{INDEX\}\}/g, nextIndex ) );
-				$box.attr( 'data-next-index', nextIndex + 1 );
-				toggleEmptyState();
+				// Initialize stats
+				let fetched = 0;
+				let created = 0;
+				let updated = 0;
+				let skipped = 0;
 
-				$newRow = $list.find( '.wpfaevent-custom-tab-row' ).last();
-				$newRow.find( 'input[type="text"]' ).trigger( 'focus' );
-			} );
+				// Show overlay
+				const $overlay = $('#wpfaevent-import-progress-overlay');
+				const $title = $('#wpfaevent-progress-title');
+				const $bar = $('#wpfaevent-progress-bar');
+				const $status = $('#wpfaevent-progress-status');
+				const $details = $('#wpfaevent-progress-details');
 
-			$box.on( 'click', '.wpfaevent-remove-custom-tab', function( event ) {
-				event.preventDefault();
-				$( this ).closest( '.wpfaevent-custom-tab-row' ).remove();
-				toggleEmptyState();
-			} );
+				$overlay.css('display', 'flex');
+				$title.text('Syncing with Eventyay');
+				$bar.css('width', '0%');
+				$status.text('Connecting to Eventyay...');
+				$details.text('');
 
-			toggleEmptyState();
-		} );
-	} );
+				// Fetch all events first
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'wpfaevent_import_get_events',
+						nonce: nonce
+					},
+					success: function(response) {
+						if (!response.success) {
+							saveSummaryAndRedirect(
+								'error',
+								response.data.message || 'Failed to fetch events from the endpoint.',
+								returnPage,
+								nonce
+							);
+							return;
+						}
+
+						const events = response.data.events;
+						if (!events || !events.length) {
+							saveSummaryAndRedirect(
+								'error',
+								'No Eventyay events were returned by the configured endpoint.',
+								returnPage,
+								nonce
+							);
+							return;
+						}
+
+						fetched = events.length;
+						$status.text('Found ' + fetched + ' event(s). Starting sync...');
+						processNextEvent(events, 0);
+					},
+					error: function(xhr) {
+						let errorMsg = 'Failed to fetch events from Eventyay endpoint.';
+						if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+							errorMsg = xhr.responseJSON.data.message;
+						}
+						saveSummaryAndRedirect('error', errorMsg, returnPage, nonce);
+					}
+				});
+
+				function processNextEvent(events, index) {
+					if (index >= events.length) {
+						$status.text('Finalizing sync...');
+						$bar.css('width', '100%');
+						const message = 'Fetched ' + fetched + ' Eventyay event(s). Created ' + created + ', updated ' + updated + ', skipped ' + skipped + '.';
+						saveSummaryAndRedirect('success', message, returnPage, nonce);
+						return;
+					}
+
+					const event = events[index];
+					const percent = Math.round((index / events.length) * 100);
+					$bar.css('width', percent + '%');
+
+					const eventTitle = event.name || event.title || event.event_slug || 'Unnamed Event';
+					$status.text('Importing ' + (index + 1) + ' of ' + events.length + ': ' + eventTitle);
+					$details.text('Saving event details, location, and dates...');
+
+					$.ajax({
+						url: ajaxurl,
+						type: 'POST',
+						data: {
+							action: 'wpfaevent_import_single_event',
+							nonce: nonce,
+							event: JSON.stringify(event)
+						},
+						success: function(response) {
+							if (response.success) {
+								const res = response.data;
+								created += res.created || 0;
+								updated += res.updated || 0;
+								skipped += res.skipped || 0;
+							} else {
+								skipped++;
+							}
+							setTimeout(function() {
+								processNextEvent(events, index + 1);
+							}, 300);
+						},
+						error: function() {
+							skipped++;
+							setTimeout(function() {
+								processNextEvent(events, index + 1);
+							}, 300);
+						}
+					});
+				}
+
+				function saveSummaryAndRedirect(type, message, returnPage, nonce) {
+					$.ajax({
+						url: ajaxurl,
+						type: 'POST',
+						data: {
+							action: 'wpfaevent_import_save_summary',
+							nonce: nonce,
+							type: type,
+							message: message
+						},
+						complete: function() {
+							window.location.href = 'edit.php?post_type=wpfa_event&page=' + encodeURIComponent(returnPage);
+						}
+					});
+				}
+			});
+		}
+	});
 
 })( jQuery );
