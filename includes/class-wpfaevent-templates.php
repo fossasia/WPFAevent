@@ -36,35 +36,35 @@ class Wpfaevent_Templates {
 	 * @var   array<string, array<string, string>>
 	 */
 	private static $templates = array(
-		'landing'         => array(
+		'landing'                => array(
 			'file'      => 'page-landing.php',
 			'label'     => 'WPFA - Landing',
 			'shortcode' => 'wpfaevent_landing',
 			'block'     => 'landing',
 			'title'     => 'WPFA Landing',
 		),
-		'speakers'        => array(
+		'speakers'               => array(
 			'file'      => 'page-speakers.php',
 			'label'     => 'WPFA - Speakers',
 			'shortcode' => 'wpfaevent_speakers',
 			'block'     => 'speakers',
 			'title'     => 'WPFA Speakers',
 		),
-		'events'          => array(
+		'events'                 => array(
 			'file'      => 'page-events.php',
 			'label'     => 'WPFA - Events',
 			'shortcode' => 'wpfaevent_events',
 			'block'     => 'events',
 			'title'     => 'WPFA Events',
 		),
-		'past_events'     => array(
+		'past_events'            => array(
 			'file'      => 'page-past-events.php',
 			'label'     => 'WPFA - Past Events',
 			'shortcode' => 'wpfaevent_past_events',
 			'block'     => 'past-events',
 			'title'     => 'WPFA Past Events',
 		),
-		'schedule'        => array(
+		'schedule'               => array(
 			'file'      => 'page-schedule.php',
 			'label'     => 'WPFA - Schedule',
 			'shortcode' => 'wpfaevent_schedule',
@@ -78,7 +78,7 @@ class Wpfaevent_Templates {
 			'block'     => 'additional-information',
 			'title'     => 'WPFA Additional Information',
 		),
-		'code_of_conduct' => array(
+		'code_of_conduct'        => array(
 			'file'      => 'page-code-of-conduct.php',
 			'label'     => 'WPFA - Code of Conduct',
 			'shortcode' => 'wpfaevent_code_of_conduct',
