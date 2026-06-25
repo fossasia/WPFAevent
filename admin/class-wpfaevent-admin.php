@@ -40,22 +40,13 @@ class Wpfaevent_Admin {
 	private $version;
 
 	/**
-	 * Eventyay REST API import service.
+	 * Eventyay import service.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 * @var Wpfaevent_Eventyay_Importer
 	 */
 	private $eventyay_importer;
-
-	/**
-	 * Eventyay JSON:API dashboard sync service.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 * @var Wpfaevent_Eventyay_Ajax_Sync
-	 */
-	private $eventyay_ajax_sync;
 
 	/**
 	 * Initialize the class and set its properties.
@@ -71,7 +62,7 @@ class Wpfaevent_Admin {
 	}
 
 	/**
-	 * Get the Eventyay REST API import service.
+	 * Get the Eventyay import service.
 	 *
 	 * @since 1.0.0
 	 *
@@ -83,21 +74,6 @@ class Wpfaevent_Admin {
 		}
 
 		return $this->eventyay_importer;
-	}
-
-	/**
-	 * Get the Eventyay JSON:API dashboard sync service.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return Wpfaevent_Eventyay_Ajax_Sync
-	 */
-	private function get_eventyay_ajax_sync() {
-		if ( ! $this->eventyay_ajax_sync instanceof Wpfaevent_Eventyay_Ajax_Sync ) {
-			$this->eventyay_ajax_sync = new Wpfaevent_Eventyay_Ajax_Sync();
-		}
-
-		return $this->eventyay_ajax_sync;
 	}
 
 	/**
@@ -142,19 +118,6 @@ class Wpfaevent_Admin {
 		 */
 
 		wp_enqueue_script( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'js/wpfaevent-admin.js', array( 'jquery' ), $this->version, false );
-		wp_localize_script(
-			$this->plugin_name . '-admin',
-			'wpfaeventAdmin',
-			array(
-				'ajaxUrl'               => admin_url( 'admin-ajax.php' ),
-				'syncingText'           => __( 'Syncing...', 'wpfaevent' ),
-				'syncCompleteText'      => __( 'Sync complete.', 'wpfaevent' ),
-				'syncFailedText'        => __( 'Sync failed.', 'wpfaevent' ),
-				'networkErrorText'      => __( 'Network error.', 'wpfaevent' ),
-				'syncButtonText'        => __( 'Sync Speakers from Eventyay', 'wpfaevent' ),
-				'lastSyncedJustNowText' => __( 'Last synced just now.', 'wpfaevent' ),
-			)
-		);
 	}
 
 	/**
@@ -445,7 +408,6 @@ class Wpfaevent_Admin {
 				'type'              => 'array',
 				'sanitize_callback' => array( $this, 'sanitize_eventyay_import_settings' ),
 				'default'           => $this->get_eventyay_importer()->get_eventyay_import_default_settings(),
-				'autoload'          => false,
 			)
 		);
 	}
@@ -481,16 +443,6 @@ class Wpfaevent_Admin {
 	}
 
 	/**
-	 * Handle Eventyay JSON:API speaker sync for the admin dashboard.
-	 *
-	 * @since 1.0.0
-	 * @return void
-	 */
-	public function ajax_sync_eventyay() {
-		$this->get_eventyay_ajax_sync()->ajax_sync_eventyay();
-	}
-
-	/**
 	 * Handle Eventyay import form submissions.
 	 *
 	 * @since 1.0.0
@@ -518,18 +470,6 @@ class Wpfaevent_Admin {
 			'normal',
 			'high'
 		);
-
-		// Eventyay sync meta box on event edit screen (visible to importers only).
-		if ( Wpfaevent_Roles::current_user_can_import_eventyay() ) {
-			add_meta_box(
-				'wpfa_eventyay_sync',
-				__( 'Eventyay Speaker Sync', 'wpfaevent' ),
-				array( $this, 'render_eventyay_sync_meta_box' ),
-				'wpfa_event',
-				'side',
-				'default'
-			);
-		}
 
 		// Speaker meta boxes.
 		add_meta_box(
@@ -666,53 +606,6 @@ class Wpfaevent_Admin {
 				</td>
 			</tr>
 		</table>
-		<?php
-	}
-
-	/**
-	 * Render the Eventyay speaker sync meta box on the event edit screen.
-	 *
-	 * @since 1.0.0
-	 * @param WP_Post $post The post object.
-	 */
-	public function render_eventyay_sync_meta_box( $post ) {
-		$eventyay_id = get_post_meta( $post->ID, '_eventyay_event_slug', true );
-		$synced_at   = get_post_meta( $post->ID, '_wpfa_eventyay_speakers_synced_at', true );
-		?>
-		<div class="wpfa-eventyay-sync-meta-box">
-		<p class="description wpfa-eventyay-sync-meta-box__description">
-			<?php esc_html_e( 'Re-sync speakers and sessions for this event from the Eventyay API.', 'wpfaevent' ); ?>
-		</p>
-		<?php if ( $eventyay_id ) : ?>
-			<p class="wpfa-eventyay-sync-meta-box__slug">
-				<strong><?php esc_html_e( 'Eventyay slug:', 'wpfaevent' ); ?></strong>
-				<?php echo esc_html( $eventyay_id ); ?>
-			</p>
-		<?php endif; ?>
-		<?php if ( $synced_at ) : ?>
-			<p class="description wpfa-eventyay-sync-meta-box__synced-at" data-wpfa-eventyay-synced-at>
-				<?php
-				echo esc_html(
-					sprintf(
-						/* translators: %s: human-readable time difference */
-						__( 'Last synced %s ago.', 'wpfaevent' ),
-						human_time_diff( absint( $synced_at ) )
-					)
-				);
-				?>
-			</p>
-		<?php endif; ?>
-		<button
-			type="button"
-			id="wpfa-eventyay-sync-btn"
-			class="button button-secondary wpfa-eventyay-sync-meta-box__button"
-			data-event-id="<?php echo esc_attr( $post->ID ); ?>"
-			data-nonce="<?php echo esc_attr( wp_create_nonce( 'fossasia_admin_nonce' ) ); ?>"
-		>
-			<?php esc_html_e( 'Sync Speakers from Eventyay', 'wpfaevent' ); ?>
-		</button>
-		<p id="wpfa-eventyay-sync-status" class="wpfa-eventyay-sync-meta-box__status" aria-live="polite"></p>
-		</div>
 		<?php
 	}
 
@@ -913,7 +806,7 @@ class Wpfaevent_Admin {
 
 		$this->update_post_id_list_meta( $post_id, 'wpfa_event_speakers', $speakers );
 
-		Wpfaevent_Meta_Event::sync_event_speaker_relationships( $post_id, $previous_speakers, $speakers );
+		$this->sync_event_speaker_relationships( $post_id, $previous_speakers, $speakers );
 	}
 
 	/**
@@ -982,6 +875,152 @@ class Wpfaevent_Admin {
 		}
 
 		update_post_meta( $post_id, $meta_key, $post_ids );
+	}
+
+	/**
+	 * Sync speaker-side event relationship meta after an event is saved.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int        $event_id          Event post ID.
+	 * @param array<int> $previous_speakers Speaker IDs before save.
+	 * @param array<int> $current_speakers  Speaker IDs after save.
+	 * @return void
+	 */
+	private function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
+		$event_id          = absint( $event_id );
+		$previous_speakers = $this->sanitize_post_id_list( $previous_speakers );
+		$current_speakers  = $this->sanitize_post_id_list( $current_speakers );
+
+		if ( ! $event_id ) {
+			return;
+		}
+
+		$previous_speakers = array_values(
+			array_unique(
+				array_merge(
+					$previous_speakers,
+					$this->get_speakers_linked_to_event( $event_id )
+				)
+			)
+		);
+
+		$removed_speakers = array_diff( $previous_speakers, $current_speakers );
+
+		foreach ( $removed_speakers as $speaker_id ) {
+			$this->remove_event_from_speaker( $speaker_id, $event_id );
+		}
+
+		foreach ( $current_speakers as $speaker_id ) {
+			$this->add_event_to_speaker( $speaker_id, $event_id );
+		}
+	}
+
+	/**
+	 * Find speakers whose speaker-side event meta includes an event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int> Speaker post IDs.
+	 */
+	private function get_speakers_linked_to_event( $event_id ) {
+		$event_id = absint( $event_id );
+
+		if ( ! $event_id ) {
+			return array();
+		}
+
+		$batch_size   = 100;
+		$current_page = 1;
+		$speaker_ids  = array();
+
+		do {
+			$batch_ids = get_posts(
+				array(
+					'post_type'              => 'wpfa_speaker',
+					'post_status'            => 'any',
+					'posts_per_page'         => $batch_size,
+					'paged'                  => $current_page,
+					'fields'                 => 'ids',
+					'no_found_rows'          => true,
+					'orderby'                => 'ID',
+					'order'                  => 'ASC',
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
+				)
+			);
+
+			if ( empty( $batch_ids ) ) {
+				break;
+			}
+
+			$batch_count = count( $batch_ids );
+			update_meta_cache( 'post', $batch_ids );
+
+			foreach ( $batch_ids as $speaker_id ) {
+				if ( in_array( $event_id, $this->get_speaker_event_ids( $speaker_id ), true ) ) {
+					$speaker_ids[] = $speaker_id;
+				}
+			}
+
+			++$current_page;
+		} while ( $batch_count === $batch_size );
+
+		return $this->sanitize_post_id_list( $speaker_ids );
+	}
+
+	/**
+	 * Add an event ID to a speaker's related events.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $speaker_id Speaker post ID.
+	 * @param int $event_id Event post ID.
+	 * @return void
+	 */
+	private function add_event_to_speaker( $speaker_id, $event_id ) {
+		$speaker_id = absint( $speaker_id );
+		$event_id   = absint( $event_id );
+
+		if ( ! $speaker_id || ! $event_id ) {
+			return;
+		}
+
+		if ( 'wpfa_speaker' !== get_post_type( $speaker_id ) ) {
+			return;
+		}
+
+		$event_ids   = $this->get_speaker_event_ids( $speaker_id );
+		$event_ids[] = $event_id;
+
+		$this->update_post_id_list_meta( $speaker_id, 'wpfa_speaker_events', $event_ids );
+	}
+
+	/**
+	 * Remove an event ID from a speaker's related events.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $speaker_id Speaker post ID.
+	 * @param int $event_id Event post ID.
+	 * @return void
+	 */
+	private function remove_event_from_speaker( $speaker_id, $event_id ) {
+		$speaker_id = absint( $speaker_id );
+		$event_id   = absint( $event_id );
+
+		if ( ! $speaker_id || ! $event_id ) {
+			return;
+		}
+
+		if ( 'wpfa_speaker' !== get_post_type( $speaker_id ) ) {
+			return;
+		}
+
+		$event_ids = array_diff( $this->get_speaker_event_ids( $speaker_id ), array( $event_id ) );
+
+		$this->update_post_id_list_meta( $speaker_id, 'wpfa_speaker_events', $event_ids );
 	}
 
 	/**
