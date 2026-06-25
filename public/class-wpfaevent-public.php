@@ -308,6 +308,21 @@ class Wpfaevent_Public {
 			'all'
 		);
 
+		wp_register_style(
+			$this->plugin_name . '-single-event',
+			WPFAEVENT_URL . 'public/css/templates/single-event.css',
+			array( $this->plugin_name, $this->plugin_name . '-navigation' ),
+			$this->version,
+			'all'
+		);
+
+		wp_register_style(
+			$this->plugin_name . '-additional-information',
+			WPFAEVENT_URL . 'public/css/templates/additional-information.css',
+			array( $this->plugin_name, $this->plugin_name . '-navigation' ),
+			$this->version,
+			'all'
+		);
 		wp_register_script(
 			$this->plugin_name . '-speakers',
 			WPFAEVENT_URL . 'public/js/wpfaevent-speakers.js',
@@ -471,6 +486,10 @@ class Wpfaevent_Public {
 
 		if ( is_singular( 'wpfa_event' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-events' );
+		}
+
+		if ( $this->is_wpfa_template_file_active( 'page-additional-information.php' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-additional-information' );
 		}
 
 		/**
