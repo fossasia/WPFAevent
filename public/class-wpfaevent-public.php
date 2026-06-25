@@ -269,6 +269,28 @@ class Wpfaevent_Public {
 		);
 
 		wp_register_style(
+			$this->plugin_name . '-event',
+			WPFAEVENT_URL . 'public/css/templates/event.css',
+			array(
+				$this->plugin_name,
+				$this->plugin_name . '-navigation',
+			),
+			$this->version,
+			'all'
+		);
+
+		wp_register_style(
+			$this->plugin_name . '-partners',
+			WPFAEVENT_URL . 'public/css/templates/partners.css',
+			array(
+				$this->plugin_name,
+				$this->plugin_name . '-navigation',
+			),
+			$this->version,
+			'all'
+		);
+
+		wp_register_style(
 			$this->plugin_name . '-past-events',
 			WPFAEVENT_URL . 'public/css/templates/past-events.css',
 			array(
@@ -439,6 +461,10 @@ class Wpfaevent_Public {
 				$this->version,
 				'all'
 			);
+		}
+
+		if ( is_singular( 'wpfa_event' ) || $this->is_wpfa_template_file_active( 'page-partner.php' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-partners' );
 		}
 
 		// Past Events template.
