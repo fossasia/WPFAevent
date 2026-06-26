@@ -32,6 +32,7 @@ class Wpfaevent_Activator {
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-speaker.php';
 		require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies.php';
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-roles.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-partner-helper.php';
 
 		// Register CPTs and taxonomies.
 		Wpfaevent_CPT_Event::register();
@@ -40,6 +41,11 @@ class Wpfaevent_Activator {
 
 		// Flush rewrite rules so CPT permalinks work.
 		flush_rewrite_rules();
+
+		// Ensure the public partner page exists for sponsor and exhibitor links.
+		if ( class_exists( 'Wpfaevent_Partner_Helper' ) ) {
+			Wpfaevent_Partner_Helper::ensure_partner_page( false );
+		}
 
 		// Schedule auto-sync cron if already configured.
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-cron-scheduler.php';
