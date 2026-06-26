@@ -19,6 +19,7 @@ if ( ! isset( $speaker ) || ! is_array( $speaker ) || empty( $speaker['name'] ) 
 
 $speaker_name        = sanitize_text_field( $speaker['name'] );
 $speaker_social      = isset( $speaker['social'] ) && is_array( $speaker['social'] ) ? $speaker['social'] : array();
+$session             = ! empty( $speaker['sessions'][0] ) && is_array( $speaker['sessions'][0] ) ? $speaker['sessions'][0] : array();
 $placeholder_url     = ! empty( $speaker_placeholder_url ) ? $speaker_placeholder_url : WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
 $is_featured_speaker = ! empty( $wpfa_dashboard_speaker_is_featured ) || ! empty( $speaker['featured'] );
 ?>
@@ -50,6 +51,12 @@ $is_featured_speaker = ! empty( $wpfa_dashboard_speaker_is_featured ) || ! empty
 	<div class="wpfa-speaker-expand">
 		<?php if ( ! empty( $speaker['bio'] ) ) : ?>
 			<div class="wpfa-speaker-bio"><?php echo wp_kses_post( wpautop( $speaker['bio'] ) ); ?></div>
+		<?php endif; ?>
+		<?php if ( ! empty( $session['title'] ) ) : ?>
+			<div class="wpfa-speaker-session">
+				<h4><?php esc_html_e( 'Session Details', 'wpfaevent' ); ?></h4>
+				<p><strong><?php echo esc_html( $session['title'] ); ?></strong></p>
+			</div>
 		<?php endif; ?>
 		<?php if ( ! empty( $speaker_social ) ) : ?>
 			<div class="wpfa-speaker-social">

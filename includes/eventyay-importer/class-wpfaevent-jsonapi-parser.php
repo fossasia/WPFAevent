@@ -16,6 +16,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Wpfaevent_JSONAPI_Parser {
 
 	/**
+	 * Low-level JSON:API resource helpers.
+	 *
+	 * @var Wpfaevent_JSONAPI_Resource_Utils
+	 */
+	private $resource_utils;
+
+	/**
+	 * Constructor.
+	 */
+	public function __construct() {
+		$this->resource_utils = new Wpfaevent_JSONAPI_Resource_Utils();
+	}
+
+	/**
 	 * Determine whether an array resembles a JSON:API resource.
 	 *
 	 * @since 1.0.0
@@ -24,7 +38,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return bool
 	 */
 	public function is_jsonapi_resource( $maybe_resource ) {
-		return is_array( $maybe_resource ) && isset( $maybe_resource['type'], $maybe_resource['id'] );
+		return $this->resource_utils->is_jsonapi_resource( $maybe_resource );
 	}
 
 	/**
@@ -36,23 +50,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return array Event resources.
 	 */
 	public function extract_eventyay_event_resources( $payload ) {
-		if ( ! is_array( $payload ) || empty( $payload ) ) {
-			return array();
-		}
-
-		if ( isset( $payload['data'] ) && is_array( $payload['data'] ) ) {
-			if ( $this->is_jsonapi_resource( $payload['data'] ) ) {
-				return array( $payload['data'] );
-			}
-
-			return array_filter( $payload['data'], 'is_array' );
-		}
-
-		if ( isset( $payload['id'] ) || isset( $payload['attributes'] ) ) {
-			return array( $payload );
-		}
-
-		return array();
+		return $this->resource_utils->extract_eventyay_event_resources( $payload );
 	}
 
 	/**
@@ -147,39 +145,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return array
 	 */
 	public function normalize_eventyay_api_resource( $eventyay_resource ) {
-		if ( ! is_array( $eventyay_resource ) ) {
-			return array();
-		}
-
-		if ( isset( $eventyay_resource['data'] ) && is_array( $eventyay_resource['data'] ) && $this->is_jsonapi_resource( $eventyay_resource['data'] ) ) {
-			$eventyay_resource = $eventyay_resource['data'];
-		}
-
-		$normalized = array();
-
-		if ( isset( $eventyay_resource['attributes'] ) && is_array( $eventyay_resource['attributes'] ) ) {
-			$normalized = $eventyay_resource['attributes'];
-		}
-
-		foreach ( $eventyay_resource as $key => $value ) {
-			if ( in_array( $key, array( 'attributes', 'relationships' ), true ) ) {
-				continue;
-			}
-
-			$normalized[ $key ] = $value;
-		}
-
-		if ( isset( $eventyay_resource['relationships'] ) && is_array( $eventyay_resource['relationships'] ) ) {
-			foreach ( $eventyay_resource['relationships'] as $relationship_key => $relationship ) {
-				if ( ! is_array( $relationship ) || ! array_key_exists( 'data', $relationship ) ) {
-					continue;
-				}
-
-				$normalized[ $relationship_key ] = $this->normalize_eventyay_relationship_data( $relationship['data'] );
-			}
-		}
-
-		return $normalized;
+		return $this->resource_utils->normalize_eventyay_api_resource( $eventyay_resource );
 	}
 
 	/**
@@ -191,20 +157,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return mixed
 	 */
 	public function normalize_eventyay_relationship_data( $relationship_data ) {
-		if ( ! is_array( $relationship_data ) ) {
-			return $relationship_data;
-		}
-
-		if ( $this->is_jsonapi_resource( $relationship_data ) ) {
-			return $this->normalize_eventyay_api_resource( $relationship_data );
-		}
-
-		$normalized = array();
-		foreach ( $relationship_data as $item ) {
-			$normalized[] = is_array( $item ) ? $this->normalize_eventyay_api_resource( $item ) : $item;
-		}
-
-		return $normalized;
+		return $this->resource_utils->normalize_eventyay_relationship_data( $relationship_data );
 	}
 
 	/**
@@ -216,36 +169,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return array
 	 */
 	public function eventyay_list_value( $value ) {
-		if ( ! is_array( $value ) ) {
-			return array();
-		}
-
-		if ( isset( $value['results'] ) && is_array( $value['results'] ) ) {
-			return $value['results'];
-		}
-
-		if ( array_key_exists( 'data', $value ) && is_array( $value['data'] ) ) {
-			if ( $this->is_jsonapi_resource( $value['data'] ) ) {
-				return array( $value['data'] );
-			}
-
-			return $value['data'];
-		}
-
-		if (
-			! array_key_exists( 0, $value )
-			&& (
-				$this->is_jsonapi_resource( $value )
-				|| isset( $value['id'] )
-				|| isset( $value['name'] )
-				|| isset( $value['title'] )
-				|| isset( $value['attributes'] )
-			)
-		) {
-			return array( $value );
-		}
-
-		return $value;
+		return $this->resource_utils->eventyay_list_value( $value );
 	}
 
 	/**
@@ -257,13 +181,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return string
 	 */
 	public function eventyay_resource_identifier( $eventyay_resource ) {
-		foreach ( array( '_eventyay_source_id', 'code', 'id', 'slug' ) as $key ) {
-			if ( isset( $eventyay_resource[ $key ] ) && is_scalar( $eventyay_resource[ $key ] ) && '' !== trim( (string) $eventyay_resource[ $key ] ) ) {
-				return sanitize_text_field( (string) $eventyay_resource[ $key ] );
-			}
-		}
-
-		return '';
+		return $this->resource_utils->eventyay_resource_identifier( $eventyay_resource );
 	}
 
 	/**
@@ -307,25 +225,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return mixed
 	 */
 	public function eventyay_first_present_raw( $eventyay_resource, $keys, $include_settings = false ) {
-		foreach ( $keys as $key ) {
-			if ( ! array_key_exists( $key, $eventyay_resource ) ) {
-				continue;
-			}
-
-			if ( is_scalar( $eventyay_resource[ $key ] ) && '' !== trim( (string) $eventyay_resource[ $key ] ) ) {
-				return $eventyay_resource[ $key ];
-			}
-
-			if ( is_array( $eventyay_resource[ $key ] ) && ! empty( $eventyay_resource[ $key ] ) ) {
-				return $eventyay_resource[ $key ];
-			}
-		}
-
-		if ( $include_settings && ! empty( $eventyay_resource['_eventyay_settings'] ) && is_array( $eventyay_resource['_eventyay_settings'] ) ) {
-			return $this->eventyay_first_present_raw( $eventyay_resource['_eventyay_settings'], $keys, false );
-		}
-
-		return '';
+		return $this->resource_utils->eventyay_first_present_raw( $eventyay_resource, $keys, $include_settings );
 	}
 
 	/**
@@ -349,9 +249,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return string
 	 */
 	public function eventyay_text_value( $value ) {
-		$resolved = $this->eventyay_scalar_value( $value );
-
-		return sanitize_text_field( $resolved );
+		return $this->resource_utils->eventyay_text_value( $value );
 	}
 
 	/**
@@ -363,27 +261,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return string
 	 */
 	public function eventyay_rich_text_value( $value ) {
-		if ( is_scalar( $value ) ) {
-			return wp_kses_post( trim( (string) $value ) );
-		}
-
-		if ( ! is_array( $value ) ) {
-			return '';
-		}
-
-		foreach ( array( 'en', 'default', 'description', 'text' ) as $preferred_key ) {
-			if ( isset( $value[ $preferred_key ] ) && is_scalar( $value[ $preferred_key ] ) && '' !== trim( (string) $value[ $preferred_key ] ) ) {
-				return wp_kses_post( (string) $value[ $preferred_key ] );
-			}
-		}
-
-		foreach ( $value as $candidate ) {
-			if ( is_scalar( $candidate ) && '' !== trim( (string) $candidate ) ) {
-				return wp_kses_post( (string) $candidate );
-			}
-		}
-
-		return '';
+		return $this->resource_utils->eventyay_rich_text_value( $value );
 	}
 
 	/**
@@ -395,33 +273,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return string
 	 */
 	public function eventyay_scalar_value( $value ) {
-		if ( is_scalar( $value ) ) {
-			return (string) $value;
-		}
-
-		if ( ! is_array( $value ) ) {
-			return '';
-		}
-
-		foreach ( array( 'value', 'date', 'datetime', 'start', 'end', 'en', 'default' ) as $preferred_key ) {
-			if ( isset( $value[ $preferred_key ] ) ) {
-				$resolved = $this->eventyay_scalar_value( $value[ $preferred_key ] );
-
-				if ( '' !== trim( $resolved ) ) {
-					return $resolved;
-				}
-			}
-		}
-
-		foreach ( $value as $candidate ) {
-			$resolved = $this->eventyay_scalar_value( $candidate );
-
-			if ( '' !== trim( $resolved ) ) {
-				return $resolved;
-			}
-		}
-
-		return '';
+		return $this->resource_utils->eventyay_scalar_value( $value );
 	}
 
 	/**
@@ -434,35 +286,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return string
 	 */
 	public function eventyay_url_value( $value, $base_url ) {
-		if ( is_array( $value ) ) {
-			foreach ( array( 'url', 'href', 'download', 'thumbnail', 'image', 'en', 'default' ) as $key ) {
-				if ( ! empty( $value[ $key ] ) ) {
-					return $this->eventyay_url_value( $value[ $key ], $base_url );
-				}
-			}
-
-			return '';
-		}
-
-		if ( ! is_scalar( $value ) ) {
-			return '';
-		}
-
-		$value = trim( (string) $value );
-		if ( '' === $value ) {
-			return '';
-		}
-
-		if ( $this->is_valid_http_url( $value ) ) {
-			return esc_url_raw( $value );
-		}
-
-		$base_url = untrailingslashit( esc_url_raw( $base_url ) );
-		if ( ! empty( $base_url ) && $this->is_valid_http_url( $base_url ) && 0 === strpos( $value, '/' ) ) {
-			return esc_url_raw( $base_url . $value );
-		}
-
-		return '';
+		return $this->resource_utils->eventyay_url_value( $value, $base_url );
 	}
 
 	/**
@@ -473,17 +297,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return bool
 	 */
 	public function is_valid_http_url( $url ) {
-		$url = trim( (string) $url );
-		if ( '' === $url ) {
-			return false;
-		}
-
-		$parsed = wp_parse_url( $url );
-		if ( empty( $parsed['scheme'] ) || empty( $parsed['host'] ) ) {
-			return false;
-		}
-
-		return in_array( strtolower( $parsed['scheme'] ), array( 'http', 'https' ), true );
+		return $this->resource_utils->is_valid_http_url( $url );
 	}
 
 	/**
@@ -495,37 +309,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return string
 	 */
 	public function eventyay_location_text_value( $value ) {
-		if ( ! is_array( $value ) ) {
-			return $this->eventyay_text_value( $value );
-		}
-
-		foreach ( array( 'name', 'title', 'label', 'location', 'address', 'full_address', 'full-address', 'formatted_address', 'formatted-address' ) as $key ) {
-			if ( ! empty( $value[ $key ] ) ) {
-				$text = $this->eventyay_text_value( $value[ $key ] );
-
-				if ( '' !== $text ) {
-					return $text;
-				}
-			}
-		}
-
-		$parts = array();
-		foreach ( array( 'street', 'street_address', 'street-address', 'address_line_1', 'address-line-1', 'line1', 'postal_code', 'postal-code', 'postcode', 'zip', 'city', 'region', 'state', 'country' ) as $key ) {
-			if ( empty( $value[ $key ] ) ) {
-				continue;
-			}
-
-			$part = $this->eventyay_text_value( $value[ $key ] );
-			if ( '' !== $part ) {
-				$parts[] = $part;
-			}
-		}
-
-		if ( ! empty( $parts ) ) {
-			return implode( ', ', array_values( array_unique( $parts ) ) );
-		}
-
-		return $this->eventyay_text_value( $value );
+		return $this->resource_utils->eventyay_location_text_value( $value );
 	}
 
 	/**
@@ -537,7 +321,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return array
 	 */
 	public function get_jsonapi_attributes( $jsonapi_resource ) {
-		return isset( $jsonapi_resource['attributes'] ) && is_array( $jsonapi_resource['attributes'] ) ? $jsonapi_resource['attributes'] : array();
+		return $this->resource_utils->get_jsonapi_attributes( $jsonapi_resource );
 	}
 
 	/**
@@ -550,13 +334,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return string
 	 */
 	public function attribute_value( $attributes, $keys ) {
-		foreach ( $keys as $key ) {
-			if ( isset( $attributes[ $key ] ) && is_scalar( $attributes[ $key ] ) ) {
-				return (string) $attributes[ $key ];
-			}
-		}
-
-		return '';
+		return $this->resource_utils->attribute_value( $attributes, $keys );
 	}
 
 	/**
@@ -568,13 +346,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return string
 	 */
 	public function truncate_string( $value ) {
-		$value = wp_strip_all_tags( (string) $value );
-
-		if ( function_exists( 'mb_substr' ) ) {
-			return mb_substr( $value, 0, 1000 );
-		}
-
-		return substr( $value, 0, 1000 );
+		return $this->resource_utils->truncate_string( $value );
 	}
 
 	/**
@@ -609,6 +381,7 @@ class Wpfaevent_JSONAPI_Parser {
 
 		$included      = $this->index_jsonapi_resources( isset( $payload['included'] ) ? $payload['included'] : array() );
 		$speakers      = array();
+		$sessions      = array();
 		$session_count = 0;
 
 		foreach ( $data as $resource ) {
@@ -632,8 +405,9 @@ class Wpfaevent_JSONAPI_Parser {
 
 			++$session_count;
 
-			$session      = $this->normalize_eventyay_session_resource( $resource, $included );
-			$speaker_refs = $this->get_jsonapi_relationship_resources( $resource, 'speakers' );
+			$session       = $this->normalize_eventyay_session_resource( $resource, $included );
+			$speaker_refs  = $this->get_jsonapi_relationship_resources( $resource, 'speakers' );
+			$speaker_names = array();
 
 			foreach ( $speaker_refs as $speaker_ref ) {
 				$speaker_resource = $this->resolve_jsonapi_resource( $speaker_ref, $included );
@@ -647,12 +421,17 @@ class Wpfaevent_JSONAPI_Parser {
 					continue;
 				}
 
+				$speaker_names[] = $speaker['name'];
+
 				if ( empty( $speaker['category'] ) && ! empty( $session['track'] ) ) {
 					$speaker['category'] = $session['track'];
 				}
 
 				$this->merge_eventyay_speaker( $speakers, $speaker, $session );
 			}
+
+			$session['speakers'] = array_values( array_unique( $speaker_names ) );
+			$sessions            = $this->merge_eventyay_session_payload( $sessions, $session );
 		}
 
 		$speakers = array_values( $speakers );
@@ -667,6 +446,7 @@ class Wpfaevent_JSONAPI_Parser {
 
 		return array(
 			'speakers'      => $speakers,
+			'sessions'      => array_values( $sessions ),
 			'session_count' => $session_count,
 		);
 	}
@@ -692,6 +472,7 @@ class Wpfaevent_JSONAPI_Parser {
 		if ( ! is_array( $results ) ) {
 			return array(
 				'speakers'      => array(),
+				'sessions'      => array(),
 				'session_count' => 0,
 			);
 		}
@@ -725,16 +506,17 @@ class Wpfaevent_JSONAPI_Parser {
 					continue;
 				}
 
-				$session                    = $this->normalize_eventyay_submission_session( $this->normalize_eventyay_api_resource( $session_resource ) );
-				$session['speakers']        = array_values( array_unique( array( $speaker['name'] ) ) );
-				$speaker['category']        = empty( $speaker['category'] ) && ! empty( $session['track'] ) ? $session['track'] : $speaker['category'];
-				$sessions[ $session['id'] ] = $session;
+				$session             = $this->normalize_eventyay_submission_session( $this->normalize_eventyay_api_resource( $session_resource ) );
+				$session['speakers'] = array_values( array_unique( array( $speaker['name'] ) ) );
+				$speaker['category'] = empty( $speaker['category'] ) && ! empty( $session['track'] ) ? $session['track'] : $speaker['category'];
+				$sessions            = $this->merge_eventyay_session_payload( $sessions, $session );
 				$this->merge_eventyay_speaker( $speakers, $speaker, $session );
 			}
 		}
 
 		return array(
 			'speakers'      => array_values( $speakers ),
+			'sessions'      => array_values( $sessions ),
 			'session_count' => count( $sessions ),
 		);
 	}
@@ -1493,5 +1275,51 @@ class Wpfaevent_JSONAPI_Parser {
 		}
 
 		return $date->format( DATE_ATOM );
+	}
+
+	/**
+	 * Determine whether a normalized Eventyay session has displayable content.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $session Normalized session.
+	 * @return bool
+	 */
+	public function eventyay_session_has_content( $session ) {
+		foreach ( array( 'title', 'date', 'time', 'end_time', 'abstract', 'track', 'room' ) as $key ) {
+			if ( ! empty( $session[ $key ] ) ) {
+				return true;
+			}
+		}
+
+		return ! empty( $session['speakers'] );
+	}
+
+	/**
+	 * Merge an Eventyay session into a session list, combining duplicate speaker names.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $sessions Session list.
+	 * @param array $session  Session payload.
+	 * @return array
+	 */
+	public function merge_eventyay_session_payload( $sessions, $session ) {
+		if ( ! $this->eventyay_session_has_content( $session ) ) {
+			return $sessions;
+		}
+
+		$key = ! empty( $session['id'] ) ? 'id:' . sanitize_key( $session['id'] ) : 'title:' . sanitize_title( ( isset( $session['title'] ) ? $session['title'] : '' ) . '-' . ( isset( $session['date'] ) ? $session['date'] : '' ) . '-' . ( isset( $session['time'] ) ? $session['time'] : '' ) );
+		if ( empty( $sessions[ $key ] ) ) {
+			$sessions[ $key ] = $session;
+			return $sessions;
+		}
+
+		if ( ! empty( $session['speakers'] ) && is_array( $session['speakers'] ) ) {
+			$existing_speakers            = isset( $sessions[ $key ]['speakers'] ) && is_array( $sessions[ $key ]['speakers'] ) ? $sessions[ $key ]['speakers'] : array();
+			$sessions[ $key ]['speakers'] = array_values( array_unique( array_merge( $existing_speakers, $session['speakers'] ) ) );
+		}
+
+		return $sessions;
 	}
 }

@@ -233,19 +233,26 @@ class Wpfaevent_Schedule_Helper {
 	 * @return string
 	 */
 	public static function get_schedule_page_url() {
-		$page_id = absint( get_option( 'wpfaevent_schedule_page_id', 0 ) );
-		if ( $page_id && 'page' === get_post_type( $page_id ) && 'trash' !== get_post_status( $page_id ) ) {
-			return apply_filters( 'wpfaevent_schedule_page_url', get_permalink( $page_id ) );
-		}
-
 		$page = get_page_by_path( 'full-schedule' );
-		if ( $page instanceof WP_Post ) {
-			$url = get_permalink( $page );
 
-			return apply_filters( 'wpfaevent_schedule_page_url', $url );
+		if ( $page instanceof WP_Post ) {
+			return get_permalink( $page );
 		}
 
-		return apply_filters( 'wpfaevent_schedule_page_url', home_url( '/full-schedule/' ) );
+		$pages = get_pages(
+			array(
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Schedule page lookup by assigned template.
+				'meta_key'    => '_wp_page_template',
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Schedule page lookup by assigned template.
+				'meta_value'  => 'page-schedule.php',
+				'number'      => 1,
+				'post_status' => 'publish',
+			)
+		);
+
+		$url = ! empty( $pages[0] ) ? get_permalink( $pages[0] ) : home_url( '/full-schedule/' );
+
+		return apply_filters( 'wpfaevent_schedule_page_url', $url );
 	}
 
 	/**
