@@ -197,11 +197,6 @@
 	transform: scale(1.05);
 }
 
-.wpfaevent .wpfa-placeholder-svg {
-	width: 100%;
-	height: 100%;
-}
-
 /* Speaker Meta (Name, Role, Category) */
 .wpfaevent .wpfa-speaker-meta {
 	position: relative;
@@ -573,11 +568,11 @@
 }
 
 .wpfaevent .wpfa-speaker-profile-photo img,
-.wpfaevent .wpfa-speaker-profile-photo svg {
+.wpfaevent .wpfa-speaker-profile-photo .wpfa-speaker-placeholder-img {
 	width: 100%;
 	height: 100%;
-	object-fit: cover;
-	object-position: center top;
+	object-fit: contain;
+	object-position: center;
 }
 
 .wpfaevent .wpfa-speaker-profile-summary h1 {

@@ -152,6 +152,14 @@ class Wpfaevent_Eventyay_Importer {
 		}
 		$settings['post_status'] = $post_status;
 
+		$settings['auto_sync_enabled'] = ! empty( $input['auto_sync_enabled'] );
+
+		$auto_sync_interval = isset( $input['auto_sync_interval'] ) ? sanitize_key( wp_unslash( $input['auto_sync_interval'] ) ) : $defaults['auto_sync_interval'];
+		if ( ! in_array( $auto_sync_interval, array( 'hourly', 'twicedaily', 'daily' ), true ) ) {
+			$auto_sync_interval = $defaults['auto_sync_interval'];
+		}
+		$settings['auto_sync_interval'] = $auto_sync_interval;
+
 		return $settings;
 	}
 
@@ -442,12 +450,19 @@ class Wpfaevent_Eventyay_Importer {
 			'skipped' => 0,
 		);
 
+		$sync_service = new Wpfaevent_Eventyay_Ajax_Sync();
+
 		foreach ( $events as $event ) {
 			$upsert = $this->event_repo->upsert_eventyay_event_post( $event, $settings );
 
 			if ( is_wp_error( $upsert ) ) {
 				++$result['skipped'];
 				continue;
+			}
+
+			$event_slug = $this->parser->eventyay_event_slug( $event );
+			if ( $event_slug && ! empty( $upsert['post_id'] ) ) {
+				$sync_service->sync_speakers_for_event( $upsert['post_id'], $event_slug, $settings );
 			}
 
 			if ( ! empty( $upsert['created'] ) ) {
