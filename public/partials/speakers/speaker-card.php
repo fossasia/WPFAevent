@@ -87,13 +87,13 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 				×
 			</button>
 		<?php endif; ?>
-		
+
 		<?php if ( ! empty( $speaker_categories ) ) : ?>
 			<p class="pill">
 				<?php echo esc_html( $speaker_categories[0] ); ?>
 			</p>
 		<?php endif; ?>
-		
+
 		<h3 class="wpfa-speaker-name" itemprop="name"><a href="<?php echo esc_url( $speaker_link ); ?>"><?php echo esc_html( $name ); ?></a></h3>
 		<?php if ( $position || $org ) : ?>
 			<p class="wpfa-speaker-role"><?php echo esc_html( trim( $position . ( $position && $org ? ' · ' : '' ) . $org ) ); ?></p>
@@ -117,17 +117,17 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 					<?php if ( $talk_date || $talk_time ) : ?>
 						<p>
 							<?php
-						$date_time = array();
-						if ( $talk_date ) {
-							$date_time[] = esc_html( $talk_date );
-						}
-						if ( $talk_time ) {
-							$date_time[] = esc_html( $talk_time );
-							if ( $talk_end_time ) {
-								$date_time[] = esc_html( $talk_end_time );
-							}
-						}
-						echo esc_html( implode( ' • ', $date_time ) );
+								$date_time = array();
+								if ( $talk_date ) {
+									$date_time[] = esc_html( $talk_date );
+								}
+								if ( $talk_time ) {
+									$date_time[] = esc_html( $talk_time );
+									if ( $talk_end_time ) {
+										$date_time[] = esc_html( $talk_end_time );
+									}
+								}
+								echo esc_html( implode( ' • ', $date_time ) );
 							?>
 						</p>
 					<?php endif; ?>
@@ -141,36 +141,36 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 			<?php endif; ?>
 
 			<?php
-		// Get social links.
-		$linkedin = get_post_meta( $sid, 'wpfa_speaker_linkedin', true );
-		$twitter  = get_post_meta( $sid, 'wpfa_speaker_twitter', true );
-		$github   = get_post_meta( $sid, 'wpfa_speaker_github', true );
-		$website  = get_post_meta( $sid, 'wpfa_speaker_website', true );
+			// Get social links.
+			$linkedin = get_post_meta( $sid, 'wpfa_speaker_linkedin', true );
+			$twitter  = get_post_meta( $sid, 'wpfa_speaker_twitter', true );
+			$github   = get_post_meta( $sid, 'wpfa_speaker_github', true );
+			$website  = get_post_meta( $sid, 'wpfa_speaker_website', true );
 
-		if ( $linkedin || $twitter || $github || $website ) :
-			?>
-			<div class="wpfa-speaker-social">
-				<?php if ( $linkedin ) : ?>
-					<a href="<?php echo esc_url( $linkedin ); ?>" target="_blank" rel="noopener noreferrer" class="wpfa-social-link">
-						LinkedIn
-					</a>
-				<?php endif; ?>
-				<?php if ( $twitter ) : ?>
-					<a href="<?php echo esc_url( $twitter ); ?>" target="_blank" rel="noopener noreferrer" class="wpfa-social-link">
-						Twitter
-					</a>
-				<?php endif; ?>
-				<?php if ( $github ) : ?>
-					<a href="<?php echo esc_url( $github ); ?>" target="_blank" rel="noopener noreferrer" class="wpfa-social-link">
-						GitHub
-					</a>
-				<?php endif; ?>
-				<?php if ( $website ) : ?>
-					<a href="<?php echo esc_url( $website ); ?>" target="_blank" rel="noopener noreferrer" class="wpfa-social-link">
-						Website
-					</a>
-				<?php endif; ?>
-			</div>
-		<?php endif; ?>
+			if ( $linkedin || $twitter || $github || $website ) :
+				?>
+				<div class="wpfa-speaker-social">
+					<?php if ( $linkedin ) : ?>
+						<a href="<?php echo esc_url( $linkedin ); ?>" target="_blank" rel="noopener noreferrer" class="wpfa-social-link">
+							LinkedIn
+						</a>
+					<?php endif; ?>
+					<?php if ( $twitter ) : ?>
+						<a href="<?php echo esc_url( $twitter ); ?>" target="_blank" rel="noopener noreferrer" class="wpfa-social-link">
+							Twitter
+						</a>
+					<?php endif; ?>
+					<?php if ( $github ) : ?>
+						<a href="<?php echo esc_url( $github ); ?>" target="_blank" rel="noopener noreferrer" class="wpfa-social-link">
+							GitHub
+						</a>
+					<?php endif; ?>
+					<?php if ( $website ) : ?>
+						<a href="<?php echo esc_url( $website ); ?>" target="_blank" rel="noopener noreferrer" class="wpfa-social-link">
+							Website
+						</a>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
 	</div>
 </article>
