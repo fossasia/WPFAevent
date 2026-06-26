@@ -312,6 +312,18 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
+	 * Get normalized speaker IDs assigned to an event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int> Speaker post IDs.
+	 */
+	public static function get_event_speaker_ids( $event_id ) {
+		return self::sanitize_post_id_list( get_post_meta( $event_id, 'wpfa_event_speakers', true ) );
+	}
+
+	/**
 	 * Sanitize, deduplicate, and reindex a list of post IDs.
 	 *
 	 * @since 1.0.0
@@ -543,30 +555,6 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
-	 * Get all color meta values for a specific event.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $event_id Event post ID.
-	 * @return array<string, string> Color meta values mapped by key.
-	 */
-	public static function get_event_colors( $event_id ) {
-		$event_id = absint( $event_id );
-		$colors   = array();
-
-		if ( ! $event_id ) {
-			return $colors;
-		}
-
-		foreach ( self::get_event_color_meta_fields() as $meta_key => $label ) {
-			$color               = get_post_meta( $event_id, $meta_key, true );
-			$colors[ $meta_key ] = self::sanitize_color_value( $color );
-		}
-
-		return $colors;
-	}
-
-	/**
 	 * Sanitize event language values.
 	 *
 	 * @since 1.0.0
@@ -662,7 +650,28 @@ class Wpfaevent_Meta_Event {
 		return '';
 	}
 
+	/**
+	 * Read all event color meta fields and return them as a keyed array.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<string, string>
+	 */
+	public static function get_event_colors( $event_id ) {
+		$event_id = absint( $event_id );
+		$colors   = array();
 
+		foreach ( array_keys( self::get_event_color_meta_fields() ) as $meta_key ) {
+			$value = get_post_meta( $event_id, $meta_key, true );
+			$value = self::sanitize_color_value( $value );
+			if ( '' !== $value ) {
+				$colors[ $meta_key ] = $value;
+			}
+		}
+
+		return $colors;
+	}
 
 	/**
 	 * Sanitize custom tab data stored in wpfa_event_custom_tabs meta.

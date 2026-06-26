@@ -238,26 +238,17 @@ class Wpfaevent_Meta_Speaker {
 				'posts_per_page' => -1,
 				'fields'         => 'ids',
 				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Speaker-event links are stored in post meta.
-				'meta_query'     => array(
-					'relation' => 'OR',
-					array(
-						'key'     => 'wpfa_speaker_events',
-						'value'   => 'i:' . $event_id . ';',
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => 'wpfa_speaker_events',
-						'value'   => '"' . $event_id . '"',
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => 'wpfa_speaker_events',
-						'value'   => (string) $event_id,
-						'compare' => '=',
-					),
-				),
 			)
+		);
+
+		$speaker_ids = array_filter(
+			array_map(
+				'absint',
+				$speaker_ids
+			),
+			static function ( $speaker_id ) use ( $event_id ) {
+				return in_array( $event_id, self::get_speaker_event_ids( $speaker_id ), true );
+			}
 		);
 
 		return Wpfaevent_Meta_Event::sanitize_post_id_list( $speaker_ids );
@@ -278,11 +269,21 @@ class Wpfaevent_Meta_Speaker {
 				'posts_per_page' => -1,
 				'fields'         => 'ids',
 				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Speaker ownership is stored in post meta.
-				'meta_key'       => 'wpfa_speaker_events',
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_compare -- Speaker ownership is stored in post meta.
-				'meta_compare'   => 'EXISTS',
 			)
+		);
+
+		if ( empty( $speaker_ids ) ) {
+			return array();
+		}
+
+		$speaker_ids = array_filter(
+			array_map(
+				'absint',
+				$speaker_ids
+			),
+			static function ( $speaker_id ) {
+				return ! empty( self::get_speaker_event_ids( $speaker_id ) );
+			}
 		);
 
 		return Wpfaevent_Meta_Event::sanitize_post_id_list( $speaker_ids );
@@ -311,26 +312,17 @@ class Wpfaevent_Meta_Speaker {
 				'posts_per_page' => -1,
 				'fields'         => 'ids',
 				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Speaker-event links are stored in post meta.
-				'meta_query'     => array(
-					'relation' => 'OR',
-					array(
-						'key'     => 'wpfa_event_speakers',
-						'value'   => 'i:' . $speaker_id . ';',
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => 'wpfa_event_speakers',
-						'value'   => '"' . $speaker_id . '"',
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => 'wpfa_event_speakers',
-						'value'   => (string) $speaker_id,
-						'compare' => '=',
-					),
-				),
 			)
+		);
+
+		$event_ids = array_filter(
+			array_map(
+				'absint',
+				$event_ids
+			),
+			static function ( $event_id ) use ( $speaker_id ) {
+				return in_array( $speaker_id, Wpfaevent_Meta_Event::get_event_speaker_ids( $event_id ), true );
+			}
 		);
 
 		return Wpfaevent_Meta_Event::sanitize_post_id_list( $event_ids );
