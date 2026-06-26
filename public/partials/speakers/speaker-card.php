@@ -108,15 +108,15 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 				<?php echo wp_kses_post( wpautop( $bio ) ); ?>
 			</div>
 		<?php endif; ?>
-		
-		<?php if ( $talk_title ) : ?>
-			<div class="wpfa-speaker-session">
-				<h4><?php esc_html_e( 'Session Details', 'wpfaevent' ); ?></h4>
-				<p><strong><?php echo esc_html( $talk_title ); ?></strong></p>
-				
-				<?php if ( $talk_date || $talk_time ) : ?>
-					<p>
-						<?php
+
+			<?php if ( $talk_title ) : ?>
+				<div class="wpfa-speaker-session">
+					<h4><?php esc_html_e( 'Session Details', 'wpfaevent' ); ?></h4>
+					<p><strong><?php echo esc_html( $talk_title ); ?></strong></p>
+
+					<?php if ( $talk_date || $talk_time ) : ?>
+						<p>
+							<?php
 						$date_time = array();
 						if ( $talk_date ) {
 							$date_time[] = esc_html( $talk_date );
@@ -128,19 +128,19 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 							}
 						}
 						echo esc_html( implode( ' • ', $date_time ) );
-						?>
-					</p>
-				<?php endif; ?>
-				
-				<?php if ( $talk_abstract ) : ?>
-					<div class="wpfa-talk-abstract">
-						<?php echo wp_kses_post( wpautop( $talk_abstract ) ); ?>
-					</div>
-				<?php endif; ?>
-			</div>
-		<?php endif; ?>
-		
-		<?php
+							?>
+						</p>
+					<?php endif; ?>
+
+					<?php if ( $talk_abstract ) : ?>
+						<div class="wpfa-talk-abstract">
+							<?php echo wp_kses_post( wpautop( $talk_abstract ) ); ?>
+						</div>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
+
+			<?php
 		// Get social links.
 		$linkedin = get_post_meta( $sid, 'wpfa_speaker_linkedin', true );
 		$twitter  = get_post_meta( $sid, 'wpfa_speaker_twitter', true );
