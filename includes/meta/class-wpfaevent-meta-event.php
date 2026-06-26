@@ -312,6 +312,18 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
+	 * Get normalized speaker IDs assigned to an event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int> Speaker post IDs.
+	 */
+	public static function get_event_speaker_ids( $event_id ) {
+		return self::sanitize_post_id_list( get_post_meta( $event_id, 'wpfa_event_speakers', true ) );
+	}
+
+	/**
 	 * Sanitize, deduplicate, and reindex a list of post IDs.
 	 *
 	 * @since 1.0.0
