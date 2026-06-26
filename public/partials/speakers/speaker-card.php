@@ -113,7 +113,7 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 			<div class="wpfa-speaker-session">
 				<h4><?php esc_html_e( 'Session Details', 'wpfaevent' ); ?></h4>
 				<p><strong><?php echo esc_html( $talk_title ); ?></strong></p>
-				
+
 				<?php if ( $talk_date || $talk_time ) : ?>
 					<p>
 						<?php
@@ -131,7 +131,7 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 						?>
 					</p>
 				<?php endif; ?>
-				
+
 				<?php if ( $talk_abstract ) : ?>
 					<div class="wpfa-talk-abstract">
 						<?php echo wp_kses_post( wpautop( $talk_abstract ) ); ?>
@@ -139,7 +139,7 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 				<?php endif; ?>
 			</div>
 		<?php endif; ?>
-		
+
 		<?php
 		// Get social links.
 		$linkedin = get_post_meta( $sid, 'wpfa_speaker_linkedin', true );
