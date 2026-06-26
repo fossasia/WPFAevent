@@ -782,6 +782,20 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
+	 * Sync speaker-side event relationship meta after an event is saved.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int        $event_id          Event post ID.
+	 * @param array<int> $previous_speakers Speaker IDs before save.
+	 * @param array<int> $current_speakers  Speaker IDs after save.
+	 * @return void
+	 */
+	public static function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
+		Wpfaevent_Event_Speaker_Relation_Manager::sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers );
+	}
+
+	/**
 	 * Get normalized speaker IDs assigned to an event.
 	 *
 	 * @since 1.0.0

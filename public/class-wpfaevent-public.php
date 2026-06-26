@@ -77,6 +77,7 @@ class Wpfaevent_Public {
 			'public/partials/additional-information-page.php',
 			'page-speakers.php',
 			'page-landing.php',
+			'admin-dashboard.php',
 		);
 
 		foreach ( $wpfa_templates as $template ) {
@@ -490,6 +491,16 @@ class Wpfaevent_Public {
 
 		if ( $this->is_wpfa_template_file_active( 'page-additional-information.php' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-additional-information' );
+		}
+
+		if ( is_singular( 'wpfa_speaker' ) || is_singular( 'wpfa_event' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-speakers' );
+			wp_enqueue_script( $this->plugin_name . '-speakers' );
+		}
+
+		if ( is_singular( 'wpfa_event' ) || $this->is_wpfa_template_file_active( 'page-schedule.php' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-single-event' );
+			wp_enqueue_style( $this->plugin_name . '-events' );
 		}
 
 		/**

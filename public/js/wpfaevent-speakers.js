@@ -125,6 +125,10 @@ const WPFA_Speakers = (function() {
 		// Card click for expand/collapse and admin actions
 		if (elements.speakerGrid) {
 			elements.speakerGrid.addEventListener('click', handleCardClick);
+		} else {
+			document.querySelectorAll('.wpfa-speakers-grid').forEach(grid => {
+				grid.addEventListener('click', handleCardClick);
+			});
 		}
 		
 		// Modal functionality
