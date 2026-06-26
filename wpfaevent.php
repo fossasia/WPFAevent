@@ -92,4 +92,5 @@ run_wpfaevent();
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	require_once WPFAEVENT_PATH . 'includes/cli/class-wpfa-cli.php';
 	WP_CLI::add_command( 'wpfa seed', array( 'WPFA_CLI', 'seed' ) );
+	WP_CLI::add_command( 'wpfa import', array( 'WPFA_CLI', 'import' ) );
 }

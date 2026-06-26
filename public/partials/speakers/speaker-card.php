@@ -40,12 +40,15 @@ if ( empty( $sid ) || ! is_numeric( $sid ) ) {
 
 $sid = (int) $sid;
 
-$name         = get_the_title( $sid );
-$org          = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
-$position     = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
-$photo_url    = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
-$speaker_link = get_permalink( $sid );
-$is_admin     = current_user_can( 'manage_options' );
+$name = get_the_title( $sid );
+/* translators: %s: Speaker name. */
+$photo_alt       = sprintf( __( 'Photo of %s', 'wpfaevent' ), $name );
+$placeholder_url = WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg';
+$org             = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
+$position        = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
+$photo_url       = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
+$speaker_link    = get_permalink( $sid );
+$is_admin        = current_user_can( 'manage_options' );
 
 // Get categories from the taxonomy.
 $speaker_categories = array();
@@ -56,23 +59,20 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 	}
 }
 
-// Get session details.
-$talk_title    = get_post_meta( $sid, 'wpfa_speaker_talk_title', true );
-$talk_date     = get_post_meta( $sid, 'wpfa_speaker_talk_date', true );
-$talk_time     = get_post_meta( $sid, 'wpfa_speaker_talk_time', true );
-$talk_end_time = get_post_meta( $sid, 'wpfa_speaker_talk_end_time', true );
-$talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 ?>
 <article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( $sid ); ?>">
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
-			<?php if ( $photo_url ) : ?>
-				<?php /* translators: %s: Speaker name. */ ?>
-				<img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $name ) ); ?>" loading="lazy" itemprop="image" />
+		<?php if ( $photo_url ) : ?>
+			<img src="<?php echo esc_url( $photo_url ); ?>"
+				alt="<?php echo esc_attr( $photo_alt ); ?>"
+				loading="lazy"
+				itemprop="image" />
 		<?php else : ?>
-			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" class="wpfa-placeholder-svg">
-				<rect width="100%" height="100%" fill="#eee" />
-				<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#999">Speaker</text>
-			</svg>
+			<img src="<?php echo esc_url( $placeholder_url ); ?>"
+				alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>"
+				loading="lazy"
+				itemprop="image"
+				class="wpfa-speaker-placeholder-img" />
 		<?php endif; ?>
 	</a>
 	<div class="wpfa-speaker-meta">
@@ -103,37 +103,6 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 			?>
 			<div class="wpfa-speaker-bio">
 				<?php echo wp_kses_post( wpautop( $bio ) ); ?>
-			</div>
-		<?php endif; ?>
-		
-		<?php if ( $talk_title ) : ?>
-			<div class="wpfa-speaker-session">
-				<h4><?php esc_html_e( 'Session Details', 'wpfaevent' ); ?></h4>
-				<p><strong><?php echo esc_html( $talk_title ); ?></strong></p>
-				
-				<?php if ( $talk_date || $talk_time ) : ?>
-					<p>
-						<?php
-						$date_time = array();
-						if ( $talk_date ) {
-							$date_time[] = esc_html( $talk_date );
-						}
-						if ( $talk_time ) {
-							$date_time[] = esc_html( $talk_time );
-							if ( $talk_end_time ) {
-								$date_time[] = esc_html( $talk_end_time );
-							}
-						}
-						echo esc_html( implode( ' • ', $date_time ) );
-						?>
-					</p>
-				<?php endif; ?>
-				
-				<?php if ( $talk_abstract ) : ?>
-					<div class="wpfa-talk-abstract">
-						<?php echo wp_kses_post( wpautop( $talk_abstract ) ); ?>
-					</div>
-				<?php endif; ?>
 			</div>
 		<?php endif; ?>
 		

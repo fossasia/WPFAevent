@@ -314,6 +314,14 @@ class Wpfaevent_Public {
 		);
 
 		wp_register_style(
+			$this->plugin_name . '-event',
+			WPFAEVENT_URL . 'public/css/templates/event.css',
+			array( $this->plugin_name ),
+			$this->version,
+			'all'
+		);
+
+		wp_register_style(
 			$this->plugin_name . '-single-event',
 			WPFAEVENT_URL . 'public/css/templates/single-event.css',
 			array( $this->plugin_name, $this->plugin_name . '-navigation' ),
@@ -445,7 +453,7 @@ class Wpfaevent_Public {
 			wp_enqueue_style( $this->plugin_name . '-code-of-conduct' );
 		}
 
-		if ( $this->is_wpfa_template_file_active( 'page-speakers.php' ) ) {
+		if ( $this->is_wpfa_template_file_active( 'page-speakers.php' ) || is_post_type_archive( 'wpfa_speaker' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-speakers' );
 			wp_enqueue_script( $this->plugin_name . '-speakers' );
 		}
@@ -475,7 +483,18 @@ class Wpfaevent_Public {
 		// Events template (page template or CPT archive).
 		if ( $this->is_wpfa_template_file_active( 'page-events.php' ) || is_post_type_archive( 'wpfa_event' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-events' );
+			wp_enqueue_style( $this->plugin_name . '-event' );
 			wp_enqueue_script( $this->plugin_name . '-events' );
+		}
+
+		// Schedule template (separate from the single event detail view).
+		if ( $this->is_wpfa_template_file_active( 'page-schedule.php' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-event' );
+		}
+
+		if ( is_singular( 'wpfa_speaker' ) || is_singular( 'wpfa_event' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-speakers' );
+			wp_enqueue_script( $this->plugin_name . '-speakers' );
 		}
 
 		if ( is_singular( 'wpfa_event' ) ) {
@@ -535,5 +554,13 @@ class Wpfaevent_Public {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-public.js', array( 'jquery' ), $this->version, false );
+		wp_localize_script(
+			$this->plugin_name,
+			'wpfaeventPublic',
+			array(
+				'speakerPlaceholderAlt' => __( 'Speaker photo placeholder', 'wpfaevent' ),
+				'speakerPlaceholderUrl' => WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg',
+			)
+		);
 	}
 }

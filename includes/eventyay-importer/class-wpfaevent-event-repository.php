@@ -61,39 +61,34 @@ class Wpfaevent_Event_Repository {
 			'post_name'    => $event_slug,
 		);
 
-		if ( ! $is_new ) {
-			$post_data['ID'] = $post_id;
-			$result_id       = wp_update_post( $post_data, true );
-		} else {
-			$result_id = wp_insert_post( $post_data, true );
-		}
+		$post_manager = new Wpfaevent_Eventyay_Post_Manager();
+		$result_id    = $post_manager->save_event_post( $post_data, $post_id );
 
 		if ( is_wp_error( $result_id ) ) {
 			return $result_id;
 		}
-
-		$post_id  = absint( $result_id );
-		$timezone = $this->eventyay_timezone_object( $this->eventyay_event_timezone( $event ) );
-
-		update_post_meta( $post_id, '_eventyay_organizer_slug', $settings['organizer_slug'] );
-		update_post_meta( $post_id, '_eventyay_event_slug', $event_slug );
-
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_timezone', Wpfaevent_Meta_Event::sanitize_timezone( $this->eventyay_event_timezone( $event ) ) );
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_location', $this->eventyay_event_location( $event ) );
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_url', $this->eventyay_public_event_url( $event, $settings, $event_slug ) );
-
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_start_date', $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'start' ), $timezone ) );
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_start_time', $this->format_eventyay_time( $this->eventyay_event_datetime( $event, 'start' ), $timezone ) );
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_end_date', $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'end' ), $timezone ) );
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_end_time', $this->format_eventyay_time( $this->eventyay_event_datetime( $event, 'end' ), $timezone ) );
-
-		$logo = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'logo_image', 'logo_url', 'logo-url', 'logo', 'event_logo_image' ), true ), $settings['base_url'] );
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_logo', $logo );
-
+		$post_id   = absint( $result_id );
+		$timezone  = $this->eventyay_timezone_object( $this->eventyay_event_timezone( $event ) );
+		$logo      = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'logo_image', 'logo_url', 'logo-url', 'logo', 'event_logo_image' ), true ), $settings['base_url'] );
 		$latitude  = $this->parser->eventyay_scalar_value( $this->parser->eventyay_first_present_raw( $event, array( 'latitude', 'lat' ), true ) );
 		$longitude = $this->parser->eventyay_scalar_value( $this->parser->eventyay_first_present_raw( $event, array( 'longitude', 'lng', 'lon', 'long' ), true ) );
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_latitude', $latitude );
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_longitude', $longitude );
+
+		$metadata = array(
+			'_eventyay_organizer_slug' => $settings['organizer_slug'],
+			'_eventyay_event_slug'     => $event_slug,
+			'wpfa_event_timezone'      => Wpfaevent_Meta_Event::sanitize_timezone( $this->eventyay_event_timezone( $event ) ),
+			'wpfa_event_location'      => $this->eventyay_event_location( $event ),
+			'wpfa_event_url'           => $this->eventyay_public_event_url( $event, $settings, $event_slug ),
+			'wpfa_event_start_date'    => $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'start' ), $timezone ),
+			'wpfa_event_start_time'    => $this->format_eventyay_time( $this->eventyay_event_datetime( $event, 'start' ), $timezone ),
+			'wpfa_event_end_date'      => $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'end' ), $timezone ),
+			'wpfa_event_end_time'      => $this->format_eventyay_time( $this->eventyay_event_datetime( $event, 'end' ), $timezone ),
+			'wpfa_event_logo'          => $logo,
+			'wpfa_event_latitude'      => $latitude,
+			'wpfa_event_longitude'     => $longitude,
+		);
+
+		$post_manager->sync_event_metadata( $post_id, $metadata );
 
 		// Import additional metadata fields.
 		$lead_text = $this->parser->eventyay_text_value( $this->parser->eventyay_first_present_raw( $event, array( 'headline', 'lead_text', 'lead-text', 'subtitle', 'frontpage_text', 'frontpage-text', 'short_description', 'short-description', 'summary' ), true ) );
@@ -117,6 +112,10 @@ class Wpfaevent_Event_Repository {
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_registration_link', $reg_link );
 
 		$cfs_link = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'cfs_link', 'cfs-link', 'cfp_link', 'cfp-link', 'cfp_url', 'cfp-url', 'speakers_url', 'speakers-url' ), true ), $settings['base_url'] );
+		if ( empty( $cfs_link ) ) {
+			$public_event_url = $this->eventyay_public_event_url( $event, $settings, $event_slug );
+			$cfs_link         = rtrim( $public_event_url, '/' ) . '/cfs';
+		}
 		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_cfs_link', $cfs_link );
 
 		// Import banner as featured image.
@@ -212,6 +211,8 @@ class Wpfaevent_Event_Repository {
 			$event,
 			array(
 				'description',
+				'description-html',
+				'description_html',
 				'frontpage_text',
 				'frontpage-text',
 				'event_info_text',
