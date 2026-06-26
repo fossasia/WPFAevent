@@ -71,12 +71,26 @@ class Wpfaevent_Templates {
 			'block'     => 'schedule',
 			'title'     => 'WPFA Schedule',
 		),
+		'partner'         => array(
+			'file'      => 'page-partner.php',
+			'label'     => 'WPFA - Partner',
+			'shortcode' => 'wpfaevent_partner',
+			'block'     => 'partner',
+			'title'     => 'WPFA Partner',
+		),
 		'code_of_conduct' => array(
 			'file'      => 'page-code-of-conduct.php',
 			'label'     => 'WPFA - Code of Conduct',
 			'shortcode' => 'wpfaevent_code_of_conduct',
 			'block'     => 'code-of-conduct',
 			'title'     => 'WPFA Code of Conduct',
+		),
+		'admin_dashboard' => array(
+			'file'      => 'admin-dashboard.php',
+			'label'     => 'WPFA - Admin Dashboard',
+			'shortcode' => 'wpfaevent_admin_dashboard',
+			'block'     => 'admin-dashboard',
+			'title'     => 'WPFA Admin Dashboard',
 		),
 	);
 

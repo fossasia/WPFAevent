@@ -53,8 +53,8 @@ if ( 'sponsor' === $partner_type ) {
 	$banner_url = ! empty( $partner['banner'] ) ? esc_url_raw( $partner['banner'] ) : '';
 }
 
-if ( $event_id && class_exists( 'Wpfaevent_Meta_Event' ) ) {
-	$event_colors        = Wpfaevent_Meta_Event::get_event_colors( $event_id );
+if ( $event_id && class_exists( 'Wpfaevent_Partner_Helper' ) ) {
+	$event_colors        = Wpfaevent_Partner_Helper::get_event_colors( $event_id );
 	$event_color_var_map = array(
 		'wpfa_event_primary_color'          => '--event-primary',
 		'wpfa_event_hover_button_color'     => '--event-primary-dark',

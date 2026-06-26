@@ -24,6 +24,79 @@ class Wpfaevent_Partner_Helper {
 	private static $partner_types = array( 'exhibitor', 'sponsor' );
 
 	/**
+	 * Roles provider callback for dependency injection.
+	 *
+	 * @since 1.0.0
+	 * @var callable|null
+	 */
+	private static $roles_provider = null;
+
+	/**
+	 * Meta event provider callback for dependency injection.
+	 *
+	 * @since 1.0.0
+	 * @var callable|null
+	 */
+	private static $meta_event_provider = null;
+
+	/**
+	 * Set the roles provider callback.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param callable $callback Callback function.
+	 * @return void
+	 */
+	public static function set_roles_provider( $callback ) {
+		self::$roles_provider = $callback;
+	}
+
+	/**
+	 * Set the meta event provider callback.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param callable $callback Callback function.
+	 * @return void
+	 */
+	public static function set_meta_event_provider( $callback ) {
+		self::$meta_event_provider = $callback;
+	}
+
+	/**
+	 * Check if the current user can manage settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return bool
+	 */
+	public static function current_user_can_manage_settings() {
+		if ( is_callable( self::$roles_provider ) ) {
+			return call_user_func( self::$roles_provider );
+		}
+
+		return class_exists( 'Wpfaevent_Roles' ) && Wpfaevent_Roles::current_user_can_manage_settings();
+	}
+
+	/**
+	 * Get event color values.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<string, string>
+	 */
+	public static function get_event_colors( $event_id ) {
+		if ( is_callable( self::$meta_event_provider ) ) {
+			return call_user_func( self::$meta_event_provider, $event_id );
+		}
+
+		return class_exists( 'Wpfaevent_Meta_Event' )
+			? Wpfaevent_Meta_Event::get_event_colors( $event_id )
+			: array();
+	}
+
+	/**
 	 * Get the public partner detail page URL.
 	 *
 	 * @since 1.0.0
@@ -174,7 +247,7 @@ class Wpfaevent_Partner_Helper {
 	 * @return int Page ID, or 0 when the page could not be ensured.
 	 */
 	public static function ensure_partner_page( $check_capability = true ) {
-		if ( $check_capability && ! Wpfaevent_Roles::current_user_can_manage_settings() ) {
+		if ( $check_capability && ! self::current_user_can_manage_settings() ) {
 			return 0;
 		}
 
