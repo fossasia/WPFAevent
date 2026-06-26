@@ -25,6 +25,24 @@ class Wpfaevent_Eventyay_Importer {
 	private $client = null;
 
 	/**
+	 * JSON:API parser.
+	 *
+	 * @var Wpfaevent_JSONAPI_Parser
+	 */
+	private $parser;
+
+	/**
+	 * Constructor.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param Wpfaevent_JSONAPI_Parser|null $parser Optional parser instance.
+	 */
+	public function __construct( $parser = null ) {
+		$this->parser = $parser ? $parser : new Wpfaevent_JSONAPI_Parser();
+	}
+
+	/**
 	 * Sanitize Eventyay import options.
 	 *
 	 * @since 1.0.0
@@ -465,7 +483,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @return array|WP_Error Import result.
 	 */
-	private function import_eventyay_events_from_settings() {
+	public function import_eventyay_events_from_settings() {
 		$settings = $this->get_eventyay_import_settings();
 
 		if ( empty( $settings['organizer_slug'] ) ) {
