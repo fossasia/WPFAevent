@@ -117,17 +117,17 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 					<?php if ( $talk_date || $talk_time ) : ?>
 						<p>
 							<?php
-								$date_time = array();
-								if ( $talk_date ) {
-									$date_time[] = esc_html( $talk_date );
+							$date_time = array();
+							if ( $talk_date ) {
+								$date_time[] = esc_html( $talk_date );
+							}
+							if ( $talk_time ) {
+								$date_time[] = esc_html( $talk_time );
+								if ( $talk_end_time ) {
+									$date_time[] = esc_html( $talk_end_time );
 								}
-								if ( $talk_time ) {
-									$date_time[] = esc_html( $talk_time );
-									if ( $talk_end_time ) {
-										$date_time[] = esc_html( $talk_end_time );
-									}
-								}
-								echo esc_html( implode( ' • ', $date_time ) );
+							}
+							echo esc_html( implode( ' • ', $date_time ) );
 							?>
 						</p>
 					<?php endif; ?>
