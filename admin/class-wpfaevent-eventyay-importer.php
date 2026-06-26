@@ -362,7 +362,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @return array|WP_Error Import result.
 	 */
-	private function import_eventyay_events_from_settings() {
+	public function import_eventyay_events_from_settings() {
 		$settings = $this->get_eventyay_import_settings();
 
 		if ( empty( $settings['organizer_slug'] ) ) {

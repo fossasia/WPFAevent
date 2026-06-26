@@ -233,6 +233,16 @@
 	text-decoration: none;
 }
 
+.wpfaevent .btn.disabled,
+.wpfaevent .btn[disabled] {
+	background: #e9ecef;
+	color: #6c757d;
+	cursor: not-allowed;
+	pointer-events: none;
+	border-color: #dee2e6;
+	box-shadow: none;
+}
+
 .wpfaevent .btn-secondary {
 	background: #6c757d;
 	color: #fff;

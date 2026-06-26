@@ -1122,16 +1122,38 @@ class Wpfaevent_JSONAPI_Parser {
 			return '';
 		}
 
-		if ( wp_http_validate_url( $value ) ) {
+		if ( $this->is_valid_http_url( $value ) ) {
 			return esc_url_raw( $value );
 		}
 
 		$base_url = untrailingslashit( esc_url_raw( $base_url ) );
-		if ( ! empty( $base_url ) && wp_http_validate_url( $base_url ) && 0 === strpos( $value, '/' ) ) {
+		if ( ! empty( $base_url ) && $this->is_valid_http_url( $base_url ) && 0 === strpos( $value, '/' ) ) {
 			return esc_url_raw( $base_url . $value );
 		}
 
 		return '';
+	}
+
+	/**
+	 * Check whether a value is a valid HTTP or HTTPS URL.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $url URL to validate.
+	 * @return bool
+	 */
+	public function is_valid_http_url( $url ) {
+		$url = trim( (string) $url );
+		if ( '' === $url ) {
+			return false;
+		}
+
+		$parsed = wp_parse_url( $url );
+		if ( empty( $parsed['scheme'] ) || empty( $parsed['host'] ) ) {
+			return false;
+		}
+
+		return in_array( strtolower( $parsed['scheme'] ), array( 'http', 'https' ), true );
 	}
 
 	/**
@@ -1426,10 +1448,16 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $payload JSON:API document.
+	 * @param array  $payload    JSON:API document or Eventyay REST response.
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
 	 * @return array|WP_Error
 	 */
-	public function normalize_eventyay_payload( $payload ) {
+	public function normalize_eventyay_payload( $payload, $settings = array(), $event_slug = '' ) {
+		if ( ! array_key_exists( 'data', $payload ) && array_key_exists( 'results', $payload ) && is_array( $payload['results'] ) ) {
+			return $this->normalize_eventyay_rest_speakers_payload( $payload['results'], $settings, $event_slug );
+		}
+
 		$data = isset( $payload['data'] ) ? $payload['data'] : array();
 
 		if ( $this->is_jsonapi_resource( $data ) ) {
@@ -1505,6 +1533,155 @@ class Wpfaevent_JSONAPI_Parser {
 		return array(
 			'speakers'      => $speakers,
 			'session_count' => $session_count,
+		);
+	}
+
+	/**
+	 * Normalize an Eventyay REST speakers response into dashboard speaker data.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $results    REST results array.
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array
+	 */
+	public function normalize_eventyay_rest_speakers_payload( $results, $settings = array(), $event_slug = '' ) {
+		$speakers = array();
+		$sessions = array();
+
+		if ( ! is_array( $results ) ) {
+			return array(
+				'speakers'      => array(),
+				'session_count' => 0,
+			);
+		}
+
+		if ( empty( $settings['base_url'] ) ) {
+			$settings['base_url'] = 'https://api.eventyay.com';
+		}
+
+		if ( empty( $settings['organizer_slug'] ) ) {
+			$settings['organizer_slug'] = '';
+		}
+
+		foreach ( $results as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$item    = $this->normalize_eventyay_api_resource( $item );
+			$speaker = $this->normalize_eventyay_submission_speaker( $item, $settings, $event_slug );
+			if ( empty( $speaker['name'] ) ) {
+				continue;
+			}
+
+			$speaker_sessions = $this->eventyay_list_value( $this->eventyay_first_present_raw( $item, array( 'submissions', 'sessions', 'talks' ) ) );
+			if ( empty( $speaker_sessions ) ) {
+				$this->merge_eventyay_speaker( $speakers, $speaker, array() );
+				continue;
+			}
+
+			foreach ( $speaker_sessions as $session_resource ) {
+				if ( ! is_array( $session_resource ) ) {
+					continue;
+				}
+
+				$session                    = $this->normalize_eventyay_submission_session( $this->normalize_eventyay_api_resource( $session_resource ) );
+				$session['speakers']        = array_values( array_unique( array( $speaker['name'] ) ) );
+				$speaker['category']        = empty( $speaker['category'] ) && ! empty( $session['track'] ) ? $session['track'] : $speaker['category'];
+				$sessions[ $session['id'] ] = $session;
+				$this->merge_eventyay_speaker( $speakers, $speaker, $session );
+			}
+		}
+
+		return array(
+			'speakers'      => array_values( $speakers ),
+			'session_count' => count( $sessions ),
+		);
+	}
+
+	/**
+	 * Transform expanded Eventyay slot rows into REST-style speaker results.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $slots Raw slots array from the Eventyay slots API.
+	 * @return array
+	 */
+	public function transform_slots_to_speakers_payload( $slots ) {
+		$speakers_map = array();
+
+		if ( ! is_array( $slots ) ) {
+			return array(
+				'count'    => 0,
+				'next'     => null,
+				'previous' => null,
+				'results'  => array(),
+			);
+		}
+
+		foreach ( $slots as $slot ) {
+			if ( empty( $slot['submission'] ) || ! is_array( $slot['submission'] ) ) {
+				continue;
+			}
+
+			$submission    = $slot['submission'];
+			$speakers      = isset( $submission['speakers'] ) ? $submission['speakers'] : array();
+			$submission_id = isset( $submission['code'] ) ? $submission['code'] : ( isset( $submission['id'] ) ? $submission['id'] : '' );
+
+			if ( empty( $submission_id ) ) {
+				continue;
+			}
+
+			$embedded_slot = array(
+				'id'       => isset( $slot['id'] ) ? $slot['id'] : '',
+				'start'    => isset( $slot['start'] ) ? $slot['start'] : '',
+				'end'      => isset( $slot['end'] ) ? $slot['end'] : '',
+				'duration' => isset( $slot['duration'] ) ? $slot['duration'] : 0,
+			);
+
+			if ( ! empty( $slot['room'] ) ) {
+				$embedded_slot['room'] = $slot['room'];
+			}
+
+			$submission['slots'] = array( $embedded_slot );
+			$submission['slot']  = $embedded_slot;
+
+			foreach ( $speakers as $speaker ) {
+				if ( ! is_array( $speaker ) || empty( $speaker['code'] ) ) {
+					continue;
+				}
+
+				$code = sanitize_text_field( (string) $speaker['code'] );
+				if ( ! isset( $speakers_map[ $code ] ) ) {
+					$speakers_map[ $code ] = array(
+						'code'           => $code,
+						'name'           => isset( $speaker['fullname'] ) ? $speaker['fullname'] : ( isset( $speaker['name'] ) ? $speaker['name'] : '' ),
+						'biography'      => isset( $speaker['biography'] ) ? $speaker['biography'] : '',
+						'avatar'         => isset( $speaker['avatar_url'] ) ? $speaker['avatar_url'] : ( isset( $speaker['avatar'] ) ? $speaker['avatar'] : '' ),
+						'position'       => isset( $speaker['position'] ) ? $speaker['position'] : '',
+						'organization'   => isset( $speaker['organization'] ) ? $speaker['organization'] : '',
+						'category'       => isset( $speaker['category'] ) ? $speaker['category'] : '',
+						'linkedin'       => isset( $speaker['linkedin'] ) ? $speaker['linkedin'] : '',
+						'twitter'        => isset( $speaker['twitter'] ) ? $speaker['twitter'] : '',
+						'github'         => isset( $speaker['github'] ) ? $speaker['github'] : '',
+						'website'        => isset( $speaker['website'] ) ? $speaker['website'] : '',
+						'featured'       => isset( $speaker['featured'] ) ? (bool) $speaker['featured'] : false,
+						'featured_order' => isset( $speaker['featured_order'] ) ? (int) $speaker['featured_order'] : 0,
+						'submissions'    => array(),
+					);
+				}
+
+				$speakers_map[ $code ]['submissions'][] = $submission;
+			}
+		}
+
+		return array(
+			'count'    => count( $speakers_map ),
+			'next'     => null,
+			'previous' => null,
+			'results'  => array_values( $speakers_map ),
 		);
 	}
 
