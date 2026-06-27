@@ -828,6 +828,8 @@ class Wpfaevent_Event_Template_Controller {
 			'event_start_content'                      => '',
 			'event_end_content'                        => '',
 			'event_time_label'                         => '',
+			'event_timezone_label'                     => '',
+			'event_url'                                => '',
 			'location'                                 => '',
 			'event_language_label'                     => '',
 			'schedule_items'                           => array(),
