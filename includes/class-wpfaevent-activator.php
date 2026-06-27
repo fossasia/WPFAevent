@@ -49,6 +49,14 @@ class Wpfaevent_Activator {
 		// Flush rewrite rules so CPT permalinks work.
 		flush_rewrite_rules();
 
+		// Schedule auto-sync cron if already configured.
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-cron-scheduler.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-importer.php';
+		$settings = get_option( 'wpfaevent_eventyay_import_settings', array() );
+		if ( is_array( $settings ) ) {
+			Wpfaevent_Cron_Scheduler::schedule( $settings );
+		}
+
 		// Register plugin roles and grant capabilities.
 		Wpfaevent_Roles::register_roles_and_capabilities();
 		update_option( Wpfaevent_Roles::ROLES_VERSION_OPTION, Wpfaevent_Roles::ROLES_VERSION, false );
