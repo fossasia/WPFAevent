@@ -19,10 +19,7 @@ if ( ! $event_id || 'wpfa_event' !== get_post_type( $event_id ) ) {
 	return;
 }
 
-$event_data = class_exists( 'Wpfaevent_Event_Template_Controller' )
-	? Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id )
-	: Wpfaevent_Event_Template_Controller::get_default_event_template_data();
-
+$event_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
 $event_style_attr                         = $event_data['event_style_attr'];
 $header_vars                              = $event_data['header_vars'];
 $event_title                              = $event_data['event_title'];
