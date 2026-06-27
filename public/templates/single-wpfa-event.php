@@ -30,6 +30,7 @@ $event_time_label                         = $event_data['event_time_label'];
 $event_timezone_label                     = $event_data['event_timezone_label'];
 $location                                 = $event_data['location'];
 $event_language_label                     = $event_data['event_language_label'];
+$event_url                                = $event_data['event_url'];
 $schedule_items                           = $event_data['schedule_items'];
 $about_content                            = $event_data['about_content'];
 $register_url                             = $event_data['register_url'];
