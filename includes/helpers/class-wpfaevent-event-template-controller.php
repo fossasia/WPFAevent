@@ -861,10 +861,10 @@ class Wpfaevent_Event_Template_Controller {
 			'speakers_url'                             => '',
 			'selected_schedule_timezone_string'        => '',
 			'schedule_timezone_options'                => array(),
-			'format_timezone_label'                    => static function () {
+			'format_timezone_label'                    => static function ( $timezone_string = '' ) {
 				return '';
 			},
-			'build_event_schedule_view_url'            => static function () {
+			'build_event_schedule_view_url'            => static function ( $view = '' ) {
 				return '';
 			},
 			'selected_schedule_timezone'               => wp_timezone(),
