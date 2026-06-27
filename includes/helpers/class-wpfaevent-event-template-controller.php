@@ -862,9 +862,11 @@ class Wpfaevent_Event_Template_Controller {
 			'selected_schedule_timezone_string'        => '',
 			'schedule_timezone_options'                => array(),
 			'format_timezone_label'                    => static function ( $timezone_string = '' ) {
+				unset( $timezone_string );
 				return '';
 			},
 			'build_event_schedule_view_url'            => static function ( $view = '' ) {
+				unset( $view );
 				return '';
 			},
 			'selected_schedule_timezone'               => wp_timezone(),

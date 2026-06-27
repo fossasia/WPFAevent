@@ -218,6 +218,7 @@ class Wpfaevent {
 
 		// Register admin-specific stylesheet.
 		$this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_styles' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_scripts' );
 
 		// Register settings page.
 		$this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
