@@ -188,7 +188,7 @@ if ( ! $formatted_end_time ) {
 				<?php endif; ?>
 			</div>
 		<?php endif; ?>
-		
+
 		<?php
 		// Get social links.
 		$linkedin = get_post_meta( $sid, 'wpfa_speaker_linkedin', true );
