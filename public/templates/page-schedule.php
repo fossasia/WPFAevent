@@ -654,41 +654,45 @@ if ( ! empty( $languages ) ) {
 							<ul class="wpfa-schedule-items">
 								<?php foreach ( $group['events'] as $schedule_event ) : ?>
 									<li class="wpfa-schedule-item">
-										<strong>
-											<a href="<?php echo esc_url( $schedule_event['permalink'] ); ?>">
-												<?php echo esc_html( $schedule_event['title'] ); ?>
-											</a>
-										</strong>
-										<?php if ( ! empty( $schedule_event['time_label'] ) ) : ?>
-											<span class="wpfa-schedule-time"><?php echo esc_html( $schedule_event['time_label'] ); ?></span>
-										<?php endif; ?>
-										<?php if ( ! empty( $schedule_event['location'] ) ) : ?>
-											<span class="wpfa-schedule-location"><?php echo esc_html( $schedule_event['location'] ); ?></span>
-										<?php endif; ?>
-										<?php if ( ! empty( $schedule_event['language_label'] ) ) : ?>
-											<span class="wpfa-schedule-language"><?php echo esc_html( $schedule_event['language_label'] ); ?></span>
-										<?php endif; ?>
-										<span class="wpfa-schedule-actions">
-											<a href="<?php echo esc_url( $schedule_event['schedule_url'] ); ?>"><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></a>
-										</span>
-										<?php if ( ! empty( $schedule_event['calendar_url'] ) ) : ?>
-											<?php
-											$calendar_label = sprintf(
-												/* translators: %s: event title. */
-												__( 'Add %s to Google Calendar', 'wpfaevent' ),
-												$schedule_event['title']
-											);
-											?>
-											<a
-												class="wpfa-calendar-action"
-												href="<?php echo esc_url( $schedule_event['calendar_url'] ); ?>"
-												target="_blank"
-												rel="noopener"
-												aria-label="<?php echo esc_attr( $calendar_label ); ?>"
-											>
-												<?php esc_html_e( 'Add to calendar', 'wpfaevent' ); ?>
-											</a>
-										<?php endif; ?>
+										<div class="wpfa-schedule-details">
+											<strong>
+												<a href="<?php echo esc_url( $schedule_event['permalink'] ); ?>">
+													<?php echo esc_html( $schedule_event['title'] ); ?>
+												</a>
+											</strong>
+											<?php if ( ! empty( $schedule_event['time_label'] ) ) : ?>
+												<span class="wpfa-schedule-time"><?php echo esc_html( $schedule_event['time_label'] ); ?></span>
+											<?php endif; ?>
+											<?php if ( ! empty( $schedule_event['location'] ) ) : ?>
+												<span class="wpfa-schedule-location"><?php echo esc_html( $schedule_event['location'] ); ?></span>
+											<?php endif; ?>
+											<?php if ( ! empty( $schedule_event['language_label'] ) ) : ?>
+												<span class="wpfa-schedule-language"><?php echo esc_html( $schedule_event['language_label'] ); ?></span>
+											<?php endif; ?>
+										</div>
+										<div class="wpfa-schedule-item-actions">
+											<div class="wpfa-schedule-actions">
+												<a class="wpfa-schedule-action" href="<?php echo esc_url( $schedule_event['schedule_url'] ); ?>"><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></a>
+											</div>
+											<?php if ( ! empty( $schedule_event['calendar_url'] ) ) : ?>
+												<?php
+												$calendar_label = sprintf(
+													/* translators: %s: event title. */
+													__( 'Add %s to Google Calendar', 'wpfaevent' ),
+													$schedule_event['title']
+												);
+												?>
+												<a
+													class="wpfa-calendar-action"
+													href="<?php echo esc_url( $schedule_event['calendar_url'] ); ?>"
+													target="_blank"
+													rel="noopener"
+													aria-label="<?php echo esc_attr( $calendar_label ); ?>"
+												>
+													<?php esc_html_e( 'Add to calendar', 'wpfaevent' ); ?>
+												</a>
+											<?php endif; ?>
+										</div>
 									</li>
 								<?php endforeach; ?>
 							</ul>

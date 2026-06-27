@@ -361,41 +361,6 @@ $event_calendar_data = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar
 $event_calendar_data = is_wp_error( $event_calendar_data ) ? array() : $event_calendar_data;
 $event_calendar_url  = ! empty( $event_calendar_data ) && class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_ics_url( $event_id ) : '';
 $event_google_url    = ! empty( $event_calendar_data ) && class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::build_google_calendar_url( $event_calendar_data ) : '';
-$share_url           = apply_filters( 'wpfa_event_share_url', get_permalink( $event_id ), $event_id );
-$share_url           = esc_url_raw( $share_url );
-$share_text          = apply_filters(
-	'wpfa_event_share_text',
-	sprintf(
-		/* translators: %s: event title */
-		__( 'Check out this event: %s', 'wpfaevent' ),
-		$event_title
-	),
-	$event_id,
-	$event_title
-);
-$share_text  = wp_strip_all_tags( $share_text );
-$share_links = array();
-
-if ( ! empty( $share_url ) ) {
-	$share_links = array(
-		array(
-			'label' => __( 'Facebook', 'wpfaevent' ),
-			'url'   => 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode( $share_url ),
-		),
-		array(
-			'label' => __( 'X', 'wpfaevent' ),
-			'url'   => 'https://twitter.com/intent/tweet?url=' . rawurlencode( $share_url ) . '&text=' . rawurlencode( $share_text ),
-		),
-		array(
-			'label' => __( 'LinkedIn', 'wpfaevent' ),
-			'url'   => 'https://www.linkedin.com/sharing/share-offsite/?url=' . rawurlencode( $share_url ),
-		),
-		array(
-			'label' => __( 'WhatsApp', 'wpfaevent' ),
-			'url'   => 'https://api.whatsapp.com/send?text=' . rawurlencode( $share_text . ' ' . $share_url ),
-		),
-	);
-}
 
 $show_about             = ! array_key_exists( 'about', $section_visibility ) || ! empty( $section_visibility['about'] );
 $show_speakers          = ! array_key_exists( 'speakers', $section_visibility ) || ! empty( $section_visibility['speakers'] );
@@ -744,7 +709,7 @@ $header_vars = array(
 							<span><?php echo esc_html( $event_language_label ); ?></span>
 						<?php endif; ?>
 
-						<?php if ( ! empty( $event_url ) && ( empty( $register_url ) || $event_url !== $register_url ) ) : ?>
+						<?php if ( ! empty( $event_url ) && ( empty( $registration_url ) || $event_url !== $registration_url ) ) : ?>
 							<a class="btn btn-secondary" href="<?php echo esc_url( $event_url ); ?>" target="_blank" rel="noopener">
 								<?php esc_html_e( 'Event Website', 'wpfaevent' ); ?>
 							</a>
@@ -783,29 +748,12 @@ $header_vars = array(
 							<?php esc_html_e( 'Add to calendar', 'wpfaevent' ); ?>
 						</a>
 					<?php endif; ?>
-						<?php if ( $event_calendar_url ) : ?>
-							<a class="wpfa-event-calendar-download" href="<?php echo esc_url( $event_calendar_url ); ?>">
-								<?php esc_html_e( 'Download .ics', 'wpfaevent' ); ?>
-							</a>
-						<?php endif; ?>
-						<?php if ( ! empty( $share_links ) ) : ?>
-							<div class="wpfa-event-share" aria-label="<?php echo esc_attr__( 'Share this event', 'wpfaevent' ); ?>">
-								<span class="wpfa-event-share-label"><?php esc_html_e( 'Share', 'wpfaevent' ); ?></span>
-								<div class="wpfa-event-share-links">
-									<?php foreach ( $share_links as $share_link ) : ?>
-										<a
-											class="wpfa-event-share-link"
-											href="<?php echo esc_url( $share_link['url'] ); ?>"
-											target="_blank"
-											rel="noopener noreferrer"
-										>
-											<?php echo esc_html( $share_link['label'] ); ?>
-										</a>
-									<?php endforeach; ?>
-								</div>
-							</div>
-						<?php endif; ?>
-						<dl class="wpfa-event-facts">
+					<?php if ( $event_calendar_url ) : ?>
+						<a class="wpfa-event-calendar-download" href="<?php echo esc_url( $event_calendar_url ); ?>">
+							<?php esc_html_e( 'Download .ics', 'wpfaevent' ); ?>
+						</a>
+					<?php endif; ?>
+					<dl class="wpfa-event-facts">
 							<?php if ( $date_label ) : ?>
 								<div>
 									<dt><?php esc_html_e( 'When', 'wpfaevent' ); ?></dt>
@@ -1340,57 +1288,35 @@ $header_vars = array(
 							$exhibitor_card_class  = 'wpfa-event-exhibitor-card';
 							$exhibitor_card_class .= $exhibitor_banner ? ' has-banner' : ' no-banner';
 							$exhibitor_card_class .= $exhibitor_logo ? ' has-logo' : ' no-logo';
-							$exhibitor_has_links   = ! empty( $exhibitor['link'] ) || ! empty( $exhibitor['video'] ) || ! empty( $exhibitor['slides'] ) || ! empty( $exhibitor['contact_link'] ) || ! empty( $exhibitor['contact_email'] );
+							$exhibitor_detail_url  = class_exists( 'Wpfaevent_Partner_Helper' )
+								? Wpfaevent_Partner_Helper::get_partner_detail_url( $event_id, 'exhibitor', $exhibitor )
+								: '';
 							?>
-							<details class="<?php echo esc_attr( $exhibitor_card_class ); ?>">
+							<a class="<?php echo esc_attr( $exhibitor_card_class ); ?> wpfa-event-exhibitor-card-link" href="<?php echo esc_url( $exhibitor_detail_url ? $exhibitor_detail_url : '#' ); ?>">
 								<?php if ( $exhibitor_banner ) : ?>
 									<img class="wpfa-event-exhibitor-banner" src="<?php echo esc_url( $exhibitor_banner ); ?>" alt="<?php echo esc_attr( $exhibitor_name ); ?>" loading="lazy">
 								<?php endif; ?>
-								<summary class="wpfa-event-exhibitor-summary">
-									<div class="wpfa-event-exhibitor-main">
+								<span class="wpfa-event-exhibitor-summary">
+									<span class="wpfa-event-exhibitor-main">
 										<?php if ( $exhibitor_logo ) : ?>
-											<div class="wpfa-event-exhibitor-logo">
+											<span class="wpfa-event-exhibitor-logo">
 												<img src="<?php echo esc_url( $exhibitor_logo ); ?>" alt="<?php echo esc_attr( $exhibitor_name ); ?>" loading="lazy">
-											</div>
+											</span>
 										<?php else : ?>
-											<div class="wpfa-event-exhibitor-placeholder" aria-hidden="true">
+											<span class="wpfa-event-exhibitor-placeholder" aria-hidden="true">
 												<?php echo esc_html( $exhibitor_initial ); ?>
-											</div>
+											</span>
 										<?php endif; ?>
-										<div class="wpfa-event-exhibitor-copy">
-											<p class="wpfa-event-exhibitor-eyebrow"><?php esc_html_e( 'Exhibitor', 'wpfaevent' ); ?></p>
-											<h3 class="wpfa-event-exhibitor-name"><?php echo esc_html( $exhibitor_name ); ?></h3>
-										</div>
-									</div>
+										<span class="wpfa-event-exhibitor-copy">
+											<span class="wpfa-event-exhibitor-eyebrow"><?php esc_html_e( 'Exhibitor', 'wpfaevent' ); ?></span>
+											<span class="wpfa-event-exhibitor-name"><?php echo esc_html( $exhibitor_name ); ?></span>
+										</span>
+									</span>
 									<span class="wpfa-event-exhibitor-toggle">
 										<span class="wpfa-event-exhibitor-toggle-closed"><?php esc_html_e( 'View details', 'wpfaevent' ); ?></span>
-										<span class="wpfa-event-exhibitor-toggle-open"><?php esc_html_e( 'Hide details', 'wpfaevent' ); ?></span>
 									</span>
-								</summary>
-								<div class="wpfa-event-exhibitor-body">
-									<?php if ( ! empty( $exhibitor['description'] ) ) : ?>
-										<div class="wpfa-event-partner-description"><?php echo wp_kses_post( wpautop( $exhibitor['description'] ) ); ?></div>
-									<?php endif; ?>
-									<?php if ( $exhibitor_has_links ) : ?>
-										<div class="wpfa-event-exhibitor-links">
-											<?php if ( ! empty( $exhibitor['link'] ) ) : ?>
-												<a href="<?php echo esc_url( $exhibitor['link'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Website', 'wpfaevent' ); ?></a>
-											<?php endif; ?>
-											<?php if ( ! empty( $exhibitor['video'] ) ) : ?>
-												<a href="<?php echo esc_url( $exhibitor['video'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Video', 'wpfaevent' ); ?></a>
-											<?php endif; ?>
-											<?php if ( ! empty( $exhibitor['slides'] ) ) : ?>
-												<a href="<?php echo esc_url( $exhibitor['slides'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Slides', 'wpfaevent' ); ?></a>
-											<?php endif; ?>
-											<?php if ( ! empty( $exhibitor['contact_link'] ) ) : ?>
-												<a href="<?php echo esc_url( $exhibitor['contact_link'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Contact', 'wpfaevent' ); ?></a>
-											<?php elseif ( ! empty( $exhibitor['contact_email'] ) ) : ?>
-												<a href="<?php echo esc_url( 'mailto:' . sanitize_email( $exhibitor['contact_email'] ) ); ?>"><?php esc_html_e( 'Contact', 'wpfaevent' ); ?></a>
-											<?php endif; ?>
-										</div>
-									<?php endif; ?>
-								</div>
-							</details>
+								</span>
+							</a>
 						<?php endforeach; ?>
 					</div>
 				</div>
