@@ -150,10 +150,7 @@ class Wpfaevent {
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
 
-		// Eventyay importer support classes.
-		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-post-manager.php';
-		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-cron-scheduler.php';
-
+		// Eventyay importer support classes are loaded above/below; avoid duplicate require_once.
 		// AJAX handler classes.
 		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-footer-handler.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-event-handler.php';
