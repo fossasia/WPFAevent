@@ -755,6 +755,8 @@ class Wpfaevent_Event_Template_Controller {
 			'event_start_content'                      => $event_start_content,
 			'event_end_content'                        => $event_end_content,
 			'event_time_label'                         => $event_time_label,
+			'event_timezone_label'                     => $event_timezone_label,
+			'event_url'                                => $event_url,
 			'location'                                 => $location,
 			'event_language_label'                     => $event_language_label,
 			'schedule_items'                           => $schedule_items,
