@@ -78,6 +78,13 @@ class Wpfaevent_Templates {
 			'block'     => 'code-of-conduct',
 			'title'     => 'WPFA Code of Conduct',
 		),
+		'admin_dashboard' => array(
+			'file'      => 'admin-dashboard.php',
+			'label'     => 'WPFA - Admin Dashboard',
+			'shortcode' => 'wpfaevent_admin_dashboard',
+			'block'     => 'admin-dashboard',
+			'title'     => 'WPFA Admin Dashboard',
+		),
 	);
 
 	/**
@@ -162,6 +169,13 @@ class Wpfaevent_Templates {
 			}
 		}
 
+		if ( is_post_type_archive( 'wpfa_speaker' ) ) {
+			$candidate = WPFAEVENT_PATH . 'public/templates/page-speakers.php';
+
+			if ( file_exists( $candidate ) ) {
+				return $candidate;
+			}
+		}
 		if ( is_post_type_archive( 'wpfa_event' ) ) {
 			$candidate = WPFAEVENT_PATH . 'public/templates/page-events.php';
 
@@ -175,7 +189,11 @@ class Wpfaevent_Templates {
 			$key    = self::get_template_key_by_file( $chosen );
 
 			if ( $key ) {
-				$candidate = WPFAEVENT_PATH . 'public/templates/' . self::$templates[ $key ]['file'];
+				if ( 'admin_dashboard' === $key ) {
+					$candidate = WPFAEVENT_PATH . 'admin/partials/' . self::$templates[ $key ]['file'];
+				} else {
+					$candidate = WPFAEVENT_PATH . 'public/templates/' . self::$templates[ $key ]['file'];
+				}
 
 				if ( file_exists( $candidate ) ) {
 					return $candidate;
@@ -402,6 +420,14 @@ class Wpfaevent_Templates {
 	public static function get_active_template_keys() {
 		$active = array();
 
+		if ( is_post_type_archive( 'wpfa_event' ) ) {
+			$active[] = 'events';
+		}
+
+		if ( is_post_type_archive( 'wpfa_speaker' ) ) {
+			$active[] = 'speakers';
+		}
+
 		if ( is_singular( 'page' ) ) {
 			$chosen = get_page_template_slug( get_queried_object_id() );
 			$key    = self::get_template_key_by_file( $chosen );
@@ -611,6 +637,8 @@ class Wpfaevent_Templates {
 				return __( 'WPFA - Schedule', 'wpfaevent' );
 			case 'code_of_conduct':
 				return __( 'WPFA - Code of Conduct', 'wpfaevent' );
+			case 'admin_dashboard':
+				return __( 'WPFA - Admin Dashboard', 'wpfaevent' );
 			default:
 				return '';
 		}
@@ -638,6 +666,8 @@ class Wpfaevent_Templates {
 				return __( 'WPFA Schedule', 'wpfaevent' );
 			case 'code_of_conduct':
 				return __( 'WPFA Code of Conduct', 'wpfaevent' );
+			case 'admin_dashboard':
+				return __( 'WPFA Admin Dashboard', 'wpfaevent' );
 			default:
 				return '';
 		}
@@ -706,6 +736,14 @@ class Wpfaevent_Templates {
 			WPFAEVENT_VERSION,
 			'all'
 		);
+
+		wp_register_style(
+			'wpfaevent-schedule',
+			WPFAEVENT_URL . 'public/css/templates/schedule.css',
+			array( 'wpfaevent', 'wpfaevent-event' ),
+			WPFAEVENT_VERSION,
+			'all'
+		);
 	}
 
 	/**
@@ -719,6 +757,7 @@ class Wpfaevent_Templates {
 	private static function get_block_style_handle( $key ) {
 		$handles = array(
 			'events'          => 'wpfaevent-events',
+			'schedule'        => 'wpfaevent-schedule',
 			'speakers'        => 'wpfaevent-speakers',
 			'past_events'     => 'wpfaevent-past-events',
 			'code_of_conduct' => 'wpfaevent-code-of-conduct',
@@ -759,6 +798,11 @@ class Wpfaevent_Templates {
 
 		if ( 'events' === $key ) {
 			wp_enqueue_style( 'wpfaevent-events' );
+		}
+
+		if ( 'schedule' === $key ) {
+			wp_enqueue_style( 'wpfaevent-event' );
+			wp_enqueue_style( 'wpfaevent-schedule' );
 		}
 
 		if ( 'code_of_conduct' === $key ) {

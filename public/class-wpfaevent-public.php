@@ -76,8 +76,12 @@ class Wpfaevent_Public {
 			'page-events.php',
 			'page-past-events.php',
 			'page-schedule.php',
+			'page-additional-information.php',
+			'page-partner.php',
+			'public/partials/additional-information-page.php',
 			'page-speakers.php',
 			'page-landing.php',
+			'admin-dashboard.php',
 		);
 
 		foreach ( $wpfa_templates as $template ) {
@@ -86,7 +90,7 @@ class Wpfaevent_Public {
 			}
 		}
 
-		return false;
+		return is_post_type_archive( array( 'wpfa_event', 'wpfa_speaker' ) );
 	}
 
 	/**
@@ -106,8 +110,6 @@ class Wpfaevent_Public {
 					return true;
 				}
 			}
-
-			return false;
 		}
 
 		$paginated_templates = array(
@@ -123,7 +125,7 @@ class Wpfaevent_Public {
 			}
 		}
 
-		return false;
+		return is_post_type_archive( array( 'wpfa_event', 'wpfa_speaker' ) );
 	}
 
 	/**
@@ -134,8 +136,8 @@ class Wpfaevent_Public {
 	 * @return   bool             True if the template is active.
 	 */
 	private function is_wpfa_template_file_active( $template ) {
-		if ( class_exists( 'Wpfaevent_Templates' ) ) {
-			return Wpfaevent_Templates::is_template_file_active( $template );
+		if ( class_exists( 'Wpfaevent_Templates' ) && Wpfaevent_Templates::is_template_file_active( $template ) ) {
+			return true;
 		}
 
 		return is_page_template( $template );
@@ -186,32 +188,34 @@ class Wpfaevent_Public {
 	 * @return   array<string, mixed> Script data for the Events template.
 	 */
 	private function get_events_script_data() {
-		return array(
-			'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-			'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ),
-			'isAdmin'    => current_user_can( 'manage_options' ),
-			'i18n'       => array(
-				'addEventTitle'      => __( 'Create a New Event', 'wpfaevent' ),
-				'editEventTitle'     => __( 'Edit Event', 'wpfaevent' ),
-				'addEventButton'     => __( 'Create Card', 'wpfaevent' ),
-				'editEventButton'    => __( 'Save Changes', 'wpfaevent' ),
-				'creating'           => __( 'Creating...', 'wpfaevent' ),
-				'saving'             => __( 'Saving...', 'wpfaevent' ),
-				'loading'            => __( 'Loading...', 'wpfaevent' ),
-				/* translators: %s: The name of the event being deleted. */
-				'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
-				'deleteSuccess'      => __( 'Event deleted successfully. The page will now reload.', 'wpfaevent' ),
-				'deleteError'        => __( 'Error deleting event', 'wpfaevent' ),
-				'deleteErrorGeneric' => __( 'Error deleting event. Please try again.', 'wpfaevent' ),
-				'addSuccess'         => __( 'Event created successfully. The page will now reload.', 'wpfaevent' ),
-				'addError'           => __( 'Error creating event', 'wpfaevent' ),
-				'addErrorGeneric'    => __( 'Error creating event. Please try again.', 'wpfaevent' ),
-				'updateSuccess'      => __( 'Event updated successfully. The page will now reload.', 'wpfaevent' ),
-				'updateError'        => __( 'Error updating event', 'wpfaevent' ),
-				'updateErrorGeneric' => __( 'Error updating event. Please try again.', 'wpfaevent' ),
-				'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
-				'loadError'          => __( 'Error loading event data', 'wpfaevent' ),
+		return array_merge(
+			array(
+				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+				'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ),
+				'i18n'       => array(
+					'addEventTitle'      => __( 'Create a New Event', 'wpfaevent' ),
+					'editEventTitle'     => __( 'Edit Event', 'wpfaevent' ),
+					'addEventButton'     => __( 'Create Card', 'wpfaevent' ),
+					'editEventButton'    => __( 'Save Changes', 'wpfaevent' ),
+					'creating'           => __( 'Creating...', 'wpfaevent' ),
+					'saving'             => __( 'Saving...', 'wpfaevent' ),
+					'loading'            => __( 'Loading...', 'wpfaevent' ),
+					/* translators: %s: The name of the event being deleted. */
+					'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
+					'deleteSuccess'      => __( 'Event deleted successfully. The page will now reload.', 'wpfaevent' ),
+					'deleteError'        => __( 'Error deleting event', 'wpfaevent' ),
+					'deleteErrorGeneric' => __( 'Error deleting event. Please try again.', 'wpfaevent' ),
+					'addSuccess'         => __( 'Event created successfully. The page will now reload.', 'wpfaevent' ),
+					'addError'           => __( 'Error creating event', 'wpfaevent' ),
+					'addErrorGeneric'    => __( 'Error creating event. Please try again.', 'wpfaevent' ),
+					'updateSuccess'      => __( 'Event updated successfully. The page will now reload.', 'wpfaevent' ),
+					'updateError'        => __( 'Error updating event', 'wpfaevent' ),
+					'updateErrorGeneric' => __( 'Error updating event. Please try again.', 'wpfaevent' ),
+					'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
+					'loadError'          => __( 'Error loading event data', 'wpfaevent' ),
+				),
 			),
+			Wpfaevent_Roles::get_frontend_script_capabilities()
 		);
 	}
 
@@ -269,6 +273,28 @@ class Wpfaevent_Public {
 		);
 
 		wp_register_style(
+			$this->plugin_name . '-event',
+			WPFAEVENT_URL . 'public/css/templates/event.css',
+			array(
+				$this->plugin_name,
+				$this->plugin_name . '-navigation',
+			),
+			$this->version,
+			'all'
+		);
+
+		wp_register_style(
+			$this->plugin_name . '-schedule',
+			WPFAEVENT_URL . 'public/css/templates/schedule.css',
+			array(
+				$this->plugin_name,
+				$this->plugin_name . '-event',
+			),
+			$this->version,
+			'all'
+		);
+
+		wp_register_style(
 			$this->plugin_name . '-past-events',
 			WPFAEVENT_URL . 'public/css/templates/past-events.css',
 			array(
@@ -301,7 +327,7 @@ class Wpfaevent_Public {
 
 		wp_register_script(
 			$this->plugin_name . '-speakers',
-			plugin_dir_url( __FILE__ ) . 'js/wpfaevent-speakers.js',
+			WPFAEVENT_URL . 'public/js/wpfaevent-speakers.js',
 			array( 'jquery' ),
 			$this->version,
 			true
@@ -310,35 +336,37 @@ class Wpfaevent_Public {
 		wp_localize_script(
 			$this->plugin_name . '-speakers',
 			'wpfaeventSpeakersConfig',
-			array(
-				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-				'adminNonce' => wp_create_nonce( 'wpfa_speakers_ajax' ),
-				'isAdmin'    => current_user_can( 'manage_options' ),
-				'i18n'       => array(
-					/* translators: %s: speaker name. */
-					'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
-					'deleteSuccess'      => __( 'Speaker deleted successfully. The page will now reload.', 'wpfaevent' ),
-					'deleteError'        => __( 'Error deleting speaker', 'wpfaevent' ),
-					'deleteErrorGeneric' => __( 'Error deleting speaker. Please try again.', 'wpfaevent' ),
-					'addSuccess'         => __( 'Speaker added successfully. The page will now reload.', 'wpfaevent' ),
-					'addError'           => __( 'Error adding speaker', 'wpfaevent' ),
-					'addErrorGeneric'    => __( 'Error adding speaker. Please try again.', 'wpfaevent' ),
-					'updateSuccess'      => __( 'Speaker updated successfully. The page will now reload.', 'wpfaevent' ),
-					'updateError'        => __( 'Error updating speaker', 'wpfaevent' ),
-					'updateErrorGeneric' => __( 'Error updating speaker. Please try again.', 'wpfaevent' ),
-					'loadError'          => __( 'Error loading speaker data', 'wpfaevent' ),
-					'fetchError'         => __( 'Error fetching speaker data', 'wpfaevent' ),
-					'fetchErrorGeneric'  => __( 'Error fetching speaker data. Please try again.', 'wpfaevent' ),
-					'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
-					/* translators: %d: number of speakers shown. */
-					'resultsCount'       => __( 'Showing %d speakers', 'wpfaevent' ),
+			array_merge(
+				array(
+					'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+					'adminNonce' => wp_create_nonce( 'wpfa_speakers_ajax' ),
+					'i18n'       => array(
+						/* translators: %s: speaker name. */
+						'confirmDelete'      => __( 'Are you sure you want to delete "%s"? This action cannot be undone.', 'wpfaevent' ),
+						'deleteSuccess'      => __( 'Speaker deleted successfully. The page will now reload.', 'wpfaevent' ),
+						'deleteError'        => __( 'Error deleting speaker', 'wpfaevent' ),
+						'deleteErrorGeneric' => __( 'Error deleting speaker. Please try again.', 'wpfaevent' ),
+						'addSuccess'         => __( 'Speaker added successfully. The page will now reload.', 'wpfaevent' ),
+						'addError'           => __( 'Error adding speaker', 'wpfaevent' ),
+						'addErrorGeneric'    => __( 'Error adding speaker. Please try again.', 'wpfaevent' ),
+						'updateSuccess'      => __( 'Speaker updated successfully. The page will now reload.', 'wpfaevent' ),
+						'updateError'        => __( 'Error updating speaker', 'wpfaevent' ),
+						'updateErrorGeneric' => __( 'Error updating speaker. Please try again.', 'wpfaevent' ),
+						'loadError'          => __( 'Error loading speaker data', 'wpfaevent' ),
+						'fetchError'         => __( 'Error fetching speaker data', 'wpfaevent' ),
+						'fetchErrorGeneric'  => __( 'Error fetching speaker data. Please try again.', 'wpfaevent' ),
+						'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
+						/* translators: %d: number of speakers shown. */
+						'resultsCount'       => __( 'Showing %d speakers', 'wpfaevent' ),
+					),
 				),
+				Wpfaevent_Roles::get_frontend_script_capabilities()
 			)
 		);
 
 		wp_register_script(
 			$this->plugin_name . '-events',
-			plugin_dir_url( __FILE__ ) . 'js/wpfaevent-events.js',
+			WPFAEVENT_URL . 'public/js/wpfaevent-events.js',
 			array( 'jquery' ),
 			$this->version,
 			true
@@ -402,7 +430,7 @@ class Wpfaevent_Public {
 			array(
 				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 				'adminNonce' => wp_create_nonce( 'wpfa_events_ajax' ), // Same nonce as events.
-				'isAdmin'    => current_user_can( 'manage_options' ),
+				'isAdmin'    => Wpfaevent_Roles::current_user_can_manage_site_branding(),
 				'i18n'       => array(
 					'saving'            => __( 'Saving...', 'wpfaevent' ),
 					'saveFooter'        => __( 'Save Footer', 'wpfaevent' ),
@@ -423,22 +451,33 @@ class Wpfaevent_Public {
 			wp_enqueue_style( $this->plugin_name . '-code-of-conduct' );
 		}
 
-		if ( $this->is_wpfa_template_file_active( 'page-speakers.php' ) ) {
+		if ( $this->is_wpfa_template_file_active( 'page-speakers.php' ) || is_post_type_archive( 'wpfa_speaker' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-speakers' );
 			wp_enqueue_script( $this->plugin_name . '-speakers' );
 		}
 
-		if ( is_singular( 'wpfa_speaker' ) ) {
-			wp_enqueue_style(
-				$this->plugin_name . '-speakers',
-				plugin_dir_url( __DIR__ ) . 'public/css/templates/speakers.css',
-				array(
-					$this->plugin_name,
-					$this->plugin_name . '-navigation',
-				),
-				$this->version,
-				'all'
-			);
+		if ( is_singular( 'wpfa_speaker' ) || is_singular( 'wpfa_event' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-speakers' );
+		}
+
+		if (
+			is_singular( 'wpfa_event' )
+			|| is_post_type_archive( 'wpfa_event' )
+			|| $this->is_wpfa_template_file_active( 'page-schedule.php' )
+			|| $this->is_wpfa_template_file_active( 'page-additional-information.php' )
+			|| $this->is_wpfa_template_file_active( 'public/partials/additional-information-page.php' )
+			|| $this->is_wpfa_template_file_active( 'page-partner.php' )
+		) {
+			wp_enqueue_style( $this->plugin_name . '-event' );
+		}
+
+		if (
+			is_singular( 'wpfa_event' )
+			|| $this->is_wpfa_template_file_active( 'page-schedule.php' )
+			|| $this->is_wpfa_template_file_active( 'page-additional-information.php' )
+			|| $this->is_wpfa_template_file_active( 'public/partials/additional-information-page.php' )
+		) {
+			wp_enqueue_style( $this->plugin_name . '-schedule' );
 		}
 
 		// Past Events template.
@@ -452,8 +491,14 @@ class Wpfaevent_Public {
 			wp_enqueue_script( $this->plugin_name . '-events' );
 		}
 
-		if ( is_singular( 'wpfa_event' ) ) {
+		if ( is_singular( 'wpfa_speaker' ) || is_singular( 'wpfa_event' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-speakers' );
+			wp_enqueue_script( $this->plugin_name . '-speakers' );
+		}
+
+		if ( is_singular( 'wpfa_event' ) || $this->is_wpfa_template_file_active( 'page-schedule.php' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-single-event' );
+			wp_enqueue_style( $this->plugin_name . '-events' );
 		}
 
 		/**
@@ -508,6 +553,17 @@ class Wpfaevent_Public {
 		 * class.
 		 */
 
+		if ( ! $this->is_wpfa_template() ) {
+			return;
+		}
+
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-public.js', array( 'jquery' ), $this->version, false );
+		wp_localize_script(
+			$this->plugin_name,
+			'wpfaeventPublic',
+			array(
+				'speakerPlaceholderAlt' => __( 'Speaker photo placeholder', 'wpfaevent' ),
+			)
+		);
 	}
 }

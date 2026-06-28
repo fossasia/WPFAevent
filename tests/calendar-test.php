@@ -44,6 +44,40 @@ if ( ! function_exists( 'esc_html__' ) ) {
 	}
 }
 
+if ( ! function_exists( '__' ) ) {
+	/**
+	 * Minimal translation fallback for standalone CLI tests.
+	 *
+	 * @param string $text Text.
+	 * @return string
+	 */
+	function __( $text ) {
+		return $text;
+	}
+}
+
+if ( ! function_exists( 'wp_timezone_string' ) ) {
+	/**
+	 * Minimal wp_timezone_string() fallback for standalone CLI tests.
+	 *
+	 * @return string
+	 */
+	function wp_timezone_string() {
+		return 'UTC';
+	}
+}
+
+if ( ! function_exists( 'wp_timezone' ) ) {
+	/**
+	 * Minimal wp_timezone() fallback for standalone CLI tests.
+	 *
+	 * @return DateTimeZone
+	 */
+	function wp_timezone() {
+		return new DateTimeZone( 'UTC' );
+	}
+}
+
 if ( ! function_exists( 'get_post' ) ) {
 	/**
 	 * Simulate a missing post for invalid event ID tests.

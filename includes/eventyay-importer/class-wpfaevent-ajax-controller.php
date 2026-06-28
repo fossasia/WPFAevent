@@ -142,6 +142,16 @@ class Wpfaevent_AJAX_Controller {
 			);
 		}
 
+		$parser     = new Wpfaevent_JSONAPI_Parser();
+		$event_slug = $parser->eventyay_event_slug( $event );
+		if ( $event_slug && ! empty( $result['post_id'] ) ) {
+			$sync_service  = new Wpfaevent_Eventyay_Ajax_Sync();
+			$speaker_stats = $sync_service->sync_speakers_for_event( $result['post_id'], $event_slug, $settings );
+			if ( ! is_wp_error( $speaker_stats ) && is_array( $speaker_stats ) ) {
+				$result = array_merge( $result, $speaker_stats );
+			}
+		}
+
 		wp_send_json_success( $result );
 	}
 
