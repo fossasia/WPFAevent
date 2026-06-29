@@ -1297,7 +1297,7 @@ $header_vars = array(
 										?>
 										<a class="wpfa-event-partner-card wpfa-event-partner-card-link" href="<?php echo esc_url( $sponsor_detail_url ? $sponsor_detail_url : '#' ); ?>">
 											<?php if ( $sponsor_image ) : ?>
-												<div class="wpfa-event-partner-logo" style="--partner-logo-size: <?php echo esc_attr( $logo_size ); ?>px;">
+													<div class="wpfa-event-partner-logo" style="--partner-logo-size: <?php echo esc_attr( sprintf( '%d', absint( $logo_size ) ) ); ?>px;">
 													<img src="<?php echo esc_url( $sponsor_image ); ?>" alt="<?php echo esc_attr( $sponsor_name ); ?>" loading="lazy">
 												</div>
 											<?php endif; ?>

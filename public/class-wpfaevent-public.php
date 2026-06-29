@@ -295,6 +295,17 @@ class Wpfaevent_Public {
 		);
 
 		wp_register_style(
+			$this->plugin_name . '-schedule',
+			WPFAEVENT_URL . 'public/css/templates/schedule.css',
+			array(
+				$this->plugin_name,
+				$this->plugin_name . '-event',
+			),
+			$this->version,
+			'all'
+		);
+
+		wp_register_style(
 			$this->plugin_name . '-past-events',
 			WPFAEVENT_URL . 'public/css/templates/past-events.css',
 			array(
@@ -471,29 +482,17 @@ class Wpfaevent_Public {
 			wp_enqueue_style( $this->plugin_name . '-event' );
 		}
 
+		if (
+			is_singular( 'wpfa_event' )
+			|| $this->is_wpfa_template_file_active( 'page-schedule.php' )
+			|| $this->is_wpfa_template_file_active( 'page-additional-information.php' )
+			|| $this->is_wpfa_template_file_active( 'public/partials/additional-information-page.php' )
+		) {
+			wp_enqueue_style( $this->plugin_name . '-schedule' );
+		}
+
 		if ( is_singular( 'wpfa_event' ) || $this->is_wpfa_template_file_active( 'page-partner.php' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-partners' );
-		}
-
-		// Past Events template.
-		if ( $this->is_wpfa_template_file_active( 'page-past-events.php' ) ) {
-			wp_enqueue_style( $this->plugin_name . '-past-events' );
-		}
-
-		// Events template (page template or CPT archive).
-		if ( $this->is_wpfa_template_file_active( 'page-events.php' ) || is_post_type_archive( 'wpfa_event' ) ) {
-			wp_enqueue_style( $this->plugin_name . '-events' );
-			wp_enqueue_script( $this->plugin_name . '-events' );
-		}
-
-		if ( is_singular( 'wpfa_speaker' ) || is_singular( 'wpfa_event' ) ) {
-			wp_enqueue_style( $this->plugin_name . '-speakers' );
-			wp_enqueue_script( $this->plugin_name . '-speakers' );
-		}
-
-		if ( is_singular( 'wpfa_event' ) || $this->is_wpfa_template_file_active( 'page-schedule.php' ) ) {
-			wp_enqueue_style( $this->plugin_name . '-single-event' );
-			wp_enqueue_style( $this->plugin_name . '-events' );
 		}
 
 		/**

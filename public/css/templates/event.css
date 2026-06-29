@@ -558,6 +558,14 @@
 	padding: 14px 16px;
 }
 
+.wpfaevent .wpfa-schedule-item-actions {
+	align-items: center;
+	display: inline-flex;
+	gap: 10px;
+	margin-left: auto;
+	white-space: nowrap;
+}
+
 .wpfaevent .wpfa-schedule-time,
 .wpfaevent .wpfa-schedule-location,
 .wpfaevent .wpfa-schedule-language {
@@ -584,6 +592,17 @@
 .wpfaevent .wpfa-schedule-actions a {
 	color: var(--event-primary-dark);
 	font-weight: 800;
+}
+
+.wpfaevent .wpfa-calendar-action {
+	color: var(--event-primary-dark);
+	font-weight: 800;
+}
+
+.wpfaevent .wpfa-calendar-action:hover,
+.wpfaevent .wpfa-calendar-action:focus {
+	color: var(--event-primary);
+	text-decoration: underline;
 }
 
 .wpfaevent .wpfa-schedule-calendar {

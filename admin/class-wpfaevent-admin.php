@@ -805,7 +805,7 @@ class Wpfaevent_Admin {
 						<select name="wpfa_speaker_events[]" id="wpfa_speaker_events" multiple class="wpfaevent-relationship-select wpfaevent-events-select">
 							<?php foreach ( $event_ids as $event_id ) : ?>
 								<?php $is_selected = in_array( $event_id, $events, true ); ?>
-								<option value="<?php echo esc_attr( $event_id ); ?>" <?php selected( $is_selected, true ); ?>>
+									<option value="<?php echo esc_attr( (string) $event_id ); ?>" <?php selected( $is_selected, true ); ?>>
 									<?php echo esc_html( get_the_title( $event_id ) ); ?>
 								</option>
 							<?php endforeach; ?>
