@@ -43,6 +43,7 @@ class Wpfaevent_Partner_Helper {
 	 * Set the roles provider callback.
 	 *
 	 * @since 1.0.0
+	 *
 	 * @param callable $callback Callback function.
 	 * @return void
 	 */
@@ -54,6 +55,7 @@ class Wpfaevent_Partner_Helper {
 	 * Set the meta event provider callback.
 	 *
 	 * @since 1.0.0
+	 *
 	 * @param callable $callback Callback function.
 	 * @return void
 	 */
@@ -62,29 +64,33 @@ class Wpfaevent_Partner_Helper {
 	}
 
 	/**
-	 * Check if current user can manage settings.
+	 * Check if the current user can manage settings.
 	 *
 	 * @since 1.0.0
+	 *
 	 * @return bool
 	 */
 	public static function current_user_can_manage_settings() {
 		if ( is_callable( self::$roles_provider ) ) {
 			return call_user_func( self::$roles_provider );
 		}
+
 		return class_exists( 'Wpfaevent_Roles' ) && Wpfaevent_Roles::current_user_can_manage_settings();
 	}
 
 	/**
-	 * Get event colors.
+	 * Get event color values.
 	 *
 	 * @since 1.0.0
-	 * @param int $event_id Event ID.
+	 *
+	 * @param int $event_id Event post ID.
 	 * @return array<string, string>
 	 */
 	public static function get_event_colors( $event_id ) {
 		if ( is_callable( self::$meta_event_provider ) ) {
 			return call_user_func( self::$meta_event_provider, $event_id );
 		}
+
 		return class_exists( 'Wpfaevent_Meta_Event' )
 			? Wpfaevent_Meta_Event::get_event_colors( $event_id )
 			: array();
@@ -451,167 +457,5 @@ class Wpfaevent_Partner_Helper {
 		}
 
 		update_post_meta( $page_id, '_wp_page_template', 'page-partner.php' );
-	}
-
-	/**
-	 * Compile and retrieve all partner page template data.
-	 *
-	 * @since 1.0.0
-	 * @return array<string, mixed>
-	 */
-	public static function get_partner_page_data() {
-		$partner_request = self::resolve_partner_request();
-
-		$event_id      = absint( $partner_request['event_id'] );
-		$event_title   = $partner_request['event_title'];
-		$event_url     = $partner_request['event_url'];
-		$partner_type  = $partner_request['type'];
-		$partner       = $partner_request['partner'];
-		$group_name    = $partner_request['group_name'];
-		$partner_label = $partner_request['partner_label'];
-		$has_partner   = ! empty( $partner['name'] );
-		$partner_name  = $has_partner ? sanitize_text_field( $partner['name'] ) : '';
-		$description   = ! empty( $partner['description'] ) ? wp_kses_post( $partner['description'] ) : '';
-		$website_link  = ! empty( $partner['link'] ) ? esc_url_raw( $partner['link'] ) : '';
-		$logo_url      = '';
-		$banner_url    = '';
-		$video_url     = ! empty( $partner['video'] ) ? esc_url_raw( $partner['video'] ) : '';
-		$slides_url    = ! empty( $partner['slides'] ) ? esc_url_raw( $partner['slides'] ) : '';
-		$contact_link  = ! empty( $partner['contact_link'] ) ? esc_url_raw( $partner['contact_link'] ) : '';
-		$contact_email = ! empty( $partner['contact_email'] ) ? sanitize_email( $partner['contact_email'] ) : '';
-
-		if ( 'sponsor' === $partner_type ) {
-			$logo_url = ! empty( $partner['image'] ) ? esc_url_raw( $partner['image'] ) : '';
-		} else {
-			$logo_url   = ! empty( $partner['logo'] ) ? esc_url_raw( $partner['logo'] ) : '';
-			$banner_url = ! empty( $partner['banner'] ) ? esc_url_raw( $partner['banner'] ) : '';
-		}
-
-		$event_style_attr = '';
-		if ( $event_id ) {
-			$event_colors        = self::get_event_colors( $event_id );
-			$event_color_var_map = array(
-				'wpfa_event_primary_color'          => '--event-primary',
-				'wpfa_event_hover_button_color'     => '--event-primary-dark',
-				'wpfa_event_theme_background_color' => '--event-soft',
-				'wpfa_event_theme_success_color'    => '--event-success',
-				'wpfa_event_theme_danger_color'     => '--event-danger',
-			);
-			$event_style_vars    = array();
-
-			foreach ( $event_color_var_map as $meta_key => $css_var ) {
-				if ( ! empty( $event_colors[ $meta_key ] ) ) {
-					$event_style_vars[] = $css_var . ': ' . $event_colors[ $meta_key ];
-				}
-			}
-
-			$event_style_attr = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
-		}
-
-		$site_logo_url = get_option( 'wpfa_site_logo_url', '' );
-		if ( empty( $site_logo_url ) ) {
-			$site_logo_url = defined( 'WPFAEVENT_URL' ) ? WPFAEVENT_URL . 'assets/images/logo.png' : '';
-		}
-		$site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
-
-		$back_url = $event_url ? $event_url . '#exhibitors' : home_url( '/events/' );
-		if ( 'sponsor' === $partner_type && $event_url ) {
-			$back_url = $event_url . '#sponsors';
-		}
-
-		$header_vars = array(
-			'site_logo_url'        => $site_logo_url,
-			'event_page_url'       => $event_url ? $event_url : home_url( '/events/' ),
-			'show_back_button'     => true,
-			'show_register_button' => false,
-			'back_button_text'     => $event_url ? __( 'Back to Event', 'wpfaevent' ) : __( 'Back to Events', 'wpfaevent' ),
-			'register_button_url'  => '',
-			'register_button_text' => __( 'Register', 'wpfaevent' ),
-		);
-
-		$partner_initial = $partner_name ? strtoupper( substr( $partner_name, 0, 1 ) ) : '';
-		$has_links       = $website_link || $video_url || $slides_url || $contact_link || $contact_email;
-		$partner_classes = array(
-			'wpfa-partner-detail',
-			$partner_type ? 'is-' . sanitize_html_class( $partner_type ) : 'is-partner',
-			$logo_url ? 'has-logo' : 'no-logo',
-			$banner_url ? 'has-banner' : 'no-banner',
-			$has_links ? 'has-links' : 'no-links',
-		);
-		$partner_label   = $partner_label ? $partner_label : __( 'Partner', 'wpfaevent' );
-
-		return array(
-			'event_id'         => $event_id,
-			'event_title'      => $event_title,
-			'event_url'        => $event_url,
-			'partner_type'     => $partner_type,
-			'partner'          => $partner,
-			'group_name'       => $group_name,
-			'partner_label'    => $partner_label,
-			'has_partner'      => $has_partner,
-			'partner_name'     => $partner_name,
-			'description'      => $description,
-			'website_link'     => $website_link,
-			'logo_url'         => $logo_url,
-			'banner_url'       => $banner_url,
-			'video_url'        => $video_url,
-			'slides_url'       => $slides_url,
-			'contact_link'     => $contact_link,
-			'contact_email'    => $contact_email,
-			'event_style_attr' => $event_style_attr,
-			'back_url'         => $back_url,
-			'header_vars'      => $header_vars,
-			'partner_initial'  => $partner_initial,
-			'partner_classes'  => $partner_classes,
-			'has_links'        => $has_links,
-		);
-	}
-
-	/**
-	 * Get the default/fallback partner page data structure.
-	 *
-	 * @since 1.0.0
-	 * @return array<string, mixed>
-	 */
-	public static function get_default_partner_page_data() {
-		$site_logo_url = get_option( 'wpfa_site_logo_url', '' );
-		if ( empty( $site_logo_url ) ) {
-			$site_logo_url = defined( 'WPFAEVENT_URL' ) ? WPFAEVENT_URL . 'assets/images/logo.png' : '';
-		}
-		$site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
-
-		return array(
-			'event_id'         => 0,
-			'event_title'      => '',
-			'event_url'        => '',
-			'partner_type'     => '',
-			'partner'          => array(),
-			'group_name'       => '',
-			'partner_label'    => __( 'Partner', 'wpfaevent' ),
-			'has_partner'      => false,
-			'partner_name'     => '',
-			'description'      => '',
-			'website_link'     => '',
-			'logo_url'         => '',
-			'banner_url'       => '',
-			'video_url'        => '',
-			'slides_url'       => '',
-			'contact_link'     => '',
-			'contact_email'    => '',
-			'event_style_attr' => '',
-			'back_url'         => home_url( '/events/' ),
-			'header_vars'      => array(
-				'site_logo_url'        => $site_logo_url,
-				'event_page_url'       => home_url( '/events/' ),
-				'show_back_button'     => true,
-				'show_register_button' => false,
-				'back_button_text'     => __( 'Back to Events', 'wpfaevent' ),
-				'register_button_url'  => '',
-				'register_button_text' => __( 'Register', 'wpfaevent' ),
-			),
-			'partner_initial'  => '',
-			'partner_classes'  => array( 'wpfa-partner-detail', 'is-partner', 'no-logo', 'no-banner', 'no-links' ),
-			'has_links'        => false,
-		);
 	}
 }

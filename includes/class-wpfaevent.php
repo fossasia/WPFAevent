@@ -131,6 +131,7 @@ class Wpfaevent {
 
 		// Shared frontend helpers.
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-navigation-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-template-controller.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-additional-information-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-partner-helper.php';
@@ -276,12 +277,15 @@ class Wpfaevent {
 		$plugin_footer_handler = new Wpfaevent_Footer_Handler();
 		$this->loader->add_action( 'wp_ajax_wpfa_update_footer_text', $plugin_footer_handler, 'ajax_update_footer_text' );
 
+		// Register AJAX actions for Eventyay import sync.
+		$eventyay_ajax = new Wpfaevent_AJAX_Controller();
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_get_events', $eventyay_ajax, 'ajax_import_get_events' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_single_event', $eventyay_ajax, 'ajax_import_single_event' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_save_summary', $eventyay_ajax, 'ajax_import_save_summary' );
+
 		// Register Eventyay sync on the maintained admin path.
 		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $this->plugin_admin, 'ajax_sync_eventyay' );
 		$this->loader->add_action( 'admin_post_wpfaevent_import_eventyay_events', $this->plugin_admin, 'handle_eventyay_events_import' );
-
-		// Register AJAX handler for dashboard JSON:API sync.
-		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $this->plugin_admin, 'ajax_sync_eventyay' );
 
 		// Scheduled auto-sync cron callback.
 		$this->loader->add_action( Wpfaevent_Cron_Scheduler::HOOK, 'Wpfaevent_Cron_Scheduler', 'run' );

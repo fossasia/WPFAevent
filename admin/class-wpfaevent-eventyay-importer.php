@@ -18,14 +18,28 @@
  */
 class Wpfaevent_Eventyay_Importer {
 	/**
-	 * Get the Eventyay API client used for endpoint building and fetches.
+	 * API client.
+	 *
+	 * @var Wpfaevent_Eventyay_API_Client|null
+	 */
+	private $client = null;
+
+	/**
+	 * JSON:API parser.
+	 *
+	 * @var Wpfaevent_JSONAPI_Parser
+	 */
+	private $parser;
+
+	/**
+	 * Constructor.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return Wpfaevent_Eventyay_API_Client
+	 * @param Wpfaevent_JSONAPI_Parser|null $parser Optional parser instance.
 	 */
-	public function get_client() {
-		return new Wpfaevent_Eventyay_API_Client();
+	public function __construct( $parser = null ) {
+		$this->parser = $parser ? $parser : new Wpfaevent_JSONAPI_Parser();
 	}
 
 	/**
@@ -87,20 +101,15 @@ class Wpfaevent_Eventyay_Importer {
 		}
 		$settings['post_status'] = $post_status;
 
-		return $settings;
-	}
+		$settings['auto_sync_enabled'] = ! empty( $input['auto_sync_enabled'] );
 
-	/**
-	 * Import a single Eventyay event record.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $event    Event data.
-	 * @param array $settings Import settings.
-	 * @return array|WP_Error
-	 */
-	public function import_single_eventyay_event( $event, $settings ) {
-		return $this->upsert_eventyay_event_post( $event, $settings );
+		$auto_sync_interval = isset( $input['auto_sync_interval'] ) ? sanitize_key( wp_unslash( $input['auto_sync_interval'] ) ) : $defaults['auto_sync_interval'];
+		if ( ! in_array( $auto_sync_interval, array( 'hourly', 'twicedaily', 'daily' ), true ) ) {
+			$auto_sync_interval = $defaults['auto_sync_interval'];
+		}
+		$settings['auto_sync_interval'] = $auto_sync_interval;
+
+		return $settings;
 	}
 
 	/**
@@ -228,7 +237,7 @@ class Wpfaevent_Eventyay_Importer {
 						<li><?php esc_html_e( 'Speakers are saved as Speaker posts and linked only to the event they came from.', 'wpfaevent' ); ?></li>
 						<li><?php esc_html_e( 'Sponsors and exhibitors are imported into event-specific dashboard JSON files.', 'wpfaevent' ); ?></li>
 						<li><?php esc_html_e( 'Dashboard JSON is written to uploads/fossasia-data using event-specific file names.', 'wpfaevent' ); ?></li>
-						<li><?php esc_html_e( 'Frontend output appears on the event detail page and the event-filtered speakers page.', 'wpfaevent' ); ?></li>
+						<li><?php esc_html_e( 'Frontend rendering for imported data is handled by the follow-up display PR.', 'wpfaevent' ); ?></li>
 					</ul>
 				</div>
 		</div>
@@ -381,6 +390,21 @@ class Wpfaevent_Eventyay_Importer {
 	}
 
 	/**
+	 * Get the Eventyay API client.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return Wpfaevent_Eventyay_API_Client
+	 */
+	public function get_client() {
+		if ( ! $this->client instanceof Wpfaevent_Eventyay_API_Client ) {
+			$this->client = new Wpfaevent_Eventyay_API_Client();
+		}
+
+		return $this->client;
+	}
+
+	/**
 	 * Get Eventyay import settings with defaults applied.
 	 *
 	 * @since 1.0.0
@@ -499,12 +523,19 @@ class Wpfaevent_Eventyay_Importer {
 			'partner_skipped'  => 0,
 		);
 
+		$sync_service = new Wpfaevent_Eventyay_Ajax_Sync();
+
 		foreach ( $events as $event ) {
 			$upsert = $this->upsert_eventyay_event_post( $event, $settings );
 
 			if ( is_wp_error( $upsert ) ) {
 				++$result['skipped'];
 				continue;
+			}
+
+			$event_slug = $this->parser->eventyay_event_slug( $event );
+			if ( $event_slug && ! empty( $upsert['post_id'] ) ) {
+				$sync_service->sync_speakers_for_event( $upsert['post_id'], $event_slug, $settings );
 			}
 
 			if ( ! empty( $upsert['created'] ) ) {
@@ -541,6 +572,63 @@ class Wpfaevent_Eventyay_Importer {
 			$result['created_speakers'] += absint( $program['created_speakers'] );
 			$result['updated_speakers'] += absint( $program['updated_speakers'] );
 			$result['schedule_rows']    += absint( $program['schedule_rows'] );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Import a single Eventyay event payload and its related data.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event    Raw Eventyay event payload.
+	 * @param array $settings  Import settings.
+	 * @return array|WP_Error
+	 */
+	public function import_single_eventyay_event( $event, $settings ) {
+		$event    = is_array( $event ) ? $event : array();
+		$settings = wp_parse_args( is_array( $settings ) ? $settings : array(), $this->get_eventyay_import_default_settings() );
+
+		if ( empty( $event ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_invalid_event',
+				esc_html__( 'The Eventyay event payload is invalid.', 'wpfaevent' )
+			);
+		}
+
+		$upsert = $this->upsert_eventyay_event_post( $event, $settings );
+		if ( is_wp_error( $upsert ) ) {
+			return $upsert;
+		}
+
+		$result = array(
+			'post_id'    => absint( $upsert['id'] ),
+			'created'    => ! empty( $upsert['created'] ),
+			'updated'    => empty( $upsert['created'] ),
+			'event_slug' => isset( $upsert['event_slug'] ) ? $upsert['event_slug'] : '',
+		);
+
+		$dashboard = $this->sync_eventyay_event_dashboard_data( $upsert['id'], $event, $settings, $upsert['event_slug'] );
+		if ( is_wp_error( $dashboard ) ) {
+			return $dashboard;
+		}
+
+		$result['about_updated'] = isset( $dashboard['about_updated'] ) ? absint( $dashboard['about_updated'] ) : 0;
+
+		$partners = $this->import_eventyay_event_partner_data( $upsert['id'], $event, $settings, $upsert['event_slug'] );
+		if ( ! is_wp_error( $partners ) ) {
+			$result['sponsors']   = isset( $partners['sponsor_count'] ) ? absint( $partners['sponsor_count'] ) : 0;
+			$result['exhibitors'] = isset( $partners['exhibitor_count'] ) ? absint( $partners['exhibitor_count'] ) : 0;
+		}
+
+		$program = $this->import_eventyay_event_program( $upsert['id'], $settings, $upsert['event_slug'] );
+		if ( ! is_wp_error( $program ) ) {
+			$result['sessions']         = isset( $program['session_count'] ) ? absint( $program['session_count'] ) : 0;
+			$result['speakers']         = isset( $program['speaker_count'] ) ? absint( $program['speaker_count'] ) : 0;
+			$result['created_speakers'] = isset( $program['created_speakers'] ) ? absint( $program['created_speakers'] ) : 0;
+			$result['updated_speakers'] = isset( $program['updated_speakers'] ) ? absint( $program['updated_speakers'] ) : 0;
+			$result['schedule_rows']    = isset( $program['schedule_rows'] ) ? absint( $program['schedule_rows'] ) : 0;
 		}
 
 		return $result;
@@ -623,7 +711,8 @@ class Wpfaevent_Eventyay_Importer {
 			$seen_urls[ $next_url ] = true;
 			++$page;
 
-			$payload = $this->fetch_eventyay_rest_json( $next_url, $settings['api_token'] );
+			$current_url = $next_url;
+			$payload     = $this->fetch_eventyay_rest_json( $current_url, $settings['api_token'] );
 			if ( is_wp_error( $payload ) ) {
 				return $payload;
 			}
@@ -635,7 +724,7 @@ class Wpfaevent_Eventyay_Importer {
 					}
 				}
 
-				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $settings['base_url'] ) : '';
+				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $current_url ) : '';
 				if ( is_wp_error( $next_url ) ) {
 					return $next_url;
 				}
@@ -1498,7 +1587,8 @@ class Wpfaevent_Eventyay_Importer {
 			$seen_urls[ $next_url ] = true;
 			++$page;
 
-			$payload = $this->fetch_eventyay_rest_json( $next_url, $settings['api_token'] );
+			$current_url = $next_url;
+			$payload     = $this->fetch_eventyay_rest_json( $current_url, $settings['api_token'] );
 			if ( is_wp_error( $payload ) ) {
 				return $payload;
 			}
@@ -1510,7 +1600,7 @@ class Wpfaevent_Eventyay_Importer {
 					}
 				}
 
-				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $endpoint ) : '';
+				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $current_url ) : '';
 				if ( is_wp_error( $next_url ) ) {
 					return $next_url;
 				}
@@ -1524,7 +1614,7 @@ class Wpfaevent_Eventyay_Importer {
 					}
 				}
 
-				$next_url = ! empty( $payload['links']['next'] ) ? $this->normalize_eventyay_next_url( $payload['links']['next'], $endpoint ) : '';
+				$next_url = ! empty( $payload['links']['next'] ) ? $this->normalize_eventyay_next_url( $payload['links']['next'], $current_url ) : '';
 				if ( is_wp_error( $next_url ) ) {
 					return $next_url;
 				}
@@ -1640,7 +1730,7 @@ class Wpfaevent_Eventyay_Importer {
 			$groups[] = $group;
 		}
 
-		return array_values( $groups );
+		return $groups;
 	}
 
 	/**
@@ -1813,7 +1903,7 @@ class Wpfaevent_Eventyay_Importer {
 			$records[] = $record;
 		}
 
-		return array_values( $records );
+		return $records;
 	}
 
 	/**
@@ -2057,7 +2147,8 @@ class Wpfaevent_Eventyay_Importer {
 			$seen_urls[ $next_url ] = true;
 			++$page;
 
-			$payload = $this->fetch_eventyay_rest_json( $next_url, $settings['api_token'] );
+			$current_url = $next_url;
+			$payload     = $this->fetch_eventyay_rest_json( $current_url, $settings['api_token'] );
 			if ( is_wp_error( $payload ) ) {
 				return $payload;
 			}
@@ -2069,7 +2160,7 @@ class Wpfaevent_Eventyay_Importer {
 					}
 				}
 
-				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $settings['base_url'] ) : '';
+				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $current_url ) : '';
 				if ( is_wp_error( $next_url ) ) {
 					return $next_url;
 				}
@@ -2147,7 +2238,8 @@ class Wpfaevent_Eventyay_Importer {
 			$seen_urls[ $next_url ] = true;
 			++$page;
 
-			$payload = $this->fetch_eventyay_rest_json( $next_url, $settings['api_token'] );
+			$current_url = $next_url;
+			$payload     = $this->fetch_eventyay_rest_json( $current_url, $settings['api_token'] );
 			if ( is_wp_error( $payload ) ) {
 				return $payload;
 			}
@@ -2159,7 +2251,7 @@ class Wpfaevent_Eventyay_Importer {
 					}
 				}
 
-				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $settings['base_url'] ) : '';
+				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $current_url ) : '';
 				if ( is_wp_error( $next_url ) ) {
 					return $next_url;
 				}
@@ -2173,7 +2265,7 @@ class Wpfaevent_Eventyay_Importer {
 					}
 				}
 
-				$next_url = ! empty( $payload['links']['next'] ) ? $this->normalize_eventyay_next_url( $payload['links']['next'], $settings['base_url'] ) : '';
+				$next_url = ! empty( $payload['links']['next'] ) ? $this->normalize_eventyay_next_url( $payload['links']['next'], $current_url ) : '';
 				if ( is_wp_error( $next_url ) ) {
 					return $next_url;
 				}
@@ -2251,7 +2343,8 @@ class Wpfaevent_Eventyay_Importer {
 			$seen_urls[ $next_url ] = true;
 			++$page;
 
-			$payload = $this->fetch_eventyay_rest_json( $next_url, $settings['api_token'] );
+			$current_url = $next_url;
+			$payload     = $this->fetch_eventyay_rest_json( $current_url, $settings['api_token'] );
 			if ( is_wp_error( $payload ) ) {
 				return $payload;
 			}
@@ -2263,7 +2356,7 @@ class Wpfaevent_Eventyay_Importer {
 					}
 				}
 
-				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $settings['base_url'] ) : '';
+				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $current_url ) : '';
 				if ( is_wp_error( $next_url ) ) {
 					return $next_url;
 				}
@@ -2277,7 +2370,7 @@ class Wpfaevent_Eventyay_Importer {
 					}
 				}
 
-				$next_url = ! empty( $payload['links']['next'] ) ? $this->normalize_eventyay_next_url( $payload['links']['next'], $settings['base_url'] ) : '';
+				$next_url = ! empty( $payload['links']['next'] ) ? $this->normalize_eventyay_next_url( $payload['links']['next'], $current_url ) : '';
 				if ( is_wp_error( $next_url ) ) {
 					return $next_url;
 				}
@@ -2300,24 +2393,24 @@ class Wpfaevent_Eventyay_Importer {
 	 * @since 1.0.0
 	 *
 	 * @param string $next_url Raw next URL.
-	 * @param string $base_url Configured base URL.
+	 * @param string $reference_url Current request URL used to resolve relative next links.
 	 * @return string|WP_Error
 	 */
-	private function normalize_eventyay_next_url( $next_url, $base_url ) {
+	private function normalize_eventyay_next_url( $next_url, $reference_url ) {
 		$next_url = trim( (string) $next_url );
 
 		if ( empty( $next_url ) ) {
 			return '';
 		}
 
-		$base_url = untrailingslashit( esc_url_raw( $base_url ) );
-		if ( empty( $base_url ) || ! wp_http_validate_url( $base_url ) ) {
+		$reference_url = untrailingslashit( esc_url_raw( $reference_url ) );
+		if ( empty( $reference_url ) || ! wp_http_validate_url( $reference_url ) ) {
 			return '';
 		}
 
 		$next_parts = wp_parse_url( $next_url );
 		if ( ! empty( $next_parts['scheme'] ) || ! empty( $next_parts['host'] ) ) {
-			if ( ! $this->eventyay_urls_share_origin( $next_url, $base_url ) ) {
+			if ( ! $this->eventyay_urls_share_origin( $next_url, $reference_url ) ) {
 				return new WP_Error(
 					'wpfaevent_eventyay_untrusted_next_url',
 					esc_html__( 'Eventyay pagination returned a next URL outside the configured Eventyay host.', 'wpfaevent' )
@@ -2335,7 +2428,7 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		if ( 0 === strpos( $next_url, '?' ) ) {
-			$base_path = preg_replace( '/[?#].*$/', '', $base_url );
+			$base_path = preg_replace( '/[?#].*$/', '', $reference_url );
 			$next_url  = $base_path . $next_url;
 
 			if ( ! wp_http_validate_url( $next_url ) ) {
@@ -2348,7 +2441,7 @@ class Wpfaevent_Eventyay_Importer {
 			return esc_url_raw( $next_url );
 		}
 
-		$base_origin = $this->eventyay_url_origin( $base_url );
+		$base_origin = $this->eventyay_url_origin( $reference_url );
 		if ( empty( $base_origin ) ) {
 			return '';
 		}
@@ -3023,8 +3116,8 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		return array(
-			'speakers'      => array_values( $speakers ),
-			'sessions'      => array_values( $sessions ),
+			'speakers'      => $speakers,
+			'sessions'      => $sessions,
 			'session_count' => $session_count,
 		);
 	}
@@ -4800,8 +4893,11 @@ class Wpfaevent_Eventyay_Importer {
 		);
 		$featured_posts = array();
 
+		$event_status   = $event_id ? get_post_status( $event_id ) : 'draft';
+		$speaker_status = 'publish' === $event_status ? 'publish' : 'draft';
+
 		foreach ( $speakers as $speaker ) {
-			$upsert = $this->upsert_eventyay_speaker_post( $speaker );
+			$upsert = $this->upsert_eventyay_speaker_post( $speaker, $speaker_status );
 
 			if ( is_wp_error( $upsert ) || empty( $upsert['id'] ) ) {
 				continue;
@@ -5043,10 +5139,11 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $speaker Speaker data.
+	 * @param array  $speaker     Speaker data.
+	 * @param string $post_status Optional. Post status. Default 'draft'.
 	 * @return array|WP_Error
 	 */
-	private function upsert_eventyay_speaker_post( $speaker ) {
+	private function upsert_eventyay_speaker_post( $speaker, $post_status = 'draft' ) {
 		if ( empty( $speaker['eventyay_speaker_id'] ) || empty( $speaker['name'] ) ) {
 			return new WP_Error(
 				'eventyay_speaker_missing_id',
@@ -5054,11 +5151,16 @@ class Wpfaevent_Eventyay_Importer {
 			);
 		}
 
+		$allowed_statuses = array( 'draft', 'publish', 'pending', 'private' );
+		if ( ! in_array( $post_status, $allowed_statuses, true ) ) {
+			$post_status = 'draft';
+		}
+
 		$speaker_id = $this->find_eventyay_speaker_post( $speaker['eventyay_speaker_id'] );
 		$post_data  = array(
 			'post_title'   => sanitize_text_field( $speaker['name'] ),
 			'post_type'    => 'wpfa_speaker',
-			'post_status'  => 'publish',
+			'post_status'  => $post_status,
 			'post_content' => wp_kses_post( $speaker['bio'] ),
 		);
 		$created    = false;

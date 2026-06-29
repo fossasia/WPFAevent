@@ -167,7 +167,7 @@ $header_vars = array(
 						<p class="events-hub-subtitle"><?php esc_html_e( 'Search by event name, topic, track, date, location, and language and find the right event faster.', 'wpfaevent' ); ?></p>
 					</div>
 					<div class="events-hub-stat-box">
-						<span class="events-hub-stat-number"><?php echo esc_html( $total_events ); ?></span>
+							<span class="events-hub-stat-number"><?php echo esc_html( (string) $total_events ); ?></span>
 						<span class="events-hub-stat-label"><?php esc_html_e( 'PUBLISHED EVENTS', 'wpfaevent' ); ?></span>
 					</div>
 				</div>
@@ -243,9 +243,9 @@ $header_vars = array(
 					<h2><?php esc_html_e( 'Events', 'wpfaevent' ); ?></h2>
 					<p class="results-info">
 						<?php esc_html_e( 'Showing', 'wpfaevent' ); ?>
-						<span id="resultsCount"><?php echo esc_html( $total_events ); ?></span>
+							<span id="resultsCount"><?php echo esc_html( (string) $total_events ); ?></span>
 						<?php esc_html_e( 'of', 'wpfaevent' ); ?>
-						<span id="totalCount"><?php echo esc_html( $total_events ); ?></span>
+							<span id="totalCount"><?php echo esc_html( (string) $total_events ); ?></span>
 						<?php esc_html_e( 'matching events', 'wpfaevent' ); ?>
 					</p>
 				</div>

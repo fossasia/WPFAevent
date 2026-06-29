@@ -478,8 +478,8 @@ class Wpfaevent_Meta_Event {
 					if ( $speaker_ids ) :
 						?>
 						<select name="wpfa_event_speakers[]" id="wpfa_event_speakers" multiple class="wpfaevent-speakers-select">
-							<?php foreach ( $speaker_ids as $speaker_id ) : ?>
-								<option value="<?php echo esc_attr( $speaker_id ); ?>" <?php selected( in_array( $speaker_id, $speakers, true ) ); ?>>
+								<?php foreach ( $speaker_ids as $speaker_id ) : ?>
+									<option value="<?php echo esc_attr( (string) $speaker_id ); ?>" <?php selected( in_array( $speaker_id, $speakers, true ) ); ?>>
 									<?php echo esc_html( get_the_title( $speaker_id ) ); ?>
 								</option>
 							<?php endforeach; ?>
@@ -498,7 +498,7 @@ class Wpfaevent_Meta_Event {
 					<?php if ( ! empty( $speakers ) ) : ?>
 						<select name="wpfa_event_featured_speakers[]" id="wpfa_event_featured_speakers" multiple class="wpfaevent-speakers-select">
 							<?php foreach ( $speakers as $speaker_id ) : ?>
-								<option value="<?php echo esc_attr( $speaker_id ); ?>" <?php selected( in_array( $speaker_id, $featured, true ) ); ?>>
+								<option value="<?php echo esc_attr( (string) $speaker_id ); ?>" <?php selected( in_array( $speaker_id, $featured, true ) ); ?>>
 									<?php echo esc_html( get_the_title( $speaker_id ) ); ?>
 								</option>
 							<?php endforeach; ?>
@@ -553,7 +553,7 @@ class Wpfaevent_Meta_Event {
 				<p class="description">
 					<?php esc_html_e( 'Add separate event page sections for focused topics such as accommodation options, travel passes, childcare, or attendee resources.', 'wpfaevent' ); ?>
 				</p>
-				<div class="wpfaevent-custom-tabs" data-next-index="<?php echo esc_attr( count( $custom_tabs ) ); ?>">
+					<div class="wpfaevent-custom-tabs" data-next-index="<?php echo esc_attr( (string) count( $custom_tabs ) ); ?>">
 					<div class="wpfaevent-custom-tabs-list">
 						<?php foreach ( $custom_tabs as $index => $custom_tab ) : ?>
 							<?php self::render_custom_tab_row( $index, $custom_tab ); ?>
@@ -1054,7 +1054,7 @@ class Wpfaevent_Meta_Event {
 			);
 		}
 
-		return array_values( $sanitized_tabs );
+		return $sanitized_tabs;
 	}
 
 	/**
@@ -1080,7 +1080,7 @@ class Wpfaevent_Meta_Event {
 			return '';
 		}
 
-		$color = trim( (string) $color );
+		$color = trim( sanitize_text_field( (string) $color ) );
 		if ( '' === $color ) {
 			return '';
 		}
@@ -1100,14 +1100,14 @@ class Wpfaevent_Meta_Event {
 		return '';
 	}
 
-		/**
-		 * Sanitize an event date value.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param mixed $date Raw date.
-		 * @return string
-		 */
+	/**
+	 * Sanitize an event date value.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $date Raw date.
+	 * @return string
+	 */
 	public static function sanitize_date_value( $date ) {
 		if ( ! is_scalar( $date ) ) {
 			return '';
@@ -1124,14 +1124,14 @@ class Wpfaevent_Meta_Event {
 		return checkdate( $parts[1], $parts[2], $parts[0] ) ? $date : '';
 	}
 
-		/**
-		 * Sanitize an event time value.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param mixed $time Raw time.
-		 * @return string
-		 */
+	/**
+	 * Sanitize an event time value.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $time Raw time.
+	 * @return string
+	 */
 	public static function sanitize_time_value( $time ) {
 		if ( ! is_scalar( $time ) ) {
 			return '';
@@ -1150,14 +1150,14 @@ class Wpfaevent_Meta_Event {
 		return substr( $time, 0, 5 );
 	}
 
-		/**
-		 * Sanitize a timezone identifier or UTC offset.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param mixed $timezone Raw timezone.
-		 * @return string
-		 */
+	/**
+	 * Sanitize a timezone identifier or UTC offset.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $timezone Raw timezone.
+	 * @return string
+	 */
 	public static function sanitize_timezone( $timezone ) {
 		if ( ! is_scalar( $timezone ) ) {
 			return '';
@@ -1179,26 +1179,26 @@ class Wpfaevent_Meta_Event {
 		}
 	}
 
-		/**
-		 * Sanitize a boolean-like meta value.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param mixed $value Raw value.
-		 * @return bool
-		 */
+	/**
+	 * Sanitize a boolean-like meta value.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $value Raw value.
+	 * @return bool
+	 */
 	public static function sanitize_boolean_value( $value ) {
 		return rest_sanitize_boolean( $value );
 	}
 
-		/**
-		 * Get an event timezone, falling back to the WordPress site timezone.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param int $event_id Event post ID.
-		 * @return string
-		 */
+	/**
+	 * Get an event timezone, falling back to the WordPress site timezone.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return string
+	 */
 	public static function get_event_timezone( $event_id ) {
 		$timezone = self::sanitize_timezone( get_post_meta( $event_id, 'wpfa_event_timezone', true ) );
 
@@ -1215,14 +1215,14 @@ class Wpfaevent_Meta_Event {
 		return wp_timezone()->getName();
 	}
 
-		/**
-		 * Determine whether an event should be treated as all-day.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param int $event_id Event post ID.
-		 * @return bool
-		 */
+	/**
+	 * Determine whether an event should be treated as all-day.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return bool
+	 */
 	public static function get_event_all_day( $event_id ) {
 		$value = get_post_meta( $event_id, 'wpfa_event_all_day', true );
 
@@ -1231,17 +1231,18 @@ class Wpfaevent_Meta_Event {
 		}
 
 		return '' === self::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_start_time', true ) )
-			&& '' === self::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_end_time', true ) );
+			&& '' === self::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_end_time', true ) )
+			&& '' === self::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_time', true ) );
 	}
 
-		/**
-		 * Normalize old WordPress UTC offset labels into DateTimeZone-compatible offsets.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param string $timezone Timezone string.
-		 * @return string
-		 */
+	/**
+	 * Normalize old WordPress UTC offset labels into DateTimeZone-compatible offsets.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $timezone Timezone string.
+	 * @return string
+	 */
 	private static function normalize_utc_offset_timezone( $timezone ) {
 		if ( ! preg_match( '/^UTC([+-])(\d{1,2})(?:\.(5|50))?$/', $timezone, $matches ) ) {
 			return $timezone;
@@ -1257,16 +1258,16 @@ class Wpfaevent_Meta_Event {
 		return sprintf( '%s%02d:%02d', $matches[1], $hours, $minutes );
 	}
 
-		/**
-		 * Build an ISO 8601 datetime for timed manual events.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param string $date     Date in Y-m-d format.
-		 * @param string $time     Time in H:i format.
-		 * @param string $timezone Timezone identifier.
-		 * @return string
-		 */
+	/**
+	 * Build an ISO 8601 datetime for timed manual events.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $date     Date in Y-m-d format.
+	 * @param string $time     Time in H:i format.
+	 * @param string $timezone Timezone identifier.
+	 * @return string
+	 */
 	public static function build_datetime_value( $date, $time, $timezone ) {
 		$date     = self::sanitize_date_value( $date );
 		$time     = self::sanitize_time_value( $time );
@@ -1289,16 +1290,16 @@ class Wpfaevent_Meta_Event {
 		return $datetime->format( DATE_ATOM );
 	}
 
-		/**
-		 * Update or remove a meta value based on emptiness.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param int    $post_id Post ID.
-		 * @param string $key     Meta key.
-		 * @param string $value   Meta value.
-		 * @return void
-		 */
+	/**
+	 * Update or remove a meta value based on emptiness.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $key     Meta key.
+	 * @param string $value   Meta value.
+	 * @return void
+	 */
 	private static function update_or_delete_meta( $post_id, $key, $value ) {
 		if ( '' === $value ) {
 			delete_post_meta( $post_id, $key );
