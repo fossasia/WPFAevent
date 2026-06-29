@@ -254,7 +254,7 @@ class Wpfaevent_Templates {
 			register_block_type(
 				'wpfaevent/' . $template['block'],
 				array(
-					'api_version'     => 2,
+					'api_version'     => '2',
 					'editor_script'   => 'wpfaevent-blocks',
 					'style'           => self::get_block_style_handle( $key ),
 					'supports'        => array(

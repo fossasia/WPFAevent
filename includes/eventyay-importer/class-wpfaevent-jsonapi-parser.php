@@ -373,7 +373,7 @@ class Wpfaevent_JSONAPI_Parser {
 
 		return array(
 			'speakers'      => array_values( $speakers ),
-			'sessions'      => array_values( $sessions ),
+			'sessions'      => $sessions,
 			'session_count' => $session_count,
 		);
 	}
@@ -2289,7 +2289,7 @@ class Wpfaevent_JSONAPI_Parser {
 			$groups[ $key ]['sponsors'][] = $sponsor;
 		}
 
-		return array_values( $groups );
+		return $groups;
 	}
 
 	/**
@@ -2343,7 +2343,7 @@ class Wpfaevent_JSONAPI_Parser {
 			$groups[] = $group;
 		}
 
-		return array_values( $groups );
+		return $groups;
 	}
 
 	/**
@@ -2371,7 +2371,7 @@ class Wpfaevent_JSONAPI_Parser {
 			$records[] = $record;
 		}
 
-		return array_values( $records );
+		return $records;
 	}
 
 	/**
