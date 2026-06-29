@@ -480,6 +480,10 @@ class Wpfaevent_Public {
 			wp_enqueue_style( $this->plugin_name . '-schedule' );
 		}
 
+		if ( is_singular( 'wpfa_event' ) || $this->is_wpfa_template_file_active( 'page-partner.php' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-partners' );
+		}
+
 		// Past Events template.
 		if ( $this->is_wpfa_template_file_active( 'page-past-events.php' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-past-events' );
