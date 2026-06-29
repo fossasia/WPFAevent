@@ -430,7 +430,7 @@ const WPFA_Events = (function() {
 	function handleCreateEventFormSubmit(e) {
 		e.preventDefault();
 
-		if (!config.isAdmin) {
+		if (!config.canManageContent) {
 			alert(config.i18n.noPermission || 'You do not have permission to perform this action.');
 			return;
 		}
