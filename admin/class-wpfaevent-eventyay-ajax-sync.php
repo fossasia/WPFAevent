@@ -998,7 +998,6 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @param array  $settings   Import settings.
 	 * @return array|WP_Error
 	 */
-
 	public function sync_speakers_for_event( $event_id, $event_slug, $settings ) {
 		$event_id  = absint( $event_id );
 		$api_token = ! empty( $settings['api_token'] ) ? $settings['api_token'] : '';
