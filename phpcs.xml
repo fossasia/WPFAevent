@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <ruleset name="WPFA Event">
   <description>WordPress Coding Standards for WPFA Event plugin.</description>
 
@@ -36,6 +36,7 @@
   <exclude-pattern>*/vendor/*</exclude-pattern>
   <exclude-pattern>*/node_modules/*</exclude-pattern>
   <exclude-pattern>*/tmp/*</exclude-pattern>
+  <exclude-pattern>*/bin/*</exclude-pattern>
   <!--
     Legacy files pending refactor (issue #57). Specific legacy admin/partials files
     are excluded. Remove each pattern when its file is refactored.
