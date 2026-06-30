@@ -1730,7 +1730,7 @@ class Wpfaevent_Eventyay_Importer {
 			$groups[] = $group;
 		}
 
-		return array_values( $groups );
+			return $groups;
 	}
 
 	/**
@@ -1903,7 +1903,7 @@ class Wpfaevent_Eventyay_Importer {
 			$records[] = $record;
 		}
 
-		return array_values( $records );
+			return $records;
 	}
 
 	/**
@@ -3115,11 +3115,11 @@ class Wpfaevent_Eventyay_Importer {
 			}
 		}
 
-		return array(
-			'speakers'      => array_values( $speakers ),
-			'sessions'      => array_values( $sessions ),
-			'session_count' => $session_count,
-		);
+			return array(
+				'speakers'      => array_values( $speakers ),
+				'sessions'      => $sessions,
+				'session_count' => $session_count,
+			);
 	}
 
 	/**
