@@ -579,9 +579,14 @@
 	margin-right: 8px;
 }
 
+.wpfaevent .wpfa-schedule-item .wpfa-calendar-action {
+	margin-left: auto;
+}
+
 .wpfaevent .wpfa-schedule-actions {
 	display: inline-flex;
 	gap: 10px;
+	margin-left: auto;
 }
 
 .wpfaevent .wpfa-schedule-actions a {
