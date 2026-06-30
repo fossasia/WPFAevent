@@ -638,7 +638,7 @@ class Wpfaevent_Admin {
 						<select name="wpfa_event_speakers[]" id="wpfa_event_speakers" multiple class="wpfaevent-relationship-select wpfaevent-speakers-select">
 							<?php foreach ( $speaker_ids as $speaker_id ) : ?>
 								<?php $is_selected = is_array( $speakers ) && in_array( $speaker_id, $speakers, true ); ?>
-									<option value="<?php echo esc_attr( $speaker_id ); ?>"
+										<option value="<?php echo esc_attr( sprintf( '%d', absint( $speaker_id ) ) ); ?>"
 										<?php selected( $is_selected, true ); ?>>
 									<?php echo esc_html( get_the_title( $speaker_id ) ); ?>
 								</option>
@@ -688,7 +688,7 @@ class Wpfaevent_Admin {
 				?>
 			</p>
 		<?php endif; ?>
-		<button type="button" id="wpfa-eventyay-sync-btn" class="button button-secondary" data-event-id="<?php echo esc_attr( $post->ID ); ?>" style="width:100%;">
+			<button type="button" id="wpfa-eventyay-sync-btn" class="button button-secondary" data-event-id="<?php echo esc_attr( sprintf( '%d', absint( $post->ID ) ) ); ?>" style="width:100%;">
 			<?php esc_html_e( 'Sync Speakers from Eventyay', 'wpfaevent' ); ?>
 		</button>
 		<p id="wpfa-eventyay-sync-status" style="margin-top:8px;font-weight:bold;display:none;"></p>
@@ -805,7 +805,7 @@ class Wpfaevent_Admin {
 						<select name="wpfa_speaker_events[]" id="wpfa_speaker_events" multiple class="wpfaevent-relationship-select wpfaevent-events-select">
 							<?php foreach ( $event_ids as $event_id ) : ?>
 								<?php $is_selected = in_array( $event_id, $events, true ); ?>
-								<option value="<?php echo esc_attr( $event_id ); ?>" <?php selected( $is_selected, true ); ?>>
+									<option value="<?php echo esc_attr( sprintf( '%d', absint( $event_id ) ) ); ?>" <?php selected( $is_selected, true ); ?>>
 									<?php echo esc_html( get_the_title( $event_id ) ); ?>
 								</option>
 							<?php endforeach; ?>

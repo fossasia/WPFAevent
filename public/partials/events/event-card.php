@@ -70,8 +70,12 @@ $speaker_ids   = (array) get_post_meta( $event_id, 'wpfa_event_speakers', true )
 $speaker_ids   = array_filter( $speaker_ids );
 $speaker_count = count( $speaker_ids );
 
-$is_admin  = current_user_can( 'manage_options' );
-$event_url = esc_url( get_permalink( $event_id ) );
+$can_manage_content  = class_exists( 'Wpfaevent_Roles' ) ? Wpfaevent_Roles::current_user_can_manage_dashboard() : current_user_can( 'manage_options' );
+$can_delete_content  = class_exists( 'Wpfaevent_Roles' ) ? Wpfaevent_Roles::current_user_can_delete_content() : current_user_can( 'delete_posts' );
+$can_edit_this_event = $can_manage_content && current_user_can( 'edit_post', $event_id );
+$can_delete_event    = $can_delete_content && current_user_can( 'delete_post', $event_id );
+$is_admin            = current_user_can( 'manage_options' );
+$event_url           = esc_url( get_permalink( $event_id ) );
 
 // Speakers page URL — link to /speakers/ filtered by event post ID.
 $speakers_url = esc_url( add_query_arg( 'event_id', $event_id, home_url( '/speakers/' ) ) );
@@ -95,6 +99,22 @@ $speakers_url = esc_url( add_query_arg( 'event_id', $event_id, home_url( '/speak
 	data-all-day="<?php echo esc_attr( $event_all_day ? '1' : '0' ); ?>"
 	data-time="<?php echo esc_attr( $event_time_value ); ?>">
 
+	<?php if ( $can_manage_content && ( ! $is_valid_date || $is_past_event ) ) : ?>
+		<div class="wpfaevent-admin-warning">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="wpfaevent-warning-icon" aria-hidden="true">
+				<path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+			</svg>
+			<span>
+				<?php
+				if ( ! $is_valid_date ) {
+					esc_html_e( 'Invalid date format', 'wpfaevent' );
+				} elseif ( $is_past_event ) {
+					esc_html_e( 'Past event', 'wpfaevent' );
+				}
+				?>
+			</span>
+		</div>
+	<?php endif; ?>
 
 	<a href="<?php echo esc_url( $event_url ); ?>" class="event-card-thumb" tabindex="-1" aria-hidden="true">
 		<?php if ( $featured_img_url ) : ?>
@@ -143,6 +163,29 @@ $speakers_url = esc_url( add_query_arg( 'event_id', $event_id, home_url( '/speak
 		<a href="<?php echo esc_url( $event_url ); ?>" class="btn btn-primary btn-sm"><?php esc_html_e( 'View Event', 'wpfaevent' ); ?></a>
 		<?php if ( $speaker_count > 0 ) : ?>
 			<a href="<?php echo esc_url( $speakers_url ); ?>" class="btn btn-outline-primary btn-sm"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></a>
+		<?php endif; ?>
+		<?php if ( $can_edit_this_event ) : ?>
+			<button class="btn btn-secondary btn-sm btn-edit-event"
+					data-post-id="<?php echo esc_attr( $event_id ); ?>"
+					data-name="<?php echo esc_attr( get_the_title( $event_id ) ); ?>"
+					data-date="<?php echo esc_attr( $event_date ); ?>"
+					data-end-date="<?php echo esc_attr( $event_end_date ); ?>"
+					data-place="<?php echo esc_attr( $event_place ); ?>"
+					data-description="<?php echo esc_attr( $event_description ); ?>"
+					data-lead-text="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_lead_text', true ) ); ?>"
+					data-registration-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_registration_link', true ) ); ?>"
+					data-cfs-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_cfs_link', true ) ); ?>"
+					data-start-time="<?php echo esc_attr( $event_time_value ); ?>"
+					data-end-time="<?php echo esc_attr( $event_end_time ); ?>"
+					data-timezone="<?php echo esc_attr( $event_timezone ); ?>"
+					data-all-day="<?php echo esc_attr( $event_all_day ? '1' : '0' ); ?>"
+					data-time="<?php echo esc_attr( $event_time_value ); ?>">
+				<?php esc_html_e( 'Edit Details', 'wpfaevent' ); ?>
+			</button>
+			<a href="<?php echo esc_url( admin_url( 'post.php?post=' . $event_id . '&action=edit' ) ); ?>" class="btn btn-outline-primary btn-sm"><?php esc_html_e( 'Edit Content', 'wpfaevent' ); ?></a>
+			<?php if ( $can_delete_event ) : ?>
+				<button class="btn btn-secondary btn-sm btn-delete-event"><?php esc_html_e( 'Delete', 'wpfaevent' ); ?></button>
+			<?php endif; ?>
 		<?php endif; ?>
 	</div>
 </div>
