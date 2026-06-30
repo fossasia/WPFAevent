@@ -16,4 +16,9 @@ tmp/
 
 # Local PHPStan overrides (allows developers to test stricter local settings without touching the .dist config)
 phpstan.neon
+
+# PHPUnit cache and artefacts
+.phpunit.result.cache
+coverage/
+clover.xml
 .claude/

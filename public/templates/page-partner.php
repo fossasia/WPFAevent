@@ -13,33 +13,97 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$partner_data = class_exists( 'Wpfaevent_Partner_Helper' )
-	? Wpfaevent_Partner_Helper::get_partner_page_data()
-	: Wpfaevent_Partner_Helper::get_default_partner_page_data();
+$partner_request = class_exists( 'Wpfaevent_Partner_Helper' )
+	? Wpfaevent_Partner_Helper::resolve_partner_request()
+	: array(
+		'event_id'      => 0,
+		'event_slug'    => '',
+		'event_title'   => '',
+		'event_url'     => '',
+		'type'          => '',
+		'partner_key'   => '',
+		'partner'       => array(),
+		'group_name'    => '',
+		'partner_label' => '',
+	);
 
-$event_id         = $partner_data['event_id'];
-$event_title      = $partner_data['event_title'];
-$event_url        = $partner_data['event_url'];
-$partner_type     = $partner_data['partner_type'];
-$partner          = $partner_data['partner'];
-$group_name       = $partner_data['group_name'];
-$partner_label    = $partner_data['partner_label'];
-$has_partner      = $partner_data['has_partner'];
-$partner_name     = $partner_data['partner_name'];
-$description      = $partner_data['description'];
-$website_link     = $partner_data['website_link'];
-$logo_url         = $partner_data['logo_url'];
-$banner_url       = $partner_data['banner_url'];
-$video_url        = $partner_data['video_url'];
-$slides_url       = $partner_data['slides_url'];
-$contact_link     = $partner_data['contact_link'];
-$contact_email    = $partner_data['contact_email'];
-$event_style_attr = $partner_data['event_style_attr'];
-$back_url         = $partner_data['back_url'];
-$header_vars      = $partner_data['header_vars'];
-$partner_initial  = $partner_data['partner_initial'];
-$partner_classes  = $partner_data['partner_classes'];
-$has_links        = $partner_data['has_links'];
+$event_id         = absint( $partner_request['event_id'] );
+$event_title      = $partner_request['event_title'];
+$event_url        = $partner_request['event_url'];
+$partner_type     = $partner_request['type'];
+$partner          = $partner_request['partner'];
+$group_name       = $partner_request['group_name'];
+$partner_label    = $partner_request['partner_label'];
+$has_partner      = ! empty( $partner['name'] );
+$partner_name     = $has_partner ? sanitize_text_field( $partner['name'] ) : '';
+$description      = ! empty( $partner['description'] ) ? wp_kses_post( $partner['description'] ) : '';
+$website_link     = ! empty( $partner['link'] ) ? esc_url_raw( $partner['link'] ) : '';
+$logo_url         = '';
+$banner_url       = '';
+$video_url        = ! empty( $partner['video'] ) ? esc_url_raw( $partner['video'] ) : '';
+$slides_url       = ! empty( $partner['slides'] ) ? esc_url_raw( $partner['slides'] ) : '';
+$contact_link     = ! empty( $partner['contact_link'] ) ? esc_url_raw( $partner['contact_link'] ) : '';
+$contact_email    = ! empty( $partner['contact_email'] ) ? sanitize_email( $partner['contact_email'] ) : '';
+$event_style_attr = '';
+
+if ( 'sponsor' === $partner_type ) {
+	$logo_url = ! empty( $partner['image'] ) ? esc_url_raw( $partner['image'] ) : '';
+} else {
+	$logo_url   = ! empty( $partner['logo'] ) ? esc_url_raw( $partner['logo'] ) : '';
+	$banner_url = ! empty( $partner['banner'] ) ? esc_url_raw( $partner['banner'] ) : '';
+}
+
+if ( $event_id && class_exists( 'Wpfaevent_Partner_Helper' ) ) {
+	$event_colors        = Wpfaevent_Partner_Helper::get_event_colors( $event_id );
+	$event_color_var_map = array(
+		'wpfa_event_primary_color'          => '--event-primary',
+		'wpfa_event_hover_button_color'     => '--event-primary-dark',
+		'wpfa_event_theme_background_color' => '--event-soft',
+		'wpfa_event_theme_success_color'    => '--event-success',
+		'wpfa_event_theme_danger_color'     => '--event-danger',
+	);
+	$event_style_vars    = array();
+
+	foreach ( $event_color_var_map as $meta_key => $css_var ) {
+		if ( ! empty( $event_colors[ $meta_key ] ) ) {
+			$event_style_vars[] = $css_var . ': ' . $event_colors[ $meta_key ];
+		}
+	}
+
+	$event_style_attr = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
+}
+
+$site_logo_url = get_option( 'wpfa_site_logo_url', '' );
+if ( empty( $site_logo_url ) ) {
+	$site_logo_url = WPFAEVENT_URL . 'assets/images/logo.png';
+}
+$site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
+
+$back_url = $event_url ? $event_url . '#exhibitors' : home_url( '/events/' );
+if ( 'sponsor' === $partner_type && $event_url ) {
+	$back_url = $event_url . '#sponsors';
+}
+
+$header_vars = array(
+	'site_logo_url'        => $site_logo_url,
+	'event_page_url'       => $event_url ? $event_url : home_url( '/events/' ),
+	'show_back_button'     => true,
+	'show_register_button' => false,
+	'back_button_text'     => $event_url ? __( 'Back to Event', 'wpfaevent' ) : __( 'Back to Events', 'wpfaevent' ),
+	'register_button_url'  => '',
+	'register_button_text' => __( 'Register', 'wpfaevent' ),
+);
+
+$partner_initial = $partner_name ? strtoupper( substr( $partner_name, 0, 1 ) ) : '';
+$has_links       = $website_link || $video_url || $slides_url || $contact_link || $contact_email;
+$partner_classes = array(
+	'wpfa-partner-detail',
+	$partner_type ? 'is-' . sanitize_html_class( $partner_type ) : 'is-partner',
+	$logo_url ? 'has-logo' : 'no-logo',
+	$banner_url ? 'has-banner' : 'no-banner',
+	$has_links ? 'has-links' : 'no-links',
+);
+$partner_label   = $partner_label ? $partner_label : __( 'Partner', 'wpfaevent' );
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
