@@ -674,23 +674,131 @@ class Wpfaevent_Meta_Event {
 		return '';
 	}
 
-
-
 	/**
-	 * Sanitize custom tab data stored in wpfa_event_custom_tabs meta.
+	 * Get featured speaker IDs assigned to one event.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param mixed $tabs JSON string or array of tab data.
-	 * @return array<int, array<string, string>>
+	 * @param int $event_id Event post ID.
+	 * @return array<int>
+	 */
+	public static function get_event_featured_speaker_ids( $event_id ) {
+		return self::sanitize_post_id_list( get_post_meta( $event_id, 'wpfa_event_featured_speakers', true ) );
+	}
+
+	/**
+	 * Resolve featured speaker IDs from event meta, dashboard JSON, and speaker categories.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int               $event_id           Event post ID.
+	 * @param array<int>        $speaker_ids        Linked speaker post IDs.
+	 * @param array<int, array> $dashboard_speakers Imported dashboard speaker rows.
+	 * @return array<int>
+	 */
+	public static function resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers = array() ) {
+		$event_id    = absint( $event_id );
+		$speaker_ids = self::sanitize_post_id_list( $speaker_ids );
+		$featured    = array_values( array_intersect( self::get_event_featured_speaker_ids( $event_id ), $speaker_ids ) );
+
+		if ( is_array( $dashboard_speakers ) && ! empty( $dashboard_speakers ) ) {
+			$eventyay_map = array();
+			$name_map     = array();
+
+			foreach ( $speaker_ids as $speaker_id ) {
+				$eventyay_id = sanitize_text_field( get_post_meta( $speaker_id, '_wpfa_eventyay_speaker_id', true ) );
+
+				if ( '' !== $eventyay_id ) {
+					$eventyay_map[ $eventyay_id ] = $speaker_id;
+				}
+
+				$name_key = sanitize_title( get_the_title( $speaker_id ) );
+
+				if ( '' !== $name_key ) {
+					$name_map[ $name_key ] = $speaker_id;
+				}
+			}
+
+			foreach ( $dashboard_speakers as $dashboard_speaker ) {
+				if ( ! is_array( $dashboard_speaker ) || empty( $dashboard_speaker['featured'] ) ) {
+					continue;
+				}
+
+				$matched_id = 0;
+
+				if ( ! empty( $dashboard_speaker['eventyay_speaker_id'] ) && isset( $eventyay_map[ $dashboard_speaker['eventyay_speaker_id'] ] ) ) {
+					$matched_id = (int) $eventyay_map[ $dashboard_speaker['eventyay_speaker_id'] ];
+				} elseif ( ! empty( $dashboard_speaker['name'] ) ) {
+					$name_key = sanitize_title( $dashboard_speaker['name'] );
+
+					if ( isset( $name_map[ $name_key ] ) ) {
+						$matched_id = (int) $name_map[ $name_key ];
+					}
+				}
+
+				if ( $matched_id && ! in_array( $matched_id, $featured, true ) ) {
+					$featured[] = $matched_id;
+				}
+			}
+		}
+
+		if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
+			foreach ( $speaker_ids as $speaker_id ) {
+				if ( in_array( $speaker_id, $featured, true ) ) {
+					continue;
+				}
+
+				$terms = get_the_terms( $speaker_id, 'wpfa_speaker_category' );
+
+				if ( empty( $terms ) || is_wp_error( $terms ) ) {
+					continue;
+				}
+
+				foreach ( $terms as $term ) {
+					if ( preg_match( '/\b(featured|keynote|plenary|highlight)\b/i', $term->name ) ) {
+						$featured[] = $speaker_id;
+						break;
+					}
+				}
+			}
+		}
+
+		$featured = self::sanitize_post_id_list( $featured );
+		$featured = array_values( array_intersect( $featured, $speaker_ids ) );
+
+		if ( empty( $featured ) && ! empty( $speaker_ids ) ) {
+			$auto_limit = absint(
+				apply_filters(
+					'wpfa_event_auto_featured_speaker_limit',
+					1,
+					$event_id,
+					$speaker_ids,
+					$dashboard_speakers
+				)
+			);
+
+			if ( $auto_limit > 0 ) {
+				$featured = array_slice( $speaker_ids, 0, min( $auto_limit, count( $speaker_ids ) ) );
+			}
+		}
+
+		return apply_filters( 'wpfa_event_featured_speaker_ids', $featured, $event_id, $speaker_ids, $dashboard_speakers );
+	}
+
+	/**
+	 * Sanitize custom tabs.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $tabs Raw custom tabs.
+	 * @return array
 	 */
 	public static function sanitize_custom_tabs( $tabs ) {
 		if ( is_string( $tabs ) ) {
-			$decoded = json_decode( $tabs, true );
-			if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
-				$tabs = $decoded;
-			} else {
-				return array();
+			$decoded_tabs = json_decode( $tabs, true );
+
+			if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded_tabs ) ) {
+				$tabs = $decoded_tabs;
 			}
 		}
 
@@ -698,95 +806,47 @@ class Wpfaevent_Meta_Event {
 			return array();
 		}
 
-		$sanitized = array();
+		$sanitized_tabs = array();
+		$used_slugs     = array();
 
 		foreach ( $tabs as $tab ) {
 			if ( ! is_array( $tab ) ) {
 				continue;
 			}
 
-			$title   = isset( $tab['title'] ) ? sanitize_text_field( (string) $tab['title'] ) : '';
-			$content = isset( $tab['content'] ) ? wp_kses_post( (string) $tab['content'] ) : '';
+			$title   = isset( $tab['title'] ) && is_scalar( $tab['title'] ) ? sanitize_text_field( $tab['title'] ) : '';
+			$content = isset( $tab['content'] ) && is_scalar( $tab['content'] ) ? trim( wp_kses_post( (string) $tab['content'] ) ) : '';
 
-			if ( '' === $title && '' === $content ) {
+			if ( '' === $title || '' === $content ) {
 				continue;
 			}
 
-			$sanitized[] = array(
+			$slug = isset( $tab['slug'] ) && is_scalar( $tab['slug'] ) ? sanitize_title( $tab['slug'] ) : '';
+			if ( '' === $slug ) {
+				$slug = sanitize_title( $title );
+			}
+
+			if ( '' === $slug ) {
+				$slug = 'custom-tab-' . ( count( $sanitized_tabs ) + 1 );
+			}
+
+			$base_slug = $slug;
+			$suffix    = 2;
+			while ( isset( $used_slugs[ $slug ] ) ) {
+				$slug = $base_slug . '-' . $suffix;
+				++$suffix;
+			}
+
+			$used_slugs[ $slug ] = true;
+
+			$sanitized_tabs[] = array(
 				'title'   => $title,
+				'slug'    => $slug,
 				'content' => $content,
 			);
 		}
 
-		return $sanitized;
-	}
-
-	/**
-	 * Resolve featured speaker post IDs for an event.
-	 *
-	 * Reads wpfa_event_featured_speaker_ids post meta (array of post IDs), filters
-	 * them to only include IDs present in $speaker_ids, and also cross-references
-	 * $dashboard_speakers to find additional featured speakers via the `featured` flag.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int                              $event_id          Event post ID.
-	 * @param array<int>                       $speaker_ids       All linked speaker post IDs.
-	 * @param array<int, array<string, mixed>> $dashboard_speakers Dashboard speaker list.
-	 * @return array<int>
-	 */
-	public static function resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers ) {
-		$event_id    = absint( $event_id );
-		$speaker_ids = array_map( 'absint', (array) $speaker_ids );
-		$speaker_ids = array_filter( $speaker_ids );
-
-		// Start with explicitly pinned featured IDs stored in meta.
-		$pinned_raw   = get_post_meta( $event_id, 'wpfa_event_featured_speaker_ids', true );
-		$pinned_ids   = self::sanitize_post_id_list( $pinned_raw );
-		$featured_ids = array_values( array_intersect( $pinned_ids, $speaker_ids ) );
-
-		// Build a quick lookup: eventyay_id => post_id and post_id list from meta.
-		$speaker_id_set = array_flip( $speaker_ids );
-
-		// Cross-reference dashboard speakers for those flagged as featured.
-		if ( is_array( $dashboard_speakers ) ) {
-			foreach ( $dashboard_speakers as $dashboard_speaker ) {
-				if ( empty( $dashboard_speaker['featured'] ) ) {
-					continue;
-				}
-
-				// Match by explicit post_id.
-				if ( ! empty( $dashboard_speaker['post_id'] ) ) {
-					$post_id = absint( $dashboard_speaker['post_id'] );
-					if ( $post_id && isset( $speaker_id_set[ $post_id ] ) && ! in_array( $post_id, $featured_ids, true ) ) {
-						$featured_ids[] = $post_id;
-					}
-					continue;
-				}
-
-				// Match by eventyay_id stored in speaker meta.
-				$eventyay_id = '';
-				if ( ! empty( $dashboard_speaker['eventyay_speaker_id'] ) ) {
-					$eventyay_id = sanitize_text_field( (string) $dashboard_speaker['eventyay_speaker_id'] );
-				} elseif ( ! empty( $dashboard_speaker['eventyay_id'] ) ) {
-					$eventyay_id = sanitize_text_field( (string) $dashboard_speaker['eventyay_id'] );
-				}
-
-				if ( '' !== $eventyay_id ) {
-					foreach ( $speaker_ids as $sid ) {
-						$stored_id = get_post_meta( $sid, '_wpfa_eventyay_speaker_id', true );
-						if ( ! $stored_id ) {
-							$stored_id = get_post_meta( $sid, 'wpfa_eventyay_speaker_id', true );
-						}
-						if ( $stored_id && $stored_id === $eventyay_id && ! in_array( $sid, $featured_ids, true ) ) {
-							$featured_ids[] = $sid;
-						}
-					}
-				}
-			}
-		}
-
-		return array_values( array_unique( array_map( 'absint', $featured_ids ) ) );
+		return array_values( $sanitized_tabs );
 	}
 
 	/**
