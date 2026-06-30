@@ -850,6 +850,45 @@
 	max-width: 900px;
 }
 
+.wpfaevent .wpfa-event-additional-preview h2,
+.wpfaevent .wpfa-event-custom-tab-content h2,
+.wpfaevent .wpfa-additional-information-body h2 {
+	color: var(--event-ink);
+	font-size: clamp(1.55rem, 2.2vw, 2rem);
+	font-weight: 900;
+	line-height: 1.15;
+	margin: 0 0 12px;
+}
+
+.wpfaevent .wpfa-event-additional-preview h2 + p,
+.wpfaevent .wpfa-event-custom-tab-content h2 + p,
+.wpfaevent .wpfa-additional-information-body h2 + p {
+	margin-top: 0;
+}
+
+.wpfaevent .wpfa-event-additional-preview h2:not(:first-child),
+.wpfaevent .wpfa-event-custom-tab-content h2:not(:first-child),
+.wpfaevent .wpfa-additional-information-body h2:not(:first-child) {
+	margin-top: 34px;
+}
+
+.wpfaevent .wpfa-event-additional-preview h3,
+.wpfaevent .wpfa-event-custom-tab-content h3,
+.wpfaevent .wpfa-additional-information-body h3 {
+	color: var(--event-ink);
+	font-size: 1.15rem;
+	font-weight: 800;
+	line-height: 1.3;
+	margin: 24px 0 10px;
+}
+
+.wpfaevent .wpfa-event-additional-preview p,
+.wpfaevent .wpfa-event-custom-tab-content p,
+.wpfaevent .wpfa-additional-information-body p {
+	font-size: 1rem;
+	line-height: 1.75;
+}
+
 .wpfaevent .wpfa-event-section-head {
 	align-items: end;
 	display: flex;

@@ -1,6 +1,6 @@
 <?php
 /**
- * Eventyay Importer Event Repository.
+ * Eventyay Event Repository.
  *
  * @package    Wpfaevent
  * @subpackage Wpfaevent/includes/eventyay-importer
@@ -11,141 +11,169 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Handles database operations for importing and updating event posts.
+ * Manages event Custom Post Type posts and post metadata.
  */
 class Wpfaevent_Event_Repository {
 
 	/**
-	 * JSONAPI Parser.
+	 * Parser instance.
 	 *
 	 * @var Wpfaevent_JSONAPI_Parser
 	 */
 	private $parser;
 
 	/**
-	 * Constructor.
+	 * Store instance.
 	 *
-	 * @param Wpfaevent_JSONAPI_Parser|null $parser Optional parser instance.
+	 * @var Wpfaevent_Partner_Json_Store
 	 */
-	public function __construct( $parser = null ) {
-		$this->parser = $parser ? $parser : new Wpfaevent_JSONAPI_Parser();
+	private $store;
+
+	/**
+	 * Constructor.
+	 */
+	public function __construct() {
+		$this->parser = new Wpfaevent_JSONAPI_Parser();
+		$this->store  = new Wpfaevent_Partner_Json_Store();
 	}
 
 	/**
-	 * Upsert an Eventyay event post CPT entry.
+	 * Create or update one imported Eventyay event post.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param array $event    Eventyay event resource.
 	 * @param array $settings Import settings.
-	 * @return array|WP_Error Import outcome details.
+	 * @return array|WP_Error Upsert result.
 	 */
 	public function upsert_eventyay_event_post( $event, $settings ) {
+		$event      = $this->parser->normalize_eventyay_event_resource( $event );
 		$event_slug = $this->parser->eventyay_event_slug( $event );
 		if ( empty( $event_slug ) ) {
 			return new WP_Error(
-				'wpfaevent_eventyay_missing_slug',
-				esc_html__( 'Eventyay event does not have a valid identifier.', 'wpfaevent' )
+				'wpfaevent_eventyay_event_missing_slug',
+				esc_html__( 'An Eventyay event was skipped because it did not contain a slug.', 'wpfaevent' )
 			);
 		}
 
-		$post_id     = $this->find_eventyay_event_post( $settings['organizer_slug'], $event_slug );
-		$is_new      = ! $post_id;
-		$post_status = $is_new ? $settings['post_status'] : get_post_status( $post_id );
-
-		$post_data = array(
+		$organizer_slug = $settings['organizer_slug'];
+		$title          = $this->parser->eventyay_event_title( $event );
+		$title          = $title ? $title : $event_slug;
+		$description    = $this->parser->eventyay_event_description( $event );
+		$existing_id    = $this->find_eventyay_event_post( $organizer_slug, $event_slug );
+		$post_status    = in_array( $settings['post_status'], array( 'draft', 'publish', 'pending', 'private' ), true ) ? $settings['post_status'] : 'draft';
+		$post_data      = array(
+			'post_title'   => sanitize_text_field( $title ),
 			'post_type'    => 'wpfa_event',
-			'post_status'  => $post_status ? $post_status : 'draft',
-			'post_title'   => $this->eventyay_event_title( $event ),
-			'post_content' => $this->eventyay_event_description( $event ),
-			'post_name'    => $event_slug,
+			'post_status'  => $post_status,
+			'post_content' => wp_kses_post( $description ),
 		);
+		$created        = false;
 
-		$post_manager = new Wpfaevent_Eventyay_Post_Manager();
-		$result_id    = $post_manager->save_event_post( $post_data, $post_id );
-
-		if ( is_wp_error( $result_id ) ) {
-			return $result_id;
+		if ( $existing_id ) {
+			$post_data['ID'] = $existing_id;
+			$saved_id        = wp_update_post( $post_data, true );
+		} else {
+			$post_data['post_name'] = sanitize_title( $organizer_slug . '-' . $event_slug );
+			$saved_id               = wp_insert_post( $post_data, true );
+			$created                = true;
 		}
-		$post_id   = absint( $result_id );
-		$timezone  = $this->eventyay_timezone_object( $this->eventyay_event_timezone( $event ) );
-		$logo      = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'logo_image', 'logo_url', 'logo-url', 'logo', 'event_logo_image' ), true ), $settings['base_url'] );
-		$latitude  = $this->parser->eventyay_scalar_value( $this->parser->eventyay_first_present_raw( $event, array( 'latitude', 'lat' ), true ) );
-		$longitude = $this->parser->eventyay_scalar_value( $this->parser->eventyay_first_present_raw( $event, array( 'longitude', 'lng', 'lon', 'long' ), true ) );
 
-		$metadata = array(
-			'_eventyay_organizer_slug' => $settings['organizer_slug'],
-			'_eventyay_event_slug'     => $event_slug,
-			'wpfa_event_timezone'      => Wpfaevent_Meta_Event::sanitize_timezone( $this->eventyay_event_timezone( $event ) ),
-			'wpfa_event_location'      => $this->eventyay_event_location( $event ),
-			'wpfa_event_url'           => $this->eventyay_public_event_url( $event, $settings, $event_slug ),
-			'wpfa_event_start_date'    => $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'start' ), $timezone ),
-			'wpfa_event_start_time'    => $this->format_eventyay_time( $this->eventyay_event_datetime( $event, 'start' ), $timezone ),
-			'wpfa_event_end_date'      => $this->format_eventyay_date( $this->eventyay_event_datetime( $event, 'end' ), $timezone ),
-			'wpfa_event_end_time'      => $this->format_eventyay_time( $this->eventyay_event_datetime( $event, 'end' ), $timezone ),
-			'wpfa_event_logo'          => $logo,
-			'wpfa_event_latitude'      => $latitude,
-			'wpfa_event_longitude'     => $longitude,
-		);
+		if ( is_wp_error( $saved_id ) ) {
+			return $saved_id;
+		}
 
-		$post_manager->sync_event_metadata( $post_id, $metadata );
-
-		// Import additional metadata fields.
-		$lead_text = $this->parser->eventyay_text_value( $this->parser->eventyay_first_present_raw( $event, array( 'headline', 'lead_text', 'lead-text', 'subtitle', 'frontpage_text', 'frontpage-text', 'short_description', 'short-description', 'summary' ), true ) );
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_lead_text', $lead_text );
-
-		// Set the post excerpt as a fallback source for the hero text on the single-event template.
-		if ( ! empty( $lead_text ) ) {
-			wp_update_post(
-				array(
-					'ID'           => $post_id,
-					'post_excerpt' => $lead_text,
-				)
+		$saved_id = absint( $saved_id );
+		if ( ! $saved_id ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_event_save_failed',
+				esc_html__( 'Could not save imported Eventyay event.', 'wpfaevent' )
 			);
 		}
 
-		$reg_link = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'ticket_url', 'ticket-url', 'registration_link', 'registration-link', 'register_link', 'register-link' ), true ), $settings['base_url'] );
-		// Eventyay does not expose a separate ticket URL; fall back to the public event page which IS the registration page.
-		if ( empty( $reg_link ) ) {
-			$reg_link = $this->eventyay_public_event_url( $event, $settings, $event_slug );
-		}
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_registration_link', $reg_link );
+		$start_datetime       = $this->parser->eventyay_event_datetime( $event, 'start' );
+		$end_datetime         = $this->parser->eventyay_event_datetime( $event, 'end' );
+		$timezone             = $this->parser->eventyay_event_timezone( $event );
+		$timezone_object      = $this->parser->eventyay_timezone_object( $timezone );
+		$event_is_all_day     = ! $this->parser->eventyay_datetime_has_time( $start_datetime ) && ! $this->parser->eventyay_datetime_has_time( $end_datetime );
+		$start_date           = $this->parser->format_eventyay_date( $start_datetime, $timezone_object );
+		$end_date             = $this->parser->format_eventyay_date( $end_datetime, $timezone_object );
+		$start_time           = $event_is_all_day ? '' : $this->parser->format_eventyay_time( $start_datetime, $timezone_object );
+		$end_time             = $event_is_all_day ? '' : $this->parser->format_eventyay_time( $end_datetime, $timezone_object );
+		$normalized_starts_at = $this->parser->normalize_eventyay_datetime( $start_datetime );
+		$normalized_ends_at   = $this->parser->normalize_eventyay_datetime( $end_datetime );
+		$location             = $this->parser->eventyay_event_location( $event );
+		$event_url            = $this->parser->eventyay_public_event_url( $event, $settings, $event_slug );
+		$languages            = $this->parser->eventyay_event_languages( $event );
+		$colors               = $this->parser->eventyay_event_colors( $event );
 
-		$cfs_link = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'cfs_link', 'cfs-link', 'cfp_link', 'cfp-link', 'cfp_url', 'cfp-url', 'speakers_url', 'speakers-url' ), true ), $settings['base_url'] );
-		if ( empty( $cfs_link ) ) {
-			$public_event_url = $this->eventyay_public_event_url( $event, $settings, $event_slug );
-			$cfs_link         = rtrim( $public_event_url, '/' ) . '/cfs';
-		}
-		$this->update_or_delete_post_meta( $post_id, 'wpfa_event_cfs_link', $cfs_link );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_start_date', $start_date );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_end_date', $end_date );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_start_time', $start_time );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_end_time', $end_time );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_timezone', $timezone );
+		update_post_meta( $saved_id, 'wpfa_event_all_day', $event_is_all_day ? '1' : '0' );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_starts_at', $normalized_starts_at );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_ends_at', $normalized_ends_at );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_location', $location );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_url', $event_url );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_languages', $languages );
 
-		// Import banner as featured image.
-		$banner_url = $this->parser->eventyay_url_value( $this->parser->eventyay_first_present_raw( $event, array( 'banner_url', 'banner-url', 'banner', 'logo_image', 'event_logo_image', 'logo_image_large', 'logo_url', 'logo-url', 'logo' ), true ), $settings['base_url'] );
-		$this->sideload_event_featured_image( $post_id, $banner_url );
+		if ( ! empty( $colors ) || $this->parser->eventyay_event_has_settings_payload( $event ) ) {
+			foreach ( Wpfaevent_Meta_Event::get_event_color_meta_fields() as $meta_key => $label ) {
+				$this->update_or_delete_post_meta( $saved_id, $meta_key, isset( $colors[ $meta_key ] ) ? $colors[ $meta_key ] : '' );
+			}
+		}
+
+		// Keep older dashboard/landing metadata in sync with the canonical event meta.
+		$this->update_or_delete_post_meta( $saved_id, '_event_date', $start_date );
+		$this->update_or_delete_post_meta( $saved_id, '_event_end_date', $end_date );
+		$this->update_or_delete_post_meta( $saved_id, '_event_place', $location );
+		$this->update_or_delete_post_meta( $saved_id, '_event_registration_link', $event_url );
+		$this->update_or_delete_post_meta( $saved_id, '_event_lead_text', wp_strip_all_tags( $description ) );
+
+		update_post_meta( $saved_id, '_wpfa_eventyay_organizer_slug', sanitize_text_field( $organizer_slug ) );
+		update_post_meta( $saved_id, '_wpfa_eventyay_event_slug', sanitize_text_field( $event_slug ) );
+		update_post_meta( $saved_id, '_wpfa_eventyay_last_imported_at', current_time( 'mysql', true ) );
+		$this->store_eventyay_event_lookup( $organizer_slug, $event_slug, $saved_id );
+
+		$source_id = $this->parser->eventyay_event_first_present_raw( $event, array( '_eventyay_source_id', 'id', 'code', 'identifier' ), false );
+		if ( is_scalar( $source_id ) && '' !== trim( (string) $source_id ) ) {
+			update_post_meta( $saved_id, '_wpfa_eventyay_event_id', sanitize_text_field( (string) $source_id ) );
+		}
 
 		return array(
-			'post_id' => $post_id,
-			'created' => $is_new ? 1 : 0,
-			'updated' => $is_new ? 0 : 1,
-			'skipped' => 0,
+			'id'         => $saved_id,
+			'created'    => $created,
+			'event_slug' => $event_slug,
 		);
 	}
 
 	/**
-	 * Find an existing Eventyay CPT event post.
+	 * Find an imported Eventyay event by source organizer and event slug.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $organizer_slug Eventyay organizer slug.
 	 * @param string $event_slug     Eventyay event slug.
-	 * @return int Post ID if found, 0 otherwise.
+	 * @return int
 	 */
 	public function find_eventyay_event_post( $organizer_slug, $event_slug ) {
-		// First try searching by post_name (slug), which is indexed in wp_posts and extremely fast.
-		$posts = get_posts(
+		$lookup_key = $this->build_eventyay_event_lookup_key( $organizer_slug, $event_slug );
+		$lookup_map = $this->get_eventyay_event_lookup_map();
+
+		if ( ! empty( $lookup_map[ $lookup_key ] ) ) {
+			$post_id = absint( $lookup_map[ $lookup_key ] );
+			if ( $post_id && 'wpfa_event' === get_post_type( $post_id ) ) {
+				return $post_id;
+			}
+		}
+
+		$event_ids = get_posts(
 			array(
 				'post_type'              => 'wpfa_event',
 				'post_status'            => 'any',
-				'name'                   => $event_slug,
+				'name'                   => sanitize_title( $organizer_slug . '-' . $event_slug ),
 				'posts_per_page'         => 1,
 				'fields'                 => 'ids',
 				'no_found_rows'          => true,
@@ -154,258 +182,116 @@ class Wpfaevent_Event_Repository {
 			)
 		);
 
-		if ( ! empty( $posts ) ) {
-			return absint( $posts[0] );
+		if ( ! empty( $event_ids[0] ) ) {
+			$post_id               = absint( $event_ids[0] );
+			$stored_organizer_slug = sanitize_text_field( (string) get_post_meta( $post_id, '_wpfa_eventyay_organizer_slug', true ) );
+			$stored_event_slug     = sanitize_text_field( (string) get_post_meta( $post_id, '_wpfa_eventyay_event_slug', true ) );
+
+			if ( sanitize_text_field( $organizer_slug ) === $stored_organizer_slug && sanitize_text_field( $event_slug ) === $stored_event_slug ) {
+				$this->store_eventyay_event_lookup( $organizer_slug, $event_slug, $post_id );
+
+				return $post_id;
+			}
 		}
 
-		// Fallback to meta query for backwards compatibility with older imports.
-		$posts = get_posts(
+		$this->prime_eventyay_event_lookup_map();
+		$lookup_map = $this->get_eventyay_event_lookup_map();
+
+		return ! empty( $lookup_map[ $lookup_key ] ) ? absint( $lookup_map[ $lookup_key ] ) : 0;
+	}
+
+	/**
+	 * Build a stable lookup key for imported Eventyay events.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $organizer_slug Eventyay organizer slug.
+	 * @param string $event_slug     Eventyay event slug.
+	 * @return string
+	 */
+	private function build_eventyay_event_lookup_key( $organizer_slug, $event_slug ) {
+		return md5( sanitize_text_field( $organizer_slug ) . '|' . sanitize_text_field( $event_slug ) );
+	}
+
+	/**
+	 * Get the imported Eventyay event lookup map.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<string, int>
+	 */
+	private function get_eventyay_event_lookup_map() {
+		$lookup_map = get_option( 'wpfaevent_eventyay_event_lookup', array() );
+
+		return is_array( $lookup_map ) ? $lookup_map : array();
+	}
+
+	/**
+	 * Store a lookup entry for an imported Eventyay event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $organizer_slug Eventyay organizer slug.
+	 * @param string $event_slug     Eventyay event slug.
+	 * @param int    $post_id        WordPress post ID.
+	 * @return void
+	 */
+	private function store_eventyay_event_lookup( $organizer_slug, $event_slug, $post_id ) {
+		$post_id    = absint( $post_id );
+		$lookup_key = $this->build_eventyay_event_lookup_key( $organizer_slug, $event_slug );
+
+		if ( ! $post_id || '' === $lookup_key ) {
+			return;
+		}
+
+		$lookup_map                = $this->get_eventyay_event_lookup_map();
+		$lookup_map[ $lookup_key ] = $post_id;
+		update_option( 'wpfaevent_eventyay_event_lookup', $lookup_map, false );
+	}
+
+	/**
+	 * Prime the imported Eventyay event lookup map from existing posts.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	private function prime_eventyay_event_lookup_map() {
+		$event_ids = get_posts(
 			array(
 				'post_type'              => 'wpfa_event',
 				'post_status'            => 'any',
-				'posts_per_page'         => 1,
+				'posts_per_page'         => -1,
 				'fields'                 => 'ids',
 				'no_found_rows'          => true,
 				'update_post_meta_cache' => false,
 				'update_post_term_cache' => false,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-				'meta_query'             => array(
-					'relation' => 'AND',
-					array(
-						'key'   => '_eventyay_organizer_slug',
-						'value' => $organizer_slug,
-					),
-					array(
-						'key'   => '_eventyay_event_slug',
-						'value' => $event_slug,
-					),
-				),
 			)
 		);
 
-		return ! empty( $posts ) ? absint( $posts[0] ) : 0;
-	}
-
-	/**
-	 * Extract event title.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $event Eventyay event resource.
-	 * @return string
-	 */
-	public function eventyay_event_title( $event ) {
-		return $this->parser->eventyay_first_present_text( $event, array( 'name', 'title' ) );
-	}
-
-	/**
-	 * Extract event description.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $event Eventyay event resource.
-	 * @return string
-	 */
-	public function eventyay_event_description( $event ) {
-		$value = $this->parser->eventyay_first_present_raw(
-			$event,
-			array(
-				'description',
-				'description-html',
-				'description_html',
-				'frontpage_text',
-				'frontpage-text',
-				'event_info_text',
-				'event-info-text',
-				'about',
-				'about_text',
-				'about-text',
-				'text',
-				'intro',
-				'short_description',
-				'short-description',
-				'subtitle',
-				'summary',
-			),
-			true
-		);
-
-		return $this->parser->eventyay_rich_text_value( $value );
-	}
-
-	/**
-	 * Extract event date-time strings.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array  $event Eventyay event resource.
-	 * @param string $type  "start" or "end".
-	 * @return string
-	 */
-	public function eventyay_event_datetime( $event, $type ) {
-		$keys = 'start' === $type ? array( 'starts_at', 'starts-at', 'start_time', 'start-time', 'start_date', 'start-date', 'start', 'date_from', 'date-from' ) : array( 'ends_at', 'ends-at', 'end_time', 'end-time', 'end_date', 'end-date', 'end', 'date_to', 'date-to' );
-
-		return $this->parser->eventyay_scalar_value( $this->parser->eventyay_first_present_raw( $event, $keys, true ) );
-	}
-
-	/**
-	 * Extract event timezone identifier.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $event Eventyay event resource.
-	 * @return string
-	 */
-	public function eventyay_event_timezone( $event ) {
-		return $this->parser->eventyay_first_present_text( $event, array( 'timezone', 'time_zone', 'timezone_name', 'timezone-name' ) );
-	}
-
-	/**
-	 * Extract event location name.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $event Eventyay event resource.
-	 * @return string
-	 */
-	public function eventyay_event_location( $event ) {
-		$value = $this->parser->eventyay_first_present_raw( $event, array( 'location_name', 'location-name', 'searchable_location_name', 'searchable-location-name', 'location', 'venue', 'venue_name', 'venue-name', 'address' ), true );
-
-		return $this->parser->eventyay_location_text_value( $value );
-	}
-
-	/**
-	 * Build public Eventyay URL.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array  $event      Eventyay event resource.
-	 * @param array  $settings   Import settings.
-	 * @param string $event_slug Event slug.
-	 * @return string
-	 */
-	public function eventyay_public_event_url( $event, $settings, $event_slug ) {
-		$url = $this->parser->eventyay_url_value(
-			$this->parser->eventyay_first_present_raw(
-				$event,
-				array(
-					'url',
-					'frontend_url',
-					'frontend-url',
-					'public_url',
-					'public-url',
-					'web_url',
-					'web-url',
-					'absolute_url',
-					'absolute-url',
-					'event_url',
-					'event-url',
-					'registration_url',
-					'registration-url',
-				),
-				true
-			),
-			$settings['base_url']
-		);
-
-		if ( $url ) {
-			return $url;
+		if ( empty( $event_ids ) ) {
+			return;
 		}
 
-		$url = trailingslashit( $settings['base_url'] ) . rawurlencode( $settings['organizer_slug'] ) . '/' . rawurlencode( $event_slug ) . '/';
+		$lookup_map = $this->get_eventyay_event_lookup_map();
 
-		return esc_url_raw(
-			apply_filters(
-				'wpfaevent_eventyay_import_event_url',
-				$url,
-				$event,
-				$settings
-			)
-		);
+		foreach ( $event_ids as $event_id ) {
+			$event_id              = absint( $event_id );
+			$stored_organizer_slug = sanitize_text_field( (string) get_post_meta( $event_id, '_wpfa_eventyay_organizer_slug', true ) );
+			$stored_event_slug     = sanitize_text_field( (string) get_post_meta( $event_id, '_wpfa_eventyay_event_slug', true ) );
+
+			if ( '' === $stored_organizer_slug || '' === $stored_event_slug ) {
+				continue;
+			}
+
+			$lookup_map[ $this->build_eventyay_event_lookup_key( $stored_organizer_slug, $stored_event_slug ) ] = $event_id;
+		}
+
+		update_option( 'wpfaevent_eventyay_event_lookup', $lookup_map, false );
 	}
 
 	/**
-	 * Format an Eventyay date-time value as a date.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string            $value    Date-time value.
-	 * @param DateTimeZone|null $timezone Optional timezone.
-	 * @return string
-	 */
-	public function format_eventyay_date( $value, $timezone = null ) {
-		$value = trim( (string) $value );
-
-		if ( '' === $value ) {
-			return '';
-		}
-
-		try {
-			$date = new DateTimeImmutable( $value );
-		} catch ( Exception $exception ) {
-			return '';
-		}
-
-		if ( $timezone instanceof DateTimeZone ) {
-			$date = $date->setTimezone( $timezone );
-		}
-
-		return $date->format( 'Y-m-d' );
-	}
-
-	/**
-	 * Format an Eventyay date-time value as a time.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string            $value    Date-time value.
-	 * @param DateTimeZone|null $timezone Optional timezone.
-	 * @return string
-	 */
-	public function format_eventyay_time( $value, $timezone = null ) {
-		$value = trim( (string) $value );
-
-		if ( '' === $value ) {
-			return '';
-		}
-
-		try {
-			$date = new DateTimeImmutable( $value );
-		} catch ( Exception $exception ) {
-			return '';
-		}
-
-		if ( $timezone instanceof DateTimeZone ) {
-			$date = $date->setTimezone( $timezone );
-		}
-
-		return $date->format( 'H:i' );
-	}
-
-	/**
-	 * Build a timezone object.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $timezone Timezone identifier.
-	 * @return DateTimeZone|null
-	 */
-	public function eventyay_timezone_object( $timezone ) {
-		$timezone = Wpfaevent_Meta_Event::sanitize_timezone( $timezone );
-
-		if ( '' === $timezone ) {
-			return null;
-		}
-
-		try {
-			return new DateTimeZone( $timezone );
-		} catch ( Exception $exception ) {
-			return null;
-		}
-	}
-
-	/**
-	 * Update or delete post meta.
+	 * Update or delete a post meta value.
 	 *
 	 * @since 1.0.0
 	 *
@@ -424,78 +310,183 @@ class Wpfaevent_Event_Repository {
 	}
 
 	/**
-	 * Download a remote image and set it as the post thumbnail.
+	 * Write imported Eventyay sessions into the dashboard schedule table.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int    $post_id    Post ID.
-	 * @param string $image_url  Remote image URL.
-	 * @return int|false Attachment ID or false on failure.
+	 * @param int   $event_id Imported WordPress event post ID.
+	 * @param array $sessions Normalized Eventyay sessions.
+	 * @return int|WP_Error Number of imported schedule data rows.
 	 */
-	public function sideload_event_featured_image( $post_id, $image_url ) {
-		$image_url = trim( (string) $image_url );
-		if ( ! $image_url ) {
-			return false;
+	public function write_eventyay_schedule_table( $event_id, $sessions ) {
+		$event_id = absint( $event_id );
+		$sessions = is_array( $sessions ) ? $sessions : array();
+
+		if ( ! $event_id ) {
+			return 0;
 		}
 
-		// Prevent re-downloading if the image URL hasn't changed.
-		$existing_banner = get_post_meta( $post_id, '_eventyay_imported_banner_url', true );
-		if ( $existing_banner === $image_url && has_post_thumbnail( $post_id ) ) {
-			return get_post_thumbnail_id( $post_id );
+		$filename          = 'schedule-' . $event_id . '.json';
+		$existing_schedule = $this->store->read_dashboard_json_file( $filename, array() );
+		if (
+			is_array( $existing_schedule )
+			&& ! empty( $existing_schedule['name'] )
+			&& ( empty( $existing_schedule['source'] ) || 'eventyay' !== $existing_schedule['source'] )
+		) {
+			return 0;
 		}
 
-		// Temporarily allow local hostnames during validation and download.
-		add_filter( 'http_request_host_is_external', '__return_true' );
-
-		if ( ! $this->parser->is_valid_http_url( $image_url ) || ! wp_http_validate_url( $image_url ) ) {
-			remove_filter( 'http_request_host_is_external', '__return_true' );
-			return false;
+		$table        = $this->build_eventyay_schedule_table( $sessions );
+		$write_result = $this->store->write_dashboard_json_file( $filename, $table );
+		if ( is_wp_error( $write_result ) ) {
+			return $write_result;
 		}
 
-		// Include media framework files if not loaded.
-		if ( ! function_exists( 'media_handle_sideload' ) || ! function_exists( 'download_url' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/image.php';
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-			require_once ABSPATH . 'wp-admin/includes/media.php';
-		}
+		return max( 0, absint( $table['rows'] ) - 1 );
+	}
 
-		// Download the remote URL to a temporary file.
-		$tmp_file = download_url( $image_url );
+	/**
+	 * Build the dashboard schedule table payload from Eventyay sessions.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $sessions Normalized Eventyay sessions.
+	 * @return array
+	 */
+	public function build_eventyay_schedule_table( $sessions ) {
+		usort(
+			$sessions,
+			static function ( $session_a, $session_b ) {
+				$a_time = ! empty( $session_a['starts_at'] ) ? $session_a['starts_at'] : trim( (string) ( isset( $session_a['date'] ) ? $session_a['date'] : '' ) . ' ' . ( isset( $session_a['time'] ) ? $session_a['time'] : '' ) );
+				$b_time = ! empty( $session_b['starts_at'] ) ? $session_b['starts_at'] : trim( (string) ( isset( $session_b['date'] ) ? $session_b['date'] : '' ) . ' ' . ( isset( $session_b['time'] ) ? $session_b['time'] : '' ) );
 
-		// Remove the temporary host filter.
-		remove_filter( 'http_request_host_is_external', '__return_true' );
-
-		if ( is_wp_error( $tmp_file ) ) {
-			return false;
-		}
-
-		// Extract filename.
-		$file_name = basename( wp_parse_url( $image_url, PHP_URL_PATH ) );
-		if ( ! $file_name ) {
-			$file_name = 'event-banner.jpg';
-		}
-
-		// Construct file array.
-		$file_array = array(
-			'name'     => $file_name,
-			'tmp_name' => $tmp_file,
+				return strcmp( $a_time, $b_time );
+			}
 		);
 
-		// Upload the file to uploads and create attachment.
-		$attachment_id = media_handle_sideload( $file_array, $post_id );
+		$rows              = array(
+			array(
+				__( 'Date', 'wpfaevent' ),
+				__( 'Time', 'wpfaevent' ),
+				__( 'Session', 'wpfaevent' ),
+				__( 'Speaker(s)', 'wpfaevent' ),
+				__( 'Track', 'wpfaevent' ),
+				__( 'Room', 'wpfaevent' ),
+			),
+		);
+		$schedule_sessions = array();
 
-		// Clean up the temporary file.
-		if ( is_wp_error( $attachment_id ) ) {
-			if ( file_exists( $tmp_file ) ) {
-				wp_delete_file( $tmp_file );
+		foreach ( $sessions as $session ) {
+			if ( ! is_array( $session ) ) {
+				continue;
 			}
-			return false;
+
+			$starts_at = isset( $session['starts_at'] ) ? sanitize_text_field( $session['starts_at'] ) : '';
+			$ends_at   = isset( $session['ends_at'] ) ? sanitize_text_field( $session['ends_at'] ) : '';
+			$date      = isset( $session['date'] ) ? sanitize_text_field( $session['date'] ) : '';
+			$time      = isset( $session['time'] ) ? sanitize_text_field( $session['time'] ) : '';
+
+			if ( ! empty( $session['end_time'] ) ) {
+				$end_time = sanitize_text_field( $session['end_time'] );
+				$time    .= $time ? ' - ' . $end_time : $end_time;
+			}
+
+			$speakers = '';
+			if ( ! empty( $session['speakers'] ) && is_array( $session['speakers'] ) ) {
+				$speakers = implode( ', ', array_map( 'sanitize_text_field', $session['speakers'] ) );
+			}
+
+			$title = isset( $session['title'] ) ? sanitize_text_field( $session['title'] ) : '';
+			$track = isset( $session['track'] ) ? sanitize_text_field( $session['track'] ) : '';
+			$room  = isset( $session['room'] ) ? sanitize_text_field( $session['room'] ) : '';
+
+			$rows[] = array(
+				$date,
+				sanitize_text_field( $time ),
+				$title,
+				$speakers,
+				$track,
+				$room,
+			);
+
+			$schedule_sessions[] = array(
+				'title'     => $title,
+				'date'      => $date,
+				'time'      => sanitize_text_field( $time ),
+				'speakers'  => $speakers,
+				'track'     => $track,
+				'room'      => $room,
+				'starts_at' => $starts_at,
+				'ends_at'   => $ends_at,
+			);
 		}
 
-		// Set post thumbnail.
-		set_post_thumbnail( $post_id, $attachment_id );
-		update_post_meta( $post_id, '_eventyay_imported_banner_url', $image_url );
+		return array(
+			'name'     => __( 'Eventyay Schedule', 'wpfaevent' ),
+			'rows'     => count( $rows ),
+			'cols'     => 6,
+			'data'     => $rows,
+			'sessions' => $schedule_sessions,
+			'source'   => 'eventyay',
+		);
+	}
 
-		return $attachment_id;
+	/**
+	 * Resolve the Eventyay sync URL from POST data or saved dashboard settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return string
+	 */
+	public function get_eventyay_sync_url( $event_id ) {
+		$api_url = '';
+
+		// Nonce is verified in ajax_sync_eventyay() before this helper is called.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing
+		if ( isset( $_POST['eventyay_api_url'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$api_url = esc_url_raw( wp_unslash( $_POST['eventyay_api_url'] ) );
+		}
+
+		if ( empty( $api_url ) ) {
+			$settings = $this->store->read_dashboard_json_file( 'site-settings-' . absint( $event_id ) . '.json', array() );
+
+			if ( is_array( $settings ) && ! empty( $settings['eventyay_api_url'] ) ) {
+				$api_url = esc_url_raw( $settings['eventyay_api_url'] );
+			}
+		}
+
+		/**
+		 * Filters the Eventyay Open API URL used by dashboard sync.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param string $api_url  Eventyay API URL.
+		 * @param int    $event_id Event post ID.
+		 */
+		return apply_filters( 'wpfaevent_eventyay_sync_url', $api_url, absint( $event_id ) );
+	}
+
+	/**
+	 * Persist the Eventyay sync URL into the dashboard settings JSON.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $event_id Event post ID.
+	 * @param string $api_url  Eventyay API URL.
+	 * @return true|WP_Error
+	 */
+	public function persist_eventyay_sync_url( $event_id, $api_url ) {
+		$filename = 'site-settings-' . absint( $event_id ) . '.json';
+		$settings = $this->store->read_dashboard_json_file( $filename, array() );
+
+		if ( ! is_array( $settings ) ) {
+			$settings = array();
+		}
+
+		$settings['eventyay_api_url'] = esc_url_raw( $api_url );
+
+		return $this->store->write_dashboard_json_file( $filename, $settings );
 	}
 }

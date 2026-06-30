@@ -65,7 +65,7 @@ $talk_time     = get_post_meta( $sid, 'wpfa_speaker_talk_time', true );
 $talk_end_time = get_post_meta( $sid, 'wpfa_speaker_talk_end_time', true );
 $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 ?>
-<article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( $sid ); ?>">
+<article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>">
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
 		<?php if ( $photo_url ) : ?>
 			<img src="<?php echo esc_url( $photo_url ); ?>"
@@ -80,10 +80,10 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 	</a>
 	<div class="wpfa-speaker-meta">
 		<?php if ( $is_admin ) : ?>
-			<button class="btn-edit-speaker" data-id="<?php echo esc_attr( $sid ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Edit Speaker', 'wpfaevent' ); ?>">
+				<button class="btn-edit-speaker" data-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Edit Speaker', 'wpfaevent' ); ?>">
 				✎
 			</button>
-			<button class="btn-delete-speaker" data-id="<?php echo esc_attr( $sid ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Delete Speaker', 'wpfaevent' ); ?>">
+				<button class="btn-delete-speaker" data-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Delete Speaker', 'wpfaevent' ); ?>">
 				×
 			</button>
 		<?php endif; ?>
