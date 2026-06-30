@@ -352,6 +352,8 @@ class Wpfaevent_Speaker_Repository {
 			wp_set_object_terms( $saved_id, sanitize_text_field( $speaker['category'] ), 'wpfa_speaker_category' );
 		}
 
+		$this->store_eventyay_speaker_lookup( $speaker['eventyay_speaker_id'], $saved_id );
+
 		return array(
 			'id'      => $saved_id,
 			'created' => $created,
@@ -367,21 +369,95 @@ class Wpfaevent_Speaker_Repository {
 	 * @return int
 	 */
 	public function find_eventyay_speaker_post( $eventyay_speaker_id ) {
+		$eventyay_speaker_id = sanitize_text_field( $eventyay_speaker_id );
+		$lookup_map          = $this->get_eventyay_speaker_lookup_map();
+
+		if ( ! empty( $lookup_map[ $eventyay_speaker_id ] ) ) {
+			$post_id = absint( $lookup_map[ $eventyay_speaker_id ] );
+			if ( $post_id && 'wpfa_speaker' === get_post_type( $post_id ) ) {
+				return $post_id;
+			}
+		}
+
+		$this->prime_eventyay_speaker_lookup_map();
+		$lookup_map = $this->get_eventyay_speaker_lookup_map();
+
+		return ! empty( $lookup_map[ $eventyay_speaker_id ] ) ? absint( $lookup_map[ $eventyay_speaker_id ] ) : 0;
+	}
+
+	/**
+	 * Get the imported Eventyay speaker lookup map.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<string, int>
+	 */
+	private function get_eventyay_speaker_lookup_map() {
+		$lookup_map = get_option( 'wpfaevent_eventyay_speaker_lookup', array() );
+
+		return is_array( $lookup_map ) ? $lookup_map : array();
+	}
+
+	/**
+	 * Store a lookup entry for an imported Eventyay speaker.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $eventyay_speaker_id Eventyay speaker ID.
+	 * @param int    $post_id             WordPress post ID.
+	 * @return void
+	 */
+	private function store_eventyay_speaker_lookup( $eventyay_speaker_id, $post_id ) {
+		$eventyay_speaker_id = sanitize_text_field( $eventyay_speaker_id );
+		$post_id             = absint( $post_id );
+
+		if ( '' === $eventyay_speaker_id || ! $post_id ) {
+			return;
+		}
+
+		$lookup_map                         = $this->get_eventyay_speaker_lookup_map();
+		$lookup_map[ $eventyay_speaker_id ] = $post_id;
+		update_option( 'wpfaevent_eventyay_speaker_lookup', $lookup_map, false );
+	}
+
+	/**
+	 * Prime the imported Eventyay speaker lookup map from existing posts.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	private function prime_eventyay_speaker_lookup_map() {
 		$speaker_ids = get_posts(
 			array(
-				'post_type'      => 'wpfa_speaker',
-				'post_status'    => 'any',
-				'posts_per_page' => 1,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Eventyay IDs are stored in speaker post meta for sync idempotency.
-				'meta_key'       => '_wpfa_eventyay_speaker_id',
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Eventyay IDs are stored in speaker post meta for sync idempotency.
-				'meta_value'     => sanitize_text_field( $eventyay_speaker_id ),
+				'post_type'              => 'wpfa_speaker',
+				'post_status'            => 'any',
+				'posts_per_page'         => -1,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
 			)
 		);
 
-		return ! empty( $speaker_ids[0] ) ? absint( $speaker_ids[0] ) : 0;
+		if ( empty( $speaker_ids ) ) {
+			return;
+		}
+
+		$lookup_map = $this->get_eventyay_speaker_lookup_map();
+
+		foreach ( $speaker_ids as $speaker_id ) {
+			$speaker_id          = absint( $speaker_id );
+			$eventyay_speaker_id = sanitize_text_field( (string) get_post_meta( $speaker_id, '_wpfa_eventyay_speaker_id', true ) );
+
+			if ( '' === $eventyay_speaker_id ) {
+				continue;
+			}
+
+			$lookup_map[ $eventyay_speaker_id ] = $speaker_id;
+		}
+
+		update_option( 'wpfaevent_eventyay_speaker_lookup', $lookup_map, false );
 	}
 
 	/**

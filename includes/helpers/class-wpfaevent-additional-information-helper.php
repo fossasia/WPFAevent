@@ -107,37 +107,24 @@ class Wpfaevent_Additional_Information_Helper {
 	 * @return string
 	 */
 	public static function get_additional_information_page_url() {
+		$page_id = absint( get_option( 'wpfaevent_additional_information_page_id', 0 ) );
+		if ( $page_id && 'page' === get_post_type( $page_id ) && 'trash' !== get_post_status( $page_id ) ) {
+			$url = get_permalink( $page_id );
+
+			return apply_filters( 'wpfaevent_additional_information_page_url', $url );
+		}
+
 		$page = get_page_by_path( 'additional-information' );
-
 		if ( $page instanceof WP_Post ) {
-			return get_permalink( $page );
+			$page_id = absint( $page->ID );
+			update_option( 'wpfaevent_additional_information_page_id', $page_id, false );
+
+			$url = get_permalink( $page_id );
+
+			return apply_filters( 'wpfaevent_additional_information_page_url', $url );
 		}
 
-		$pages = get_pages(
-			array(
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Managed page lookup by assigned template.
-				'meta_key'    => '_wp_page_template',
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Managed page lookup by assigned template.
-				'meta_value'  => 'page-additional-information.php',
-				'number'      => 1,
-				'post_status' => 'publish',
-			)
-		);
-
-		if ( empty( $pages ) ) {
-			$pages = get_pages(
-				array(
-					// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Back-compat managed page lookup by assigned template.
-					'meta_key'    => '_wp_page_template',
-					// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Back-compat managed page lookup by assigned template.
-					'meta_value'  => 'public/partials/additional-information-page.php',
-					'number'      => 1,
-					'post_status' => 'publish',
-				)
-			);
-		}
-
-		$url = ! empty( $pages[0] ) ? get_permalink( $pages[0] ) : home_url( '/additional-information/' );
+		$url = home_url( '/additional-information/' );
 
 		return apply_filters( 'wpfaevent_additional_information_page_url', $url );
 	}

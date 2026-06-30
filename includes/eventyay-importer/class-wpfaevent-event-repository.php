@@ -135,6 +135,7 @@ class Wpfaevent_Event_Repository {
 		update_post_meta( $saved_id, '_wpfa_eventyay_organizer_slug', sanitize_text_field( $organizer_slug ) );
 		update_post_meta( $saved_id, '_wpfa_eventyay_event_slug', sanitize_text_field( $event_slug ) );
 		update_post_meta( $saved_id, '_wpfa_eventyay_last_imported_at', current_time( 'mysql', true ) );
+		$this->store_eventyay_event_lookup( $organizer_slug, $event_slug, $saved_id );
 
 		$source_id = $this->parser->eventyay_event_first_present_raw( $event, array( '_eventyay_source_id', 'id', 'code', 'identifier' ), false );
 		if ( is_scalar( $source_id ) && '' !== trim( (string) $source_id ) ) {
@@ -158,31 +159,135 @@ class Wpfaevent_Event_Repository {
 	 * @return int
 	 */
 	public function find_eventyay_event_post( $organizer_slug, $event_slug ) {
+		$lookup_key = $this->build_eventyay_event_lookup_key( $organizer_slug, $event_slug );
+		$lookup_map = $this->get_eventyay_event_lookup_map();
+
+		if ( ! empty( $lookup_map[ $lookup_key ] ) ) {
+			$post_id = absint( $lookup_map[ $lookup_key ] );
+			if ( $post_id && 'wpfa_event' === get_post_type( $post_id ) ) {
+				return $post_id;
+			}
+		}
+
 		$event_ids = get_posts(
 			array(
-				'post_type'      => 'wpfa_event',
-				'post_status'    => 'any',
-				'posts_per_page' => 1,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Imported Eventyay event identity is stored in post meta for idempotency.
-				'meta_query'     => array(
-					'relation' => 'AND',
-					array(
-						'key'     => '_wpfa_eventyay_organizer_slug',
-						'value'   => sanitize_text_field( $organizer_slug ),
-						'compare' => '=',
-					),
-					array(
-						'key'     => '_wpfa_eventyay_event_slug',
-						'value'   => sanitize_text_field( $event_slug ),
-						'compare' => '=',
-					),
-				),
+				'post_type'              => 'wpfa_event',
+				'post_status'            => 'any',
+				'name'                   => sanitize_title( $organizer_slug . '-' . $event_slug ),
+				'posts_per_page'         => 1,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
 			)
 		);
 
-		return ! empty( $event_ids[0] ) ? absint( $event_ids[0] ) : 0;
+		if ( ! empty( $event_ids[0] ) ) {
+			$post_id               = absint( $event_ids[0] );
+			$stored_organizer_slug = sanitize_text_field( (string) get_post_meta( $post_id, '_wpfa_eventyay_organizer_slug', true ) );
+			$stored_event_slug     = sanitize_text_field( (string) get_post_meta( $post_id, '_wpfa_eventyay_event_slug', true ) );
+
+			if ( sanitize_text_field( $organizer_slug ) === $stored_organizer_slug && sanitize_text_field( $event_slug ) === $stored_event_slug ) {
+				$this->store_eventyay_event_lookup( $organizer_slug, $event_slug, $post_id );
+
+				return $post_id;
+			}
+		}
+
+		$this->prime_eventyay_event_lookup_map();
+		$lookup_map = $this->get_eventyay_event_lookup_map();
+
+		return ! empty( $lookup_map[ $lookup_key ] ) ? absint( $lookup_map[ $lookup_key ] ) : 0;
+	}
+
+	/**
+	 * Build a stable lookup key for imported Eventyay events.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $organizer_slug Eventyay organizer slug.
+	 * @param string $event_slug     Eventyay event slug.
+	 * @return string
+	 */
+	private function build_eventyay_event_lookup_key( $organizer_slug, $event_slug ) {
+		return md5( sanitize_text_field( $organizer_slug ) . '|' . sanitize_text_field( $event_slug ) );
+	}
+
+	/**
+	 * Get the imported Eventyay event lookup map.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<string, int>
+	 */
+	private function get_eventyay_event_lookup_map() {
+		$lookup_map = get_option( 'wpfaevent_eventyay_event_lookup', array() );
+
+		return is_array( $lookup_map ) ? $lookup_map : array();
+	}
+
+	/**
+	 * Store a lookup entry for an imported Eventyay event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $organizer_slug Eventyay organizer slug.
+	 * @param string $event_slug     Eventyay event slug.
+	 * @param int    $post_id        WordPress post ID.
+	 * @return void
+	 */
+	private function store_eventyay_event_lookup( $organizer_slug, $event_slug, $post_id ) {
+		$post_id    = absint( $post_id );
+		$lookup_key = $this->build_eventyay_event_lookup_key( $organizer_slug, $event_slug );
+
+		if ( ! $post_id || '' === $lookup_key ) {
+			return;
+		}
+
+		$lookup_map                = $this->get_eventyay_event_lookup_map();
+		$lookup_map[ $lookup_key ] = $post_id;
+		update_option( 'wpfaevent_eventyay_event_lookup', $lookup_map, false );
+	}
+
+	/**
+	 * Prime the imported Eventyay event lookup map from existing posts.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	private function prime_eventyay_event_lookup_map() {
+		$event_ids = get_posts(
+			array(
+				'post_type'              => 'wpfa_event',
+				'post_status'            => 'any',
+				'posts_per_page'         => -1,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+			)
+		);
+
+		if ( empty( $event_ids ) ) {
+			return;
+		}
+
+		$lookup_map = $this->get_eventyay_event_lookup_map();
+
+		foreach ( $event_ids as $event_id ) {
+			$event_id              = absint( $event_id );
+			$stored_organizer_slug = sanitize_text_field( (string) get_post_meta( $event_id, '_wpfa_eventyay_organizer_slug', true ) );
+			$stored_event_slug     = sanitize_text_field( (string) get_post_meta( $event_id, '_wpfa_eventyay_event_slug', true ) );
+
+			if ( '' === $stored_organizer_slug || '' === $stored_event_slug ) {
+				continue;
+			}
+
+			$lookup_map[ $this->build_eventyay_event_lookup_key( $stored_organizer_slug, $stored_event_slug ) ] = $event_id;
+		}
+
+		update_option( 'wpfaevent_eventyay_event_lookup', $lookup_map, false );
 	}
 
 	/**
