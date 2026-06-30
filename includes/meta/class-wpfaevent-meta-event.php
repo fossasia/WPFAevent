@@ -846,7 +846,7 @@ class Wpfaevent_Meta_Event {
 			);
 		}
 
-		return $sanitized_tabs;
+		return array_values( $sanitized_tabs );
 	}
 
 	/**

@@ -35,30 +35,10 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	private $parser;
 
 	/**
-	 * Dashboard schedule sync service.
-	 *
-	 * @var Wpfaevent_Eventyay_Schedule_Sync
-	 */
-	private $schedule_sync;
-
-	/**
 	 * Constructor.
 	 */
 	public function __construct() {
 		$this->parser = new Wpfaevent_JSONAPI_Parser();
-	}
-
-	/**
-	 * Get the dashboard schedule sync service.
-	 *
-	 * @return Wpfaevent_Eventyay_Schedule_Sync
-	 */
-	private function get_schedule_sync() {
-		if ( ! $this->schedule_sync instanceof Wpfaevent_Eventyay_Schedule_Sync ) {
-			$this->schedule_sync = new Wpfaevent_Eventyay_Schedule_Sync();
-		}
-
-		return $this->schedule_sync;
 	}
 
 	/**
@@ -134,11 +114,6 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 		}
 
 		$cpt_result = $this->sync_eventyay_speaker_posts( $import['speakers'], $event_id );
-
-		$schedule_rows = $this->get_schedule_sync()->write_eventyay_schedule_table( $event_id, $import['sessions'] );
-		if ( is_wp_error( $schedule_rows ) ) {
-			$this->send_eventyay_ajax_error( $schedule_rows );
-		}
 
 		$schedule_rows = $this->write_eventyay_schedule_table( $event_id, $import['sessions'] );
 		if ( is_wp_error( $schedule_rows ) ) {
@@ -1046,11 +1021,6 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 		}
 
 		$cpt_result = $this->sync_eventyay_speaker_posts( $import['speakers'], $event_id );
-
-		$schedule_rows = $this->get_schedule_sync()->write_eventyay_schedule_table( $event_id, $import['sessions'] );
-		if ( is_wp_error( $schedule_rows ) ) {
-			return $schedule_rows;
-		}
 
 		$schedule_rows = $this->write_eventyay_schedule_table( $event_id, $import['sessions'] );
 		if ( is_wp_error( $schedule_rows ) ) {
