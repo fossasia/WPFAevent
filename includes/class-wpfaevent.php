@@ -248,8 +248,8 @@ class Wpfaevent {
 		$this->loader->add_action( 'add_meta_boxes', $this->plugin_admin, 'add_meta_boxes' );
 
 		// Save meta box data.
-		$this->loader->add_action( 'save_post_wpfa_event', 'Wpfaevent_Meta_Event', 'save_meta' );
-		$this->loader->add_action( 'save_post_wpfa_speaker', 'Wpfaevent_Meta_Speaker', 'save_meta' );
+		$this->loader->add_action( 'save_post_wpfa_event', $this->plugin_admin, 'save_event_meta' );
+		$this->loader->add_action( 'save_post_wpfa_speaker', $this->plugin_admin, 'save_speaker_meta' );
 
 		// Keep event-owned speakers out of the global speaker admin list.
 		$this->loader->add_action( 'restrict_manage_posts', $this->plugin_admin, 'render_speaker_event_filter' );

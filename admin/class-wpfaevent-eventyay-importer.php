@@ -9,6 +9,10 @@
  * @subpackage Wpfaevent/admin
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Handles Eventyay settings, imports, and dashboard syncs.
  *
