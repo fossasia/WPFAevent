@@ -1328,5 +1328,4 @@ class Wpfaevent_Meta_Event {
 
 		return array_values( array_unique( $speaker_ids ) );
 	}
-
 }
