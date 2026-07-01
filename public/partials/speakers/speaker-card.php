@@ -77,13 +77,13 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 		<?php else : ?>
 			<span class="wpfa-speaker-placeholder" aria-hidden="true"></span>
 		<?php endif; ?>
-	</a>
-	<div class="wpfa-speaker-meta">
+		</a>
+		<div class="wpfa-speaker-meta">
 		<?php if ( $is_admin ) : ?>
-		<button class="btn-edit-speaker" data-id="<?php echo esc_attr( (string) $sid ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Edit Speaker', 'wpfaevent' ); ?>">
+			<button class="btn-edit-speaker" data-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Edit Speaker', 'wpfaevent' ); ?>">
 				✎
 			</button>
-		<button class="btn-delete-speaker" data-id="<?php echo esc_attr( (string) $sid ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Delete Speaker', 'wpfaevent' ); ?>">
+			<button class="btn-delete-speaker" data-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Delete Speaker', 'wpfaevent' ); ?>">
 				×
 			</button>
 		<?php endif; ?>

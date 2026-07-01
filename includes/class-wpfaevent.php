@@ -84,6 +84,7 @@ class Wpfaevent {
 		$this->define_cpt_hooks();
 		$this->define_taxonomy_hooks();
 		$this->define_meta_hooks();
+		$this->define_page_hooks();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
 	}
@@ -126,17 +127,20 @@ class Wpfaevent {
 
 		// Calendar export support.
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-calendar.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-navigation-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-additional-information-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-partner-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-controller.php';
-		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-navigation-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-template-controller.php';
 
 		// Eventyay Importer modular classes.
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-jsonapi-resource-utils.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-jsonapi-parser.php';
-		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-api-client.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-partner-json-store.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-event-repository.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-speaker-repository.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-api-client.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-post-manager.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-admin-settings-renderer.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-ajax-controller.php';
@@ -149,7 +153,6 @@ class Wpfaevent {
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
 
-		// Eventyay importer support classes are loaded above/below; avoid duplicate require_once.
 		// AJAX handler classes.
 		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-footer-handler.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-event-handler.php';
@@ -206,6 +209,17 @@ class Wpfaevent {
 	}
 
 	/**
+	 * Register hooks for plugin-managed pages.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_page_hooks() {
+		$this->loader->add_action( 'init', 'Wpfaevent_Additional_Information_Helper', 'ensure_additional_information_page', 21 );
+		$this->loader->add_action( 'init', 'Wpfaevent_Partner_Helper', 'ensure_partner_page', 22 );
+	}
+
+	/**
 	 * Register all of the hooks related to the admin area functionality
 	 * of the plugin.
 	 *
@@ -216,7 +230,7 @@ class Wpfaevent {
 		// Instantiate the admin class.
 		$this->plugin_admin = new Wpfaevent_Admin( $this->plugin_name, $this->version );
 
-		// Register admin-specific stylesheet.
+		// Register admin-specific stylesheet and scripts.
 		$this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_scripts' );
 
@@ -254,13 +268,12 @@ class Wpfaevent {
 		$plugin_footer_handler = new Wpfaevent_Footer_Handler();
 		$this->loader->add_action( 'wp_ajax_wpfa_update_footer_text', $plugin_footer_handler, 'ajax_update_footer_text' );
 
-		// Register AJAX actions for Eventyay import sync.
-		$eventyay_ajax = new Wpfaevent_AJAX_Controller();
-		$this->loader->add_action( 'wp_ajax_wpfaevent_import_get_events', $eventyay_ajax, 'ajax_import_get_events' );
-		$this->loader->add_action( 'wp_ajax_wpfaevent_import_single_event', $eventyay_ajax, 'ajax_import_single_event' );
-		$this->loader->add_action( 'wp_ajax_wpfaevent_import_save_summary', $eventyay_ajax, 'ajax_import_save_summary' );
-
-		// Cron hooks are registered below via Wpfaevent_Cron_Scheduler::HOOK (avoid duplicate callbacks).
+		// Register AJAX handler for Eventyay sync and chunked imports.
+		$eventyay_ajax_controller = new Wpfaevent_AJAX_Controller();
+		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $eventyay_ajax_controller, 'ajax_sync_eventyay' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_get_events', $eventyay_ajax_controller, 'ajax_import_get_events' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_single_event', $eventyay_ajax_controller, 'ajax_import_single_event' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_save_summary', $eventyay_ajax_controller, 'ajax_import_save_summary' );
 
 		// Register Eventyay import form handler.
 		$this->loader->add_action( 'admin_post_wpfaevent_import_eventyay_events', $this->plugin_admin, 'handle_eventyay_events_import' );
