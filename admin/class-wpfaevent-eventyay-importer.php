@@ -124,6 +124,157 @@ class Wpfaevent_Eventyay_Importer {
 	}
 
 	/**
+	 * Proxy JSON:API resource detection to the shared parser.
+	 *
+	 * @param mixed $maybe_resource Possible JSON:API resource.
+	 * @return bool
+	 */
+	public function is_jsonapi_resource( $maybe_resource ) {
+		return $this->parser->is_jsonapi_resource( $maybe_resource );
+	}
+
+	/**
+	 * Proxy dashboard JSON reads to the shared partner store.
+	 *
+	 * @param string $filename JSON filename.
+	 * @param mixed  $fallback Fallback value.
+	 * @return mixed
+	 */
+	public function read_dashboard_json_file( $filename, $fallback ) {
+		return $this->store->read_dashboard_json_file( $filename, $fallback );
+	}
+
+	/**
+	 * Proxy dashboard JSON writes to the shared partner store.
+	 *
+	 * @param string $filename JSON filename.
+	 * @param mixed  $data Data to write.
+	 * @return bool|WP_Error
+	 */
+	public function write_dashboard_json_file( $filename, $data ) {
+		return $this->store->write_dashboard_json_file( $filename, $data );
+	}
+
+	/**
+	 * Proxy Eventyay error body decoding to the shared API client.
+	 *
+	 * @param string $body Response body.
+	 * @return array|string
+	 */
+	public function decode_eventyay_error_body( $body ) {
+		return $this->client->decode_eventyay_error_body( $body );
+	}
+
+	/**
+	 * Proxy string truncation to the shared parser.
+	 *
+	 * @param mixed $value Value to truncate.
+	 * @return string
+	 */
+	public function truncate_string( $value ) {
+		return $this->parser->truncate_string( $value );
+	}
+
+	/**
+	 * Proxy timezone creation to the shared parser.
+	 *
+	 * @param string $timezone Timezone string.
+	 * @return DateTimeZone|null
+	 */
+	public function eventyay_timezone_object( $timezone ) {
+		return $this->parser->eventyay_timezone_object( $timezone );
+	}
+
+	/**
+	 * Proxy datetime presence detection to the shared parser.
+	 *
+	 * @param mixed $value Value to inspect.
+	 * @return bool
+	 */
+	public function eventyay_datetime_has_time( $value ) {
+		return $this->parser->eventyay_datetime_has_time( $value );
+	}
+
+	/**
+	 * Proxy Eventyay date formatting to the shared parser.
+	 *
+	 * @param mixed $value Datetime value.
+	 * @param mixed $timezone Timezone object.
+	 * @return string
+	 */
+	public function format_eventyay_date( $value, $timezone = null ) {
+		return $this->parser->format_eventyay_date( $value, $timezone );
+	}
+
+	/**
+	 * Proxy Eventyay time formatting to the shared parser.
+	 *
+	 * @param mixed $value Datetime value.
+	 * @param mixed $timezone Timezone object.
+	 * @return string
+	 */
+	public function format_eventyay_time( $value, $timezone = null ) {
+		return $this->parser->format_eventyay_time( $value, $timezone );
+	}
+
+	/**
+	 * Proxy datetime normalization to the shared parser.
+	 *
+	 * @param mixed $value Datetime value.
+	 * @return string
+	 */
+	public function normalize_eventyay_datetime( $value ) {
+		return $this->parser->normalize_eventyay_datetime( $value );
+	}
+
+	/**
+	 * Proxy public Eventyay URL generation to the shared parser.
+	 *
+	 * @param array  $event Eventyay event resource.
+	 * @param array  $settings Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return string
+	 */
+	public function eventyay_public_event_url( $event, $settings, $event_slug ) {
+		return $this->parser->eventyay_public_event_url( $event, $settings, $event_slug );
+	}
+
+	/**
+	 * Proxy post meta updates to the event repository.
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $key Meta key.
+	 * @param mixed  $value Meta value.
+	 * @return void
+	 */
+	public function update_or_delete_post_meta( $post_id, $key, $value ) {
+		$this->event_repo->update_or_delete_post_meta( $post_id, $key, $value );
+	}
+
+	/**
+	 * Proxy speaker merging to the shared parser.
+	 *
+	 * @param array $speakers Speakers by reference.
+	 * @param array $speaker Speaker data.
+	 * @param array $session Session data.
+	 * @return void
+	 */
+	public function merge_eventyay_speaker( &$speakers, $speaker, $session ) {
+		$this->parser->merge_eventyay_speaker( $speakers, $speaker, $session );
+	}
+
+	/**
+	 * Proxy program payload merging to the shared parser.
+	 *
+	 * @param array $base Base payload.
+	 * @param array $extra Extra payload.
+	 * @return array
+	 */
+	public function merge_eventyay_program_payloads( $base, $extra ) {
+		return $this->parser->merge_eventyay_program_payloads( $base, $extra );
+	}
+
+	/**
 	 * Sanitize Eventyay import options.
 	 *
 	 * @since 1.0.0
@@ -504,7 +655,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $settings Import settings.
 	 * @return array|WP_Error Event resources and metadata.
 	 */
-	private function fetch_eventyay_event_resources( $settings ) {
+	public function fetch_eventyay_event_resources( $settings ) {
 		$endpoints = $this->build_eventyay_event_endpoint_candidates( $settings );
 		if ( is_wp_error( $endpoints ) ) {
 			return $endpoints;
@@ -1035,7 +1186,7 @@ class Wpfaevent_Eventyay_Importer {
 		 * @param string $event_slug Eventyay event slug.
 		 * @return string|WP_Error Endpoint URL.
 		 */
-	private function build_eventyay_submissions_endpoint( $settings, $event_slug ) {
+	public function build_eventyay_submissions_endpoint( $settings, $event_slug ) {
 		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
 		$base_url   = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
 		$event_slug = $this->sanitize_eventyay_path_segment( $event_slug );
@@ -1319,7 +1470,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param string $resource_type Partner resource type.
 	 * @return array|WP_Error Partner resources and metadata.
 	 */
-	private function fetch_eventyay_partner_collection( $settings, $event, $event_slug, $resource_type ) {
+	public function fetch_eventyay_partner_collection( $settings, $event, $event_slug, $resource_type ) {
 		$endpoints = $this->build_eventyay_partner_endpoint_candidates( $settings, $event, $event_slug, $resource_type );
 		if ( empty( $endpoints ) ) {
 			return new WP_Error(
@@ -1450,7 +1601,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $settings  Import settings.
 	 * @return array
 	 */
-	private function normalize_eventyay_sponsor_resources( $resources, $settings ) {
+	public function normalize_eventyay_sponsor_resources( $resources, $settings ) {
 		$sponsors = array();
 
 		foreach ( $resources as $resource ) {
@@ -1523,7 +1674,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $existing Existing dashboard sponsor groups.
 	 * @return array
 	 */
-	private function merge_eventyay_sponsor_groups( $imported, $existing ) {
+	public function merge_eventyay_sponsor_groups( $imported, $existing ) {
 		$existing = is_array( $existing ) ? $existing : array();
 		$groups   = array();
 
@@ -1620,7 +1771,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $settings  Import settings.
 	 * @return array
 	 */
-	private function normalize_eventyay_exhibitor_resources( $resources, $settings ) {
+	public function normalize_eventyay_exhibitor_resources( $resources, $settings ) {
 		$exhibitors = array();
 
 		foreach ( $resources as $resource ) {
@@ -1696,7 +1847,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $existing Existing records.
 	 * @return array
 	 */
-	private function merge_eventyay_flat_records( $imported, $existing ) {
+	public function merge_eventyay_flat_records( $imported, $existing ) {
 		$existing = is_array( $existing ) ? $existing : array();
 		$records  = array();
 
@@ -1724,7 +1875,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $sessions Normalized Eventyay sessions.
 	 * @return int|WP_Error Number of imported schedule data rows.
 	 */
-	private function write_eventyay_schedule_table( $event_id, $sessions ) {
+	public function write_eventyay_schedule_table( $event_id, $sessions ) {
 		$event_id = absint( $event_id );
 		$sessions = is_array( $sessions ) ? $sessions : array();
 
@@ -1846,7 +1997,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $settings Import settings.
 	 * @return array|WP_Error Submission resources and metadata.
 	 */
-	private function fetch_eventyay_program_resources( $endpoint, $settings ) {
+	public function fetch_eventyay_program_resources( $endpoint, $settings ) {
 		$submissions = array();
 		$next_url    = $endpoint;
 		$page        = 0;
@@ -1914,7 +2065,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array|WP_Error Normalized speaker program payload.
 	 */
-	private function fetch_eventyay_event_speaker_program( $settings, $event_slug ) {
+	public function fetch_eventyay_event_speaker_program( $settings, $event_slug ) {
 		$endpoint = $this->build_eventyay_speakers_endpoint( $settings, $event_slug );
 		if ( is_wp_error( $endpoint ) ) {
 			return $endpoint;
@@ -2019,7 +2170,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array|WP_Error Normalized slot program payload.
 	 */
-	private function fetch_eventyay_event_slot_program( $settings, $event_slug ) {
+	public function fetch_eventyay_event_slot_program( $settings, $event_slug ) {
 		$endpoint = $this->build_eventyay_slots_endpoint( $settings, $event_slug );
 		if ( is_wp_error( $endpoint ) ) {
 			return $endpoint;
@@ -2616,7 +2767,7 @@ class Wpfaevent_Eventyay_Importer {
 			 * @param array $settings Import settings.
 			 * @return array|WP_Error Upsert result.
 			 */
-	private function upsert_eventyay_event_post( $event, $settings ) {
+	public function upsert_eventyay_event_post( $event, $settings ) {
 		$event      = $this->normalize_eventyay_event_resource( $event );
 		$event_slug = $this->eventyay_event_slug( $event );
 		if ( empty( $event_slug ) ) {
@@ -2794,7 +2945,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param string $event_slug  Eventyay event slug.
 	 * @return array
 	 */
-	private function normalize_eventyay_submissions_payload( $submissions, $settings, $event_slug ) {
+	public function normalize_eventyay_submissions_payload( $submissions, $settings, $event_slug ) {
 		$speakers      = array();
 		$sessions      = array();
 		$session_count = 0;
@@ -2971,49 +3122,6 @@ class Wpfaevent_Eventyay_Importer {
 			'speakers'      => array_values( $speakers ),
 			'sessions'      => array_values( $sessions ),
 			'session_count' => count( $sessions ),
-		);
-	}
-
-	/**
-	 * Merge two normalized Eventyay program payloads.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $base  Base program payload.
-	 * @param array $extra Extra program payload.
-	 * @return array
-	 */
-	private function merge_eventyay_program_payloads( $base, $extra ) {
-		$base  = is_array( $base ) ? $base : array();
-		$extra = is_array( $extra ) ? $extra : array();
-
-		$merged_speakers = array();
-		foreach ( array_merge( isset( $base['speakers'] ) && is_array( $base['speakers'] ) ? $base['speakers'] : array(), isset( $extra['speakers'] ) && is_array( $extra['speakers'] ) ? $extra['speakers'] : array() ) as $speaker ) {
-			if ( ! is_array( $speaker ) || empty( $speaker['name'] ) ) {
-				continue;
-			}
-
-			$this->merge_eventyay_speaker( $merged_speakers, $speaker, array() );
-			if ( ! empty( $speaker['sessions'] ) && is_array( $speaker['sessions'] ) ) {
-				foreach ( $speaker['sessions'] as $session ) {
-					if ( is_array( $session ) ) {
-						$this->merge_eventyay_speaker( $merged_speakers, $speaker, $session );
-					}
-				}
-			}
-		}
-
-		$merged_sessions = array();
-		foreach ( array_merge( isset( $base['sessions'] ) && is_array( $base['sessions'] ) ? $base['sessions'] : array(), isset( $extra['sessions'] ) && is_array( $extra['sessions'] ) ? $extra['sessions'] : array() ) as $session ) {
-			if ( is_array( $session ) ) {
-				$merged_sessions = $this->merge_eventyay_session_payload( $merged_sessions, $session );
-			}
-		}
-
-		return array(
-			'speakers'      => array_values( $merged_speakers ),
-			'sessions'      => array_values( $merged_sessions ),
-			'session_count' => count( $merged_sessions ),
 		);
 	}
 
