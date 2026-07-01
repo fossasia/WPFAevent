@@ -111,7 +111,7 @@ if ( ! $formatted_end_time ) {
 	$formatted_end_time = $talk_end_time;
 }
 ?>
-<article class="wpfa-speaker-card <?php echo esc_attr( $is_featured_speaker ? 'is-featured' : '' ); ?>" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( (string) $sid ); ?>">
+<article class="wpfa-speaker-card <?php echo esc_attr( $is_featured_speaker ? 'is-featured' : '' ); ?>" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>">
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
 		<?php if ( $photo_url ) : ?>
 			<?php /* translators: %s: Speaker name. */ ?>
@@ -122,12 +122,12 @@ if ( ! $formatted_end_time ) {
 	</a>
 	<div class="wpfa-speaker-meta">
 		<?php if ( $can_edit_this_speaker ) : ?>
-				<button class="btn-edit-speaker" data-id="<?php echo esc_attr( (string) $sid ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Edit Speaker', 'wpfaevent' ); ?>">
+				<button class="btn-edit-speaker" data-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Edit Speaker', 'wpfaevent' ); ?>">
 				✎
 			</button>
 		<?php endif; ?>
 		<?php if ( $can_delete_speaker ) : ?>
-				<button class="btn-delete-speaker" data-id="<?php echo esc_attr( (string) $sid ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Delete Speaker', 'wpfaevent' ); ?>">
+				<button class="btn-delete-speaker" data-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Delete Speaker', 'wpfaevent' ); ?>">
 				×
 			</button>
 		<?php endif; ?>

@@ -63,6 +63,10 @@ class Wpfaevent_Public {
 			return true;
 		}
 
+		if ( is_post_type_archive( array( 'wpfa_event', 'wpfa_speaker' ) ) ) {
+			return true;
+		}
+
 		if ( class_exists( 'Wpfaevent_Templates' ) && ! empty( Wpfaevent_Templates::get_active_template_keys() ) ) {
 			return true;
 		}
@@ -86,7 +90,7 @@ class Wpfaevent_Public {
 			}
 		}
 
-		return is_post_type_archive( array( 'wpfa_event', 'wpfa_speaker' ) );
+		return false;
 	}
 
 	/**
@@ -324,6 +328,7 @@ class Wpfaevent_Public {
 			$this->version,
 			'all'
 		);
+
 		wp_register_script(
 			$this->plugin_name . '-speakers',
 			WPFAEVENT_URL . 'public/js/wpfaevent-speakers.js',
@@ -510,6 +515,10 @@ class Wpfaevent_Public {
 		if ( is_singular( 'wpfa_event' ) || $this->is_wpfa_template_file_active( 'page-schedule.php' ) ) {
 			wp_enqueue_style( $this->plugin_name . '-single-event' );
 			wp_enqueue_style( $this->plugin_name . '-events' );
+		}
+
+		if ( $this->is_wpfa_template_file_active( 'page-additional-information.php' ) ) {
+			wp_enqueue_style( $this->plugin_name . '-additional-information' );
 		}
 
 		/**

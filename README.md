@@ -268,9 +268,38 @@ Contributions are welcome!
 * Commit and push your changes, then submit a **Pull Request**
 * Follow **WordPress PHP coding standards**
 
+### Development commands
+
+```bash
+# Install dev dependencies
+composer install
+
+# Run code style checks
+composer phpcs
+
+# Auto-fix code style violations
+composer phpcbf
+
+# Run static analysis
+composer phpstan
+
+# Bootstrap the WordPress test environment
+# Requires WP_DB_USER and WP_DB_PASS env vars (defaults: wp_test / test_password)
+composer setup-tests
+
+# Run the test suite
+composer test
+
+# Run a specific test suite
+composer test -- --testsuite Unit
+composer test -- --testsuite Integration
+```
+
 Before submitting:
 
-* Run `phpcs` with the WordPress standard
+* Run `composer phpcs` — code must pass WordPress standards
+* Run `composer phpstan` — no static analysis errors
+* Run `composer test` — all tests must pass
 * Avoid committing binary or large files
 * Test locally with caching disabled
 * Ensure translations are wrapped correctly in `__()` or `_e()`
