@@ -534,8 +534,8 @@ class Wpfaevent_Eventyay_Importer {
 			}
 
 			$event_slug = $this->parser->eventyay_event_slug( $event );
-			if ( $event_slug && ! empty( $upsert['post_id'] ) ) {
-				$sync_service->sync_speakers_for_event( $upsert['post_id'], $event_slug, $settings );
+			if ( $event_slug && ! empty( $upsert['id'] ) ) {
+				$sync_service->sync_speakers_for_event( $upsert['id'], $event_slug, $settings );
 			}
 
 			if ( ! empty( $upsert['created'] ) ) {
