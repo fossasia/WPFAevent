@@ -98,6 +98,7 @@ class Wpfaevent_Additional_Information_Helper {
 		return array();
 	}
 
+
 	/**
 	 * Get the public additional information page URL.
 	 *

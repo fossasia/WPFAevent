@@ -638,7 +638,7 @@ class Wpfaevent_Admin {
 						<select name="wpfa_event_speakers[]" id="wpfa_event_speakers" multiple class="wpfaevent-relationship-select wpfaevent-speakers-select">
 							<?php foreach ( $speaker_ids as $speaker_id ) : ?>
 								<?php $is_selected = is_array( $speakers ) && in_array( $speaker_id, $speakers, true ); ?>
-									<option value="<?php echo esc_attr( sprintf( '%d', absint( $speaker_id ) ) ); ?>"
+										<option value="<?php echo esc_attr( sprintf( '%d', absint( $speaker_id ) ) ); ?>"
 										<?php selected( $is_selected, true ); ?>>
 									<?php echo esc_html( get_the_title( $speaker_id ) ); ?>
 								</option>

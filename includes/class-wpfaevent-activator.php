@@ -31,20 +31,12 @@ class Wpfaevent_Activator {
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-speaker.php';
 		require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies.php';
-		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-additional-information-helper.php';
-		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
-		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-partner-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-roles.php';
 
 		// Register CPTs and taxonomies.
 		Wpfaevent_CPT_Event::register();
 		Wpfaevent_CPT_Speaker::register();
 		Wpfaevent_Taxonomies::register();
-
-		// Create the public schedule page used by event detail links.
-		Wpfaevent_Schedule_Helper::ensure_schedule_page( false );
-		Wpfaevent_Additional_Information_Helper::ensure_additional_information_page( false );
-		Wpfaevent_Partner_Helper::ensure_partner_page( false );
 
 		// Flush rewrite rules so CPT permalinks work.
 		flush_rewrite_rules();
@@ -57,8 +49,71 @@ class Wpfaevent_Activator {
 			Wpfaevent_Cron_Scheduler::schedule( $settings );
 		}
 
-		// Register plugin roles and grant capabilities.
+		// Grant custom capabilities to administrators.
+		self::add_capabilities();
 		Wpfaevent_Roles::register_roles_and_capabilities();
 		update_option( Wpfaevent_Roles::ROLES_VERSION_OPTION, Wpfaevent_Roles::ROLES_VERSION, false );
+	}
+
+	/**
+	 * Grant custom capabilities to administrator role.
+	 *
+	 * @since 1.0.0
+	 */
+	private static function add_capabilities() {
+		$role = get_role( 'administrator' );
+
+		if ( ! $role ) {
+			return;
+		}
+
+		// Event capabilities.
+		// TODO: Future PR - Review capability list alignment with CPT registration.
+		// Currently granting extended capabilities (delete_*, edit_private_*, etc.).
+		// These are auto-derived by map_meta_cap. Consider either:
+		// 1. Explicitly defining all capabilities in CPT registration, OR
+		// 2. Only granting base capabilities defined in the CPT.
+		// Reference: https://developer.wordpress.org/plugins/users/roles-and-capabilities/.
+		$event_caps = array(
+			'edit_event',
+			'read_event',
+			'delete_event',
+			'edit_events',
+			'edit_others_events',
+			'publish_events',
+			'read_private_events',
+			'delete_events',
+			'delete_private_events',
+			'delete_published_events',
+			'delete_others_events',
+			'edit_private_events',
+			'edit_published_events',
+		);
+
+		foreach ( $event_caps as $cap ) {
+			$role->add_cap( $cap );
+		}
+
+		// Speaker capabilities.
+		// TODO: Same capability review needed for speakers (see event_caps above).
+		$speaker_caps = array(
+			'edit_speaker',
+			'read_speaker',
+			'delete_speaker',
+			'edit_speakers',
+			'edit_others_speakers',
+			'publish_speakers',
+			'read_private_speakers',
+			'delete_speakers',
+			'delete_private_speakers',
+			'delete_published_speakers',
+			'delete_others_speakers',
+			'edit_private_speakers',
+			'edit_published_speakers',
+		);
+
+		foreach ( $speaker_caps as $cap ) {
+			$role->add_cap( $cap );
+		}
 	}
 }

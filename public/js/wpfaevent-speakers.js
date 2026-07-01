@@ -117,10 +117,12 @@ const WPFA_Speakers = (function() {
 			elements.searchInput.addEventListener('input', handleSearch);
 		}
 		
-		// Category filter buttons only; event chooser links navigate normally.
-		document.querySelectorAll('.wpfa-filter-btn[data-filter]').forEach(button => {
-			button.addEventListener('click', handleFilterClick);
-		});
+		// Filter buttons
+		if (elements.filterButtons.length > 0) {
+			elements.filterButtons.forEach(button => {
+				button.addEventListener('click', handleFilterClick);
+			});
+		}
 		
 		// Card click for expand/collapse and admin actions
 		if (elements.speakerGrid) {
@@ -192,19 +194,14 @@ const WPFA_Speakers = (function() {
 	 * Handle filter button click
 	 */
 	function handleFilterClick(e) {
-		const button = e.currentTarget;
-		const filterValue = button.getAttribute('data-filter');
-
-		if (!filterValue) {
-			return;
-		}
-
-		e.preventDefault();
-
-		document.querySelectorAll('.wpfa-filter-btn[data-filter]').forEach(btn => btn.classList.remove('active'));
-		button.classList.add('active');
-
-		currentFilter = filterValue;
+		// Update active button
+		elements.filterButtons.forEach(btn => btn.classList.remove('active'));
+		e.target.classList.add('active');
+		
+		// Update current filter
+		currentFilter = e.target.dataset.filter;
+		
+		// Re-render speakers
 		filterAndRenderSpeakers();
 	}
 	
@@ -322,29 +319,15 @@ const WPFA_Speakers = (function() {
 		// Show filtered speakers
 		filteredSpeakers.forEach(speaker => {
 			if (speaker.element) {
-				speaker.element.style.display = '';
-				speaker.element.classList.add('visible');
+				speaker.element.style.display = 'block';
 			}
 		});
-
-		updateSpeakerGroupVisibility();
 		
 		// Update results count
 		updateResultsCount(filteredSpeakers.length);
 		
 		// Show/hide no results message
 		showNoResults(filteredSpeakers.length === 0);
-	}
-
-	/**
-	 * Show only speaker groups that still contain visible cards.
-	 */
-	function updateSpeakerGroupVisibility() {
-		document.querySelectorAll('.wpfa-speaker-group').forEach(group => {
-			const hasVisibleCards = Array.from(group.querySelectorAll('.wpfa-speaker-card')).some(card => card.style.display !== 'none');
-
-			group.classList.toggle('is-hidden', !hasVisibleCards);
-		});
 	}
 	
 	/**
@@ -404,14 +387,6 @@ const WPFA_Speakers = (function() {
 		// Observe all speaker cards
 		document.querySelectorAll('.wpfa-speaker-card:not(.visible)').forEach(card => {
 			observer.observe(card);
-		});
-
-		// Ensure cards already in view are visible even if the observer misses the first paint.
-		document.querySelectorAll('.wpfa-speaker-card:not(.visible)').forEach(card => {
-			const rect = card.getBoundingClientRect();
-			if (rect.top < window.innerHeight && rect.bottom > 0) {
-				card.classList.add('visible');
-			}
 		});
 	}
 	
@@ -752,22 +727,21 @@ const WPFA_Speakers = (function() {
 	function handleFormSubmit(e) {
 		e.preventDefault();
 		
-		if (!elements.speakerForm) {
-			console.error('Speaker form element not found');
-			return;
-		}
-
-		const formData = new FormData(elements.speakerForm);
-		const action = formData.get('action');
-		const canSubmit = action === 'add' ? config.isAdmin : config.canManageContent;
-
-		if (!canSubmit) {
-			const errorMsg = config.i18n && config.i18n.noPermission
-				? config.i18n.noPermission
+		if (!config.isAdmin) {
+			const errorMsg = config.i18n && config.i18n.noPermission 
+				? config.i18n.noPermission 
 				: 'You do not have permission to perform this action.';
 			alert(errorMsg);
 			return;
 		}
+
+		if (!elements.speakerForm) {
+			console.error('Speaker form element not found');
+			return;
+		}
+		
+		const formData = new FormData(elements.speakerForm);
+		const action = formData.get('action');
 		const submitBtn = elements.speakerForm.querySelector('button[type="submit"]');
 		
 		// Disable button during submission

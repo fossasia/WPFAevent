@@ -39,11 +39,11 @@ This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible 
 2. Activate **Event Plugin** in your WordPress Admin under
    `Plugins → Installed Plugins → Event Plugin → Activate`.
 
-3. Configure Eventyay import:
+3. Configure your API endpoints:
 
-   * Go to **Events → Import Events** in the WordPress Admin.
-   * Enter the Eventyay base URL, organizer slug, optional event slug, and API token.
-   * Choose the imported event post status, then run the import.
+   * Go to **Settings → Event Plugin** in the WordPress Admin.
+   * Enter the URLs of your Eventyay API endpoints for **Speakers**, **Sessions**, and **Schedule**.
+   * Optionally adjust the **cache time (TTL)** in seconds.
 
 4. Add WPFA template shortcodes to your pages or posts, for example:
 
@@ -136,68 +136,17 @@ Speaker profiles use the `wpfa_speaker` custom post type, registered speaker met
 
 See [`docs/speaker-data-model.md`](docs/speaker-data-model.md) for the speaker fields, REST-exposed metadata, relationship sync behavior, and the interim session metadata approach.
 
-## Roles And Permissions
+## Settings Page
 
-WPFAevent uses three access levels. WordPress user roles stay unchanged.
+Navigate to **Settings → Event Plugin** to configure:
 
-| Access level | Publish events & speakers | Import/update from Eventyay | Edit existing content | Delete content |
-| --- | --- | --- | --- | --- |
-| **Administrator** | Yes | Yes | Yes | Yes |
-| **Event Organizer** | Yes | Yes | Yes | Yes |
-| **Event Contributor** | No | No | Yes | No |
+* **Speakers Endpoint:** `https://example.org/api/v1/events/{id}/speakers`
+* **Sessions Endpoint:** `https://example.org/api/v1/events/{id}/sessions`
+* **Schedule Endpoint:** `https://example.org/api/v1/events/{id}/schedule`
+* **Cache TTL (seconds):** Duration for transient caching of API results
+* **Test Buttons:** Verify that endpoints respond with valid JSON data
 
-Site administrators assign access under **WPFAEvent → Settings → Event Plugin Access**.
-
-* **Administrator** — full WordPress site control.
-* **Event Organizer** — run Eventyay import/update, publish new events and speakers, and access **WPFAEvent → Settings**.
-* **Event Contributor** — maintain existing event and speaker details from wp-admin and the frontend dashboard, without import, publish, or delete access.
-
-Site-wide footer branding remains administrator-only.
-
-## Event Attendee Information
-
-Each `wpfa_event` post includes an **Attendee Information** meta box. Use the main editor for general venue and travel notes, then add extra information sections for focused topics such as accommodation options, accessibility notes, or attendee resources.
-
-Extra sections are stored in the `wpfa_event_custom_tabs` post meta field and render on that event's single event page as separate sections. They are also added to the event section navigation with anchors such as `#custom-section-accommodation`.
-
-## Settings And Import Pages
-
-Navigate to **WPFAEvent → Settings** for plugin-level settings and the future admin dashboard placeholder. Eventyay event imports are configured under **Events → Import Events**.
-
-The Eventyay import page accepts:
-
-* **Eventyay base URL:** The Eventyay site root, for example `https://eventyay.com`
-* **Organizer slug:** The organizer path segment
-* **Event slug:** Optional single-event filter
-* **API token:** Optional private token for authenticated Eventyay endpoints
-* **Imported post status:** Draft, published, pending review, or private
-
-## Eventyay Event Import
-
-Users with the **Event Organizer** role or **Administrator** role can import Eventyay events from **Events → Import Events**. The importer uses the configured Eventyay base URL, organizer slug, optional event slug, and API token to create or update WordPress content.
-
-Imported data is stored and displayed in these places:
-
-| Eventyay data | WordPress destination |
-| ------------- | --------------------- |
-| Event title, dates, times, timezone, location, URL, and description | `wpfa_event` posts and event post meta such as `wpfa_event_start_date`, `wpfa_event_start_time`, `wpfa_event_timezone`, `wpfa_event_location`, and `_wpfa_eventyay_event_slug` |
-| Speakers | `wpfa_speaker` posts linked to the imported event through `wpfa_event_speakers` and `wpfa_speaker_events` |
-| Event-specific speaker dashboard data | `wp-content/uploads/fossasia-data/speakers-{event_id}.json` |
-| Event schedule rows | `wp-content/uploads/fossasia-data/schedule-{event_id}.json` |
-| About text, registration button, and visibility settings | `wp-content/uploads/fossasia-data/site-settings-{event_id}.json` |
-
-On the frontend, imported data appears on the single event page and on the event-filtered speaker list, for example `/speakers/?event={event-slug}`. The default speakers archive does not mix all event speakers together; select an event to view that event's own speaker list.
-
-## Calendar Export And Timezones
-
-Single event pages expose an **Add to calendar** link when the event has a valid start date. The primary link opens a Google Calendar event template, and the fallback `.ics` download is available from `/wp-json/wpfaevent/v1/events/{event_id}/ics`.
-
-Event timezone behavior is deterministic:
-
-* Each event can save an explicit timezone. If it is empty, WPFAevent falls back to the WordPress site timezone.
-* All-day events export date-only `DTSTART` and exclusive date-only `DTEND` values.
-* Timed events are interpreted in the event timezone and exported as UTC `DTSTART`/`DTEND` values.
-* Eventyay imports save the Eventyay `timezone` field when present and preserve normalized source datetime values for calendar rendering/export.
+If the fields are left empty, the plugin falls back to placeholder content for development.
 
 ## Calendar Export And Timezones
 

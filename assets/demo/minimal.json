@@ -6,7 +6,7 @@
       "slug": "alex-example",
       "org": "FOSSASIA",
       "position": "Developer Advocate",
-      "photo": ""
+      "photo": "https://via.placeholder.com/300x300.png?text=Alex"
     },
     {
       "title": "Bao Nguyen",
@@ -14,7 +14,7 @@
       "slug": "bao-nguyen",
       "org": "Eventyay",
       "position": "Software Engineer",
-      "photo": ""
+      "photo": "https://via.placeholder.com/300x300.png?text=Bao"
     }
   ],
   "events": [

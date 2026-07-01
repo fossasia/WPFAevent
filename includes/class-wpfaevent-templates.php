@@ -184,7 +184,7 @@ class Wpfaevent_Templates {
 		}
 
 		if ( is_post_type_archive( 'wpfa_event' ) ) {
-			$candidate = WPFAEVENT_PATH . 'public/templates/archive-wpfa-event.php';
+			$candidate = WPFAEVENT_PATH . 'public/templates/page-events.php';
 
 			if ( file_exists( $candidate ) ) {
 				return $candidate;
@@ -634,12 +634,6 @@ class Wpfaevent_Templates {
 				return __( 'WPFA - Additional Information', 'wpfaevent' );
 			case 'code_of_conduct':
 				return __( 'WPFA - Code of Conduct', 'wpfaevent' );
-			case 'partner':
-				return __( 'WPFA - Partner', 'wpfaevent' );
-			case 'admin_dashboard':
-				return __( 'WPFA - Admin Dashboard', 'wpfaevent' );
-			case 'additional_info':
-				return __( 'WPFA - Additional Information', 'wpfaevent' );
 			default:
 				return '';
 		}
@@ -669,12 +663,6 @@ class Wpfaevent_Templates {
 				return __( 'WPFA Additional Information', 'wpfaevent' );
 			case 'code_of_conduct':
 				return __( 'WPFA Code of Conduct', 'wpfaevent' );
-			case 'partner':
-				return __( 'WPFA Partner', 'wpfaevent' );
-			case 'admin_dashboard':
-				return __( 'WPFA Admin Dashboard', 'wpfaevent' );
-			case 'additional_info':
-				return __( 'WPFA Additional Information', 'wpfaevent' );
 			default:
 				return '';
 		}
@@ -745,14 +733,6 @@ class Wpfaevent_Templates {
 		);
 
 		wp_register_style(
-			'wpfaevent-event',
-			WPFAEVENT_URL . 'public/css/templates/event.css',
-			array( 'wpfaevent', 'wpfaevent-navigation' ),
-			WPFAEVENT_VERSION,
-			'all'
-		);
-
-		wp_register_style(
 			'wpfaevent-additional-information',
 			WPFAEVENT_URL . 'public/css/templates/additional-information.css',
 			array( 'wpfaevent', 'wpfaevent-navigation' ),
@@ -785,8 +765,6 @@ class Wpfaevent_Templates {
 			'past_events'            => 'wpfaevent-past-events',
 			'additional_information' => 'wpfaevent-additional-information',
 			'code_of_conduct'        => 'wpfaevent-code-of-conduct',
-			'partner'                => 'wpfaevent-event',
-			'additional_info'        => 'wpfaevent-event',
 		);
 
 		return isset( $handles[ $key ] ) ? $handles[ $key ] : 'wpfaevent';
@@ -805,7 +783,7 @@ class Wpfaevent_Templates {
 			wp_enqueue_style( 'wpfaevent' );
 		}
 
-		if ( in_array( $key, array( 'speakers', 'past_events', 'schedule', 'additional_info', 'additional_information', 'code_of_conduct', 'partner' ), true ) && ! wp_style_is( 'wpfaevent-navigation', 'enqueued' ) ) {
+		if ( in_array( $key, array( 'speakers', 'past_events', 'additional_information', 'code_of_conduct' ), true ) && ! wp_style_is( 'wpfaevent-navigation', 'enqueued' ) ) {
 			wp_enqueue_style( 'wpfaevent-navigation' );
 		}
 
@@ -833,10 +811,6 @@ class Wpfaevent_Templates {
 		if ( 'schedule' === $key ) {
 			wp_enqueue_style( 'wpfaevent-event' );
 			wp_enqueue_style( 'wpfaevent-schedule' );
-		}
-
-		if ( in_array( $key, array( 'schedule', 'additional_info', 'partner' ), true ) ) {
-			wp_enqueue_style( 'wpfaevent-event' );
 		}
 
 		if ( 'code_of_conduct' === $key ) {

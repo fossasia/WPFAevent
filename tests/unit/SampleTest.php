@@ -8,7 +8,7 @@
 /**
  * Sample test class to verify environment boot stability.
  */
-class Unit_SampleTest extends WP_UnitTestCase {
+class SampleTest extends WP_UnitTestCase {
 
 	/**
 	 * Verify that the baseline setup is working and WordPress functions are accessible.

@@ -243,9 +243,9 @@ $header_vars = array(
 					<h2><?php esc_html_e( 'Events', 'wpfaevent' ); ?></h2>
 					<p class="results-info">
 						<?php esc_html_e( 'Showing', 'wpfaevent' ); ?>
-						<span id="resultsCount"><?php echo esc_html( number_format_i18n( $total_events ) ); ?></span>
+							<span id="resultsCount"><?php echo esc_html( number_format_i18n( $total_events ) ); ?></span>
 						<?php esc_html_e( 'of', 'wpfaevent' ); ?>
-						<span id="totalCount"><?php echo esc_html( number_format_i18n( $total_events ) ); ?></span>
+							<span id="totalCount"><?php echo esc_html( number_format_i18n( $total_events ) ); ?></span>
 						<?php esc_html_e( 'matching events', 'wpfaevent' ); ?>
 					</p>
 				</div>

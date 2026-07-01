@@ -14,11 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$page_data = class_exists( 'Wpfaevent_Additional_Information_Helper' )
-	? Wpfaevent_Additional_Information_Helper::get_additional_information_page_data( get_permalink() )
-	: array();
-
-if ( empty( $page_data ) ) {
+if ( class_exists( 'Wpfaevent_Additional_Information_Helper' ) ) {
+	$page_data = Wpfaevent_Additional_Information_Helper::get_additional_information_page_data();
+} else {
 	$site_logo_url = get_option( 'wpfa_site_logo_url', '' );
 	if ( empty( $site_logo_url ) ) {
 		$site_logo_url = defined( 'WPFAEVENT_URL' ) ? WPFAEVENT_URL . 'assets/images/logo.png' : '';

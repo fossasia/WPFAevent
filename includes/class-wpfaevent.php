@@ -216,8 +216,6 @@ class Wpfaevent {
 	 * @access   private
 	 */
 	private function define_page_hooks() {
-		// Repair the schedule page for existing installs before WordPress resolves the request.
-		$this->loader->add_action( 'init', 'Wpfaevent_Schedule_Helper', 'ensure_schedule_page', 20 );
 		$this->loader->add_action( 'init', 'Wpfaevent_Additional_Information_Helper', 'ensure_additional_information_page', 21 );
 		$this->loader->add_action( 'init', 'Wpfaevent_Partner_Helper', 'ensure_partner_page', 22 );
 	}
@@ -307,7 +305,6 @@ class Wpfaevent {
 
 		// Register public-specific stylesheet.
 		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
-		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_scripts' );
 
 		// Cache invalidation hooks (static method calls).
 		$this->loader->add_action( 'save_post', 'Wpfaevent_Cache', 'clear_page_cache' );
