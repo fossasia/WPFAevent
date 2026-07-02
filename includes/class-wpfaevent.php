@@ -112,6 +112,7 @@ class Wpfaevent {
 		// Cache management.
 		require_once plugin_dir_path( __FILE__ ) . 'cache/class-wpfaevent-cache.php';
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-roles.php';
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-event-speaker-relation-manager.php';
 
 		// Data model classes - Custom Post Types.
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';
@@ -250,14 +251,19 @@ class Wpfaevent {
 		$this->loader->add_action( 'save_post_wpfa_event', $this->plugin_admin, 'save_event_meta' );
 		$this->loader->add_action( 'save_post_wpfa_speaker', $this->plugin_admin, 'save_speaker_meta' );
 
-		// Register AJAX handlers for speakers page.
+		// Keep event-owned speakers out of the global speaker admin list.
+		$this->loader->add_action( 'restrict_manage_posts', $this->plugin_admin, 'render_speaker_event_filter' );
+		$this->loader->add_action( 'pre_get_posts', $this->plugin_admin, 'filter_speaker_admin_list' );
+		$this->loader->add_filter( 'views_edit-wpfa_speaker', $this->plugin_admin, 'filter_speaker_admin_views' );
+
+		// Register AJAX handlers for the speakers page.
 		$plugin_speakers_handler = new Wpfaevent_Speakers_Handler();
 		$this->loader->add_action( 'wp_ajax_wpfa_get_speaker', $plugin_speakers_handler, 'ajax_get_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_add_speaker', $plugin_speakers_handler, 'ajax_add_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_update_speaker', $plugin_speakers_handler, 'ajax_update_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_delete_speaker', $plugin_speakers_handler, 'ajax_delete_speaker' );
 
-		// Register AJAX handlers for events page.
+		// Register AJAX handlers for the events page.
 		$plugin_event_handler = new Wpfaevent_Event_Handler();
 		$this->loader->add_action( 'wp_ajax_wpfa_get_event', $plugin_event_handler, 'ajax_get_event' );
 		$this->loader->add_action( 'wp_ajax_wpfa_add_event', $plugin_event_handler, 'ajax_add_event' );
@@ -270,16 +276,13 @@ class Wpfaevent {
 
 		// Register AJAX handler for Eventyay sync and chunked imports.
 		$eventyay_ajax_controller = new Wpfaevent_AJAX_Controller();
-		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $eventyay_ajax_controller, 'ajax_sync_eventyay' );
 		$this->loader->add_action( 'wp_ajax_wpfaevent_import_get_events', $eventyay_ajax_controller, 'ajax_import_get_events' );
 		$this->loader->add_action( 'wp_ajax_wpfaevent_import_single_event', $eventyay_ajax_controller, 'ajax_import_single_event' );
 		$this->loader->add_action( 'wp_ajax_wpfaevent_import_save_summary', $eventyay_ajax_controller, 'ajax_import_save_summary' );
 
-		// Register Eventyay import form handler.
-		$this->loader->add_action( 'admin_post_wpfaevent_import_eventyay_events', $this->plugin_admin, 'handle_eventyay_events_import' );
-
 		// Register AJAX handler for dashboard JSON:API sync.
 		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $this->plugin_admin, 'ajax_sync_eventyay' );
+		$this->loader->add_action( 'admin_post_wpfaevent_import_eventyay_events', $this->plugin_admin, 'handle_eventyay_events_import' );
 
 		// Scheduled auto-sync cron callback.
 		$this->loader->add_action( Wpfaevent_Cron_Scheduler::HOOK, 'Wpfaevent_Cron_Scheduler', 'run' );

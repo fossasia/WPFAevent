@@ -486,9 +486,157 @@ class Wpfaevent_Admin {
 		$this->get_eventyay_importer()->handle_eventyay_events_import();
 	}
 
+	/**
+	 * Render a scope filter on the Speakers admin list.
+	 *
+	 * @since 1.0.0
+	 */
+	public function render_speaker_event_filter() {
+		global $typenow;
+
+		if ( 'wpfa_speaker' !== $typenow ) {
+			return;
+		}
+
+		$scope_options = $this->get_speaker_admin_scope_options();
+		$current_scope = $this->get_current_speaker_admin_scope();
+		?>
+		<label class="screen-reader-text" for="wpfaevent-speaker-scope"><?php esc_html_e( 'Filter speakers by ownership', 'wpfaevent' ); ?></label>
+		<select name="wpfaevent_speaker_scope" id="wpfaevent-speaker-scope">
+			<?php foreach ( $scope_options as $scope => $label ) : ?>
+				<option value="<?php echo esc_attr( $scope ); ?>" <?php selected( $current_scope, $scope ); ?>>
+					<?php echo esc_html( $label ); ?>
+				</option>
+			<?php endforeach; ?>
+		</select>
+		<?php
+	}
+
+	/**
+	 * Filter the Speakers admin query by ownership scope.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Query $query Admin posts query.
+	 */
+	public function filter_speaker_admin_list( $query ) {
+		if ( ! $query instanceof WP_Query || ! $this->is_speaker_admin_list_query( $query ) ) {
+			return;
+		}
+
+		$scope             = $this->get_current_speaker_admin_scope();
+		$event_speaker_ids = Wpfaevent_Event_Speaker_Relation_Manager::get_all_event_owned_speaker_ids();
+
+		if ( 'event' === $scope ) {
+			if ( empty( $event_speaker_ids ) ) {
+				$query->set( 'post__in', array( 0 ) );
+				return;
+			}
+
+			$query->set( 'post__in', $event_speaker_ids );
+			return;
+		}
+
+		if ( 'all' === $scope || empty( $event_speaker_ids ) ) {
+			return;
+		}
+
+		$query->set( 'post__not_in', $event_speaker_ids );
+	}
+
+	/**
+	 * Add custom view links for the Speakers admin list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $views Existing list table views.
+	 * @return array
+	 */
+	public function filter_speaker_admin_views( $views ) {
+		if ( ! is_array( $views ) ) {
+			$views = array();
+		}
+
+		$current_scope = $this->get_current_speaker_admin_scope();
+		$scope_options = $this->get_speaker_admin_scope_options();
+		$custom_views  = array();
+
+		foreach ( $scope_options as $scope => $label ) {
+			$url = add_query_arg(
+				array(
+					'post_type'               => 'wpfa_speaker',
+					'wpfaevent_speaker_scope' => $scope,
+				),
+				admin_url( 'edit.php' )
+			);
+
+			$custom_views[ 'wpfaevent_scope_' . $scope ] = sprintf(
+				'<a href="%s" %s>%s</a>',
+				esc_url( $url ),
+				$scope === $current_scope ? 'class="current" aria-current="page"' : '',
+				esc_html( $label )
+			);
+		}
+
+		return array_merge( $custom_views, $views );
+	}
+
 	// ========================================
 	// META BOXES
 	// ========================================
+
+	/**
+	 * Check whether a query is the main Speakers admin list query.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Query $query Query to inspect.
+	 * @return bool
+	 */
+	private function is_speaker_admin_list_query( $query ) {
+		if ( ! is_admin() || ! $query->is_main_query() ) {
+			return false;
+		}
+
+		if ( 'edit.php' !== $GLOBALS['pagenow'] ) {
+			return false;
+		}
+
+		return 'wpfa_speaker' === $query->get( 'post_type' );
+	}
+
+	/**
+	 * Get the selected scope for the Speakers admin list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string
+	 */
+	private function get_current_speaker_admin_scope() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin list filter persisted via query string.
+		$scope = isset( $_GET['wpfaevent_speaker_scope'] ) ? sanitize_key( wp_unslash( $_GET['wpfaevent_speaker_scope'] ) ) : 'standalone';
+
+		if ( ! array_key_exists( $scope, $this->get_speaker_admin_scope_options() ) ) {
+			return 'standalone';
+		}
+
+		return $scope;
+	}
+
+	/**
+	 * Get supported scope options for the Speakers admin list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<string, string>
+	 */
+	private function get_speaker_admin_scope_options() {
+		return array(
+			'standalone' => __( 'Standalone Speakers', 'wpfaevent' ),
+			'event'      => __( 'Event-Owned Speakers', 'wpfaevent' ),
+			'all'        => __( 'All Speakers', 'wpfaevent' ),
+		);
+	}
 
 	/**
 	 * Register meta boxes for Event and Speaker CPTs.

@@ -225,42 +225,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @return array<int>
 	 */
 	public static function get_speakers_linked_to_event( $event_id ) {
-		$event_id = absint( $event_id );
-
-		if ( ! $event_id ) {
-			return array();
-		}
-
-		$speaker_ids = get_posts(
-			array(
-				'post_type'      => self::$post_type,
-				'post_status'    => 'any',
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Speaker-event links are stored in post meta.
-				'meta_query'     => array(
-					'relation' => 'OR',
-					array(
-						'key'     => 'wpfa_speaker_events',
-						'value'   => 'i:' . $event_id . ';',
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => 'wpfa_speaker_events',
-						'value'   => '"' . $event_id . '"',
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => 'wpfa_speaker_events',
-						'value'   => (string) $event_id,
-						'compare' => '=',
-					),
-				),
-			)
-		);
-
-		return Wpfaevent_Meta_Event::sanitize_post_id_list( $speaker_ids );
+		return Wpfaevent_Event_Speaker_Relation_Manager::get_speakers_linked_to_event( $event_id );
 	}
 
 	/**
@@ -271,21 +236,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @return array<int>
 	 */
 	public static function get_all_speakers_linked_to_events() {
-		$speaker_ids = get_posts(
-			array(
-				'post_type'      => self::$post_type,
-				'post_status'    => 'any',
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Speaker ownership is stored in post meta.
-				'meta_key'       => 'wpfa_speaker_events',
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_compare -- Speaker ownership is stored in post meta.
-				'meta_compare'   => 'EXISTS',
-			)
-		);
-
-		return Wpfaevent_Meta_Event::sanitize_post_id_list( $speaker_ids );
+		return Wpfaevent_Event_Speaker_Relation_Manager::get_all_speakers_linked_to_events();
 	}
 
 	/**
@@ -298,42 +249,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @return array<int>
 	 */
 	public static function get_events_referencing_speaker( $speaker_id, $post_status = 'any' ) {
-		$speaker_id = absint( $speaker_id );
-
-		if ( ! $speaker_id ) {
-			return array();
-		}
-
-		$event_ids = get_posts(
-			array(
-				'post_type'      => 'wpfa_event',
-				'post_status'    => $post_status,
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Speaker-event links are stored in post meta.
-				'meta_query'     => array(
-					'relation' => 'OR',
-					array(
-						'key'     => 'wpfa_event_speakers',
-						'value'   => 'i:' . $speaker_id . ';',
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => 'wpfa_event_speakers',
-						'value'   => '"' . $speaker_id . '"',
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => 'wpfa_event_speakers',
-						'value'   => (string) $speaker_id,
-						'compare' => '=',
-					),
-				),
-			)
-		);
-
-		return Wpfaevent_Meta_Event::sanitize_post_id_list( $event_ids );
+		return Wpfaevent_Event_Speaker_Relation_Manager::get_events_referencing_speaker( $speaker_id, $post_status );
 	}
 
 	/**
@@ -346,36 +262,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @return array<int>
 	 */
 	public static function get_events_linked_to_speaker( $speaker_id, $post_status = 'publish' ) {
-		$speaker_id = absint( $speaker_id );
-
-		if ( ! $speaker_id || get_post_type( $speaker_id ) !== self::$post_type ) {
-			return array();
-		}
-
-		$event_ids = Wpfaevent_Meta_Event::sanitize_post_id_list(
-			array_merge(
-				self::get_speaker_event_ids( $speaker_id ),
-				self::get_events_referencing_speaker( $speaker_id, $post_status )
-			)
-		);
-
-		if ( empty( $event_ids ) || empty( $post_status ) || 'any' === $post_status ) {
-			return $event_ids;
-		}
-
-		$event_ids = get_posts(
-			array(
-				'post_type'      => 'wpfa_event',
-				'post_status'    => $post_status,
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-				'post__in'       => $event_ids,
-				'orderby'        => 'post__in',
-				'no_found_rows'  => true,
-			)
-		);
-
-		return Wpfaevent_Meta_Event::sanitize_post_id_list( $event_ids );
+		return Wpfaevent_Event_Speaker_Relation_Manager::get_events_linked_to_speaker( $speaker_id, $post_status );
 	}
 
 	/**
@@ -388,21 +275,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @param bool $check_capability Whether to require edit access to the speaker.
 	 */
 	public static function add_event_to_speaker( $speaker_id, $event_id, $check_capability = true ) {
-		$speaker_id = absint( $speaker_id );
-		$event_id   = absint( $event_id );
-
-		if ( ! $speaker_id || ! $event_id || get_post_type( $speaker_id ) !== self::$post_type ) {
-			return;
-		}
-
-		if ( $check_capability && ! current_user_can( 'edit_post', $speaker_id ) ) {
-			return;
-		}
-
-		$event_ids   = self::get_speaker_event_ids( $speaker_id );
-		$event_ids[] = $event_id;
-
-		update_post_meta( $speaker_id, 'wpfa_speaker_events', Wpfaevent_Meta_Event::sanitize_post_id_list( $event_ids ) );
+		Wpfaevent_Event_Speaker_Relation_Manager::add_event_to_speaker( $speaker_id, $event_id, $check_capability );
 	}
 
 	/**
@@ -415,26 +288,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @param bool $check_capability Whether to require edit access to the speaker.
 	 */
 	public static function remove_event_from_speaker( $speaker_id, $event_id, $check_capability = true ) {
-		$speaker_id = absint( $speaker_id );
-		$event_id   = absint( $event_id );
-
-		if ( ! $speaker_id || ! $event_id || get_post_type( $speaker_id ) !== self::$post_type ) {
-			return;
-		}
-
-		if ( $check_capability && ! current_user_can( 'edit_post', $speaker_id ) ) {
-			return;
-		}
-
-		$event_ids = array_diff( self::get_speaker_event_ids( $speaker_id ), array( $event_id ) );
-		$event_ids = Wpfaevent_Meta_Event::sanitize_post_id_list( $event_ids );
-
-		if ( empty( $event_ids ) ) {
-			delete_post_meta( $speaker_id, 'wpfa_speaker_events' );
-			return;
-		}
-
-		update_post_meta( $speaker_id, 'wpfa_speaker_events', $event_ids );
+		Wpfaevent_Event_Speaker_Relation_Manager::remove_event_from_speaker( $speaker_id, $event_id, $check_capability );
 	}
 
 	/**
@@ -446,7 +300,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @return array<int>
 	 */
 	public static function get_speaker_event_ids( $speaker_id ) {
-		return Wpfaevent_Meta_Event::sanitize_post_id_list( get_post_meta( $speaker_id, 'wpfa_speaker_events', true ) );
+		return Wpfaevent_Event_Speaker_Relation_Manager::get_speaker_event_ids( $speaker_id );
 	}
 
 	/**
@@ -481,6 +335,6 @@ class Wpfaevent_Meta_Speaker {
 	 * @return array Sanitized array of integers.
 	 */
 	public static function sanitize_event_ids( $event_ids ) {
-		return Wpfaevent_Meta_Event::sanitize_post_id_list( $event_ids );
+		return Wpfaevent_Event_Speaker_Relation_Manager::sanitize_post_id_list( $event_ids );
 	}
 }
