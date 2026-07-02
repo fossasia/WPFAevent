@@ -524,7 +524,7 @@ class Wpfaevent_Admin {
 			return;
 		}
 
-		$scope            = $this->get_current_speaker_admin_scope();
+		$scope             = $this->get_current_speaker_admin_scope();
 		$event_speaker_ids = Wpfaevent_Event_Speaker_Relation_Manager::get_all_event_owned_speaker_ids();
 
 		if ( 'event' === $scope ) {
@@ -613,6 +613,7 @@ class Wpfaevent_Admin {
 	 * @return string
 	 */
 	private function get_current_speaker_admin_scope() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin list filter persisted via query string.
 		$scope = isset( $_GET['wpfaevent_speaker_scope'] ) ? sanitize_key( wp_unslash( $_GET['wpfaevent_speaker_scope'] ) ) : 'standalone';
 
 		if ( ! array_key_exists( $scope, $this->get_speaker_admin_scope_options() ) ) {
