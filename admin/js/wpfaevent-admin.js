@@ -8,7 +8,9 @@
 		if ($importForm.length || $updateForm.length) {
 			const $form = $importForm.length ? $importForm : $updateForm;
 			const rawReturnPage = $form.find('input[name="wpfaevent_eventyay_return_page"]').val();
-			const returnPage = /^[a-zA-Z0-9_-]+$/.test(rawReturnPage || '') ? rawReturnPage : 'wpfaevent-import-events';
+			const returnPage = (typeof rawReturnPage === 'string' && /^[a-zA-Z0-9_-]+$/.test(rawReturnPage))
+				? rawReturnPage
+				: 'wpfaevent-import-events';
 
 			$form.on('submit', function(e) {
 				e.preventDefault();
@@ -24,6 +26,16 @@
 				let created = 0;
 				let updated = 0;
 				let skipped = 0;
+				let sessions = 0;
+				let speakers = 0;
+				let sponsors = 0;
+				let exhibitors = 0;
+				let created_speakers = 0;
+				let updated_speakers = 0;
+				let about_updates = 0;
+				let schedule_rows = 0;
+				let program_skipped = 0;
+				let partner_skipped = 0;
 
 				// Show overlay
 				const $overlay = $('#wpfaevent-import-progress-overlay');
@@ -85,7 +97,7 @@
 					if (index >= events.length) {
 						$status.text('Finalizing sync...');
 						$bar.css('width', '100%');
-						const message = 'Fetched ' + fetched + ' Eventyay event(s). Created ' + created + ', updated ' + updated + ', skipped ' + skipped + '.';
+						const message = 'Fetched ' + fetched + ' Eventyay event(s). Created ' + created + ', updated ' + updated + ', skipped ' + skipped + '. Imported ' + sessions + ' session(s), ' + speakers + ' speaker(s), ' + sponsors + ' sponsor(s), ' + exhibitors + ' exhibitor(s), ' + schedule_rows + ' schedule row(s), and updated ' + about_updates + ' about section(s); skipped program import for ' + program_skipped + ' event(s) and sponsor/exhibitor import for ' + partner_skipped + ' event(s).';
 						saveSummaryAndRedirect('success', message, returnPage, nonce);
 						return;
 					}
@@ -96,7 +108,7 @@
 
 					const eventTitle = getEventTitle(event);
 					$status.text('Importing ' + (index + 1) + ' of ' + events.length + ': ' + eventTitle);
-					$details.text('Saving event details, location, and dates...');
+					$details.text('Processing speakers, sessions, schedules, and partners...');
 
 					$.ajax({
 						url: ajaxurl,
@@ -112,6 +124,16 @@
 								created += res.created || 0;
 								updated += res.updated || 0;
 								skipped += res.skipped || 0;
+								sessions += res.sessions || 0;
+								speakers += res.speakers || 0;
+								sponsors += res.sponsors || 0;
+								exhibitors += res.exhibitors || 0;
+								created_speakers += res.created_speakers || 0;
+								updated_speakers += res.updated_speakers || 0;
+								about_updates += res.about_updates || 0;
+								schedule_rows += res.schedule_rows || 0;
+								program_skipped += res.program_skipped || 0;
+								partner_skipped += res.partner_skipped || 0;
 							} else {
 								skipped++;
 							}

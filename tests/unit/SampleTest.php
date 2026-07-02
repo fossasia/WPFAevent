@@ -1,6 +1,6 @@
 <?php
 /**
- * Class SampleTest
+ * Class UnitSampleTest
  *
  * @package Wpfaevent
  */
@@ -8,7 +8,7 @@
 /**
  * Sample test class to verify environment boot stability.
  */
-class SampleTest extends WP_UnitTestCase {
+class UnitSampleTest extends WP_UnitTestCase {
 
 	/**
 	 * Verify that the baseline setup is working and WordPress functions are accessible.

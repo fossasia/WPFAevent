@@ -205,7 +205,7 @@
 /* Importer settings card and info card visual styling */
 .wpfaevent-settings-card,
 .wpfaevent-info-card {
-	max-width: 960px !important;
+	max-width: 960px;
 	background: #ffffff;
 	border: 1px solid #e2e8f0 !important;
 	border-radius: 12px !important;
