@@ -390,6 +390,10 @@ class Wpfaevent_Roles {
 			$allcaps[ $capability ] = true;
 		}
 
+		foreach ( self::get_request_scoped_admin_capabilities( $level ) as $capability ) {
+			$allcaps[ $capability ] = true;
+		}
+
 		self::$in_capability_filter = false;
 		return $allcaps;
 	}
@@ -541,6 +545,50 @@ class Wpfaevent_Roles {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Grant minimal core admin gates only while viewing WPFAEvent CPT screens.
+	 *
+	 * WordPress admin list/edit screens can check generic edit_posts before the
+	 * custom CPT capability is evaluated. Keep that bridge scoped to WPFAEvent
+	 * requests so contributors do not gain regular Posts access.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $level Assigned WPFAEvent access level.
+	 * @return array<int, string>
+	 */
+	private static function get_request_scoped_admin_capabilities( $level ) {
+		if ( ! is_admin() || ! in_array( $level, array( self::ACCESS_ORGANIZER, self::ACCESS_CONTRIBUTOR ), true ) ) {
+			return array();
+		}
+
+		if ( empty( $GLOBALS['pagenow'] ) || ! in_array( $GLOBALS['pagenow'], array( 'edit.php', 'post.php' ), true ) ) {
+			return array();
+		}
+
+		$post_type = '';
+
+		if ( 'edit.php' === $GLOBALS['pagenow'] ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin screen routing.
+			$post_type = isset( $_GET['post_type'] ) ? sanitize_key( wp_unslash( $_GET['post_type'] ) ) : 'post';
+		}
+
+		if ( 'post.php' === $GLOBALS['pagenow'] ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin screen routing.
+			$post_id = isset( $_GET['post'] ) ? absint( wp_unslash( $_GET['post'] ) ) : 0;
+
+			if ( $post_id ) {
+				$post_type = get_post_type( $post_id );
+			}
+		}
+
+		if ( ! in_array( $post_type, array( 'wpfa_event', 'wpfa_speaker' ), true ) ) {
+			return array();
+		}
+
+		return array( 'edit_posts' );
 	}
 
 	/**
