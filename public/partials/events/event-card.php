@@ -65,9 +65,11 @@ if ( ! empty( $calendar_data['date_label'] ) ) {
 $event_tracks = get_the_terms( $event_id, 'wpfa_event_track' );
 $track_slugs  = ( ! is_wp_error( $event_tracks ) && $event_tracks ) ? implode( ',', wp_list_pluck( $event_tracks, 'slug' ) ) : '';
 
-// Speaker count via stored relationship meta.
-$speaker_ids   = (array) get_post_meta( $event_id, 'wpfa_event_speakers', true );
-$speaker_ids   = array_filter( $speaker_ids );
+// Speaker count via bidirectional relationship meta.
+$speaker_ids   = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' )
+	? Wpfaevent_Event_Speaker_Relation_Manager::get_admin_event_speaker_ids( $event_id )
+	: (array) get_post_meta( $event_id, 'wpfa_event_speakers', true );
+$speaker_ids   = array_filter( array_map( 'absint', (array) $speaker_ids ) );
 $speaker_count = count( $speaker_ids );
 
 $can_manage_content  = class_exists( 'Wpfaevent_Roles' ) ? Wpfaevent_Roles::current_user_can_manage_dashboard() : current_user_can( 'manage_options' );
@@ -77,8 +79,10 @@ $can_delete_event    = $can_delete_content && current_user_can( 'delete_post', $
 $is_admin            = current_user_can( 'manage_options' );
 $event_url           = esc_url( get_permalink( $event_id ) );
 
-// Speakers page URL — link to /speakers/ filtered by event post ID.
-$speakers_url = esc_url( add_query_arg( 'event_id', $event_id, home_url( '/speakers/' ) ) );
+// Speakers page URL — link to /speakers/ filtered by event slug.
+$speaker_archive_url = get_post_type_archive_link( 'wpfa_speaker' );
+$speaker_archive_url = $speaker_archive_url ? $speaker_archive_url : home_url( '/speakers/' );
+$speakers_url        = esc_url( add_query_arg( 'event', get_post_field( 'post_name', $event_id ), $speaker_archive_url ) );
 ?>
 
 <div class="event-card"

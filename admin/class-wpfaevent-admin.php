@@ -490,16 +490,14 @@ class Wpfaevent_Admin {
 	 * Render a scope filter on the Speakers admin list.
 	 *
 	 * @since 1.0.0
+	 *
+	 * @param string $post_type Current admin list post type.
 	 */
-	public function render_speaker_event_filter() {
-		global $typenow;
-
-		if ( 'wpfa_speaker' !== $typenow ) {
+	public function render_speaker_event_filter( $post_type = '' ) {
+		if ( 'wpfa_speaker' !== $post_type ) {
 			return;
 		}
 
-		$scope_options = $this->get_speaker_admin_scope_options();
-		$current_scope = $this->get_current_speaker_admin_scope();
 		$current_event = $this->get_current_speaker_admin_event_filter();
 		$events        = get_posts(
 			array(
@@ -508,25 +506,20 @@ class Wpfaevent_Admin {
 				'posts_per_page' => -1,
 				'orderby'        => 'title',
 				'order'          => 'ASC',
-				'fields'         => 'ids',
 				'no_found_rows'  => true,
 			)
 		);
+
+		if ( empty( $events ) ) {
+			return;
+		}
 		?>
-		<label class="screen-reader-text" for="wpfaevent-speaker-scope"><?php esc_html_e( 'Filter speakers by ownership', 'wpfaevent' ); ?></label>
-		<select name="wpfaevent_speaker_scope" id="wpfaevent-speaker-scope">
-			<?php foreach ( $scope_options as $scope => $label ) : ?>
-				<option value="<?php echo esc_attr( $scope ); ?>" <?php selected( $current_scope, $scope ); ?>>
-					<?php echo esc_html( $label ); ?>
-				</option>
-			<?php endforeach; ?>
-		</select>
-		<label class="screen-reader-text" for="wpfaevent-speaker-event"><?php esc_html_e( 'Filter speakers by event', 'wpfaevent' ); ?></label>
-		<select name="wpfaevent_speaker_event" id="wpfaevent-speaker-event">
-			<option value="0"><?php esc_html_e( 'All events', 'wpfaevent' ); ?></option>
-			<?php foreach ( $events as $event_id ) : ?>
-				<option value="<?php echo esc_attr( (string) absint( $event_id ) ); ?>" <?php selected( $current_event, absint( $event_id ) ); ?>>
-					<?php echo esc_html( get_the_title( $event_id ) ); ?>
+		<label class="screen-reader-text" for="wpfa_speaker_event"><?php esc_html_e( 'Filter speakers by event', 'wpfaevent' ); ?></label>
+		<select name="wpfa_speaker_event" id="wpfa_speaker_event">
+			<option value="0"><?php esc_html_e( 'Site speakers', 'wpfaevent' ); ?></option>
+			<?php foreach ( $events as $event ) : ?>
+				<option value="<?php echo esc_attr( (string) absint( $event->ID ) ); ?>" <?php selected( $current_event, absint( $event->ID ) ); ?>>
+					<?php echo esc_html( sprintf( /* translators: %s: Event title. */ __( 'Event: %s', 'wpfaevent' ), get_the_title( $event ) ) ); ?>
 				</option>
 			<?php endforeach; ?>
 		</select>
@@ -666,7 +659,12 @@ class Wpfaevent_Admin {
 	 */
 	private function get_current_speaker_admin_event_filter() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin list filter persisted via query string.
-		$event_id = isset( $_GET['wpfaevent_speaker_event'] ) ? absint( wp_unslash( $_GET['wpfaevent_speaker_event'] ) ) : 0;
+		$event_id = isset( $_GET['wpfa_speaker_event'] ) ? absint( wp_unslash( $_GET['wpfa_speaker_event'] ) ) : 0;
+
+		if ( ! $event_id ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Backward compatibility for earlier PR builds of this read-only filter.
+			$event_id = isset( $_GET['wpfaevent_speaker_event'] ) ? absint( wp_unslash( $_GET['wpfaevent_speaker_event'] ) ) : 0;
+		}
 
 		if ( ! $event_id || 'wpfa_event' !== get_post_type( $event_id ) ) {
 			return 0;

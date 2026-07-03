@@ -26,6 +26,8 @@ $current_page = max( 1, (int) get_query_var( 'paged', 1 ) );
 $current_event_filter = isset( $_GET['event'] ) ? sanitize_text_field( wp_unslash( $_GET['event'] ) ) : ( isset( $_GET['event_id'] ) ? sanitize_text_field( wp_unslash( $_GET['event_id'] ) ) : '' );
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only front-end search filtering via query args.
 $search_term = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only front-end category filtering via query args.
+$current_category = isset( $_GET['category'] ) ? sanitize_title( wp_unslash( $_GET['category'] ) ) : 'all';
 
 $selected_event_id = 0;
 if ( '' !== trim( $current_event_filter ) ) {
@@ -41,6 +43,21 @@ if ( '' !== trim( $current_event_filter ) ) {
 		}
 	}
 }
+
+$selected_event_slug  = $selected_event_id ? get_post_field( 'post_name', $selected_event_id ) : '';
+$selected_event_title = $selected_event_id ? get_the_title( $selected_event_id ) : '';
+$speakers_base_url   = get_post_type_archive_link( 'wpfa_speaker' );
+$speakers_base_url   = $speakers_base_url ? $speakers_base_url : home_url( '/speakers/' );
+$event_filter_posts  = get_posts(
+	array(
+		'post_type'      => 'wpfa_event',
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'orderby'        => 'title',
+		'order'          => 'ASC',
+		'no_found_rows'  => true,
+	)
+);
 
 // Query speakers from the CPT.
 $speakers_per_page = max( 1, (int) apply_filters( 'wpfa_speakers_per_page', 24 ) );
@@ -103,10 +120,6 @@ if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
 	}
 }
 
-// Get the current category from the URL.
-// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only front-end category filtering via query args.
-$current_category = isset( $_GET['category'] ) ? sanitize_title( wp_unslash( $_GET['category'] ) ) : 'all';
-
 // Get the site logo.
 $site_logo_url = get_option( 'wpfa_site_logo_url', '' );
 if ( empty( $site_logo_url ) ) {
@@ -164,10 +177,30 @@ $header_vars         = array(
 	<?php endif; ?>
 		<section class="wpfa-speakers-hero">
 			<div class="container">
-				<h1><?php echo esc_html( apply_filters( 'wpfa_speakers_title', __( 'FOSSASIA Summit Speakers', 'wpfaevent' ) ) ); ?></h1>
-				<p><?php echo esc_html( apply_filters( 'wpfa_speakers_subtitle', __( 'Discover all the amazing speakers joining us at FOSSASIA Summit', 'wpfaevent' ) ) ); ?></p>
+				<h1>
+					<?php
+					echo esc_html(
+						$selected_event_title
+							? sprintf(
+								/* translators: %s: Event title. */
+								__( '%s Speakers', 'wpfaevent' ),
+								$selected_event_title
+							)
+							: apply_filters( 'wpfa_speakers_title', __( 'FOSSASIA Summit Speakers', 'wpfaevent' ) )
+					);
+					?>
+				</h1>
+				<p>
+					<?php
+					echo esc_html(
+						$selected_event_id
+							? __( 'Speakers linked to this event.', 'wpfaevent' )
+							: apply_filters( 'wpfa_speakers_subtitle', __( 'Choose an event to view its speaker list.', 'wpfaevent' ) )
+					);
+					?>
+				</p>
 
-				<form class="wpfa-speakers-search" method="get" action="<?php echo esc_url( get_permalink() ); ?>">
+				<form class="wpfa-speakers-search" method="get" action="<?php echo esc_url( $speakers_base_url ); ?>">
 					<label for="wpfa-speaker-search" class="screen-reader-text">
 						<?php esc_html_e( 'Search speakers', 'wpfaevent' ); ?>
 					</label>
@@ -183,10 +216,38 @@ $header_vars         = array(
 						🔍
 					</button>
 					<input type="hidden" name="category" value="<?php echo esc_attr( $current_category ); ?>">
-					<?php if ( '' !== $current_event_filter ) : ?>
-						<input type="hidden" name="event" value="<?php echo esc_attr( $current_event_filter ); ?>">
+					<?php if ( $selected_event_slug ) : ?>
+						<input type="hidden" name="event" value="<?php echo esc_attr( $selected_event_slug ); ?>">
 					<?php endif; ?>
 				</form>
+
+				<?php if ( ! empty( $event_filter_posts ) ) : ?>
+				<div class="wpfa-speakers-filters wpfa-event-filters" aria-label="<?php esc_attr_e( 'Filter speakers by event', 'wpfaevent' ); ?>">
+					<a href="<?php echo esc_url( $speakers_base_url ); ?>"
+							class="wpfa-filter-btn <?php echo esc_attr( $selected_event_id ? '' : 'active' ); ?>">
+						<?php esc_html_e( 'Choose Event', 'wpfaevent' ); ?>
+					</a>
+					<?php foreach ( $event_filter_posts as $event_filter_post ) : ?>
+						<?php
+						$event_filter_slug = get_post_field( 'post_name', $event_filter_post->ID );
+						$event_filter_args = array(
+							'event' => $event_filter_slug,
+						);
+						if ( $search_term ) {
+							$event_filter_args['q'] = $search_term;
+						}
+						if ( 'all' !== $current_category ) {
+							$event_filter_args['category'] = $current_category;
+						}
+						$event_filter_url = add_query_arg( $event_filter_args, $speakers_base_url );
+						?>
+						<a href="<?php echo esc_url( $event_filter_url ); ?>"
+								class="wpfa-filter-btn <?php echo esc_attr( absint( $event_filter_post->ID ) === $selected_event_id ? 'active' : '' ); ?>">
+							<?php echo esc_html( get_the_title( $event_filter_post->ID ) ); ?>
+						</a>
+					<?php endforeach; ?>
+				</div>
+				<?php endif; ?>
 
 				<?php if ( ! empty( $categories ) ) : ?>
 				<div class="wpfa-speakers-filters">
@@ -252,8 +313,8 @@ $header_vars         = array(
 				if ( 'all' !== $current_category ) {
 					$pagination_args['category'] = $current_category;
 				}
-				if ( '' !== $current_event_filter ) {
-					$pagination_args['event'] = $current_event_filter;
+				if ( $selected_event_slug ) {
+					$pagination_args['event'] = $selected_event_slug;
 				}
 
 				wpfa_render_pagination(
