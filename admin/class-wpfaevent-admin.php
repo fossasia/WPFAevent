@@ -500,12 +500,33 @@ class Wpfaevent_Admin {
 
 		$scope_options = $this->get_speaker_admin_scope_options();
 		$current_scope = $this->get_current_speaker_admin_scope();
+		$current_event = $this->get_current_speaker_admin_event_filter();
+		$events        = get_posts(
+			array(
+				'post_type'      => 'wpfa_event',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+			)
+		);
 		?>
 		<label class="screen-reader-text" for="wpfaevent-speaker-scope"><?php esc_html_e( 'Filter speakers by ownership', 'wpfaevent' ); ?></label>
 		<select name="wpfaevent_speaker_scope" id="wpfaevent-speaker-scope">
 			<?php foreach ( $scope_options as $scope => $label ) : ?>
 				<option value="<?php echo esc_attr( $scope ); ?>" <?php selected( $current_scope, $scope ); ?>>
 					<?php echo esc_html( $label ); ?>
+				</option>
+			<?php endforeach; ?>
+		</select>
+		<label class="screen-reader-text" for="wpfaevent-speaker-event"><?php esc_html_e( 'Filter speakers by event', 'wpfaevent' ); ?></label>
+		<select name="wpfaevent_speaker_event" id="wpfaevent-speaker-event">
+			<option value="0"><?php esc_html_e( 'All events', 'wpfaevent' ); ?></option>
+			<?php foreach ( $events as $event_id ) : ?>
+				<option value="<?php echo esc_attr( (string) absint( $event_id ) ); ?>" <?php selected( $current_event, absint( $event_id ) ); ?>>
+					<?php echo esc_html( get_the_title( $event_id ) ); ?>
 				</option>
 			<?php endforeach; ?>
 		</select>
@@ -525,7 +546,20 @@ class Wpfaevent_Admin {
 		}
 
 		$scope             = $this->get_current_speaker_admin_scope();
+		$event_filter      = $this->get_current_speaker_admin_event_filter();
 		$event_speaker_ids = Wpfaevent_Event_Speaker_Relation_Manager::get_all_event_owned_speaker_ids();
+
+		if ( $event_filter ) {
+			$filtered_speaker_ids = Wpfaevent_Event_Speaker_Relation_Manager::get_admin_event_speaker_ids( $event_filter );
+
+			if ( empty( $filtered_speaker_ids ) ) {
+				$query->set( 'post__in', array( 0 ) );
+				return;
+			}
+
+			$query->set( 'post__in', $filtered_speaker_ids );
+			return;
+		}
 
 		if ( 'event' === $scope ) {
 			if ( empty( $event_speaker_ids ) ) {
@@ -621,6 +655,24 @@ class Wpfaevent_Admin {
 		}
 
 		return $scope;
+	}
+
+	/**
+	 * Get the selected event filter for the Speakers admin list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return int
+	 */
+	private function get_current_speaker_admin_event_filter() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin list filter persisted via query string.
+		$event_id = isset( $_GET['wpfaevent_speaker_event'] ) ? absint( wp_unslash( $_GET['wpfaevent_speaker_event'] ) ) : 0;
+
+		if ( ! $event_id || 'wpfa_event' !== get_post_type( $event_id ) ) {
+			return 0;
+		}
+
+		return $event_id;
 	}
 
 	/**

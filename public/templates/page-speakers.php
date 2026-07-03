@@ -56,11 +56,10 @@ $args              = array(
 );
 
 if ( $selected_event_id ) {
-	$speaker_ids = get_post_meta( $selected_event_id, 'wpfa_event_speakers', true );
-	if ( ! is_array( $speaker_ids ) ) {
-		$speaker_ids = array();
-	}
-	$speaker_ids = array_filter( array_map( 'absint', $speaker_ids ) );
+	$speaker_ids = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' )
+		? Wpfaevent_Event_Speaker_Relation_Manager::get_admin_event_speaker_ids( $selected_event_id )
+		: get_post_meta( $selected_event_id, 'wpfa_event_speakers', true );
+	$speaker_ids = array_filter( array_map( 'absint', (array) $speaker_ids ) );
 	if ( empty( $speaker_ids ) ) {
 		$args['post__in'] = array( 0 );
 	} else {
@@ -184,6 +183,9 @@ $header_vars         = array(
 						🔍
 					</button>
 					<input type="hidden" name="category" value="<?php echo esc_attr( $current_category ); ?>">
+					<?php if ( '' !== $current_event_filter ) : ?>
+						<input type="hidden" name="event" value="<?php echo esc_attr( $current_event_filter ); ?>">
+					<?php endif; ?>
 				</form>
 
 				<?php if ( ! empty( $categories ) ) : ?>
@@ -249,6 +251,9 @@ $header_vars         = array(
 				}
 				if ( 'all' !== $current_category ) {
 					$pagination_args['category'] = $current_category;
+				}
+				if ( '' !== $current_event_filter ) {
+					$pagination_args['event'] = $current_event_filter;
 				}
 
 				wpfa_render_pagination(
