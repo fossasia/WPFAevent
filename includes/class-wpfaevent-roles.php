@@ -453,6 +453,7 @@ class Wpfaevent_Roles {
 	 */
 	public static function get_plugin_capabilities() {
 		return array(
+			'read',
 			self::CAP_MANAGE_SETTINGS,
 			self::CAP_IMPORT_EVENTYAY,
 		);
@@ -486,6 +487,7 @@ class Wpfaevent_Roles {
 	 */
 	public static function get_contributor_capabilities() {
 		return array(
+			'read',
 			'read_event',
 			'edit_event',
 			'edit_events',
@@ -520,7 +522,25 @@ class Wpfaevent_Roles {
 
 		$levels = self::get_user_access_levels();
 
-		return isset( $levels[ $user_id ] ) ? $levels[ $user_id ] : '';
+		if ( isset( $levels[ $user_id ] ) ) {
+			return $levels[ $user_id ];
+		}
+
+		$user = get_userdata( $user_id );
+
+		if ( ! $user instanceof WP_User ) {
+			return '';
+		}
+
+		if ( in_array( self::LEGACY_ROLE_ORGANIZER, (array) $user->roles, true ) ) {
+			return self::ACCESS_ORGANIZER;
+		}
+
+		if ( in_array( self::LEGACY_ROLE_CONTRIBUTOR, (array) $user->roles, true ) ) {
+			return self::ACCESS_CONTRIBUTOR;
+		}
+
+		return '';
 	}
 
 	/**
