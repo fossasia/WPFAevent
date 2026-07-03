@@ -79,7 +79,7 @@ $event_url           = esc_url( get_permalink( $event_id ) );
 
 // Speakers page URL — link to /speakers/ filtered by event post ID.
 $speakers_url  = esc_url( add_query_arg( 'event_id', $event_id, home_url( '/speakers/' ) ) );
-$is_bookmarked = is_user_logged_in() && in_array( (int) $event_id, array_map( 'absint', (array) get_user_meta( get_current_user_id(), 'wpfa_bookmarked_events', true ) ), true );
+$is_bookmarked = class_exists( 'Wpfaevent_User_Preferences_Service' ) && Wpfaevent_User_Preferences_Service::is_event_bookmarked( $event_id );
 ?>
 
 <div class="event-card<?php echo $is_bookmarked ? ' is-bookmarked' : ''; ?>"
