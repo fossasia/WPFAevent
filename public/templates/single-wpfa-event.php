@@ -19,6 +19,8 @@ if ( ! $event_id || 'wpfa_event' !== get_post_type( $event_id ) ) {
 	return;
 }
 
+$is_bookmarked = is_user_logged_in() && in_array( (int) $event_id, array_map( 'absint', (array) get_user_meta( get_current_user_id(), 'wpfa_bookmarked_events', true ) ), true );
+
 $event_data                               = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
 $event_style_attr                         = $event_data['event_style_attr'];
 $header_vars                              = $event_data['header_vars'];
@@ -157,6 +159,12 @@ $current_schedule_view                    = $event_data['current_schedule_view']
 							<?php echo esc_html( $register_text ); ?>
 						</a>
 					<?php endif; ?>
+					<button class="wpfa-event-bookmark-btn wpfa-bookmark-btn<?php echo $is_bookmarked ? ' is-bookmarked' : ''; ?>" data-event-id="<?php echo esc_attr( (string) $event_id ); ?>">
+						<svg class="wpfa-bookmark-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="width: 16px; height: 16px; margin-right: 8px; vertical-align: middle;">
+							<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+						</svg>
+						<span class="wpfa-bookmark-text"><?php echo $is_bookmarked ? esc_html__( 'Remove Bookmark', 'wpfaevent' ) : esc_html__( 'Bookmark Event', 'wpfaevent' ); ?></span>
+					</button>
 					<?php if ( $event_google_url ) : ?>
 						<a class="wpfa-event-calendar-link" href="<?php echo esc_url( $event_google_url ); ?>" target="_blank" rel="noopener">
 							<?php esc_html_e( 'Add to calendar', 'wpfaevent' ); ?>

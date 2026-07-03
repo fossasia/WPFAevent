@@ -579,6 +579,92 @@ class Wpfaevent_Public {
 			'wpfaeventPublic',
 			array(
 				'speakerPlaceholderAlt' => __( 'Speaker photo placeholder', 'wpfaevent' ),
+				'ajaxUrl'               => admin_url( 'admin-ajax.php' ),
+				'nonce'                 => wp_create_nonce( 'wpfa_bookmark_nonce' ),
+				'isLoggedIn'            => is_user_logged_in(),
+				'bookmarkedEvents'      => is_user_logged_in() ? array_values( array_filter( array_map( 'absint', (array) get_user_meta( get_current_user_id(), 'wpfa_bookmarked_events', true ) ) ) ) : array(),
+				'i18n'                  => array(
+					'bookmark'          => __( 'Bookmark', 'wpfaevent' ),
+					'bookmarked'        => __( 'Bookmarked', 'wpfaevent' ),
+					'bookmarkEvent'     => __( 'Bookmark Event', 'wpfaevent' ),
+					'removeBookmark'    => __( 'Remove Bookmark', 'wpfaevent' ),
+					'bookmarkSuccess'   => __( 'Event bookmarked!', 'wpfaevent' ),
+					'unbookmarkSuccess' => __( 'Event removed from bookmarks!', 'wpfaevent' ),
+					'loginRequired'     => __( 'Please log in to bookmark events.', 'wpfaevent' ),
+					'error'             => __( 'Something went wrong. Please try again.', 'wpfaevent' ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Toggle bookmark/favorite status of an event for the current logged-in user.
+	 *
+	 * @since    1.0.0
+	 */
+	public function ajax_toggle_bookmark() {
+		// Verify nonce.
+		if ( ! check_ajax_referer( 'wpfa_bookmark_nonce', 'nonce', false ) ) {
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'Invalid nonce', 'wpfaevent' ),
+				),
+				403
+			);
+		}
+
+		// Verify user is logged in.
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'You must be logged in to bookmark events.', 'wpfaevent' ),
+				),
+				401
+			);
+		}
+
+		$event_id = isset( $_POST['event_id'] ) ? absint( $_POST['event_id'] ) : 0;
+
+		if ( ! $event_id ) {
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'Invalid event ID.', 'wpfaevent' ),
+				)
+			);
+		}
+
+		$event = get_post( $event_id );
+
+		if ( ! $event || 'wpfa_event' !== $event->post_type ) {
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'Event not found.', 'wpfaevent' ),
+				)
+			);
+		}
+
+		$user_id           = get_current_user_id();
+		$bookmarked_events = (array) get_user_meta( $user_id, 'wpfa_bookmarked_events', true );
+		$bookmarked_events = array_filter( array_map( 'absint', $bookmarked_events ) );
+
+		if ( in_array( $event_id, $bookmarked_events, true ) ) {
+			// Remove bookmark.
+			$bookmarked_events = array_diff( $bookmarked_events, array( $event_id ) );
+			$bookmarked        = false;
+			$message           = esc_html__( 'Event removed from bookmarks.', 'wpfaevent' );
+		} else {
+			// Add bookmark.
+			$bookmarked_events[] = $event_id;
+			$bookmarked          = true;
+			$message             = esc_html__( 'Event bookmarked successfully.', 'wpfaevent' );
+		}
+
+		update_user_meta( $user_id, 'wpfa_bookmarked_events', array_values( $bookmarked_events ) );
+
+		wp_send_json_success(
+			array(
+				'bookmarked' => $bookmarked,
+				'message'    => $message,
 			)
 		);
 	}
