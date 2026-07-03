@@ -171,7 +171,8 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 			array_merge(
 				self::get_event_speaker_ids( $event_id ),
 				self::get_speakers_linked_to_event( $event_id ),
-				self::get_eventyay_speakers_linked_to_event( $event_id )
+				self::get_eventyay_speakers_linked_to_event( $event_id ),
+				self::get_sibling_event_speaker_ids( $event_id )
 			)
 		);
 	}
@@ -347,6 +348,66 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 		$event_slugs = array_map( 'sanitize_title', array_filter( array_map( 'strval', $event_slugs ) ) );
 
 		return array_values( array_unique( $event_slugs ) );
+	}
+
+	/**
+	 * Get speakers from duplicate imports of the same Eventyay event.
+	 *
+	 * Eventyay imports may leave an older event post with populated speaker
+	 * relationships while the active event uses an organizer-prefixed slug.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int>
+	 */
+	private static function get_sibling_event_speaker_ids( $event_id ) {
+		$event_id    = absint( $event_id );
+		$event_slugs = self::get_eventyay_event_slugs( $event_id );
+
+		if ( ! $event_id || empty( $event_slugs ) ) {
+			return array();
+		}
+
+		$meta_query = array( 'relation' => 'OR' );
+
+		foreach ( $event_slugs as $event_slug ) {
+			$meta_query[] = array(
+				'key'   => '_wpfa_eventyay_event_slug',
+				'value' => $event_slug,
+			);
+			$meta_query[] = array(
+				'key'   => '_eventyay_event_slug',
+				'value' => $event_slug,
+			);
+		}
+
+		$sibling_event_ids = get_posts(
+			array(
+				'post_type'      => self::$event_post_type,
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'post__not_in'   => array( $event_id ),
+				'no_found_rows'  => true,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Eventyay duplicate-event lookup uses post meta.
+				'meta_query'     => $meta_query,
+			)
+		);
+
+		$speaker_ids = array();
+
+		foreach ( $sibling_event_ids as $sibling_event_id ) {
+			$sibling_event_id = absint( $sibling_event_id );
+			$speaker_ids      = array_merge(
+				$speaker_ids,
+				self::get_event_speaker_ids( $sibling_event_id ),
+				self::get_speakers_linked_to_event( $sibling_event_id ),
+				self::get_eventyay_speakers_linked_to_event( $sibling_event_id )
+			);
+		}
+
+		return self::sanitize_post_id_list( $speaker_ids );
 	}
 
 	/**
