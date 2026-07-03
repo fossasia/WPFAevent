@@ -386,10 +386,8 @@ class Wpfaevent_Roles {
 			? self::get_organizer_capabilities()
 			: self::get_contributor_capabilities();
 
-		foreach ( $caps as $cap ) {
-			if ( in_array( $cap, $grant_caps, true ) ) {
-				$allcaps[ $cap ] = true;
-			}
+		foreach ( $grant_caps as $capability ) {
+			$allcaps[ $capability ] = true;
 		}
 
 		self::$in_capability_filter = false;
