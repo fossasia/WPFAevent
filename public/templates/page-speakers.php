@@ -46,9 +46,9 @@ if ( '' !== trim( $current_event_filter ) ) {
 
 $selected_event_slug  = $selected_event_id ? get_post_field( 'post_name', $selected_event_id ) : '';
 $selected_event_title = $selected_event_id ? get_the_title( $selected_event_id ) : '';
-$speakers_base_url   = get_post_type_archive_link( 'wpfa_speaker' );
-$speakers_base_url   = $speakers_base_url ? $speakers_base_url : home_url( '/speakers/' );
-$event_filter_posts  = get_posts(
+$speakers_base_url    = get_post_type_archive_link( 'wpfa_speaker' );
+$speakers_base_url    = $speakers_base_url ? $speakers_base_url : home_url( '/speakers/' );
+$event_filter_posts   = get_posts(
 	array(
 		'post_type'      => 'wpfa_event',
 		'post_status'    => 'publish',
