@@ -44,7 +44,7 @@ jobs:
 
       # Post or update the warning comment if linting fails
       - name: Comment on PR if title is invalid
-        if: steps.lint_pr_title.outcome == 'failure'
+        if: steps.lint_pr_title.outcome == 'failure' && github.event.pull_request.head.repo.fork == false
         uses: marocchino/sticky-pull-request-comment@v3
         continue-on-error: true
         with:
@@ -67,7 +67,7 @@ jobs:
 
       # Automatically clean up and delete the comment if the user fixed the title
       - name: Delete warning comment if title is valid
-        if: steps.lint_pr_title.outcome == 'success'
+        if: steps.lint_pr_title.outcome == 'success' && github.event.pull_request.head.repo.fork == false
         uses: marocchino/sticky-pull-request-comment@v3
         continue-on-error: true
         with:
