@@ -19,7 +19,7 @@ if ( ! $event_id || 'wpfa_event' !== get_post_type( $event_id ) ) {
 	return;
 }
 
-$is_bookmarked = is_user_logged_in() && in_array( (int) $event_id, array_map( 'absint', (array) get_user_meta( get_current_user_id(), 'wpfa_bookmarked_events', true ) ), true );
+$is_bookmarked = class_exists( 'Wpfaevent_User_Preferences_Service' ) && Wpfaevent_User_Preferences_Service::is_event_bookmarked( $event_id );
 
 $event_data                               = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
 $event_style_attr                         = $event_data['event_style_attr'];

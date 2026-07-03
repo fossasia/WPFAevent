@@ -83,7 +83,7 @@ $event_url           = esc_url( get_permalink( $event_id ) );
 $speaker_archive_url = get_post_type_archive_link( 'wpfa_speaker' );
 $speaker_archive_url = $speaker_archive_url ? $speaker_archive_url : home_url( '/speakers/' );
 $speakers_url        = esc_url( add_query_arg( 'event', get_post_field( 'post_name', $event_id ), $speaker_archive_url ) );
-$is_bookmarked = is_user_logged_in() && in_array( (int) $event_id, array_map( 'absint', (array) get_user_meta( get_current_user_id(), 'wpfa_bookmarked_events', true ) ), true );
+$is_bookmarked = class_exists( 'Wpfaevent_User_Preferences_Service' ) && Wpfaevent_User_Preferences_Service::is_event_bookmarked( $event_id );
 ?>
 
 <div class="event-card<?php echo $is_bookmarked ? ' is-bookmarked' : ''; ?>"
