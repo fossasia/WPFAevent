@@ -170,7 +170,8 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 		return self::sanitize_post_id_list(
 			array_merge(
 				self::get_event_speaker_ids( $event_id ),
-				self::get_speakers_linked_to_event( $event_id )
+				self::get_speakers_linked_to_event( $event_id ),
+				self::get_eventyay_speakers_linked_to_event( $event_id )
 			)
 		);
 	}
@@ -249,6 +250,55 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 	}
 
 	/**
+	 * Find imported Eventyay speakers when relationship meta is missing.
+	 *
+	 * Older imports can have Eventyay speaker IDs prefixed by the Eventyay event
+	 * slug without the newer bidirectional relationship meta.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int>
+	 */
+	public static function get_eventyay_speakers_linked_to_event( $event_id ) {
+		$event_id = absint( $event_id );
+
+		if ( ! $event_id ) {
+			return array();
+		}
+
+		$event_slugs = self::get_eventyay_event_slugs( $event_id );
+
+		if ( empty( $event_slugs ) ) {
+			return array();
+		}
+
+		$meta_query = array( 'relation' => 'OR' );
+
+		foreach ( $event_slugs as $event_slug ) {
+			$meta_query[] = array(
+				'key'     => '_wpfa_eventyay_speaker_id',
+				'value'   => $event_slug . ':',
+				'compare' => 'LIKE',
+			);
+		}
+
+		$speaker_ids = get_posts(
+			array(
+				'post_type'      => self::$speaker_post_type,
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Eventyay speaker links are stored in post meta.
+				'meta_query'     => $meta_query,
+			)
+		);
+
+		return self::sanitize_post_id_list( $speaker_ids );
+	}
+
+	/**
 	 * Find all speakers with any event relationship.
 	 *
 	 * @since 1.0.0
@@ -271,6 +321,32 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 		);
 
 		return self::sanitize_post_id_list( $speaker_ids );
+	}
+
+	/**
+	 * Get possible Eventyay event slugs for an event post.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<string>
+	 */
+	private static function get_eventyay_event_slugs( $event_id ) {
+		$event_id = absint( $event_id );
+
+		if ( ! $event_id ) {
+			return array();
+		}
+
+		$event_slugs = array(
+			get_post_meta( $event_id, '_wpfa_eventyay_event_slug', true ),
+			get_post_meta( $event_id, '_eventyay_event_slug', true ),
+			get_post_field( 'post_name', $event_id ),
+		);
+
+		$event_slugs = array_map( 'sanitize_title', array_filter( array_map( 'strval', $event_slugs ) ) );
+
+		return array_values( array_unique( $event_slugs ) );
 	}
 
 	/**
