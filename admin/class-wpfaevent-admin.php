@@ -486,9 +486,207 @@ class Wpfaevent_Admin {
 		$this->get_eventyay_importer()->handle_eventyay_events_import();
 	}
 
+	/**
+	 * Render a scope filter on the Speakers admin list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $post_type Current admin list post type.
+	 */
+	public function render_speaker_event_filter( $post_type = '' ) {
+		if ( 'wpfa_speaker' !== $post_type ) {
+			return;
+		}
+
+		$current_event = $this->get_current_speaker_admin_event_filter();
+		$events        = get_posts(
+			array(
+				'post_type'      => 'wpfa_event',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+				'no_found_rows'  => true,
+			)
+		);
+
+		if ( empty( $events ) ) {
+			return;
+		}
+		?>
+		<label class="screen-reader-text" for="wpfa_speaker_event"><?php esc_html_e( 'Filter speakers by event', 'wpfaevent' ); ?></label>
+		<select name="wpfa_speaker_event" id="wpfa_speaker_event">
+			<option value="0"><?php esc_html_e( 'Site speakers', 'wpfaevent' ); ?></option>
+			<?php foreach ( $events as $event ) : ?>
+				<option value="<?php echo esc_attr( (string) absint( $event->ID ) ); ?>" <?php selected( $current_event, absint( $event->ID ) ); ?>>
+					<?php echo esc_html( sprintf( /* translators: %s: Event title. */ __( 'Event: %s', 'wpfaevent' ), get_the_title( $event ) ) ); ?>
+				</option>
+			<?php endforeach; ?>
+		</select>
+		<?php
+	}
+
+	/**
+	 * Filter the Speakers admin query by ownership scope.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Query $query Admin posts query.
+	 */
+	public function filter_speaker_admin_list( $query ) {
+		if ( ! $query instanceof WP_Query || ! $this->is_speaker_admin_list_query( $query ) ) {
+			return;
+		}
+
+		$scope             = $this->get_current_speaker_admin_scope();
+		$event_filter      = $this->get_current_speaker_admin_event_filter();
+		$event_speaker_ids = Wpfaevent_Event_Speaker_Relation_Manager::get_all_event_owned_speaker_ids();
+
+		if ( $event_filter ) {
+			$filtered_speaker_ids = Wpfaevent_Event_Speaker_Relation_Manager::get_admin_event_speaker_ids( $event_filter );
+
+			if ( empty( $filtered_speaker_ids ) ) {
+				$query->set( 'post__in', array( 0 ) );
+				return;
+			}
+
+			$query->set( 'post__in', $filtered_speaker_ids );
+			return;
+		}
+
+		if ( 'event' === $scope ) {
+			if ( empty( $event_speaker_ids ) ) {
+				$query->set( 'post__in', array( 0 ) );
+				return;
+			}
+
+			$query->set( 'post__in', $event_speaker_ids );
+			return;
+		}
+
+		if ( 'all' === $scope || empty( $event_speaker_ids ) ) {
+			return;
+		}
+
+		$query->set( 'post__not_in', $event_speaker_ids );
+	}
+
+	/**
+	 * Add custom view links for the Speakers admin list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $views Existing list table views.
+	 * @return array
+	 */
+	public function filter_speaker_admin_views( $views ) {
+		if ( ! is_array( $views ) ) {
+			$views = array();
+		}
+
+		$current_scope = $this->get_current_speaker_admin_scope();
+		$scope_options = $this->get_speaker_admin_scope_options();
+		$custom_views  = array();
+
+		foreach ( $scope_options as $scope => $label ) {
+			$url = add_query_arg(
+				array(
+					'post_type'               => 'wpfa_speaker',
+					'wpfaevent_speaker_scope' => $scope,
+				),
+				admin_url( 'edit.php' )
+			);
+
+			$custom_views[ 'wpfaevent_scope_' . $scope ] = sprintf(
+				'<a href="%s" %s>%s</a>',
+				esc_url( $url ),
+				$scope === $current_scope ? 'class="current" aria-current="page"' : '',
+				esc_html( $label )
+			);
+		}
+
+		return array_merge( $custom_views, $views );
+	}
+
 	// ========================================
 	// META BOXES
 	// ========================================
+
+	/**
+	 * Check whether a query is the main Speakers admin list query.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Query $query Query to inspect.
+	 * @return bool
+	 */
+	private function is_speaker_admin_list_query( $query ) {
+		if ( ! is_admin() || ! $query->is_main_query() ) {
+			return false;
+		}
+
+		if ( 'edit.php' !== $GLOBALS['pagenow'] ) {
+			return false;
+		}
+
+		return 'wpfa_speaker' === $query->get( 'post_type' );
+	}
+
+	/**
+	 * Get the selected scope for the Speakers admin list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string
+	 */
+	private function get_current_speaker_admin_scope() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin list filter persisted via query string.
+		$scope = isset( $_GET['wpfaevent_speaker_scope'] ) ? sanitize_key( wp_unslash( $_GET['wpfaevent_speaker_scope'] ) ) : 'standalone';
+
+		if ( ! array_key_exists( $scope, $this->get_speaker_admin_scope_options() ) ) {
+			return 'standalone';
+		}
+
+		return $scope;
+	}
+
+	/**
+	 * Get the selected event filter for the Speakers admin list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return int
+	 */
+	private function get_current_speaker_admin_event_filter() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin list filter persisted via query string.
+		$event_id = isset( $_GET['wpfa_speaker_event'] ) ? absint( wp_unslash( $_GET['wpfa_speaker_event'] ) ) : 0;
+
+		if ( ! $event_id ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Backward compatibility for earlier PR builds of this read-only filter.
+			$event_id = isset( $_GET['wpfaevent_speaker_event'] ) ? absint( wp_unslash( $_GET['wpfaevent_speaker_event'] ) ) : 0;
+		}
+
+		if ( ! $event_id || 'wpfa_event' !== get_post_type( $event_id ) ) {
+			return 0;
+		}
+
+		return $event_id;
+	}
+
+	/**
+	 * Get supported scope options for the Speakers admin list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<string, string>
+	 */
+	private function get_speaker_admin_scope_options() {
+		return array(
+			'standalone' => __( 'Standalone Speakers', 'wpfaevent' ),
+			'event'      => __( 'Event-Owned Speakers', 'wpfaevent' ),
+			'all'        => __( 'All Speakers', 'wpfaevent' ),
+		);
+	}
 
 	/**
 	 * Register meta boxes for Event and Speaker CPTs.
