@@ -123,7 +123,6 @@ class Wpfaevent {
 
 		// Data model classes - Meta Fields.
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-user-preferences-service.php';
-		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-event-speaker-relation-manager.php';
 		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-event.php';
 		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-speaker.php';
 
