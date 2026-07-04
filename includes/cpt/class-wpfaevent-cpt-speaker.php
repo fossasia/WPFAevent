@@ -63,13 +63,20 @@ class Wpfaevent_CPT_Speaker {
 		);
 
 		$capabilities = array(
-			'edit_post'          => 'edit_speaker',
-			'read_post'          => 'read_speaker',
-			'delete_post'        => 'delete_speaker',
-			'edit_posts'         => 'edit_speakers',
-			'edit_others_posts'  => 'edit_others_speakers',
-			'publish_posts'      => 'publish_speakers',
-			'read_private_posts' => 'read_private_speakers',
+			'edit_post'              => 'edit_speaker',
+			'read_post'              => 'read_speaker',
+			'delete_post'            => 'delete_speaker',
+			'edit_posts'             => 'edit_speakers',
+			'edit_others_posts'      => 'edit_others_speakers',
+			'publish_posts'          => 'publish_speakers',
+			'read_private_posts'     => 'read_private_speakers',
+			'delete_posts'           => 'delete_speakers',
+			'delete_private_posts'   => 'delete_private_speakers',
+			'delete_published_posts' => 'delete_published_speakers',
+			'delete_others_posts'    => 'delete_others_speakers',
+			'edit_private_posts'     => 'edit_private_speakers',
+			'edit_published_posts'   => 'edit_published_speakers',
+			'create_posts'           => 'publish_speakers',
 		);
 
 		$args = array(

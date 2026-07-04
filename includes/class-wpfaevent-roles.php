@@ -386,10 +386,12 @@ class Wpfaevent_Roles {
 			? self::get_organizer_capabilities()
 			: self::get_contributor_capabilities();
 
-		foreach ( $caps as $cap ) {
-			if ( in_array( $cap, $grant_caps, true ) ) {
-				$allcaps[ $cap ] = true;
-			}
+		foreach ( $grant_caps as $capability ) {
+			$allcaps[ $capability ] = true;
+		}
+
+		foreach ( self::get_request_scoped_admin_capabilities( $level ) as $capability ) {
+			$allcaps[ $capability ] = true;
 		}
 
 		self::$in_capability_filter = false;
@@ -455,6 +457,7 @@ class Wpfaevent_Roles {
 	 */
 	public static function get_plugin_capabilities() {
 		return array(
+			'read',
 			self::CAP_MANAGE_SETTINGS,
 			self::CAP_IMPORT_EVENTYAY,
 		);
@@ -488,12 +491,21 @@ class Wpfaevent_Roles {
 	 */
 	public static function get_contributor_capabilities() {
 		return array(
+			'read',
 			'read_event',
 			'edit_event',
 			'edit_events',
+			'edit_others_events',
+			'edit_published_events',
+			'edit_private_events',
+			'read_private_events',
 			'read_speaker',
 			'edit_speaker',
 			'edit_speakers',
+			'edit_others_speakers',
+			'edit_published_speakers',
+			'edit_private_speakers',
+			'read_private_speakers',
 		);
 	}
 
@@ -514,7 +526,69 @@ class Wpfaevent_Roles {
 
 		$levels = self::get_user_access_levels();
 
-		return isset( $levels[ $user_id ] ) ? $levels[ $user_id ] : '';
+		if ( isset( $levels[ $user_id ] ) ) {
+			return $levels[ $user_id ];
+		}
+
+		$user = get_userdata( $user_id );
+
+		if ( ! $user instanceof WP_User ) {
+			return '';
+		}
+
+		if ( in_array( self::LEGACY_ROLE_ORGANIZER, (array) $user->roles, true ) ) {
+			return self::ACCESS_ORGANIZER;
+		}
+
+		if ( in_array( self::LEGACY_ROLE_CONTRIBUTOR, (array) $user->roles, true ) ) {
+			return self::ACCESS_CONTRIBUTOR;
+		}
+
+		return '';
+	}
+
+	/**
+	 * Grant minimal core admin gates only while viewing WPFAEvent CPT screens.
+	 *
+	 * WordPress admin list/edit screens can check generic edit_posts before the
+	 * custom CPT capability is evaluated. Keep that bridge scoped to WPFAEvent
+	 * requests so contributors do not gain regular Posts access.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $level Assigned WPFAEvent access level.
+	 * @return array<int, string>
+	 */
+	private static function get_request_scoped_admin_capabilities( $level ) {
+		if ( ! is_admin() || ! in_array( $level, array( self::ACCESS_ORGANIZER, self::ACCESS_CONTRIBUTOR ), true ) ) {
+			return array();
+		}
+
+		if ( empty( $GLOBALS['pagenow'] ) || ! in_array( $GLOBALS['pagenow'], array( 'edit.php', 'post.php' ), true ) ) {
+			return array();
+		}
+
+		$post_type = '';
+
+		if ( 'edit.php' === $GLOBALS['pagenow'] ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin screen routing.
+			$post_type = isset( $_GET['post_type'] ) ? sanitize_key( wp_unslash( $_GET['post_type'] ) ) : 'post';
+		}
+
+		if ( 'post.php' === $GLOBALS['pagenow'] ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin screen routing.
+			$post_id = isset( $_GET['post'] ) ? absint( wp_unslash( $_GET['post'] ) ) : 0;
+
+			if ( $post_id ) {
+				$post_type = get_post_type( $post_id );
+			}
+		}
+
+		if ( ! in_array( $post_type, array( 'wpfa_event', 'wpfa_speaker' ), true ) ) {
+			return array();
+		}
+
+		return array( 'edit_posts' );
 	}
 
 	/**
