@@ -87,7 +87,7 @@ jobs:
       # --------------------------------------------------------------
       - name: Create Pull Request
         if: steps.checksum.outputs.needs_update == 'true'
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: update-install-wp-tests-${{ github.run_id }}
