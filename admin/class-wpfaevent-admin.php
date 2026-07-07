@@ -218,35 +218,8 @@ class Wpfaevent_Admin {
 	 * @since 1.0.0
 	 */
 	public function remove_event_taxonomy_submenus() {
-		global $submenu;
-
-		$parent_slug = 'edit.php?post_type=wpfa_event';
-
-		if ( empty( $submenu[ $parent_slug ] ) || ! is_array( $submenu[ $parent_slug ] ) ) {
-			return;
-		}
-
-		$submenu[ $parent_slug ] = array_values(
-			array_filter(
-				$submenu[ $parent_slug ],
-				static function ( $item ) {
-					if ( ! is_array( $item ) || empty( $item[2] ) ) {
-						return true;
-					}
-
-					return ! in_array(
-						$item[2],
-						array(
-							'edit-tags.php?taxonomy=wpfa_event_track&amp;post_type=wpfa_event',
-							'edit-tags.php?taxonomy=wpfa_event_track&post_type=wpfa_event',
-							'edit-tags.php?taxonomy=wpfa_event_tag&amp;post_type=wpfa_event',
-							'edit-tags.php?taxonomy=wpfa_event_tag&post_type=wpfa_event',
-						),
-						true
-					);
-				}
-			)
-		);
+		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'edit-tags.php?taxonomy=wpfa_event_track&post_type=wpfa_event' );
+		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'edit-tags.php?taxonomy=wpfa_event_tag&post_type=wpfa_event' );
 	}
 
 	/**

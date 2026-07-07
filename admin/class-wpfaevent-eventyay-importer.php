@@ -60,8 +60,8 @@ class Wpfaevent_Eventyay_Importer {
 		$current  = $this->get_eventyay_import_settings();
 		$settings = $defaults;
 
-		$base_url = isset( $input['base_url'] ) ? trim( (string) wp_unslash( $input['base_url'] ) ) : '';
-		$base_url = $base_url ? esc_url_raw( $base_url ) : $defaults['base_url'];
+		$base_url  = isset( $input['base_url'] ) ? trim( (string) wp_unslash( $input['base_url'] ) ) : '';
+		$base_url  = $base_url ? esc_url_raw( $base_url ) : $defaults['base_url'];
 		$event_url = isset( $input['event_url'] ) ? trim( (string) wp_unslash( $input['event_url'] ) ) : '';
 
 		if ( ! wp_http_validate_url( $base_url ) ) {
@@ -384,7 +384,7 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		if ( isset( $_POST['wpfaevent_eventyay_import_settings'] ) && is_array( $_POST['wpfaevent_eventyay_import_settings'] ) ) {
-			$raw_settings = wp_unslash( $_POST['wpfaevent_eventyay_import_settings'] );
+			$raw_settings = wp_unslash( $_POST['wpfaevent_eventyay_import_settings'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Array values are sanitized immediately by sanitize_eventyay_import_settings().
 			$raw_settings = wp_parse_args( $raw_settings, $this->get_eventyay_import_settings() );
 			$sanitized    = $this->sanitize_eventyay_import_settings( $raw_settings );
 
