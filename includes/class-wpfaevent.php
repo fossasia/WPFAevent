@@ -148,6 +148,9 @@ class Wpfaevent {
 
 		// Admin and Public classes.
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-dashboard-store.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-event-dashboard-data.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-event-dashboard-sync-service.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-event-dashboard-page.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-schedule-sync.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-importer.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-ajax-sync.php';
@@ -240,6 +243,12 @@ class Wpfaevent {
 		$this->loader->add_action( 'admin_head', $this->plugin_admin, 'remove_event_taxonomy_submenus' );
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_plugin_settings' );
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_eventyay_import_settings' );
+
+		$event_dashboard_page = new Wpfaevent_Event_Dashboard_Page();
+		$this->loader->add_action( 'admin_menu', $event_dashboard_page, 'register_page' );
+		$this->loader->add_action( 'admin_menu', $event_dashboard_page, 'hide_submenu', 999 );
+		$this->loader->add_filter( 'post_row_actions', $event_dashboard_page, 'add_row_action', 10, 2 );
+		$this->loader->add_action( 'admin_post_wpfaevent_sync_event_dashboard', $event_dashboard_page, 'handle_sync' );
 
 		// Add settings link to the plugins page.
 		$plugin_basename = plugin_basename( dirname( __DIR__ ) . '/wpfaevent.php' );
