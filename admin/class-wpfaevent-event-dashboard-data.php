@@ -244,7 +244,11 @@ class Wpfaevent_Event_Dashboard_Data {
 			array_filter(
 				array_map(
 					static function ( $term ) {
-						return isset( $term->name ) ? sanitize_text_field( $term->name ) : '';
+						if ( ! $term instanceof WP_Term ) {
+							return '';
+						}
+
+						return sanitize_text_field( $term->name );
 					},
 					$terms
 				)
