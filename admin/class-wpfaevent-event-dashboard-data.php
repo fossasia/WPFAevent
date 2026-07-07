@@ -118,9 +118,9 @@ class Wpfaevent_Event_Dashboard_Data {
 				),
 			),
 			'sections'   => array(
-				'visibility'      => $section_visibility,
+				'visibility'       => $section_visibility,
 				'custom_tab_count' => count( $custom_tabs ),
-				'about_excerpt'   => $about_content,
+				'about_excerpt'    => $about_content,
 			),
 			'import'     => array(
 				'source'           => $this->get_import_source_label( $event_id ),
@@ -133,8 +133,8 @@ class Wpfaevent_Event_Dashboard_Data {
 				'last_program_at'  => $this->format_meta_datetime( get_post_meta( $event_id, '_wpfa_eventyay_speakers_synced_at', true ) ),
 			),
 			'sync'       => array(
-				'status'         => $this->get_sync_status( $event_id ),
-				'can_sync'       => $this->is_eventyay_event( $event_id ) && Wpfaevent_Roles::current_user_can_import_eventyay(),
+				'status'           => $this->get_sync_status( $event_id ),
+				'can_sync'         => $this->is_eventyay_event( $event_id ) && Wpfaevent_Roles::current_user_can_import_eventyay(),
 				'eventyay_api_url' => ! empty( $site_settings['eventyay_api_url'] ) ? esc_url_raw( $site_settings['eventyay_api_url'] ) : '',
 			),
 			'settings'   => array(

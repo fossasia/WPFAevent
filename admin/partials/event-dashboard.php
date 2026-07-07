@@ -72,10 +72,10 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 		<?php endif; ?>
 	<h1>
 		<?php
-		printf(
-			/* translators: %s: event title. */
-			esc_html__( 'Event Dashboard: %s', 'wpfaevent' ),
-			esc_html( isset( $event['title'] ) ? $event['title'] : '' )
+			printf(
+				/* translators: %s: event title. */
+				esc_html__( 'Event Dashboard: %s', 'wpfaevent' ),
+				esc_html( isset( $event['title'] ) ? $event['title'] : '' )
 			);
 			?>
 		</h1>
@@ -312,7 +312,19 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 						<?php esc_html_e( 'Eventyay API URL not saved.', 'wpfaevent' ); ?>
 					<?php endif; ?>
 				</li>
-				<li><?php echo esc_html( ! empty( $settings['reg_button_text'] ) ? sprintf( __( 'Registration button text: %s', 'wpfaevent' ), $settings['reg_button_text'] ) : __( 'Registration button text not set.', 'wpfaevent' ) ); ?></li>
+				<li>
+					<?php
+					echo esc_html(
+						! empty( $settings['reg_button_text'] )
+							? sprintf(
+								/* translators: %s: registration button label. */
+								__( 'Registration button text: %s', 'wpfaevent' ),
+								$settings['reg_button_text']
+							)
+							: __( 'Registration button text not set.', 'wpfaevent' )
+					);
+					?>
+				</li>
 			</ul>
 		</div>
 	</div>

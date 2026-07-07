@@ -120,7 +120,7 @@ class Wpfaevent_Event_Dashboard_Page {
 			);
 		}
 
-		$dashboard_data = $this->data_provider->get_event_dashboard_data( $event_id );
+		$dashboard_data   = $this->data_provider->get_event_dashboard_data( $event_id );
 		$dashboard_notice = $this->consume_notice();
 
 		require WPFAEVENT_PATH . 'admin/partials/event-dashboard.php';
