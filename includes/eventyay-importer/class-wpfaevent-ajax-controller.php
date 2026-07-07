@@ -187,21 +187,20 @@ class Wpfaevent_AJAX_Controller {
 			);
 		}
 
-		$fetched = $this->client->fetch_eventyay_event_resources( $settings );
-		if ( is_wp_error( $fetched ) ) {
+		if ( empty( $settings['event_slug'] ) ) {
 			wp_send_json_error(
 				array(
-					'message' => $fetched->get_error_message(),
+					'message' => esc_html__( 'Please save a single Eventyay event URL before importing or updating.', 'wpfaevent' ),
 				),
 				400
 			);
 		}
 
-		$events = isset( $fetched['events'] ) && is_array( $fetched['events'] ) ? $fetched['events'] : array();
-		if ( empty( $events ) ) {
+		$event = $importer->fetch_single_eventyay_event_from_settings( $settings );
+		if ( is_wp_error( $event ) ) {
 			wp_send_json_error(
 				array(
-					'message' => esc_html__( 'No Eventyay events were returned by the configured endpoint.', 'wpfaevent' ),
+					'message' => $event->get_error_message(),
 				),
 				400
 			);
@@ -209,7 +208,7 @@ class Wpfaevent_AJAX_Controller {
 
 		wp_send_json_success(
 			array(
-				'events' => $events,
+				'events' => array( $event ),
 			)
 		);
 	}
