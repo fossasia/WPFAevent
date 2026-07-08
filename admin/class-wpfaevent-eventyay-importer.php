@@ -60,8 +60,8 @@ class Wpfaevent_Eventyay_Importer {
 		$current  = $this->get_eventyay_import_settings();
 		$settings = $defaults;
 
-		$base_url = isset( $input['base_url'] ) ? trim( (string) wp_unslash( $input['base_url'] ) ) : '';
-		$base_url = $base_url ? esc_url_raw( $base_url ) : $defaults['base_url'];
+		$base_url  = isset( $input['base_url'] ) ? trim( (string) wp_unslash( $input['base_url'] ) ) : '';
+		$base_url  = $base_url ? esc_url_raw( $base_url ) : $defaults['base_url'];
 		$event_url = isset( $input['event_url'] ) ? trim( (string) wp_unslash( $input['event_url'] ) ) : '';
 
 		if ( ! wp_http_validate_url( $base_url ) ) {
@@ -384,6 +384,7 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		if ( isset( $_POST['wpfaevent_eventyay_import_settings'] ) && is_array( $_POST['wpfaevent_eventyay_import_settings'] ) ) {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Array values are sanitized immediately by sanitize_eventyay_import_settings().
 			$raw_settings = wp_unslash( $_POST['wpfaevent_eventyay_import_settings'] );
 			$raw_settings = wp_parse_args( $raw_settings, $this->get_eventyay_import_settings() );
 			$sanitized    = $this->sanitize_eventyay_import_settings( $raw_settings );
@@ -3082,8 +3083,9 @@ class Wpfaevent_Eventyay_Importer {
 			 *
 			 * @since 1.0.0
 			 *
-			 * @param array $event    Eventyay event resource.
-			 * @param array $settings Import settings.
+			 * @param array $event             Eventyay event resource.
+			 * @param array $settings          Import settings.
+			 * @param int   $preferred_post_id Optional preferred WordPress event post ID.
 			 * @return array|WP_Error Upsert result.
 			 */
 	private function upsert_eventyay_event_post( $event, $settings, $preferred_post_id = 0 ) {
@@ -3109,7 +3111,7 @@ class Wpfaevent_Eventyay_Importer {
 			'post_status'  => $post_status,
 			'post_content' => wp_kses_post( $description ),
 		);
-		$created        = false;
+		$created = false;
 
 		if ( $existing_id ) {
 			$post_data['ID'] = $existing_id;

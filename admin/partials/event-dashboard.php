@@ -21,6 +21,9 @@ $sessions           = isset( $dashboard_data['sessions'] ) && is_array( $dashboa
 $tracks             = isset( $dashboard_data['tracks'] ) && is_array( $dashboard_data['tracks'] ) ? $dashboard_data['tracks'] : array();
 $assets             = isset( $dashboard_data['assets'] ) && is_array( $dashboard_data['assets'] ) ? $dashboard_data['assets'] : array();
 $resources          = isset( $dashboard_data['resources'] ) && is_array( $dashboard_data['resources'] ) ? $dashboard_data['resources'] : array();
+$module_urls        = isset( $module_urls ) && is_array( $module_urls ) ? $module_urls : array();
+$sync_action_url    = isset( $sync_action_url ) ? (string) $sync_action_url : admin_url( 'admin-post.php' );
+$sync_ajax_url      = isset( $sync_ajax_url ) ? (string) $sync_ajax_url : admin_url( 'admin-ajax.php' );
 $section_visibility = isset( $sections['visibility'] ) && is_array( $sections['visibility'] ) ? $sections['visibility'] : array();
 $about_excerpt      = isset( $sections['about_excerpt'] ) ? (string) $sections['about_excerpt'] : '';
 $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections['custom_tab_count'] ) : 0;
@@ -82,8 +85,8 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 			/* translators: %s: event title. */
 			esc_html__( 'Event Dashboard: %s', 'wpfaevent' ),
 			esc_html( isset( $event['title'] ) ? $event['title'] : '' )
-			);
-			?>
+		);
+		?>
 		</h1>
 		<div class="wpfaevent-dashboard-hero">
 			<div class="wpfaevent-dashboard-meta">
@@ -319,7 +322,19 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 						<?php esc_html_e( 'Eventyay API URL not saved.', 'wpfaevent' ); ?>
 					<?php endif; ?>
 				</li>
-				<li><?php echo esc_html( ! empty( $settings['reg_button_text'] ) ? sprintf( __( 'Registration button text: %s', 'wpfaevent' ), $settings['reg_button_text'] ) : __( 'Registration button text not set.', 'wpfaevent' ) ); ?></li>
+				<li>
+					<?php
+					echo esc_html(
+						! empty( $settings['reg_button_text'] )
+							? sprintf(
+								/* translators: %s: registration button text. */
+								__( 'Registration button text: %s', 'wpfaevent' ),
+								$settings['reg_button_text']
+							)
+							: __( 'Registration button text not set.', 'wpfaevent' )
+					);
+					?>
+				</li>
 			</ul>
 		</div>
 	</div>

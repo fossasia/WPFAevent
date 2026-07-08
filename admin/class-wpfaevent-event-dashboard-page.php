@@ -120,7 +120,7 @@ class Wpfaevent_Event_Dashboard_Page {
 			);
 		}
 
-		$dashboard_data = $this->data_provider->get_event_dashboard_data( $event_id );
+		$dashboard_data   = $this->data_provider->get_event_dashboard_data( $event_id );
 		$dashboard_notice = $this->consume_notice();
 		$dashboard_url    = $this->get_dashboard_url( $event_id );
 		$module_urls      = $this->get_module_urls( $event_id, $dashboard_data );
@@ -146,7 +146,7 @@ class Wpfaevent_Event_Dashboard_Page {
 			);
 		}
 
-		$result   = $this->run_sync_request( $event_id );
+		$result = $this->run_sync_request( $event_id );
 
 		if ( is_wp_error( $result ) ) {
 			$error_data = $result->get_error_data();
@@ -290,6 +290,7 @@ class Wpfaevent_Event_Dashboard_Page {
 	 * @return int
 	 */
 	private function get_posted_sync_event_id() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified in run_sync_request() before the value is acted upon.
 		return isset( $_POST['event_id'] ) ? absint( wp_unslash( $_POST['event_id'] ) ) : 0;
 	}
 
@@ -369,8 +370,8 @@ class Wpfaevent_Event_Dashboard_Page {
 	 * @return array<string, string>
 	 */
 	private function get_module_urls( $event_id, $dashboard_data ) {
-		$event_id      = absint( $event_id );
-		$dashboard_url = $this->get_dashboard_url( $event_id );
+		$event_id       = absint( $event_id );
+		$dashboard_url  = $this->get_dashboard_url( $event_id );
 		$event_edit_url = isset( $dashboard_data['event']['edit_url'] ) ? (string) $dashboard_data['event']['edit_url'] : '';
 
 		return array(
