@@ -3111,7 +3111,7 @@ class Wpfaevent_Eventyay_Importer {
 			'post_status'  => $post_status,
 			'post_content' => wp_kses_post( $description ),
 		);
-		$created = false;
+		$created           = false;
 
 		if ( $existing_id ) {
 			$post_data['ID'] = $existing_id;
