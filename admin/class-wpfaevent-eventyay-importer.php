@@ -60,8 +60,8 @@ class Wpfaevent_Eventyay_Importer {
 		$current  = $this->get_eventyay_import_settings();
 		$settings = $defaults;
 
-		$base_url  = isset( $input['base_url'] ) ? trim( (string) wp_unslash( $input['base_url'] ) ) : '';
-		$base_url  = $base_url ? esc_url_raw( $base_url ) : $defaults['base_url'];
+		$base_url = isset( $input['base_url'] ) ? trim( (string) wp_unslash( $input['base_url'] ) ) : '';
+		$base_url = $base_url ? esc_url_raw( $base_url ) : $defaults['base_url'];
 		$event_url = isset( $input['event_url'] ) ? trim( (string) wp_unslash( $input['event_url'] ) ) : '';
 
 		if ( ! wp_http_validate_url( $base_url ) ) {
@@ -384,7 +384,7 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		if ( isset( $_POST['wpfaevent_eventyay_import_settings'] ) && is_array( $_POST['wpfaevent_eventyay_import_settings'] ) ) {
-			$raw_settings = wp_unslash( $_POST['wpfaevent_eventyay_import_settings'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Array values are sanitized immediately by sanitize_eventyay_import_settings().
+			$raw_settings = wp_unslash( $_POST['wpfaevent_eventyay_import_settings'] );
 			$raw_settings = wp_parse_args( $raw_settings, $this->get_eventyay_import_settings() );
 			$sanitized    = $this->sanitize_eventyay_import_settings( $raw_settings );
 
@@ -681,8 +681,8 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $events   Fetched Eventyay event resources.
-	 * @param array $settings Import settings.
+	 * @param array $events    Fetched Eventyay event resources.
+	 * @param array $settings  Import settings.
 	 * @return array|WP_Error
 	 */
 	private function match_configured_eventyay_event( $events, $settings ) {
@@ -741,13 +741,15 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $event    Raw Eventyay event payload.
-	 * @param array $settings  Import settings.
+	 * @param array $event          Raw Eventyay event payload.
+	 * @param array $settings       Import settings.
+	 * @param int   $target_post_id Optional target event post ID to update in place.
 	 * @return array|WP_Error
 	 */
-	public function import_single_eventyay_event( $event, $settings ) {
-		$event    = is_array( $event ) ? $event : array();
-		$settings = wp_parse_args( is_array( $settings ) ? $settings : array(), $this->get_eventyay_import_default_settings() );
+	public function import_single_eventyay_event( $event, $settings, $target_post_id = 0 ) {
+		$event          = is_array( $event ) ? $event : array();
+		$settings       = wp_parse_args( is_array( $settings ) ? $settings : array(), $this->get_eventyay_import_default_settings() );
+		$target_post_id = absint( $target_post_id );
 
 		if ( empty( $event ) ) {
 			return new WP_Error(
@@ -756,7 +758,7 @@ class Wpfaevent_Eventyay_Importer {
 			);
 		}
 
-		$upsert = $this->upsert_eventyay_event_post( $event, $settings );
+		$upsert = $this->upsert_eventyay_event_post( $event, $settings, $target_post_id );
 		if ( is_wp_error( $upsert ) ) {
 			return $upsert;
 		}
@@ -788,6 +790,7 @@ class Wpfaevent_Eventyay_Importer {
 			$result['created_speakers'] = isset( $program['created_speakers'] ) ? absint( $program['created_speakers'] ) : 0;
 			$result['updated_speakers'] = isset( $program['updated_speakers'] ) ? absint( $program['updated_speakers'] ) : 0;
 			$result['schedule_rows']    = isset( $program['schedule_rows'] ) ? absint( $program['schedule_rows'] ) : 0;
+			$result['tracks']           = isset( $program['track_count'] ) ? absint( $program['track_count'] ) : 0;
 		}
 
 		return $result;
@@ -2137,12 +2140,15 @@ class Wpfaevent_Eventyay_Importer {
 			return $schedule_rows;
 		}
 
+		$track_count = $this->sync_eventyay_event_tracks( $event_id, $program['sessions'] );
+
 		return array(
 			'speaker_count'    => count( $program['speakers'] ),
 			'session_count'    => $program['session_count'],
 			'created_speakers' => $cpt_result['created'],
 			'updated_speakers' => $cpt_result['updated'],
 			'schedule_rows'    => $schedule_rows,
+			'track_count'      => $track_count,
 		);
 	}
 
@@ -2180,6 +2186,39 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		return max( 0, absint( $table['rows'] ) - 1 );
+	}
+
+	/**
+	 * Sync event track terms from imported Eventyay sessions.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int   $event_id Imported WordPress event post ID.
+	 * @param array $sessions Normalized Eventyay sessions.
+	 * @return int
+	 */
+	private function sync_eventyay_event_tracks( $event_id, $sessions ) {
+		$event_id = absint( $event_id );
+		$sessions = is_array( $sessions ) ? $sessions : array();
+
+		if ( ! $event_id || 'wpfa_event' !== get_post_type( $event_id ) || ! taxonomy_exists( 'wpfa_event_track' ) ) {
+			return 0;
+		}
+
+		$tracks = array();
+
+		foreach ( $sessions as $session ) {
+			if ( ! is_array( $session ) || empty( $session['track'] ) ) {
+				continue;
+			}
+
+			$tracks[] = sanitize_text_field( $session['track'] );
+		}
+
+		$tracks = array_values( array_unique( array_filter( $tracks ) ) );
+		wp_set_object_terms( $event_id, $tracks, 'wpfa_event_track', false );
+
+		return count( $tracks );
 	}
 
 	/**
@@ -3047,7 +3086,7 @@ class Wpfaevent_Eventyay_Importer {
 			 * @param array $settings Import settings.
 			 * @return array|WP_Error Upsert result.
 			 */
-	private function upsert_eventyay_event_post( $event, $settings ) {
+	private function upsert_eventyay_event_post( $event, $settings, $preferred_post_id = 0 ) {
 		$event      = $this->normalize_eventyay_event_resource( $event );
 		$event_slug = $this->eventyay_event_slug( $event );
 		if ( empty( $event_slug ) ) {
@@ -3057,13 +3096,14 @@ class Wpfaevent_Eventyay_Importer {
 			);
 		}
 
-		$organizer_slug = $settings['organizer_slug'];
-		$title          = $this->eventyay_event_title( $event );
-		$title          = $title ? $title : $event_slug;
-		$description    = $this->eventyay_event_description( $event );
-		$existing_id    = $this->find_eventyay_event_post( $organizer_slug, $event_slug );
-		$post_status    = in_array( $settings['post_status'], array( 'draft', 'publish', 'pending', 'private' ), true ) ? $settings['post_status'] : 'draft';
-		$post_data      = array(
+		$organizer_slug    = $settings['organizer_slug'];
+		$title             = $this->eventyay_event_title( $event );
+		$title             = $title ? $title : $event_slug;
+		$description       = $this->eventyay_event_description( $event );
+		$preferred_post_id = absint( $preferred_post_id );
+		$existing_id       = $preferred_post_id && 'wpfa_event' === get_post_type( $preferred_post_id ) ? $preferred_post_id : $this->find_eventyay_event_post( $organizer_slug, $event_slug );
+		$post_status       = in_array( $settings['post_status'], array( 'draft', 'publish', 'pending', 'private' ), true ) ? $settings['post_status'] : 'draft';
+		$post_data         = array(
 			'post_title'   => sanitize_text_field( $title ),
 			'post_type'    => 'wpfa_event',
 			'post_status'  => $post_status,
@@ -3203,6 +3243,11 @@ class Wpfaevent_Eventyay_Importer {
 
 		if ( $event_url ) {
 			$dashboard_settings['reg_button_link'] = esc_url_raw( $event_url );
+		}
+
+		$eventyay_api_url = $this->build_eventyay_event_endpoint( $settings, $event_slug );
+		if ( ! is_wp_error( $eventyay_api_url ) ) {
+			$dashboard_settings['eventyay_api_url'] = esc_url_raw( $eventyay_api_url );
 		}
 
 		$write_result = $this->write_dashboard_json_file( $settings_file, $dashboard_settings );

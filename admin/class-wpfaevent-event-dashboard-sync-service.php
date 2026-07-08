@@ -76,7 +76,7 @@ class Wpfaevent_Event_Dashboard_Sync_Service {
 			return $event;
 		}
 
-		$result = $this->importer->import_single_eventyay_event( $event, $settings );
+		$result = $this->importer->import_single_eventyay_event( $event, $settings, $event_id );
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
@@ -147,7 +147,7 @@ class Wpfaevent_Event_Dashboard_Sync_Service {
 			$logo_overwritten                     = true;
 		}
 
-		if ( empty( $dashboard_settings['hero_image_url'] ) && ! empty( $media['hero_image_url'] ) ) {
+		if ( ! empty( $media['hero_image_url'] ) && ( empty( $dashboard_settings['hero_image_url'] ) || $dashboard_settings['hero_image_url'] !== $media['hero_image_url'] ) ) {
 			$dashboard_settings['hero_image_url'] = $media['hero_image_url'];
 			$updated                              = true;
 		}

@@ -120,8 +120,12 @@ class Wpfaevent_Event_Dashboard_Page {
 			);
 		}
 
-		$dashboard_data   = $this->data_provider->get_event_dashboard_data( $event_id );
+		$dashboard_data = $this->data_provider->get_event_dashboard_data( $event_id );
 		$dashboard_notice = $this->consume_notice();
+		$dashboard_url    = $this->get_dashboard_url( $event_id );
+		$module_urls      = $this->get_module_urls( $event_id, $dashboard_data );
+		$sync_action_url  = $this->get_sync_action_url();
+		$sync_ajax_url    = admin_url( 'admin-ajax.php' );
 
 		require WPFAEVENT_PATH . 'admin/partials/event-dashboard.php';
 	}
@@ -132,10 +136,9 @@ class Wpfaevent_Event_Dashboard_Page {
 	 * @return void
 	 */
 	public function handle_sync() {
-		$event_id = isset( $_POST['event_id'] ) ? absint( wp_unslash( $_POST['event_id'] ) ) : 0;
-		$nonce    = isset( $_POST['wpfaevent_sync_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfaevent_sync_nonce'] ) ) : '';
+		$event_id = $this->get_posted_sync_event_id();
 
-		if ( ! $event_id || ! wp_verify_nonce( $nonce, 'wpfaevent_sync_event_dashboard_' . $event_id ) ) {
+		if ( ! $event_id ) {
 			wp_die(
 				esc_html__( 'The synchronize request is invalid.', 'wpfaevent' ),
 				esc_html__( 'Access denied', 'wpfaevent' ),
@@ -143,18 +146,19 @@ class Wpfaevent_Event_Dashboard_Page {
 			);
 		}
 
-		if ( ! $this->current_user_can_access_event( $event_id ) || ! Wpfaevent_Roles::current_user_can_import_eventyay() ) {
-			wp_die(
-				esc_html__( 'You are not allowed to synchronize this event.', 'wpfaevent' ),
-				esc_html__( 'Access denied', 'wpfaevent' ),
-				array( 'response' => 403 )
-			);
-		}
-
-		$overwrite_logo = ! empty( $_POST['overwrite_existing_logo'] );
-		$result         = $this->sync_service->sync_event( $event_id, $overwrite_logo );
+		$result   = $this->run_sync_request( $event_id );
 
 		if ( is_wp_error( $result ) ) {
+			$error_data = $result->get_error_data();
+
+			if ( is_array( $error_data ) && ! empty( $error_data['status'] ) && 403 === absint( $error_data['status'] ) ) {
+				wp_die(
+					esc_html( $result->get_error_message() ),
+					esc_html__( 'Access denied', 'wpfaevent' ),
+					array( 'response' => 403 )
+				);
+			}
+
 			$this->store_notice(
 				array(
 					'type'    => 'error',
@@ -172,6 +176,33 @@ class Wpfaevent_Event_Dashboard_Page {
 
 		wp_safe_redirect( $this->get_dashboard_url( $event_id ) );
 		exit;
+	}
+
+	/**
+	 * Handle the dashboard synchronize action over AJAX.
+	 *
+	 * @return void
+	 */
+	public function handle_sync_ajax() {
+		$event_id = $this->get_posted_sync_event_id();
+		$result   = $this->run_sync_request( $event_id );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error(
+				array(
+					'message' => $result->get_error_message(),
+				),
+				$this->json_error_status( $result )
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'message'       => $this->build_sync_success_message( $result ),
+				'dashboard_url' => $this->get_dashboard_url( $event_id ),
+				'result'        => $result,
+			)
+		);
 	}
 
 	/**
@@ -254,6 +285,46 @@ class Wpfaevent_Event_Dashboard_Page {
 	}
 
 	/**
+	 * Get validated sync request event ID from POST data.
+	 *
+	 * @return int
+	 */
+	private function get_posted_sync_event_id() {
+		return isset( $_POST['event_id'] ) ? absint( wp_unslash( $_POST['event_id'] ) ) : 0;
+	}
+
+	/**
+	 * Run one dashboard sync request after validating permissions and nonce.
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<string, mixed>|WP_Error
+	 */
+	private function run_sync_request( $event_id ) {
+		$event_id = absint( $event_id );
+		$nonce    = isset( $_POST['wpfaevent_sync_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfaevent_sync_nonce'] ) ) : '';
+
+		if ( ! $event_id || ! wp_verify_nonce( $nonce, 'wpfaevent_sync_event_dashboard_' . $event_id ) ) {
+			return new WP_Error(
+				'wpfaevent_dashboard_invalid_sync_request',
+				esc_html__( 'The synchronize request is invalid.', 'wpfaevent' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		if ( ! $this->current_user_can_access_event( $event_id ) || ! Wpfaevent_Roles::current_user_can_import_eventyay() ) {
+			return new WP_Error(
+				'wpfaevent_dashboard_sync_forbidden',
+				esc_html__( 'You are not allowed to synchronize this event.', 'wpfaevent' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		$overwrite_logo = ! empty( $_POST['overwrite_existing_logo'] );
+
+		return $this->sync_service->sync_event( $event_id, $overwrite_logo );
+	}
+
+	/**
 	 * Store one dashboard notice for the current user.
 	 *
 	 * @param array<string, string> $notice Notice payload.
@@ -291,6 +362,47 @@ class Wpfaevent_Event_Dashboard_Page {
 	}
 
 	/**
+	 * Build contextual admin URLs for dashboard module cards.
+	 *
+	 * @param int                 $event_id        Event post ID.
+	 * @param array<string,mixed> $dashboard_data  Dashboard data payload.
+	 * @return array<string, string>
+	 */
+	private function get_module_urls( $event_id, $dashboard_data ) {
+		$event_id      = absint( $event_id );
+		$dashboard_url = $this->get_dashboard_url( $event_id );
+		$event_edit_url = isset( $dashboard_data['event']['edit_url'] ) ? (string) $dashboard_data['event']['edit_url'] : '';
+
+		return array(
+			'speakers' => add_query_arg(
+				array(
+					'post_type'               => 'wpfa_speaker',
+					'wpfaevent_speaker_scope' => 'event',
+					'wpfa_speaker_event'      => $event_id,
+				),
+				admin_url( 'edit.php' )
+			),
+			'sessions' => $dashboard_url . '#wpfaevent-sessions',
+			'tracks'   => $event_edit_url ? $event_edit_url . '#tagsdiv-wpfa_event_track' : $dashboard_url . '#wpfaevent-tracks',
+			'settings' => $event_edit_url ? $event_edit_url : $dashboard_url . '#wpfaevent-settings',
+			'source'   => $dashboard_url . '#wpfaevent-source',
+			'sync'     => $dashboard_url . '#wpfaevent-sync',
+		);
+	}
+
+	/**
+	 * Resolve an HTTP status for an AJAX error response.
+	 *
+	 * @param WP_Error $error Error object.
+	 * @return int
+	 */
+	private function json_error_status( $error ) {
+		$data = is_wp_error( $error ) ? $error->get_error_data() : array();
+
+		return is_array( $data ) && ! empty( $data['status'] ) ? absint( $data['status'] ) : 400;
+	}
+
+	/**
 	 * Build a friendly synchronization success message.
 	 *
 	 * @param array<string, mixed> $result Sync result.
@@ -298,10 +410,11 @@ class Wpfaevent_Event_Dashboard_Page {
 	 */
 	private function build_sync_success_message( $result ) {
 		$message = sprintf(
-			/* translators: 1: sessions count, 2: speakers count. */
-			esc_html__( 'Event synchronized. Imported %1$d sessions and %2$d speakers.', 'wpfaevent' ),
+			/* translators: 1: sessions count, 2: speakers count, 3: tracks count. */
+			esc_html__( 'Event synchronized. Updated %1$d sessions, %2$d speakers, and %3$d tracks.', 'wpfaevent' ),
 			isset( $result['sessions'] ) ? absint( $result['sessions'] ) : 0,
-			isset( $result['speakers'] ) ? absint( $result['speakers'] ) : 0
+			isset( $result['speakers'] ) ? absint( $result['speakers'] ) : 0,
+			isset( $result['tracks'] ) ? absint( $result['tracks'] ) : 0
 		);
 
 		if ( ! empty( $result['logo_overwritten'] ) ) {

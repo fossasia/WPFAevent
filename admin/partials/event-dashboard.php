@@ -55,6 +55,12 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 		.wpfaevent-asset img { width:100%; height:140px; object-fit:cover; border-radius:10px; border:1px solid #d9e2ec; background:#fff; }
 		.wpfaevent-asset code { display:block; margin-top:8px; }
 		.wpfaevent-sync-form { display:grid; gap:12px; margin-top:12px; }
+		.wpfaevent-sync-feedback { display:none; margin-top:4px; padding:12px 14px; border-radius:12px; border:1px solid transparent; }
+		.wpfaevent-sync-feedback.is-active { display:block; }
+		.wpfaevent-sync-feedback.is-loading { background:#eef5fb; border-color:#cfe0f2; color:#184b73; }
+		.wpfaevent-sync-feedback.is-success { background:#edf9f0; border-color:#bad8c2; color:#1f5f33; }
+		.wpfaevent-sync-feedback.is-error { background:#fdf0f0; border-color:#efc4c4; color:#8a1f1f; }
+		.wpfaevent-sync-form button[disabled] { opacity:0.7; cursor:not-allowed; }
 		.wpfaevent-dashboard-shell .notice { margin: 0 0 20px; }
 		.wpfaevent-dashboard-module-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:16px; margin-top:20px; }
 		.wpfaevent-module-card { min-height:158px; display:flex; flex-direction:column; justify-content:space-between; }
@@ -72,10 +78,10 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 		<?php endif; ?>
 	<h1>
 		<?php
-			printf(
-				/* translators: %s: event title. */
-				esc_html__( 'Event Dashboard: %s', 'wpfaevent' ),
-				esc_html( isset( $event['title'] ) ? $event['title'] : '' )
+		printf(
+			/* translators: %s: event title. */
+			esc_html__( 'Event Dashboard: %s', 'wpfaevent' ),
+			esc_html( isset( $event['title'] ) ? $event['title'] : '' )
 			);
 			?>
 		</h1>
@@ -186,7 +192,7 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 			<p><strong><?php esc_html_e( 'Last synchronized', 'wpfaevent' ); ?>:</strong> <?php echo esc_html( ! empty( $import['last_synced_at'] ) ? $import['last_synced_at'] : __( 'Never', 'wpfaevent' ) ); ?></p>
 			<p><strong><?php esc_html_e( 'Last speaker/session sync', 'wpfaevent' ); ?>:</strong> <?php echo esc_html( ! empty( $import['last_program_at'] ) ? $import['last_program_at'] : __( 'Never', 'wpfaevent' ) ); ?></p>
 			<?php if ( ! empty( $sync['can_sync'] ) ) : ?>
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="wpfaevent-sync-form">
+				<form method="post" action="<?php echo esc_url( $sync_action_url ); ?>" class="wpfaevent-sync-form" data-sync-form data-ajax-url="<?php echo esc_url( $sync_ajax_url ); ?>">
 					<input type="hidden" name="action" value="wpfaevent_sync_event_dashboard">
 					<input type="hidden" name="event_id" value="<?php echo esc_attr( (string) $event['id'] ); ?>">
 					<?php wp_nonce_field( 'wpfaevent_sync_event_dashboard_' . absint( $event['id'] ), 'wpfaevent_sync_nonce' ); ?>
@@ -196,6 +202,7 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 					</label>
 					<p class="description"><?php esc_html_e( 'When enabled, a saved event logo in dashboard settings can be replaced with the Eventyay logo if one is available.', 'wpfaevent' ); ?></p>
 					<?php submit_button( __( 'Synchronize Event', 'wpfaevent' ), 'primary', 'submit', false ); ?>
+					<div class="wpfaevent-sync-feedback" data-sync-feedback aria-live="polite"></div>
 				</form>
 			<?php else : ?>
 				<p class="description"><?php esc_html_e( 'This event can be viewed here, but synchronization is only available for Eventyay-linked events and users with import permission.', 'wpfaevent' ); ?></p>
@@ -209,35 +216,35 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 				<h2><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h2>
 				<p><?php esc_html_e( 'Review attached speaker records, featured speakers, and imported speaker profile data for this event.', 'wpfaevent' ); ?></p>
 			</div>
-			<a class="wpfaevent-module-link" href="#wpfaevent-speakers"><?php esc_html_e( 'Go to Speakers', 'wpfaevent' ); ?></a>
+			<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['speakers'] ); ?>"><?php esc_html_e( 'Go to Speakers', 'wpfaevent' ); ?></a>
 		</div>
 		<div class="wpfaevent-dashboard-card wpfaevent-module-card">
 			<div>
 				<h2><?php esc_html_e( 'Sessions', 'wpfaevent' ); ?></h2>
 				<p><?php esc_html_e( 'Inspect imported schedule sessions, time slots, track assignments, and room information.', 'wpfaevent' ); ?></p>
 			</div>
-			<a class="wpfaevent-module-link" href="#wpfaevent-sessions"><?php esc_html_e( 'Go to Sessions', 'wpfaevent' ); ?></a>
+			<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['sessions'] ); ?>"><?php esc_html_e( 'Go to Sessions', 'wpfaevent' ); ?></a>
 		</div>
 		<div class="wpfaevent-dashboard-card wpfaevent-module-card">
 			<div>
 				<h2><?php esc_html_e( 'Tracks', 'wpfaevent' ); ?></h2>
 				<p><?php esc_html_e( 'See event taxonomy tracks and tracks inferred from imported session data in one place.', 'wpfaevent' ); ?></p>
 			</div>
-			<a class="wpfaevent-module-link" href="#wpfaevent-tracks"><?php esc_html_e( 'Go to Tracks', 'wpfaevent' ); ?></a>
+			<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['tracks'] ); ?>"><?php esc_html_e( 'Go to Tracks', 'wpfaevent' ); ?></a>
 		</div>
 		<div class="wpfaevent-dashboard-card wpfaevent-module-card">
 			<div>
 				<h2><?php esc_html_e( 'Event Settings', 'wpfaevent' ); ?></h2>
 				<p><?php esc_html_e( 'Check public URLs, registration settings, dashboard settings, and event-specific content visibility.', 'wpfaevent' ); ?></p>
 			</div>
-			<a class="wpfaevent-module-link" href="#wpfaevent-settings"><?php esc_html_e( 'Go to Settings', 'wpfaevent' ); ?></a>
+			<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['settings'] ); ?>"><?php esc_html_e( 'Go to Settings', 'wpfaevent' ); ?></a>
 		</div>
 		<div class="wpfaevent-dashboard-card wpfaevent-module-card">
 			<div>
 				<h2><?php esc_html_e( 'Import Source', 'wpfaevent' ); ?></h2>
 				<p><?php esc_html_e( 'View source metadata, Eventyay slugs and IDs, and stored dashboard file references for this event.', 'wpfaevent' ); ?></p>
 			</div>
-			<a class="wpfaevent-module-link" href="#wpfaevent-source"><?php esc_html_e( 'Go to Source', 'wpfaevent' ); ?></a>
+			<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['source'] ); ?>"><?php esc_html_e( 'Go to Source', 'wpfaevent' ); ?></a>
 		</div>
 		<div class="wpfaevent-dashboard-card wpfaevent-module-card">
 			<div>
@@ -252,7 +259,7 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 					?>
 				</p>
 			</div>
-			<a class="wpfaevent-module-link" href="#wpfaevent-sync"><?php esc_html_e( 'Go to Synchronization', 'wpfaevent' ); ?></a>
+			<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['sync'] ); ?>"><?php esc_html_e( 'Go to Synchronization', 'wpfaevent' ); ?></a>
 		</div>
 	</div>
 
@@ -312,19 +319,7 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 						<?php esc_html_e( 'Eventyay API URL not saved.', 'wpfaevent' ); ?>
 					<?php endif; ?>
 				</li>
-				<li>
-					<?php
-					echo esc_html(
-						! empty( $settings['reg_button_text'] )
-							? sprintf(
-								/* translators: %s: registration button label. */
-								__( 'Registration button text: %s', 'wpfaevent' ),
-								$settings['reg_button_text']
-							)
-							: __( 'Registration button text not set.', 'wpfaevent' )
-					);
-					?>
-				</li>
+				<li><?php echo esc_html( ! empty( $settings['reg_button_text'] ) ? sprintf( __( 'Registration button text: %s', 'wpfaevent' ), $settings['reg_button_text'] ) : __( 'Registration button text not set.', 'wpfaevent' ) ); ?></li>
 			</ul>
 		</div>
 	</div>
@@ -483,3 +478,71 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 	</div>
 </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+	const form = document.querySelector('[data-sync-form]');
+	if (!form) {
+		return;
+	}
+
+	const submitButton = form.querySelector('button[type="submit"]');
+	const feedback = form.querySelector('[data-sync-feedback]');
+	const defaultLabel = submitButton ? submitButton.textContent : '';
+	const loadingLabel = <?php echo wp_json_encode( __( 'Synchronizing...', 'wpfaevent' ) ); ?>;
+
+	const setFeedback = function (type, message) {
+		if (!feedback) {
+			return;
+		}
+
+		feedback.className = 'wpfaevent-sync-feedback is-active is-' + type;
+		feedback.textContent = message;
+	};
+
+	form.addEventListener('submit', function (event) {
+		event.preventDefault();
+
+		if (!submitButton) {
+			form.submit();
+			return;
+		}
+
+		submitButton.disabled = true;
+		submitButton.textContent = loadingLabel;
+		form.setAttribute('aria-busy', 'true');
+		setFeedback('loading', loadingLabel);
+
+		const formData = new FormData(form);
+
+		window.fetch(form.dataset.ajaxUrl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			body: formData
+		}).then(function (response) {
+			return response.json().catch(function () {
+				return { success: false, data: { message: <?php echo wp_json_encode( __( 'The server returned an unexpected response.', 'wpfaevent' ) ); ?> } };
+			});
+		}).then(function (payload) {
+			if (!payload || !payload.success) {
+				const message = payload && payload.data && payload.data.message ? payload.data.message : <?php echo wp_json_encode( __( 'Synchronization failed.', 'wpfaevent' ) ); ?>;
+				setFeedback('error', message);
+				return;
+			}
+
+			const message = payload.data && payload.data.message ? payload.data.message : <?php echo wp_json_encode( __( 'Synchronization completed.', 'wpfaevent' ) ); ?>;
+			setFeedback('success', message);
+
+			window.setTimeout(function () {
+				const nextUrl = payload.data && payload.data.dashboard_url ? payload.data.dashboard_url + '#wpfaevent-sync' : window.location.href.split('#')[0] + '#wpfaevent-sync';
+				window.location.href = nextUrl;
+			}, 900);
+		}).catch(function () {
+			setFeedback('error', <?php echo wp_json_encode( __( 'Synchronization failed. Please try again.', 'wpfaevent' ) ); ?>);
+		}).finally(function () {
+			submitButton.disabled = false;
+			submitButton.textContent = defaultLabel;
+			form.removeAttribute('aria-busy');
+		});
+	});
+});
+</script>
