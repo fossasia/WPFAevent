@@ -56,9 +56,7 @@ class Wpfaevent_Bookmark_Controller {
 			);
 		}
 
-		$event = get_post( $event_id );
-
-		if ( ! $event || 'wpfa_event' !== $event->post_type ) {
+		if ( ! $event || 'wpfa_event' !== $event->post_type || ! current_user_can( 'read_post', $event_id ) ) {
 			wp_send_json_error(
 				array(
 					'message' => esc_html__( 'Event not found.', 'wpfaevent' ),
