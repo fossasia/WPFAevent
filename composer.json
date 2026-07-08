@@ -34,6 +34,9 @@
 
     "config": {
         "sort-packages": true,
+        "platform": {
+            "php": "8.2.32"
+        },
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "phpstan/extension-installer": true
