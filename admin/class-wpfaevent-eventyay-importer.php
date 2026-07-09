@@ -3205,6 +3205,32 @@ class Wpfaevent_Eventyay_Importer {
 			$dashboard_settings['reg_button_link'] = esc_url_raw( $event_url );
 		}
 
+		$event_logo_url    = $this->parser->eventyay_event_logo_url( $event, $settings );
+		$event_header_url  = $this->parser->eventyay_event_header_image_url( $event, $settings );
+		$ticket_widget_url = $this->parser->eventyay_ticket_widget_url( $event, $settings, $event_slug );
+
+		if ( ! $event_header_url && $event_logo_url ) {
+			$event_header_url = $event_logo_url;
+		}
+
+		if ( $event_header_url ) {
+			$dashboard_settings['event_header_image_url'] = esc_url_raw( $event_header_url );
+		} else {
+			unset( $dashboard_settings['event_header_image_url'] );
+		}
+
+		if ( $event_logo_url ) {
+			$dashboard_settings['event_logo_url'] = esc_url_raw( $event_logo_url );
+		} else {
+			unset( $dashboard_settings['event_logo_url'] );
+		}
+
+		if ( $ticket_widget_url ) {
+			$dashboard_settings['ticket_widget_url'] = esc_url_raw( $ticket_widget_url );
+		} else {
+			unset( $dashboard_settings['ticket_widget_url'] );
+		}
+
 		$write_result = $this->write_dashboard_json_file( $settings_file, $dashboard_settings );
 		if ( is_wp_error( $write_result ) ) {
 			return $write_result;
