@@ -741,6 +741,14 @@ class Wpfaevent_Templates {
 		);
 
 		wp_register_style(
+			'wpfaevent-event',
+			WPFAEVENT_URL . 'public/css/templates/event.css',
+			array( 'wpfaevent', 'wpfaevent-navigation' ),
+			WPFAEVENT_VERSION,
+			'all'
+		);
+
+		wp_register_style(
 			'wpfaevent-additional-information',
 			WPFAEVENT_URL . 'public/css/templates/additional-information.css',
 			array( 'wpfaevent', 'wpfaevent-navigation' ),

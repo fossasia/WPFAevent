@@ -206,6 +206,45 @@ class Wpfaevent_Meta_Event {
 			)
 		);
 
+		// Event-specific header image.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_header_image_url',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'esc_url_raw',
+				'description'       => __( 'Event-specific header image URL', 'wpfaevent' ),
+			)
+		);
+
+		// Event-specific logo.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_logo_url',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'esc_url_raw',
+				'description'       => __( 'Event-specific logo or banner image URL', 'wpfaevent' ),
+			)
+		);
+
+		// Eventyay ticket widget URL.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_ticket_widget_url',
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'esc_url_raw',
+				'description'       => __( 'Eventyay ticket widget event URL', 'wpfaevent' ),
+			)
+		);
+
 		register_post_meta(
 			self::$post_type,
 			'wpfa_event_languages',
