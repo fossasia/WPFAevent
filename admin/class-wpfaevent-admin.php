@@ -750,14 +750,17 @@ class Wpfaevent_Admin {
 			$start_time = get_post_meta( $post->ID, 'wpfa_event_time', true );
 		}
 
-		$timezone  = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_timezone( $post->ID ) : wp_timezone_string();
-		$all_day   = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_all_day( $post->ID ) : false;
-		$location  = get_post_meta( $post->ID, 'wpfa_event_location', true );
-		$url       = get_post_meta( $post->ID, 'wpfa_event_url', true );
-		$lead_text = get_post_meta( $post->ID, 'wpfa_event_lead_text', true );
-		$reg_link  = get_post_meta( $post->ID, 'wpfa_event_registration_link', true );
-		$cfs_link  = get_post_meta( $post->ID, 'wpfa_event_cfs_link', true );
-		$speakers  = $this->get_event_speaker_ids( $post->ID );
+		$timezone   = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_timezone( $post->ID ) : wp_timezone_string();
+		$all_day    = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_all_day( $post->ID ) : false;
+		$location   = get_post_meta( $post->ID, 'wpfa_event_location', true );
+		$url        = get_post_meta( $post->ID, 'wpfa_event_url', true );
+		$header_url = get_post_meta( $post->ID, 'wpfa_event_header_image_url', true );
+		$logo_url   = get_post_meta( $post->ID, 'wpfa_event_logo_url', true );
+		$widget_url = get_post_meta( $post->ID, 'wpfa_event_ticket_widget_url', true );
+		$lead_text  = get_post_meta( $post->ID, 'wpfa_event_lead_text', true );
+		$reg_link   = get_post_meta( $post->ID, 'wpfa_event_registration_link', true );
+		$cfs_link   = get_post_meta( $post->ID, 'wpfa_event_cfs_link', true );
+		$speakers   = $this->get_event_speaker_ids( $post->ID );
 
 		?>
 		<table class="form-table">
@@ -807,6 +810,27 @@ class Wpfaevent_Admin {
 			<tr>
 				<th><label for="wpfa_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
 				<td><input type="url" id="wpfa_event_url" name="wpfa_event_url" value="<?php echo esc_attr( $url ); ?>" class="regular-text" placeholder="https://"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_header_image_url"><?php esc_html_e( 'Header Image URL', 'wpfaevent' ); ?></label></th>
+				<td>
+					<input type="url" id="wpfa_event_header_image_url" name="wpfa_event_header_image_url" value="<?php echo esc_attr( $header_url ); ?>" class="regular-text" placeholder="https://">
+					<p class="description"><?php esc_html_e( 'Imported from Eventyay header, banner, hero, or cover image fields when available.', 'wpfaevent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_logo_url"><?php esc_html_e( 'Event Logo URL', 'wpfaevent' ); ?></label></th>
+				<td>
+					<input type="url" id="wpfa_event_logo_url" name="wpfa_event_logo_url" value="<?php echo esc_attr( $logo_url ); ?>" class="regular-text" placeholder="https://">
+					<p class="description"><?php esc_html_e( 'Imported from Eventyay logo or shop banner image settings when available.', 'wpfaevent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_event_ticket_widget_url"><?php esc_html_e( 'Ticket Widget URL', 'wpfaevent' ); ?></label></th>
+				<td>
+					<input type="url" id="wpfa_event_ticket_widget_url" name="wpfa_event_ticket_widget_url" value="<?php echo esc_attr( $widget_url ); ?>" class="regular-text" placeholder="https://eventyay.com/organizer/event/">
+					<p class="description"><?php esc_html_e( 'Used to embed the Eventyay ticket purchasing widget on the event page.', 'wpfaevent' ); ?></p>
+				</td>
 			</tr>
 			<tr>
 				<th><label for="wpfa_event_registration_link"><?php esc_html_e( 'Registration Link', 'wpfaevent' ); ?></label></th>
@@ -1100,13 +1124,16 @@ class Wpfaevent_Admin {
 			'wpfa_event_url',
 			'wpfa_event_registration_link',
 			'wpfa_event_cfs_link',
+			'wpfa_event_header_image_url',
+			'wpfa_event_logo_url',
+			'wpfa_event_ticket_widget_url',
 		);
 
 		foreach ( $meta_fields as $field ) {
 			if ( isset( $_POST[ $field ] ) ) {
 				$raw_value = sanitize_text_field( wp_unslash( $_POST[ $field ] ) );
 
-				if ( in_array( $field, array( 'wpfa_event_url', 'wpfa_event_registration_link', 'wpfa_event_cfs_link' ), true ) ) {
+				if ( in_array( $field, array( 'wpfa_event_url', 'wpfa_event_registration_link', 'wpfa_event_cfs_link', 'wpfa_event_header_image_url', 'wpfa_event_logo_url', 'wpfa_event_ticket_widget_url' ), true ) ) {
 					$value = esc_url_raw( $raw_value );
 				} else {
 					$value = $raw_value;

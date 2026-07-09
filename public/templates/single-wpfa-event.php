@@ -76,6 +76,59 @@ $schedule_hidden_count                    = $event_data['schedule_hidden_count']
 $event_schedule_url                       = $event_data['event_schedule_url'];
 $visible_sponsor_groups                   = $event_data['visible_sponsor_groups'];
 $current_schedule_view                    = $event_data['current_schedule_view'];
+
+$event_header_image_url = $event_data['event_header_image_url'];
+$event_logo_url         = $event_data['event_logo_url'];
+$show_ticket_widget     = $event_data['show_ticket_widget'];
+$ticket_widget_assets   = $event_data['ticket_widget_assets'];
+$ticket_widget_id       = $event_data['ticket_widget_id'];
+$ticket_widget_skip_ssl = $event_data['ticket_widget_skip_ssl'];
+
+if ( $show_ticket_widget ) {
+	$eventyay_widget_handle = 'wpfaevent-eventyay-widget-' . absint( $event_id );
+
+	wp_enqueue_style(
+		$eventyay_widget_handle,
+		$ticket_widget_assets['css_url'],
+		array(),
+		WPFAEVENT_VERSION
+	);
+
+	wp_enqueue_script(
+		$eventyay_widget_handle,
+		$ticket_widget_assets['script_url'],
+		array(),
+		WPFAEVENT_VERSION,
+		false
+	);
+
+	wp_script_add_data( $eventyay_widget_handle, 'strategy', 'async' );
+	wp_script_add_data( $eventyay_widget_handle, 'async', true );
+
+	wp_add_inline_script(
+		$eventyay_widget_handle,
+		implode(
+			'',
+			array(
+				'(function(){',
+				'var container=document.getElementById(' . wp_json_encode( $ticket_widget_id ) . ');',
+				'if(!container||typeof MutationObserver==="undefined"){return;}',
+				'var expected=' . wp_json_encode( __( 'The ticket shop could not be loaded.', 'wpfaevent' ) ) . ';',
+				'var markFailed=function(){',
+				'var error=container.querySelector(".pretix-widget-error-message");',
+				'if(!error){return;}',
+				'if(expected&&error.textContent.trim()!==expected){return;}',
+				'container.classList.add("wpfa-event-ticket-widget-failed");',
+				'};',
+				'var observer=new MutationObserver(markFailed);',
+				'observer.observe(container,{childList:true,subtree:true});',
+				'markFailed();',
+				'})();',
+			)
+		),
+		'after'
+	);
+}
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -104,9 +157,29 @@ $current_schedule_view                    = $event_data['current_schedule_view']
 	?>
 
 	<main class="wpfa-event-detail" itemscope itemtype="https://schema.org/Event">
-		<section class="wpfa-event-hero">
+		<?php
+		$hero_classes = array( 'wpfa-event-hero' );
+		if ( $event_header_image_url ) {
+			$hero_classes[] = 'has-event-header-image';
+		}
+
+		if ( $event_logo_url && $event_header_image_url && $event_logo_url === $event_header_image_url ) {
+			$event_logo_url = '';
+		}
+
+		$hero_style_attr = $event_header_image_url ? ' style="' . esc_attr( '--event-header-image: url("' . esc_url_raw( $event_header_image_url ) . '");' ) . '"' : '';
+		?>
+		<?php if ( $event_header_image_url ) : ?>
+			<meta itemprop="image" content="<?php echo esc_url( $event_header_image_url ); ?>">
+		<?php endif; ?>
+		<section class="<?php echo esc_attr( implode( ' ', $hero_classes ) ); ?>"<?php echo $hero_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>
 			<div class="container wpfa-event-hero-inner">
 				<div class="wpfa-event-hero-copy">
+					<?php if ( $event_logo_url ) : ?>
+						<div class="wpfa-event-logo-mark">
+							<img src="<?php echo esc_url( $event_logo_url ); ?>" alt="<?php echo esc_attr( $event_title ); ?>" loading="eager">
+						</div>
+					<?php endif; ?>
 					<p class="wpfa-event-kicker"><?php esc_html_e( 'Eventyay Event', 'wpfaevent' ); ?></p>
 					<h1 itemprop="name"><?php echo esc_html( $event_title ); ?></h1>
 						<div class="wpfa-event-meta-list">
@@ -154,7 +227,11 @@ $current_schedule_view                    = $event_data['current_schedule_view']
 						<p><?php esc_html_e( 'Registration', 'wpfaevent' ); ?></p>
 						<strong><?php esc_html_e( 'Open', 'wpfaevent' ); ?></strong>
 					</div>
-					<?php if ( $register_url ) : ?>
+					<?php if ( $show_ticket_widget ) : ?>
+						<a class="wpfa-event-register" href="#tickets">
+							<?php echo esc_html( $register_text ); ?>
+						</a>
+					<?php elseif ( $register_url ) : ?>
 						<a class="wpfa-event-register" href="<?php echo esc_url( $register_url ); ?>" target="_blank" rel="noopener">
 							<?php echo esc_html( $register_text ); ?>
 						</a>
@@ -235,6 +312,47 @@ $current_schedule_view                    = $event_data['current_schedule_view']
 
 		<?php if ( ! empty( $wpfa_event_nav_items ) ) : ?>
 			<?php include WPFAEVENT_PATH . 'public/partials/event-section-nav.php'; ?>
+		<?php endif; ?>
+
+		<?php if ( $show_ticket_widget ) : ?>
+			<section id="tickets" class="wpfa-event-section wpfa-event-tickets" aria-labelledby="wpfa-event-tickets-title">
+				<div class="container">
+					<div class="wpfa-event-section-head">
+						<div>
+							<h2 id="wpfa-event-tickets-title"><?php esc_html_e( 'Tickets', 'wpfaevent' ); ?></h2>
+							<p><?php esc_html_e( 'Select ticket options and continue checkout through Eventyay.', 'wpfaevent' ); ?></p>
+						</div>
+						<a href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>" target="_blank" rel="noopener">
+							<?php esc_html_e( 'Open on Eventyay', 'wpfaevent' ); ?>
+						</a>
+					</div>
+					<div id="<?php echo esc_attr( $ticket_widget_id ); ?>" class="wpfa-event-ticket-widget">
+						<div class="wpfa-event-ticket-backup" role="note">
+							<strong><?php esc_html_e( 'Tickets are handled by Eventyay.', 'wpfaevent' ); ?></strong>
+							<p><?php esc_html_e( 'If ticket options do not appear here, open the Eventyay ticket shop directly.', 'wpfaevent' ); ?></p>
+							<a class="wpfa-event-ticket-backup-button" href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>" target="_blank" rel="noopener">
+								<?php esc_html_e( 'Buy tickets on Eventyay', 'wpfaevent' ); ?>
+							</a>
+						</div>
+						<?php // Eventyay docs: use div.pretix-widget-compat when custom elements are unavailable. ?>
+						<div
+							class="pretix-widget-compat"
+							event="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>"
+							<?php if ( $ticket_widget_skip_ssl ) : ?>
+								skip-ssl-check
+							<?php endif; ?>
+						></div>
+						<noscript>
+							<p class="wpfa-event-ticket-fallback">
+								<?php esc_html_e( 'JavaScript is required to show Eventyay tickets here.', 'wpfaevent' ); ?>
+								<a href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>" target="_blank" rel="noopener">
+									<?php esc_html_e( 'Buy tickets on Eventyay', 'wpfaevent' ); ?>
+								</a>
+							</p>
+						</noscript>
+					</div>
+				</div>
+			</section>
 		<?php endif; ?>
 
 		<?php if ( $show_about && '' !== trim( $about_content ) ) : ?>
