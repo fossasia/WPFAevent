@@ -1104,7 +1104,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 */
 	public function eventyay_url_value( $value, $base_url ) {
 		if ( is_array( $value ) ) {
-			foreach ( array( 'url', 'href', 'download', 'thumbnail', 'image', 'en', 'default' ) as $key ) {
+			foreach ( array( 'url', 'href', 'download', 'full', 'original', 'large', 'medium', 'small', 'thumbnail', 'image', 'banner', 'logo', 'file', 'en', 'default' ) as $key ) {
 				if ( ! empty( $value[ $key ] ) ) {
 					return $this->eventyay_url_value( $value[ $key ], $base_url );
 				}
@@ -2248,6 +2248,137 @@ class Wpfaevent_JSONAPI_Parser {
 
 		return $colors;
 	}
+
+	/**
+	 * Get a header or hero image URL from likely Eventyay event fields.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event    Eventyay event resource.
+	 * @param array $settings Import settings.
+	 * @return string
+	 */
+	public function eventyay_event_header_image_url( $event, $settings ) {
+		$value = $this->eventyay_event_first_present_raw(
+			$event,
+			array(
+				'header_image_url',
+				'header-image-url',
+				'header_image',
+				'header-image',
+				'header',
+				'banner_image_url',
+				'banner-image-url',
+				'banner_image',
+				'banner-image',
+				'banner',
+				'hero_image_url',
+				'hero-image-url',
+				'hero_image',
+				'hero-image',
+				'hero',
+				'cover_image_url',
+				'cover-image-url',
+				'cover_image',
+				'cover-image',
+				'cover',
+				'background_image_url',
+				'background-image-url',
+				'background_image',
+				'background-image',
+				'frontpage_image_url',
+				'frontpage-image-url',
+				'frontpage_image',
+				'frontpage-image',
+				'image_url',
+				'image-url',
+				'image',
+				'large_image_url',
+				'large-image-url',
+				'original_image_url',
+				'original-image-url',
+			),
+			true
+		);
+
+		return $this->eventyay_url_value( $value, $settings['base_url'] );
+	}
+
+	/**
+	 * Get an Eventyay event logo or ticket shop banner image URL.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event    Eventyay event resource.
+	 * @param array $settings Import settings.
+	 * @return string
+	 */
+	public function eventyay_event_logo_url( $event, $settings ) {
+		$value = $this->eventyay_event_first_present_raw(
+			$event,
+			array(
+				'logo_image_url',
+				'logo-image-url',
+				'logo_image',
+				'logo-image',
+				'logo_url',
+				'logo-url',
+				'event_logo_url',
+				'event-logo-url',
+				'event_logo',
+				'event-logo',
+				'shop_logo_url',
+				'shop-logo-url',
+				'shop_logo',
+				'shop-logo',
+				'logo',
+			),
+			true
+		);
+
+		return $this->eventyay_url_value( $value, $settings['base_url'] );
+	}
+
+	/**
+	 * Get the Eventyay widget URL to use in the ticket purchase embed.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $event      Eventyay event resource.
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return string
+	 */
+	public function eventyay_ticket_widget_url( $event, $settings, $event_slug ) {
+		$url = $this->eventyay_url_value(
+			$this->eventyay_event_first_present_raw(
+				$event,
+				array(
+					'ticket_widget_url',
+					'ticket-widget-url',
+					'widget_url',
+					'widget-url',
+					'tickets_url',
+					'tickets-url',
+					'ticket_url',
+					'ticket-url',
+					'shop_url',
+					'shop-url',
+					'registration_url',
+					'registration-url',
+				),
+				true
+			),
+			$settings['base_url']
+		);
+
+		if ( ! $url ) {
+			$url = $this->eventyay_public_event_url( $event, $settings, $event_slug );
+		}
+
+		return $url ? trailingslashit( esc_url_raw( $url ) ) : '';
+	}
+
 
 	/**
 	 * Group imported sponsors by Eventyay type or level.

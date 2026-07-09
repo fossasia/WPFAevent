@@ -106,6 +106,13 @@ class Wpfaevent_Event_Repository {
 		$event_url            = $this->parser->eventyay_public_event_url( $event, $settings, $event_slug );
 		$languages            = $this->parser->eventyay_event_languages( $event );
 		$colors               = $this->parser->eventyay_event_colors( $event );
+		$event_logo_url       = $this->parser->eventyay_event_logo_url( $event, $settings );
+		$event_header_url     = $this->parser->eventyay_event_header_image_url( $event, $settings );
+		$ticket_widget_url    = $this->parser->eventyay_ticket_widget_url( $event, $settings, $event_slug );
+
+		if ( ! $event_header_url && $event_logo_url ) {
+			$event_header_url = $event_logo_url;
+		}
 
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_start_date', $start_date );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_end_date', $end_date );
@@ -117,6 +124,10 @@ class Wpfaevent_Event_Repository {
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_ends_at', $normalized_ends_at );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_location', $location );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_url', $event_url );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_registration_link', $event_url );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_header_image_url', $event_header_url );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_logo_url', $event_logo_url );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_ticket_widget_url', $ticket_widget_url );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_languages', $languages );
 
 		if ( ! empty( $colors ) || $this->parser->eventyay_event_has_settings_payload( $event ) ) {
@@ -134,6 +145,7 @@ class Wpfaevent_Event_Repository {
 
 		update_post_meta( $saved_id, '_wpfa_eventyay_organizer_slug', sanitize_text_field( $organizer_slug ) );
 		update_post_meta( $saved_id, '_wpfa_eventyay_event_slug', sanitize_text_field( $event_slug ) );
+		update_post_meta( $saved_id, '_wpfa_eventyay_base_url', esc_url_raw( $settings['base_url'] ) );
 		update_post_meta( $saved_id, '_wpfa_eventyay_last_imported_at', current_time( 'mysql', true ) );
 		$this->store_eventyay_event_lookup( $organizer_slug, $event_slug, $saved_id );
 
