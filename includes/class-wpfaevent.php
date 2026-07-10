@@ -112,7 +112,6 @@ class Wpfaevent {
 		// Cache management.
 		require_once plugin_dir_path( __FILE__ ) . 'cache/class-wpfaevent-cache.php';
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-roles.php';
-		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-event-speaker-relation-manager.php';
 
 		// Data model classes - Custom Post Types.
 		require_once plugin_dir_path( __FILE__ ) . 'cpt/class-wpfaevent-cpt-event.php';
@@ -123,6 +122,8 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies-speaker.php';
 
 		// Data model classes - Meta Fields.
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-user-preferences-service.php';
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-event-speaker-relation-manager.php';
 		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-event.php';
 		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-speaker.php';
 
@@ -153,6 +154,7 @@ class Wpfaevent {
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-ajax-sync.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
+		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-bookmark-controller.php';
 
 		// AJAX handler classes.
 		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-footer-handler.php';
@@ -305,6 +307,14 @@ class Wpfaevent {
 
 		// Register public-specific stylesheet.
 		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
+
+		// Register public-specific script.
+		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_scripts' );
+
+		// Register AJAX actions for bookmarking.
+		$bookmark_controller = new Wpfaevent_Bookmark_Controller();
+		$this->loader->add_action( 'wp_ajax_wpfa_toggle_bookmark', $bookmark_controller, 'ajax_toggle_bookmark' );
+		$this->loader->add_action( 'wp_ajax_nopriv_wpfa_toggle_bookmark', $bookmark_controller, 'ajax_toggle_bookmark' );
 
 		// Cache invalidation hooks (static method calls).
 		$this->loader->add_action( 'save_post', 'Wpfaevent_Cache', 'clear_page_cache' );

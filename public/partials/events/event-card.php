@@ -83,11 +83,13 @@ $event_url           = esc_url( get_permalink( $event_id ) );
 $speaker_archive_url = get_post_type_archive_link( 'wpfa_speaker' );
 $speaker_archive_url = $speaker_archive_url ? $speaker_archive_url : home_url( '/speakers/' );
 $speakers_url        = esc_url( add_query_arg( 'event', get_post_field( 'post_name', $event_id ), $speaker_archive_url ) );
+$is_bookmarked       = class_exists( 'Wpfaevent_User_Preferences_Service' ) && Wpfaevent_User_Preferences_Service::is_event_bookmarked( $event_id );
 ?>
 
-<div class="event-card"
+<div class="event-card<?php echo $is_bookmarked ? ' is-bookmarked' : ''; ?>"
 	data-post-id="<?php echo esc_attr( $event_id ); ?>"
 	data-is-past="<?php echo $is_past_event ? '1' : '0'; ?>"
+	data-is-bookmarked="<?php echo $is_bookmarked ? '1' : '0'; ?>"
 	data-name="<?php echo esc_attr( get_the_title( $event_id ) ); ?>"
 	data-date="<?php echo esc_attr( $event_date ); ?>"
 	data-end-date="<?php echo esc_attr( $event_end_date ); ?>"
@@ -168,6 +170,12 @@ $speakers_url        = esc_url( add_query_arg( 'event', get_post_field( 'post_na
 		<?php if ( $speaker_count > 0 ) : ?>
 			<a href="<?php echo esc_url( $speakers_url ); ?>" class="btn btn-outline-primary btn-sm"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></a>
 		<?php endif; ?>
+		<button class="btn btn-outline-primary btn-sm wpfa-bookmark-btn<?php echo $is_bookmarked ? ' is-bookmarked' : ''; ?>" data-event-id="<?php echo esc_attr( $event_id ); ?>">
+			<svg class="wpfa-bookmark-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="width: 14px; height: 14px; margin-right: 6px; vertical-align: middle;">
+				<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+			</svg>
+			<span class="wpfa-bookmark-text"><?php echo $is_bookmarked ? esc_html__( 'Bookmarked', 'wpfaevent' ) : esc_html__( 'Bookmark', 'wpfaevent' ); ?></span>
+		</button>
 		<?php if ( $can_edit_this_event ) : ?>
 			<button class="btn btn-secondary btn-sm btn-edit-event"
 					data-post-id="<?php echo esc_attr( $event_id ); ?>"
