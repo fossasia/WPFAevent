@@ -67,6 +67,85 @@
 					applySpeakerPlaceholder.call(this);
 				}
 			});
+
+		// Bookmark Toggle Handler
+		$(document).on('click', '.wpfa-bookmark-btn', function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+
+			const $btn = $(this);
+			const eventId = $btn.data('event-id');
+			const settings = window.wpfaeventPublic || {};
+
+			if (!settings.isLoggedIn) {
+				alert(settings.i18n?.loginRequired || 'Please log in to bookmark events.');
+				return;
+			}
+
+			$btn.prop('disabled', true);
+
+			$.ajax({
+				url: settings.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'wpfa_toggle_bookmark',
+					nonce: settings.nonce,
+					event_id: eventId
+				},
+				success: function(response) {
+					$btn.prop('disabled', false);
+					if (response.success) {
+						const isBookmarked = response.data.bookmarked;
+
+						// Synchronize all bookmark buttons on the page for this specific event
+						const $allTargetBtns = $(`.wpfa-bookmark-btn[data-event-id="${eventId}"]`);
+
+						if (isBookmarked) {
+							$allTargetBtns.addClass('is-bookmarked');
+							$allTargetBtns.each(function() {
+								const $thisBtn = $(this);
+								if ($thisBtn.hasClass('wpfa-event-bookmark-btn')) {
+									$thisBtn.find('.wpfa-bookmark-text').text(settings.i18n?.removeBookmark || 'Remove Bookmark');
+								} else {
+									$thisBtn.find('.wpfa-bookmark-text').text(settings.i18n?.bookmarked || 'Bookmarked');
+								}
+							});
+						} else {
+							$allTargetBtns.removeClass('is-bookmarked');
+							$allTargetBtns.each(function() {
+								const $thisBtn = $(this);
+								if ($thisBtn.hasClass('wpfa-event-bookmark-btn')) {
+									$thisBtn.find('.wpfa-bookmark-text').text(settings.i18n?.bookmarkEvent || 'Bookmark Event');
+								} else {
+									$thisBtn.find('.wpfa-bookmark-text').text(settings.i18n?.bookmark || 'Bookmark');
+								}
+							});
+						}
+
+						// Update dataset attributes on any corresponding event cards
+						const $card = $(`.event-card[data-post-id="${eventId}"]`);
+						if ($card.length) {
+							$card.attr('data-is-bookmarked', isBookmarked ? '1' : '0');
+							$card.data('is-bookmarked', isBookmarked ? '1' : '0');
+						}
+
+						// Dynamically re-filter events hub if on Favorites tab
+						if (window.WPFA_Events && typeof window.WPFA_Events.filterEvents === 'function') {
+							const $activeTab = $('.date-filter-btn.active');
+							if ($activeTab.length && $activeTab.data('filter') === 'bookmarked') {
+								window.WPFA_Events.filterEvents();
+							}
+						}
+					} else {
+						alert(response.data?.message || settings.i18n?.error || 'Something went wrong.');
+					}
+				},
+				error: function() {
+					$btn.prop('disabled', false);
+					alert(settings.i18n?.error || 'Something went wrong.');
+				}
+			});
+		});
 	});
 
 })( jQuery );
