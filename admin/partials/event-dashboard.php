@@ -463,7 +463,7 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 			<h2><?php esc_html_e( 'Sessions', 'wpfaevent' ); ?></h2>
 			<?php if ( ! empty( $sessions ) ) : ?>
 				<div class="wpfaevent-list">
-					<?php foreach ( $sessions as $session ) : ?>
+					<?php foreach ( array_slice( $sessions, 0, 4 ) as $session ) : ?>
 						<div class="wpfaevent-list-item">
 							<div class="wpfaevent-list-copy">
 								<strong><?php echo esc_html( $session['title'] ); ?></strong>
@@ -475,6 +475,33 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 							<div class="description"><?php echo esc_html( ! empty( $session['track'] ) ? $session['track'] : __( 'No track', 'wpfaevent' ) ); ?></div>
 						</div>
 					<?php endforeach; ?>
+				</div>
+				<div style="margin-top: 15px; border-top: 1px solid var(--wpfa-border); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+					<span class="description">
+						<?php
+						$total_sessions_count = count( $sessions );
+						if ( $total_sessions_count <= 4 ) {
+							printf(
+								/* translators: %d: count of sessions */
+								esc_html( _n( 'Showing %d session', 'Showing %d sessions', $total_sessions_count, 'wpfaevent' ) ),
+								absint( $total_sessions_count )
+							);
+						} else {
+							printf(
+								/* translators: %d: count of sessions */
+								esc_html__( 'Showing 4 of %d sessions', 'wpfaevent' ),
+								absint( $total_sessions_count )
+							);
+						}
+						?>
+					</span>
+					<?php
+					$event_slug        = get_post_field( 'post_name', $event['id'] );
+					$full_schedule_url = add_query_arg( 'event', $event_slug, home_url( '/full-schedule/' ) );
+					?>
+					<a class="wpfaevent-module-link" href="<?php echo esc_url( $full_schedule_url ); ?>" target="_blank" rel="noopener noreferrer">
+						<?php esc_html_e( 'View Sessions &rarr;', 'wpfaevent' ); ?>
+					</a>
 				</div>
 			<?php else : ?>
 				<p class="description"><?php esc_html_e( 'No imported sessions were found for this event yet.', 'wpfaevent' ); ?></p>
