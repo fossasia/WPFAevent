@@ -290,13 +290,15 @@ const WPFA_Events = (function() {
 			const description = (card.dataset.description || '').toLowerCase();
 			const cardTrack   = (card.dataset.track       || '').toLowerCase();
 			const isPast      = card.dataset.isPast === '1';
+			const isBookmarked  = card.classList.contains('is-bookmarked') || card.dataset.isBookmarked === '1';
 
 			const textMatch     = !searchTerm || name.includes(searchTerm) || place.includes(searchTerm) || description.includes(searchTerm);
 			const trackMatch    = !track     || cardTrack.split(',').some(s => s.trim() === track.toLowerCase());
 			const locationMatch = !location  || place === location;
 			const dateMatch     = dateFilter === 'all'
 				|| (dateFilter === 'past'     &&  isPast)
-				|| (dateFilter === 'upcoming' && !isPast);
+				|| (dateFilter === 'upcoming' && !isPast)
+				|| (dateFilter === 'bookmarked' && isBookmarked);
 
 			const isVisible = textMatch && trackMatch && locationMatch && dateMatch;
 			card.style.display = isVisible ? '' : 'none';

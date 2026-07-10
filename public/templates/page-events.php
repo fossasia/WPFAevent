@@ -227,6 +227,9 @@ $header_vars = array(
 							<button class="date-filter-btn active" data-filter="all"><?php esc_html_e( 'All', 'wpfaevent' ); ?></button>
 							<button class="date-filter-btn" data-filter="upcoming"><?php esc_html_e( 'Upcoming', 'wpfaevent' ); ?></button>
 							<button class="date-filter-btn" data-filter="past"><?php esc_html_e( 'Past', 'wpfaevent' ); ?></button>
+							<?php if ( is_user_logged_in() ) : ?>
+								<button class="date-filter-btn" data-filter="bookmarked"><?php esc_html_e( 'Favorites', 'wpfaevent' ); ?></button>
+							<?php endif; ?>
 						</div>
 						<button id="searchEventsBtn" class="btn btn-primary">
 							<?php esc_html_e( 'Search Events', 'wpfaevent' ); ?>

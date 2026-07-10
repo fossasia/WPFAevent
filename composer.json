@@ -6,6 +6,7 @@
 
     "require-dev": {
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "doctrine/instantiator": "2.0.0",
         "php-stubs/wp-cli-stubs": "^2.12",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.1",
