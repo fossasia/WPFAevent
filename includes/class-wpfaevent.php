@@ -250,6 +250,7 @@ class Wpfaevent {
 		$this->loader->add_filter( 'post_row_actions', $event_dashboard_page, 'add_row_action', 10, 2 );
 		$this->loader->add_action( 'admin_post_wpfaevent_sync_event_dashboard', $event_dashboard_page, 'handle_sync' );
 		$this->loader->add_action( 'wp_ajax_wpfaevent_sync_event_dashboard', $event_dashboard_page, 'handle_sync_ajax' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_save_dashboard_field', $event_dashboard_page, 'handle_save_field_ajax' );
 
 		// Add settings link to the plugins page.
 		$plugin_basename = plugin_basename( dirname( __DIR__ ) . '/wpfaevent.php' );

@@ -447,6 +447,9 @@ class Wpfaevent_Event_Dashboard_Data {
 			array_filter(
 				$assets,
 				static function ( $asset ) {
+					if ( in_array( $asset['label'], array( __( 'Event logo', 'wpfaevent' ), __( 'Header image', 'wpfaevent' ) ), true ) ) {
+						return true;
+					}
 					return ! empty( $asset['url'] );
 				}
 			)

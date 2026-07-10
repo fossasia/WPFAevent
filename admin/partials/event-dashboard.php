@@ -73,10 +73,12 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 		@media (max-width: 1200px) { .wpfaevent-dashboard-module-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
 		@media (max-width: 1024px) { .wpfaevent-dashboard-columns, .wpfaevent-dashboard-split, .wpfaevent-dashboard-module-grid { grid-template-columns: 1fr; } .wpfaevent-dashboard-tabs { position:static; } }
 	</style>
-	<div class="wpfaevent-dashboard-shell">
+	<?php $edit_nonce = wp_create_nonce( 'wpfaevent_edit_event_dashboard_' . absint( $event['id'] ) ); ?>
+	<div class="wpfaevent-dashboard-shell" data-event-id="<?php echo esc_attr( (string) $event['id'] ); ?>" data-edit-nonce="<?php echo esc_attr( $edit_nonce ); ?>">
+		<div class="wpfaevent-notification-container"></div>
 		<?php if ( ! empty( $dashboard_notice['message'] ) ) : ?>
 			<div class="notice notice-<?php echo esc_attr( ! empty( $dashboard_notice['type'] ) ? $dashboard_notice['type'] : 'info' ); ?> is-dismissible">
-				<p><?php echo esc_html( $dashboard_notice['message'] ); ?></p>
+				<p style="white-space: pre-wrap;"><?php echo esc_html( $dashboard_notice['message'] ); ?></p>
 			</div>
 		<?php endif; ?>
 	<h1>
@@ -155,21 +157,36 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 						<th scope="row"><?php esc_html_e( 'Created', 'wpfaevent' ); ?></th>
 						<td><?php echo esc_html( ! empty( $event['created'] ) ? $event['created'] : __( 'Unknown', 'wpfaevent' ) ); ?></td>
 					</tr>
-					<tr>
+					<tr class="wpfaevent-editable-row" data-field="wpfa_event_start_date" data-type="date" data-label="<?php esc_attr_e( 'Start date', 'wpfaevent' ); ?>" data-raw-value="<?php echo esc_attr( ! empty( $event['start_date'] ) ? $event['start_date'] : '' ); ?>">
 						<th scope="row"><?php esc_html_e( 'Start date', 'wpfaevent' ); ?></th>
-						<td><?php echo esc_html( ! empty( $event['start_date'] ) ? $event['start_date'] : __( 'Not set', 'wpfaevent' ) ); ?></td>
+						<td>
+							<div class="wpfaevent-field-container">
+								<span class="wpfaevent-field-value"><?php echo esc_html( ! empty( $event['start_date'] ) ? $event['start_date'] : __( 'Not set', 'wpfaevent' ) ); ?></span>
+								<button type="button" class="wpfaevent-edit-field-btn button button-small button-link" style="margin-left: 8px;"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></button>
+							</div>
+						</td>
 					</tr>
-					<tr>
+					<tr class="wpfaevent-editable-row" data-field="wpfa_event_end_date" data-type="date" data-label="<?php esc_attr_e( 'End date', 'wpfaevent' ); ?>" data-raw-value="<?php echo esc_attr( ! empty( $event['end_date'] ) ? $event['end_date'] : '' ); ?>">
 						<th scope="row"><?php esc_html_e( 'End date', 'wpfaevent' ); ?></th>
-						<td><?php echo esc_html( ! empty( $event['end_date'] ) ? $event['end_date'] : __( 'Not set', 'wpfaevent' ) ); ?></td>
+						<td>
+							<div class="wpfaevent-field-container">
+								<span class="wpfaevent-field-value"><?php echo esc_html( ! empty( $event['end_date'] ) ? $event['end_date'] : __( 'Not set', 'wpfaevent' ) ); ?></span>
+								<button type="button" class="wpfaevent-edit-field-btn button button-small button-link" style="margin-left: 8px;"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></button>
+							</div>
+						</td>
 					</tr>
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Time', 'wpfaevent' ); ?></th>
 						<td><?php echo esc_html( ! empty( $event['time'] ) ? $event['time'] : __( 'Not set', 'wpfaevent' ) ); ?></td>
 					</tr>
-					<tr>
+					<tr class="wpfaevent-editable-row" data-field="wpfa_event_location" data-type="text" data-label="<?php esc_attr_e( 'Location', 'wpfaevent' ); ?>" data-raw-value="<?php echo esc_attr( ! empty( $event['location'] ) ? $event['location'] : '' ); ?>">
 						<th scope="row"><?php esc_html_e( 'Location', 'wpfaevent' ); ?></th>
-						<td><?php echo esc_html( ! empty( $event['location'] ) ? $event['location'] : __( 'Not set', 'wpfaevent' ) ); ?></td>
+						<td>
+							<div class="wpfaevent-field-container">
+								<span class="wpfaevent-field-value"><?php echo esc_html( ! empty( $event['location'] ) ? $event['location'] : __( 'Not set', 'wpfaevent' ) ); ?></span>
+								<button type="button" class="wpfaevent-edit-field-btn button button-small button-link" style="margin-left: 8px;"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></button>
+							</div>
+						</td>
 					</tr>
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Tracks', 'wpfaevent' ); ?></th>
@@ -204,7 +221,7 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 						<?php esc_html_e( 'Overwrite existing logo', 'wpfaevent' ); ?>
 					</label>
 					<p class="description"><?php esc_html_e( 'When enabled, a saved event logo in dashboard settings can be replaced with the Eventyay logo if one is available.', 'wpfaevent' ); ?></p>
-					<?php submit_button( __( 'Synchronize Event', 'wpfaevent' ), 'primary', 'submit', false ); ?>
+					<?php submit_button( __( 'Synchronize Event', 'wpfaevent' ), 'primary', 'wpfaevent_sync_submit', false ); ?>
 					<div class="wpfaevent-sync-feedback" data-sync-feedback aria-live="polite"></div>
 				</form>
 			<?php else : ?>
@@ -294,26 +311,41 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 		<div id="wpfaevent-settings" class="wpfaevent-dashboard-card">
 			<h2><?php esc_html_e( 'Event Settings', 'wpfaevent' ); ?></h2>
 			<ul style="margin:12px 0 0 18px;list-style:disc;">
-				<li>
-					<?php if ( ! empty( $event['event_url'] ) ) : ?>
-						<a href="<?php echo esc_url( $event['event_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Public event URL', 'wpfaevent' ); ?></a>
-					<?php else : ?>
-						<?php esc_html_e( 'Public event URL not set.', 'wpfaevent' ); ?>
-					<?php endif; ?>
+				<li class="wpfaevent-editable-item" data-field="wpfa_event_url" data-type="url" data-label="<?php esc_attr_e( 'Public event URL', 'wpfaevent' ); ?>" data-raw-value="<?php echo esc_attr( ! empty( $event['event_url'] ) ? $event['event_url'] : '' ); ?>">
+					<div class="wpfaevent-field-container">
+						<span class="wpfaevent-field-value">
+							<?php if ( ! empty( $event['event_url'] ) ) : ?>
+								<a href="<?php echo esc_url( $event['event_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Public event URL', 'wpfaevent' ); ?></a>
+							<?php else : ?>
+								<?php esc_html_e( 'Public event URL not set.', 'wpfaevent' ); ?>
+							<?php endif; ?>
+						</span>
+						<button type="button" class="wpfaevent-edit-field-btn button button-small button-link" style="margin-left: 8px; vertical-align: middle;"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></button>
+					</div>
 				</li>
-				<li>
-					<?php if ( ! empty( $event['register_url'] ) ) : ?>
-						<a href="<?php echo esc_url( $event['register_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Registration link', 'wpfaevent' ); ?></a>
-					<?php else : ?>
-						<?php esc_html_e( 'Registration link not set.', 'wpfaevent' ); ?>
-					<?php endif; ?>
+				<li class="wpfaevent-editable-item" data-field="wpfa_event_registration_link" data-type="url" data-label="<?php esc_attr_e( 'Registration link', 'wpfaevent' ); ?>" data-raw-value="<?php echo esc_attr( ! empty( $event['register_url'] ) ? $event['register_url'] : '' ); ?>">
+					<div class="wpfaevent-field-container">
+						<span class="wpfaevent-field-value">
+							<?php if ( ! empty( $event['register_url'] ) ) : ?>
+								<a href="<?php echo esc_url( $event['register_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Registration link', 'wpfaevent' ); ?></a>
+							<?php else : ?>
+								<?php esc_html_e( 'Registration link not set.', 'wpfaevent' ); ?>
+							<?php endif; ?>
+						</span>
+						<button type="button" class="wpfaevent-edit-field-btn button button-small button-link" style="margin-left: 8px; vertical-align: middle;"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></button>
+					</div>
 				</li>
-				<li>
-					<?php if ( ! empty( $event['cfs_url'] ) ) : ?>
-						<a href="<?php echo esc_url( $event['cfs_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Call for speakers link', 'wpfaevent' ); ?></a>
-					<?php else : ?>
-						<?php esc_html_e( 'Call for speakers link not set.', 'wpfaevent' ); ?>
-					<?php endif; ?>
+				<li class="wpfaevent-editable-item" data-field="wpfa_event_cfs_link" data-type="url" data-label="<?php esc_attr_e( 'Call for speakers link', 'wpfaevent' ); ?>" data-raw-value="<?php echo esc_attr( ! empty( $event['cfs_url'] ) ? $event['cfs_url'] : '' ); ?>">
+					<div class="wpfaevent-field-container">
+						<span class="wpfaevent-field-value">
+							<?php if ( ! empty( $event['cfs_url'] ) ) : ?>
+								<a href="<?php echo esc_url( $event['cfs_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Call for speakers link', 'wpfaevent' ); ?></a>
+							<?php else : ?>
+								<?php esc_html_e( 'Call for speakers link not set.', 'wpfaevent' ); ?>
+							<?php endif; ?>
+						</span>
+						<button type="button" class="wpfaevent-edit-field-btn button button-small button-link" style="margin-left: 8px; vertical-align: middle;"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></button>
+					</div>
 				</li>
 				<li>
 					<?php if ( ! empty( $settings['eventyay_api_url'] ) ) : ?>
@@ -441,9 +473,42 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 			<?php if ( ! empty( $assets ) ) : ?>
 				<div class="wpfaevent-assets">
 					<?php foreach ( $assets as $asset ) : ?>
-						<div class="wpfaevent-asset">
-							<img src="<?php echo esc_url( $asset['url'] ); ?>" alt="<?php echo esc_attr( $asset['label'] ); ?>">
-							<strong><?php echo esc_html( $asset['label'] ); ?></strong>
+						<?php
+						$is_editable = false;
+						$field_key   = '';
+						if ( __( 'Event logo', 'wpfaevent' ) === $asset['label'] ) {
+							$is_editable = true;
+							$field_key   = 'wpfa_event_logo_url';
+						} elseif ( __( 'Header image', 'wpfaevent' ) === $asset['label'] ) {
+							$is_editable = true;
+							$field_key   = 'wpfa_event_header_image_url';
+						}
+						?>
+						<div class="wpfaevent-asset <?php echo $is_editable ? 'wpfaevent-editable-asset' : ''; ?>" 
+							<?php if ( $is_editable ) : ?>
+								data-field="<?php echo esc_attr( $field_key ); ?>" 
+								data-type="media" 
+								data-label="<?php echo esc_attr( $asset['label'] ); ?>" 
+								data-raw-value="<?php echo esc_attr( $asset['url'] ); ?>"
+							<?php endif; ?>>
+							
+							<div class="wpfaevent-asset-preview">
+								<?php if ( ! empty( $asset['url'] ) ) : ?>
+									<img class="wpfaevent-asset-img" src="<?php echo esc_url( $asset['url'] ); ?>" alt="<?php echo esc_attr( $asset['label'] ); ?>">
+								<?php else : ?>
+									<div class="wpfaevent-asset-placeholder" style="width:100%; height:140px; border-radius:10px; border:1px dashed #ccc; display:flex; align-items:center; justify-content:center; background:#fafafa; color:#888; margin-bottom:10px;">
+										<?php esc_html_e( 'No image set', 'wpfaevent' ); ?>
+									</div>
+								<?php endif; ?>
+							</div>
+							
+							<div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
+								<strong><?php echo esc_html( $asset['label'] ); ?></strong>
+								<?php if ( $is_editable ) : ?>
+									<button type="button" class="wpfaevent-edit-field-btn button button-small button-link"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></button>
+								<?php endif; ?>
+							</div>
+							
 							<div class="description"><?php echo esc_html( ! empty( $asset['source'] ) ? $asset['source'] : __( 'Saved asset', 'wpfaevent' ) ); ?></div>
 						</div>
 					<?php endforeach; ?>
@@ -500,9 +565,19 @@ document.addEventListener('DOMContentLoaded', function () {
 		return;
 	}
 
-	const submitButton = form.querySelector('button[type="submit"]');
+	const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
 	const feedback = form.querySelector('[data-sync-feedback]');
-	const defaultLabel = submitButton ? submitButton.textContent : '';
+	const getButtonText = function (btn) {
+		return btn.tagName === 'INPUT' ? btn.value : btn.textContent;
+	};
+	const setButtonText = function (btn, text) {
+		if (btn.tagName === 'INPUT') {
+			btn.value = text;
+		} else {
+			btn.textContent = text;
+		}
+	};
+	const defaultLabel = submitButton ? getButtonText(submitButton) : '';
 	const loadingLabel = <?php echo wp_json_encode( __( 'Synchronizing...', 'wpfaevent' ) ); ?>;
 
 	const setFeedback = function (type, message) {
@@ -523,7 +598,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		}
 
 		submitButton.disabled = true;
-		submitButton.textContent = loadingLabel;
+		setButtonText(submitButton, loadingLabel);
 		form.setAttribute('aria-busy', 'true');
 		setFeedback('loading', loadingLabel);
 
@@ -550,14 +625,245 @@ document.addEventListener('DOMContentLoaded', function () {
 			window.setTimeout(function () {
 				const nextUrl = payload.data && payload.data.dashboard_url ? payload.data.dashboard_url + '#wpfaevent-sync' : window.location.href.split('#')[0] + '#wpfaevent-sync';
 				window.location.href = nextUrl;
+				window.location.reload();
 			}, 900);
 		}).catch(function () {
 			setFeedback('error', <?php echo wp_json_encode( __( 'Synchronization failed. Please try again.', 'wpfaevent' ) ); ?>);
 		}).finally(function () {
 			submitButton.disabled = false;
-			submitButton.textContent = defaultLabel;
+			setButtonText(submitButton, defaultLabel);
 			form.removeAttribute('aria-busy');
 		});
 	});
+
+	// Inline Editor Logic
+	document.body.addEventListener('click', function (e) {
+		const editBtn = e.target.closest('.wpfaevent-edit-field-btn');
+		if (editBtn) {
+			e.preventDefault();
+			handleEdit(editBtn);
+		}
+	});
+
+	const activeEditors = {};
+
+	function handleEdit(btn) {
+		const parent = btn.closest('.wpfaevent-editable-row, .wpfaevent-editable-item, .wpfaevent-editable-asset');
+		if (!parent) return;
+
+		const field = parent.dataset.field;
+		const type = parent.dataset.type;
+		const label = parent.dataset.label;
+		const rawValue = parent.dataset.rawValue || '';
+
+		if (activeEditors[field]) return; // Already editing this field
+
+		const container = parent.querySelector('.wpfaevent-field-container') || parent;
+		const originalHTML = container.innerHTML;
+
+		activeEditors[field] = {
+			parent: parent,
+			container: container,
+			originalHTML: originalHTML,
+			rawValue: rawValue
+		};
+
+		if (type === 'media') {
+			if (typeof wp === 'undefined' || !wp.media) {
+				alert('WordPress media library is not loaded.');
+				delete activeEditors[field];
+				return;
+			}
+
+			const frame = wp.media({
+				title: 'Select or Upload ' + label,
+				button: {
+					text: 'Use this image'
+				},
+				multiple: false,
+				library: {
+					type: 'image'
+				}
+			});
+
+			frame.on('select', function () {
+				const attachment = frame.state().get('selection').first().toJSON();
+				const newUrl = attachment.url;
+
+				// Update preview
+				const previewContainer = parent.querySelector('.wpfaevent-asset-preview');
+				if (previewContainer) {
+					previewContainer.innerHTML = '<img class="wpfaevent-asset-img" src="' + newUrl + '" alt="' + label + '">';
+				}
+
+				// Show Save/Cancel actions in place of the edit button
+				const actionArea = parent.querySelector('div[style*="display: flex"]') || parent.lastElementChild;
+				actionArea.innerHTML = `
+					<strong>${label}</strong>
+					<div style="display:inline-flex; gap:5px;">
+						<button type="button" class="wpfaevent-save-field-btn button button-primary button-small">Save</button>
+						<button type="button" class="wpfaevent-cancel-field-btn button button-small">Cancel</button>
+					</div>
+				`;
+
+				// Attach save and cancel listeners
+				actionArea.querySelector('.wpfaevent-save-field-btn').addEventListener('click', function () {
+					saveField(field, newUrl, parent);
+				});
+				actionArea.querySelector('.wpfaevent-cancel-field-btn').addEventListener('click', function () {
+					cancelEdit(field);
+				});
+			});
+
+			frame.on('close', function() {
+				if (!parent.querySelector('.wpfaevent-save-field-btn')) {
+					// User closed modal without selecting
+					delete activeEditors[field];
+				}
+			});
+
+			frame.open();
+		} else {
+			// For text, date, url
+			let inputHTML = '';
+			if (type === 'date') {
+				inputHTML = '<input type="date" class="wpfaevent-inline-input" value="' + rawValue + '" style="vertical-align: middle;">';
+			} else if (type === 'url') {
+				inputHTML = '<input type="url" class="wpfaevent-inline-input regular-text" value="' + rawValue + '" placeholder="https://" style="vertical-align: middle;">';
+			} else {
+				inputHTML = '<input type="text" class="wpfaevent-inline-input regular-text" value="' + rawValue + '" style="vertical-align: middle;">';
+			}
+
+			container.innerHTML = `
+				<div class="wpfaevent-inline-editor-form" style="display:inline-flex; align-items:center; gap:6px;">
+					${inputHTML}
+					<button type="button" class="wpfaevent-save-field-btn button button-primary button-small">Save</button>
+					<button type="button" class="wpfaevent-cancel-field-btn button button-small">Cancel</button>
+				</div>
+			`;
+
+			container.querySelector('.wpfaevent-save-field-btn').addEventListener('click', function () {
+				const val = container.querySelector('.wpfaevent-inline-input').value;
+				saveField(field, val, parent);
+			});
+
+			container.querySelector('.wpfaevent-cancel-field-btn').addEventListener('click', function () {
+				cancelEdit(field);
+			});
+		}
+	}
+
+	function cancelEdit(field) {
+		const editor = activeEditors[field];
+		if (!editor) return;
+
+		editor.container.innerHTML = editor.originalHTML;
+		delete activeEditors[field];
+	}
+
+	function saveField(field, value, parent) {
+		const shell = document.querySelector('.wpfaevent-dashboard-shell');
+		const eventId = shell.dataset.eventId;
+		const nonce = shell.dataset.editNonce;
+		const type = parent.dataset.type;
+		const label = parent.dataset.label;
+
+		const saveBtn = parent.querySelector('.wpfaevent-save-field-btn');
+		const cancelBtn = parent.querySelector('.wpfaevent-cancel-field-btn');
+		const input = parent.querySelector('.wpfaevent-inline-input');
+
+		if (saveBtn) saveBtn.disabled = true;
+		if (cancelBtn) cancelBtn.disabled = true;
+		if (input) input.disabled = true;
+
+		const formData = new FormData();
+		formData.append('action', 'wpfaevent_save_dashboard_field');
+		formData.append('event_id', eventId);
+		formData.append('field', field);
+		formData.append('value', value);
+		formData.append('nonce', nonce);
+
+		window.fetch(ajaxurl, {
+			method: 'POST',
+			body: formData
+		}).then(function (response) {
+			return response.json().catch(function () {
+				return { success: false, data: { message: 'Unexpected server response.' } };
+			});
+		}).then(function (payload) {
+			if (!payload || !payload.success) {
+				const msg = payload && payload.data && payload.data.message ? payload.data.message : 'Failed to save field.';
+				showNotice('error', msg);
+				if (saveBtn) saveBtn.disabled = false;
+				if (cancelBtn) cancelBtn.disabled = false;
+				if (input) input.disabled = false;
+				return;
+			}
+
+			// Save succeeded!
+			showNotice('success', payload.data.message);
+
+			// Update values on parent
+			parent.dataset.rawValue = payload.data.value;
+
+			// Update UI
+			if (type === 'media') {
+				const previewContainer = parent.querySelector('.wpfaevent-asset-preview');
+				if (payload.data.value) {
+					previewContainer.innerHTML = '<img class="wpfaevent-asset-img" src="' + payload.data.value + '" alt="' + label + '">';
+				} else {
+					previewContainer.innerHTML = `
+						<div class="wpfaevent-asset-placeholder" style="width:100%; height:140px; border-radius:10px; border:1px dashed #ccc; display:flex; align-items:center; justify-content:center; background:#fafafa; color:#888; margin-bottom:10px;">
+							No image set
+						</div>
+					`;
+				}
+				const actionArea = parent.querySelector('div[style*="display: flex"]') || parent.lastElementChild;
+				if (actionArea) {
+					actionArea.innerHTML = `
+						<strong>${label}</strong>
+						<button type="button" class="wpfaevent-edit-field-btn button button-small button-link">Edit</button>
+					`;
+				}
+			} else {
+				let displayHTML = '';
+				if (type === 'url' && payload.data.value) {
+					displayHTML = '<a href="' + payload.data.value + '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+				} else if (type === 'url') {
+					displayHTML = label + ' not set.';
+				} else {
+					displayHTML = payload.data.display;
+				}
+
+				parent.querySelector('.wpfaevent-field-container').innerHTML = `
+					<span class="wpfaevent-field-value">${displayHTML}</span>
+					<button type="button" class="wpfaevent-edit-field-btn button button-small button-link" style="margin-left: 8px;">Edit</button>
+				`;
+			}
+
+			delete activeEditors[field];
+		}).catch(function () {
+			showNotice('error', 'An error occurred. Please try again.');
+			if (saveBtn) saveBtn.disabled = false;
+			if (cancelBtn) cancelBtn.disabled = false;
+			if (input) input.disabled = false;
+		});
+	}
+
+	const showNotice = function (type, message) {
+		const container = document.querySelector('.wpfaevent-notification-container') || document.querySelector('.wpfaevent-dashboard-shell');
+		const notice = document.createElement('div');
+		notice.className = 'notice notice-' + type + ' is-dismissible';
+		notice.style.margin = '0 0 20px';
+		notice.innerHTML = '<p>' + message + '</p>';
+		
+		const existing = container.querySelectorAll('.notice.wpfaevent-edit-notice');
+		existing.forEach(el => el.remove());
+		
+		notice.classList.add('wpfaevent-edit-notice');
+		container.insertBefore(notice, container.firstChild);
+		
+		notice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+	};
 });
 </script>

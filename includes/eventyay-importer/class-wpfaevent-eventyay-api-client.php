@@ -1231,22 +1231,54 @@ class Wpfaevent_Eventyay_API_Client {
 		$last_error   = null;
 
 		foreach ( $auth_schemes as $auth_scheme ) {
+			$headers = $this->build_eventyay_rest_headers( $api_token, $auth_scheme );
+			$this->safe_debug_log(
+				'Sending API Request (REST)',
+				array(
+					'url'     => $api_url,
+					'headers' => $headers,
+				)
+			);
+
 			$response = wp_remote_get(
 				$api_url,
 				array(
 					'timeout'     => 20,
 					'redirection' => 3,
-					'headers'     => $this->build_eventyay_rest_headers( $api_token, $auth_scheme ),
+					'headers'     => $headers,
 				)
 			);
 
 			if ( is_wp_error( $response ) ) {
+				$this->safe_debug_log(
+					'API Request Failed (WP_Error, REST)',
+					array(
+						'url'           => $api_url,
+						'error_message' => $response->get_error_message(),
+						'error_code'    => $response->get_error_code(),
+					)
+				);
 				return new WP_Error(
 					'wpfaevent_eventyay_request_failed',
 					esc_html__( 'Eventyay request failed.', 'wpfaevent' ),
 					array( 'details' => $response->get_error_message() )
 				);
 			}
+
+			$status       = absint( wp_remote_retrieve_response_code( $response ) );
+			$resp_headers = wp_remote_retrieve_headers( $response );
+			$headers_arr  = is_array( $resp_headers ) ? $resp_headers : ( method_exists( $resp_headers, 'getAll' ) ? $resp_headers->getAll() : (array) $resp_headers );
+			$body         = wp_remote_retrieve_body( $response );
+
+			$this->safe_debug_log(
+				'Received API Response (REST)',
+				array(
+					'url'              => $api_url,
+					'response_code'    => $status,
+					'response_headers' => $headers_arr,
+					'response_body'    => $body,
+				)
+			);
 
 			$decoded = $this->decode_eventyay_rest_response( $response, $api_url );
 			if ( ! is_wp_error( $decoded ) ) {
@@ -1282,18 +1314,57 @@ class Wpfaevent_Eventyay_API_Client {
 		$body   = wp_remote_retrieve_body( $response );
 
 		if ( $status < 200 || $status >= 300 ) {
+			$error_message = '';
+			$decoded_body  = $this->decode_eventyay_error_body( $body );
+			if ( is_array( $decoded_body ) ) {
+				if ( ! empty( $decoded_body['detail'] ) ) {
+					$error_message = $decoded_body['detail'];
+				} elseif ( ! empty( $decoded_body['error'] ) ) {
+					$error_message = $decoded_body['error'];
+				} elseif ( ! empty( $decoded_body['errors'] ) && is_array( $decoded_body['errors'] ) ) {
+					$details = array();
+					foreach ( $decoded_body['errors'] as $err ) {
+						if ( is_array( $err ) && ! empty( $err['detail'] ) ) {
+							$details[] = $err['detail'];
+						}
+					}
+					if ( ! empty( $details ) ) {
+						$error_message = implode( '; ', $details );
+					}
+				}
+			}
+
+			$display_body = $body;
+			if ( is_array( $decoded_body ) ) {
+				$display_body = wp_json_encode( $decoded_body, JSON_PRETTY_PRINT );
+			} else {
+				$display_body = wp_strip_all_tags( (string) $body );
+			}
+
+			$full_msg = sprintf(
+				/* translators: 1: HTTP status code, 2: Eventyay API URL. */
+				esc_html__( 'Eventyay API returned HTTP %1$d for %2$s.', 'wpfaevent' ),
+				$status,
+				esc_url_raw( $api_url )
+			);
+
+			if ( ! empty( $error_message ) ) {
+				$full_msg .= "\n" . sprintf(
+					/* translators: %s: API error message detail. */
+					esc_html__( 'API Error: %s', 'wpfaevent' ),
+					$error_message
+				);
+			}
+
+			$full_msg .= "\n\n" . sprintf( "HTTP Status: %d\nURL: %s\nResponse:\n%s", $status, esc_url_raw( $api_url ), $display_body );
+
 			return new WP_Error(
 				'wpfaevent_eventyay_http_error',
-				sprintf(
-					/* translators: 1: HTTP status code, 2: Eventyay API URL. */
-					esc_html__( 'Eventyay API returned HTTP %1$d for %2$s.', 'wpfaevent' ),
-					$status,
-					esc_url_raw( $api_url )
-				),
+				$full_msg,
 				array(
 					'http_status' => $status,
 					'url'         => esc_url_raw( $api_url ),
-					'body'        => $this->decode_eventyay_error_body( $body ),
+					'body'        => $decoded_body,
 				)
 			);
 		}
@@ -1431,18 +1502,35 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @return array|WP_Error
 	 */
 	public function fetch_eventyay_json( $api_url ) {
+		$headers = array(
+			'Accept' => 'application/vnd.api+json, application/json',
+		);
+		$this->safe_debug_log(
+			'Sending API Request (JSON:API)',
+			array(
+				'url'     => $api_url,
+				'headers' => $headers,
+			)
+		);
+
 		$response = wp_remote_get(
 			$api_url,
 			array(
 				'timeout'     => 20,
 				'redirection' => 3,
-				'headers'     => array(
-					'Accept' => 'application/vnd.api+json, application/json',
-				),
+				'headers'     => $headers,
 			)
 		);
 
 		if ( is_wp_error( $response ) ) {
+			$this->safe_debug_log(
+				'API Request Failed (WP_Error, JSON:API)',
+				array(
+					'url'           => $api_url,
+					'error_message' => $response->get_error_message(),
+					'error_code'    => $response->get_error_code(),
+				)
+			);
 			return new WP_Error(
 				'eventyay_request_failed',
 				esc_html__( 'Eventyay request failed.', 'wpfaevent' ),
@@ -1453,21 +1541,73 @@ class Wpfaevent_Eventyay_API_Client {
 			);
 		}
 
-		$status = absint( wp_remote_retrieve_response_code( $response ) );
-		$body   = wp_remote_retrieve_body( $response );
+		$status       = absint( wp_remote_retrieve_response_code( $response ) );
+		$resp_headers = wp_remote_retrieve_headers( $response );
+		$headers_arr  = is_array( $resp_headers ) ? $resp_headers : ( method_exists( $resp_headers, 'getAll' ) ? $resp_headers->getAll() : (array) $resp_headers );
+		$body         = wp_remote_retrieve_body( $response );
+
+		$this->safe_debug_log(
+			'Received API Response (JSON:API)',
+			array(
+				'url'              => $api_url,
+				'response_code'    => $status,
+				'response_headers' => $headers_arr,
+				'response_body'    => $body,
+			)
+		);
 
 		if ( $status < 200 || $status >= 300 ) {
+			$error_message = '';
+			$decoded_body  = $this->decode_eventyay_error_body( $body );
+			if ( is_array( $decoded_body ) ) {
+				if ( ! empty( $decoded_body['detail'] ) ) {
+					$error_message = $decoded_body['detail'];
+				} elseif ( ! empty( $decoded_body['error'] ) ) {
+					$error_message = $decoded_body['error'];
+				} elseif ( ! empty( $decoded_body['errors'] ) && is_array( $decoded_body['errors'] ) ) {
+					$details = array();
+					foreach ( $decoded_body['errors'] as $err ) {
+						if ( is_array( $err ) && ! empty( $err['detail'] ) ) {
+							$details[] = $err['detail'];
+						}
+					}
+					if ( ! empty( $details ) ) {
+						$error_message = implode( '; ', $details );
+					}
+				}
+			}
+
+			$display_body = $body;
+			if ( is_array( $decoded_body ) ) {
+				$display_body = wp_json_encode( $decoded_body, JSON_PRETTY_PRINT );
+			} else {
+				$display_body = wp_strip_all_tags( (string) $body );
+			}
+
+			$full_msg = sprintf(
+				/* translators: 1: HTTP status code, 2: Eventyay API URL. */
+				esc_html__( 'Eventyay API returned HTTP %1$d for %2$s.', 'wpfaevent' ),
+				$status,
+				esc_url_raw( $api_url )
+			);
+
+			if ( ! empty( $error_message ) ) {
+				$full_msg .= "\n" . sprintf(
+					/* translators: %s: API error message detail. */
+					esc_html__( 'API Error: %s', 'wpfaevent' ),
+					$error_message
+				);
+			}
+
+			$full_msg .= "\n\n" . sprintf( "HTTP Status: %d\nURL: %s\nResponse:\n%s", $status, esc_url_raw( $api_url ), $display_body );
+
 			return new WP_Error(
 				'eventyay_http_error',
-				sprintf(
-					/* translators: %d: HTTP status code. */
-					esc_html__( 'Eventyay API returned HTTP %d.', 'wpfaevent' ),
-					$status
-				),
+				$full_msg,
 				array(
 					'status'      => ( $status >= 400 && $status <= 599 ) ? $status : 502,
 					'http_status' => $status,
-					'body'        => $this->decode_eventyay_error_body( $body ),
+					'body'        => $decoded_body,
 				)
 			);
 		}
@@ -1490,7 +1630,6 @@ class Wpfaevent_Eventyay_API_Client {
 				esc_html__( 'Eventyay API returned malformed JSON.', 'wpfaevent' ),
 				array(
 					'status'          => 502,
-					'http_status'     => $status,
 					'json_error'      => json_last_error_msg(),
 					'response_sample' => $this->parser->truncate_string( $body ),
 				)
@@ -1630,5 +1769,23 @@ class Wpfaevent_Eventyay_API_Client {
 		$value = sanitize_text_field( wp_unslash( (string) $value ) );
 
 		return preg_replace( '/[^A-Za-z0-9._-]/', '', $value );
+	}
+
+	/**
+	 * Safe debug log helper.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $message Log message.
+	 * @param array  $context Additional context data.
+	 */
+	private function safe_debug_log( $message, $context = array() ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			$log_entry = '[WPFAevent Eventyay Debug] ' . $message;
+			if ( ! empty( $context ) ) {
+				$log_entry .= ' | Context: ' . wp_json_encode( $context, JSON_UNESCAPED_SLASHES );
+			}
+			error_log( $log_entry ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		}
 	}
 }

@@ -127,6 +127,9 @@ class Wpfaevent_Event_Dashboard_Page {
 		$sync_action_url  = $this->get_sync_action_url();
 		$sync_ajax_url    = admin_url( 'admin-ajax.php' );
 
+		// Enqueue media files for WordPress Media Library integration.
+		wp_enqueue_media();
+
 		require WPFAEVENT_PATH . 'admin/partials/event-dashboard.php';
 	}
 
@@ -423,5 +426,148 @@ class Wpfaevent_Event_Dashboard_Page {
 		}
 
 		return $message;
+	}
+
+	/**
+	 * Handle direct dashboard field update over AJAX.
+	 *
+	 * @return void
+	 */
+	public function handle_save_field_ajax() {
+		if ( ! Wpfaevent_Roles::current_user_can_manage_dashboard() ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'You are not allowed to edit this event.', 'wpfaevent' ) ), 403 );
+		}
+
+		$event_id = isset( $_POST['event_id'] ) ? absint( wp_unslash( $_POST['event_id'] ) ) : 0;
+		$field    = isset( $_POST['field'] ) ? sanitize_text_field( wp_unslash( $_POST['field'] ) ) : '';
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized later in update_dashboard_field based on field type.
+		$value = isset( $_POST['value'] ) ? wp_unslash( $_POST['value'] ) : '';
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+
+		if ( ! $event_id || ! wp_verify_nonce( $nonce, 'wpfaevent_edit_event_dashboard_' . $event_id ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Invalid request or session expired.', 'wpfaevent' ) ), 403 );
+		}
+
+		if ( 'wpfa_event' !== get_post_type( $event_id ) || ! current_user_can( 'edit_post', $event_id ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to edit this event.', 'wpfaevent' ) ), 403 );
+		}
+
+		// Process save based on the field.
+		$result = $this->update_dashboard_field( $event_id, $field, $value );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => esc_html__( 'Field updated successfully.', 'wpfaevent' ),
+				'value'   => $result['value'],
+				'display' => $result['display'],
+			)
+		);
+	}
+
+	/**
+	 * Update one dashboard-backed event field.
+	 *
+	 * @param int    $event_id Event post ID.
+	 * @param string $field    Field name.
+	 * @param mixed  $value    New value.
+	 * @return array<string, mixed>|WP_Error
+	 */
+	private function update_dashboard_field( $event_id, $field, $value ) {
+		$allowed_fields = array(
+			'wpfa_event_logo_url',
+			'wpfa_event_header_image_url',
+			'wpfa_event_location',
+			'wpfa_event_start_date',
+			'wpfa_event_end_date',
+			'wpfa_event_registration_link',
+			'wpfa_event_url',
+			'wpfa_event_cfs_link',
+		);
+
+		if ( ! in_array( $field, $allowed_fields, true ) ) {
+			return new WP_Error( 'invalid_field', esc_html__( 'The requested field cannot be edited.', 'wpfaevent' ) );
+		}
+
+		$formatted_value = '';
+		$display_value   = '';
+
+		// 1. Sanitize and validate
+		switch ( $field ) {
+			case 'wpfa_event_logo_url':
+			case 'wpfa_event_header_image_url':
+			case 'wpfa_event_registration_link':
+			case 'wpfa_event_url':
+			case 'wpfa_event_cfs_link':
+				$formatted_value = esc_url_raw( $value );
+				$display_value   = esc_url( $value );
+				break;
+			case 'wpfa_event_start_date':
+			case 'wpfa_event_end_date':
+				$formatted_value = sanitize_text_field( $value );
+				if ( ! empty( $formatted_value ) ) {
+					// Verify date format YYYY-MM-DD.
+					if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $formatted_value ) ) {
+						return new WP_Error( 'invalid_date', esc_html__( 'Please enter a valid date in YYYY-MM-DD format.', 'wpfaevent' ) );
+					}
+					// Convert to user-friendly display date format.
+					$timestamp     = strtotime( $formatted_value );
+					$display_value = $timestamp ? wp_date( get_option( 'date_format' ), $timestamp ) : $formatted_value;
+				} else {
+					$display_value = esc_html__( 'Not set', 'wpfaevent' );
+				}
+				break;
+			case 'wpfa_event_location':
+				$formatted_value = sanitize_text_field( $value );
+				$display_value   = esc_html( $formatted_value );
+				if ( empty( $display_value ) ) {
+					$display_value = esc_html__( 'Not set', 'wpfaevent' );
+				}
+				break;
+		}
+
+		// 2. Persist in underlying post meta
+		update_post_meta( $event_id, $field, $formatted_value );
+
+		// Mirror post meta keys to their alias/legacy counterparts.
+		if ( 'wpfa_event_location' === $field ) {
+			update_post_meta( $event_id, '_event_place', $formatted_value );
+		} elseif ( 'wpfa_event_start_date' === $field ) {
+			update_post_meta( $event_id, '_event_date', $formatted_value );
+		} elseif ( 'wpfa_event_end_date' === $field ) {
+			update_post_meta( $event_id, '_event_end_date', $formatted_value );
+		} elseif ( 'wpfa_event_registration_link' === $field ) {
+			update_post_meta( $event_id, '_event_registration_link', $formatted_value );
+		}
+
+		// 3. Update dashboard JSON settings file (site-settings-$event_id.json) if applicable.
+		$store         = new Wpfaevent_Eventyay_Dashboard_Store();
+		$settings_file = 'site-settings-' . absint( $event_id ) . '.json';
+		$settings      = $store->read_dashboard_json_file( $settings_file, array() );
+		$settings      = is_array( $settings ) ? $settings : array();
+
+		$json_updated = false;
+		if ( 'wpfa_event_logo_url' === $field ) {
+			$settings['event_logo_url'] = $formatted_value;
+			$json_updated               = true;
+		} elseif ( 'wpfa_event_header_image_url' === $field ) {
+			$settings['hero_image_url'] = $formatted_value;
+			$json_updated               = true;
+		} elseif ( 'wpfa_event_registration_link' === $field ) {
+			$settings['reg_button_link'] = $formatted_value;
+			$json_updated                = true;
+		}
+
+		if ( $json_updated ) {
+			$store->write_dashboard_json_file( $settings_file, $settings );
+		}
+
+		return array(
+			'value'   => $formatted_value,
+			'display' => $display_value,
+		);
 	}
 }
