@@ -125,7 +125,6 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 
 		<nav class="wpfaevent-dashboard-tabs" aria-label="<?php esc_attr_e( 'Event dashboard sections', 'wpfaevent' ); ?>">
 			<a class="wpfaevent-dashboard-tab" href="#wpfaevent-overview"><?php esc_html_e( 'Overview', 'wpfaevent' ); ?></a>
-			<a class="wpfaevent-dashboard-tab" href="#wpfaevent-modules"><?php esc_html_e( 'Modules', 'wpfaevent' ); ?></a>
 			<a class="wpfaevent-dashboard-tab" href="#wpfaevent-speakers"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></a>
 			<a class="wpfaevent-dashboard-tab" href="#wpfaevent-sessions"><?php esc_html_e( 'Sessions', 'wpfaevent' ); ?></a>
 			<a class="wpfaevent-dashboard-tab" href="#wpfaevent-tracks"><?php esc_html_e( 'Tracks', 'wpfaevent' ); ?></a>
@@ -230,58 +229,7 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 		</div>
 	</div>
 
-	<div id="wpfaevent-modules" class="wpfaevent-dashboard-module-grid wpfaevent-dashboard-section">
-		<div class="wpfaevent-dashboard-card wpfaevent-module-card">
-			<div>
-				<h2><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h2>
-				<p><?php esc_html_e( 'Review attached speaker records, featured speakers, and imported speaker profile data for this event.', 'wpfaevent' ); ?></p>
-			</div>
-			<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['speakers'] ); ?>"><?php esc_html_e( 'Go to Speakers', 'wpfaevent' ); ?></a>
-		</div>
-		<div class="wpfaevent-dashboard-card wpfaevent-module-card">
-			<div>
-				<h2><?php esc_html_e( 'Sessions', 'wpfaevent' ); ?></h2>
-				<p><?php esc_html_e( 'Inspect imported schedule sessions, time slots, track assignments, and room information.', 'wpfaevent' ); ?></p>
-			</div>
-			<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['sessions'] ); ?>"><?php esc_html_e( 'Go to Sessions', 'wpfaevent' ); ?></a>
-		</div>
-		<div class="wpfaevent-dashboard-card wpfaevent-module-card">
-			<div>
-				<h2><?php esc_html_e( 'Tracks', 'wpfaevent' ); ?></h2>
-				<p><?php esc_html_e( 'See event taxonomy tracks and tracks inferred from imported session data in one place.', 'wpfaevent' ); ?></p>
-			</div>
-			<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['tracks'] ); ?>"><?php esc_html_e( 'Go to Tracks', 'wpfaevent' ); ?></a>
-		</div>
-		<div class="wpfaevent-dashboard-card wpfaevent-module-card">
-			<div>
-				<h2><?php esc_html_e( 'Event Settings', 'wpfaevent' ); ?></h2>
-				<p><?php esc_html_e( 'Check public URLs, registration settings, dashboard settings, and event-specific content visibility.', 'wpfaevent' ); ?></p>
-			</div>
-			<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['settings'] ); ?>"><?php esc_html_e( 'Go to Settings', 'wpfaevent' ); ?></a>
-		</div>
-		<div class="wpfaevent-dashboard-card wpfaevent-module-card">
-			<div>
-				<h2><?php esc_html_e( 'Import Source', 'wpfaevent' ); ?></h2>
-				<p><?php esc_html_e( 'View source metadata, Eventyay slugs and IDs, and stored dashboard file references for this event.', 'wpfaevent' ); ?></p>
-			</div>
-			<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['source'] ); ?>"><?php esc_html_e( 'Go to Source', 'wpfaevent' ); ?></a>
-		</div>
-		<div class="wpfaevent-dashboard-card wpfaevent-module-card">
-			<div>
-				<h2><?php esc_html_e( 'Synchronization', 'wpfaevent' ); ?></h2>
-				<p>
-					<?php
-					echo esc_html(
-						! empty( $sync['can_sync'] )
-							? __( 'Run an Eventyay sync and optionally replace the saved dashboard logo from the source event.', 'wpfaevent' )
-							: __( 'Synchronization stays visible here even for manually edited events, but only Eventyay-linked events can run it.', 'wpfaevent' )
-					);
-					?>
-				</p>
-			</div>
-			<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['sync'] ); ?>"><?php esc_html_e( 'Go to Synchronization', 'wpfaevent' ); ?></a>
-		</div>
-	</div>
+
 
 	<div id="wpfaevent-source" class="wpfaevent-dashboard-split wpfaevent-dashboard-section">
 		<div class="wpfaevent-dashboard-card">
