@@ -387,7 +387,7 @@ class Wpfaevent_Event_Dashboard_Page {
 				admin_url( 'edit.php' )
 			),
 			'sessions' => $dashboard_url . '#wpfaevent-sessions',
-			'tracks'   => $event_edit_url ? $event_edit_url . '#tagsdiv-wpfa_event_track' : $dashboard_url . '#wpfaevent-tracks',
+			'tracks'   => admin_url( 'edit-tags.php?taxonomy=wpfa_event_track&post_type=wpfa_event' ),
 			'settings' => $event_edit_url ? $event_edit_url : $dashboard_url . '#wpfaevent-settings',
 			'source'   => $dashboard_url . '#wpfaevent-source',
 			'sync'     => $dashboard_url . '#wpfaevent-sync',

@@ -410,8 +410,9 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 		<div id="wpfaevent-speakers" class="wpfaevent-dashboard-card wpfaevent-dashboard-section">
 			<h2><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h2>
 			<?php if ( ! empty( $speakers ) ) : ?>
+				<?php $total_speakers_count = count( $speakers ); ?>
 				<div class="wpfaevent-list">
-					<?php foreach ( $speakers as $speaker ) : ?>
+					<?php foreach ( array_slice( $speakers, 0, 5 ) as $speaker ) : ?>
 						<div class="wpfaevent-list-item">
 							<?php if ( ! empty( $speaker['image'] ) ) : ?>
 								<img src="<?php echo esc_url( $speaker['image'] ); ?>" alt="<?php echo esc_attr( $speaker['name'] ); ?>">
@@ -426,8 +427,35 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 						</div>
 					<?php endforeach; ?>
 				</div>
+				<div style="margin-top: 15px; border-top: 1px solid var(--wpfa-border); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+					<span class="description">
+						<?php
+						if ( $total_speakers_count <= 5 ) {
+							printf(
+								/* translators: %d: count of speakers */
+								esc_html( _n( 'Showing %d speaker', 'Showing %d speakers', $total_speakers_count, 'wpfaevent' ) ),
+								absint( $total_speakers_count )
+							);
+						} else {
+							printf(
+								/* translators: %d: count of speakers */
+								esc_html__( 'Showing 5 of %d speakers', 'wpfaevent' ),
+								absint( $total_speakers_count )
+							);
+						}
+						?>
+					</span>
+					<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['speakers'] ); ?>">
+						<?php esc_html_e( 'View All Speakers &rarr;', 'wpfaevent' ); ?>
+					</a>
+				</div>
 			<?php else : ?>
 				<p class="description"><?php esc_html_e( 'No dashboard speakers were found for this event yet.', 'wpfaevent' ); ?></p>
+				<div style="margin-top: 15px; border-top: 1px solid var(--wpfa-border); padding-top: 10px;">
+					<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['speakers'] ); ?>">
+						<?php esc_html_e( 'Go to Speakers &rarr;', 'wpfaevent' ); ?>
+					</a>
+				</div>
 			<?php endif; ?>
 		</div>
 
@@ -463,8 +491,18 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 						<span class="wpfaevent-tag"><?php echo esc_html( $track ); ?></span>
 					<?php endforeach; ?>
 				</div>
+				<div style="margin-top: 15px; border-top: 1px solid var(--wpfa-border); padding-top: 10px;">
+					<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['tracks'] ); ?>">
+						<?php esc_html_e( 'Manage Tracks &rarr;', 'wpfaevent' ); ?>
+					</a>
+				</div>
 			<?php else : ?>
 				<p class="description"><?php esc_html_e( 'No tracks are attached to this event yet.', 'wpfaevent' ); ?></p>
+				<div style="margin-top: 15px; border-top: 1px solid var(--wpfa-border); padding-top: 10px;">
+					<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['tracks'] ); ?>">
+						<?php esc_html_e( 'Manage Tracks &rarr;', 'wpfaevent' ); ?>
+					</a>
+				</div>
 			<?php endif; ?>
 		</div>
 

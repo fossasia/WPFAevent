@@ -51,7 +51,43 @@ class Wpfaevent_Event_Dashboard_Data {
 		$sponsors      = is_array( $sponsors ) ? $sponsors : array();
 		$sessions      = $this->get_schedule_sessions( $schedule );
 		$tracks        = $this->get_track_names( $event_id, $sessions );
-		$speakers_list = $this->get_dashboard_speakers( $speakers );
+
+		$db_speaker_ids = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_admin_event_speaker_ids( $event_id ) : array();
+		$speakers_list  = array();
+		if ( ! empty( $db_speaker_ids ) ) {
+			$speaker_posts = get_posts(
+				array(
+					'post_type'      => 'wpfa_speaker',
+					'post_status'    => 'any',
+					'post__in'       => $db_speaker_ids,
+					'posts_per_page' => -1,
+					'orderby'        => 'post__in',
+				)
+			);
+			foreach ( $speaker_posts as $sp_post ) {
+				$position     = get_post_meta( $sp_post->ID, 'wpfa_speaker_position', true );
+				$organization = get_post_meta( $sp_post->ID, 'wpfa_speaker_organization', true );
+				$headshot_url = get_post_meta( $sp_post->ID, 'wpfa_speaker_headshot_url', true );
+				if ( empty( $headshot_url ) ) {
+					$headshot_url = get_the_post_thumbnail_url( $sp_post->ID, 'thumbnail' );
+				}
+				$featured_ids = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_event_featured_speaker_ids( $event_id ) : array();
+				$is_featured  = in_array( $sp_post->ID, $featured_ids, true );
+
+				$speakers_list[] = array(
+					'name'         => $sp_post->post_title,
+					'title'        => $position,
+					'organization' => $organization,
+					'image'        => $headshot_url,
+					'featured'     => $is_featured,
+				);
+			}
+		}
+
+		if ( empty( $speakers_list ) ) {
+			$speakers_list = $this->get_dashboard_speakers( $speakers );
+		}
+
 		$site_logo_url = get_option( 'wpfa_site_logo_url', '' );
 		$assets        = $this->get_event_assets(
 			$event_id,
@@ -384,7 +420,7 @@ class Wpfaevent_Event_Dashboard_Data {
 			);
 		}
 
-		return array_slice( $normalized, 0, 6 );
+		return $normalized;
 	}
 
 	/**

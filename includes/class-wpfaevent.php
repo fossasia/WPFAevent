@@ -242,7 +242,7 @@ class Wpfaevent {
 
 		// Register settings page.
 		$this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
-		$this->loader->add_action( 'admin_head', $this->plugin_admin, 'remove_event_taxonomy_submenus' );
+		$this->loader->add_action( 'admin_menu', $this->plugin_admin, 'remove_event_taxonomy_submenus', 999 );
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_plugin_settings' );
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_eventyay_import_settings' );
 
@@ -269,6 +269,9 @@ class Wpfaevent {
 		$this->loader->add_action( 'restrict_manage_posts', $this->plugin_admin, 'render_speaker_event_filter' );
 		$this->loader->add_action( 'pre_get_posts', $this->plugin_admin, 'filter_speaker_admin_list' );
 		$this->loader->add_filter( 'views_edit-wpfa_speaker', $this->plugin_admin, 'filter_speaker_admin_views' );
+		$this->loader->add_action( 'load-edit.php', $this->plugin_admin, 'intercept_speaker_list_screen' );
+		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'begin_speaker_table_layout' );
+		$this->loader->add_action( 'admin_footer', $this->plugin_admin, 'end_speaker_table_layout' );
 
 		// Register AJAX handlers for the speakers page.
 		$plugin_speakers_handler = new Wpfaevent_Speakers_Handler();
