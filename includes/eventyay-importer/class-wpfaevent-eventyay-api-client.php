@@ -1780,12 +1780,24 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $context Additional context data.
 	 */
 	private function safe_debug_log( $message, $context = array() ) {
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
-			$log_entry = '[WPFAevent Eventyay Debug] ' . $message;
-			if ( ! empty( $context ) ) {
-				$log_entry .= ' | Context: ' . wp_json_encode( $context, JSON_UNESCAPED_SLASHES );
-			}
-			error_log( $log_entry ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		if ( ! ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) ) {
+			return;
 		}
+
+		$context = is_array( $context ) ? $context : array();
+
+		if ( isset( $context['headers']['Authorization'] ) ) {
+			$context['headers']['Authorization'] = '[redacted]';
+		}
+
+		if ( isset( $context['response_body'] ) && is_string( $context['response_body'] ) && strlen( $context['response_body'] ) > 2000 ) {
+			$context['response_body'] = substr( $context['response_body'], 0, 2000 ) . '...';
+		}
+
+		$log_entry = '[WPFAevent Eventyay Debug] ' . $message;
+		if ( ! empty( $context ) ) {
+			$log_entry .= ' | Context: ' . wp_json_encode( $context, JSON_UNESCAPED_SLASHES );
+		}
+		error_log( $log_entry ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 	}
 }
