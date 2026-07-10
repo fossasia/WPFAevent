@@ -639,38 +639,80 @@ class Wpfaevent_Admin {
 			return;
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( ! empty( $_GET['wpfa_speaker_event'] ) || ! empty( $_GET['wpfaevent_speaker_event'] ) ) {
-			return;
+		$event_filter = $this->get_current_speaker_admin_event_filter();
+
+		if ( $event_filter ) {
+			$db_speaker_ids       = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_admin_event_speaker_ids( $event_filter ) : array();
+			$total_speakers_count = count( $db_speaker_ids );
+			$event_owned_count    = $total_speakers_count;
+			$standalone_count     = 0;
+
+			$speaker_cat_ids = array();
+			if ( ! empty( $db_speaker_ids ) ) {
+				foreach ( $db_speaker_ids as $sp_id ) {
+					$terms = wp_get_post_terms( $sp_id, 'wpfa_speaker_category', array( 'fields' => 'ids' ) );
+					if ( is_array( $terms ) ) {
+						$speaker_cat_ids = array_merge( $speaker_cat_ids, $terms );
+					}
+				}
+			}
+			$speaker_cat_ids        = array_unique( $speaker_cat_ids );
+			$total_categories_count = count( $speaker_cat_ids );
+
+			$speakers_preview = array();
+			if ( ! empty( $db_speaker_ids ) ) {
+				$speakers_preview = get_posts(
+					array(
+						'post_type'      => 'wpfa_speaker',
+						'post_status'    => 'any',
+						'post__in'       => $db_speaker_ids,
+						'posts_per_page' => 5,
+						'orderby'        => 'post__in',
+					)
+				);
+			}
+
+			$categories_preview = array();
+			if ( ! empty( $speaker_cat_ids ) ) {
+				$categories_preview = get_terms(
+					array(
+						'taxonomy'   => 'wpfa_speaker_category',
+						'hide_empty' => false,
+						'number'     => 5,
+						'include'    => $speaker_cat_ids,
+					)
+				);
+				$categories_preview = is_array( $categories_preview ) ? $categories_preview : array();
+			}
+		} else {
+			// Calculate counts.
+			$all_posts_count      = wp_count_posts( 'wpfa_speaker' );
+			$total_speakers_count = isset( $all_posts_count->publish ) ? (int) $all_posts_count->publish : 0;
+			$event_speaker_ids    = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_all_event_owned_speaker_ids() : array();
+			$event_owned_count    = count( $event_speaker_ids );
+			$standalone_count     = max( 0, $total_speakers_count - $event_owned_count );
+
+			$categories_count_raw   = wp_count_terms( array( 'taxonomy' => 'wpfa_speaker_category' ) );
+			$total_categories_count = ! is_wp_error( $categories_count_raw ) ? (int) $categories_count_raw : 0;
+
+			// Fetch preview arrays (limited to 5).
+			$speakers_preview = get_posts(
+				array(
+					'post_type'      => 'wpfa_speaker',
+					'post_status'    => 'any',
+					'posts_per_page' => 5,
+				)
+			);
+
+			$categories_preview = get_terms(
+				array(
+					'taxonomy'   => 'wpfa_speaker_category',
+					'hide_empty' => false,
+					'number'     => 5,
+				)
+			);
+			$categories_preview = is_array( $categories_preview ) ? $categories_preview : array();
 		}
-
-		// Calculate counts.
-		$all_posts_count      = wp_count_posts( 'wpfa_speaker' );
-		$total_speakers_count = isset( $all_posts_count->publish ) ? (int) $all_posts_count->publish : 0;
-		$event_speaker_ids    = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_all_event_owned_speaker_ids() : array();
-		$event_owned_count    = count( $event_speaker_ids );
-		$standalone_count     = max( 0, $total_speakers_count - $event_owned_count );
-
-		$categories_count_raw   = wp_count_terms( array( 'taxonomy' => 'wpfa_speaker_category' ) );
-		$total_categories_count = ! is_wp_error( $categories_count_raw ) ? (int) $categories_count_raw : 0;
-
-		// Fetch preview arrays (limited to 5).
-		$speakers_preview = get_posts(
-			array(
-				'post_type'      => 'wpfa_speaker',
-				'post_status'    => 'any',
-				'posts_per_page' => 5,
-			)
-		);
-
-		$categories_preview = get_terms(
-			array(
-				'taxonomy'   => 'wpfa_speaker_category',
-				'hide_empty' => false,
-				'number'     => 5,
-			)
-		);
-		$categories_preview = is_array( $categories_preview ) ? $categories_preview : array();
 
 		// Set up global variables so that admin-header.php renders the correct sidebar menu and highlighted items.
 		global $parent_file, $submenu_file, $title, $post_type;

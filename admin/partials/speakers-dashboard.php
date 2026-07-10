@@ -19,7 +19,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @var int            $total_categories_count Total speaker categories count.
  * @var array<WP_Post> $speakers_preview       Preview list of speakers.
  * @var array<WP_Term> $categories_preview     Preview list of categories.
+ * @var int            $event_filter           Event ID to filter by.
  */
+
+$new_speaker_url = admin_url( 'post-new.php?post_type=wpfa_speaker' );
+$table_view_url  = add_query_arg( 'wpfa_view', 'table' );
+if ( ! empty( $event_filter ) ) {
+	$new_speaker_url = add_query_arg( 'wpfa_speaker_event', $event_filter, $new_speaker_url );
+	$table_view_url  = add_query_arg( 'wpfa_speaker_event', $event_filter, $table_view_url );
+}
 ?>
 <div class="wrap">
 	<style>
@@ -61,10 +69,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</div>
 			<p><?php esc_html_e( 'Manage all speakers across your site events. Review attached speaker records, standalone profiles, and categories.', 'wpfaevent' ); ?></p>
 			<div class="wpfaevent-dashboard-actions">
-				<a class="button" href="<?php echo esc_url( admin_url( 'post-new.php?post_type=wpfa_speaker' ) ); ?>">
+				<a class="button" href="<?php echo esc_url( $new_speaker_url ); ?>">
 					<?php esc_html_e( 'Add New Speaker', 'wpfaevent' ); ?>
 				</a>
-				<a class="button button-secondary" href="<?php echo esc_url( add_query_arg( 'wpfa_view', 'table' ) ); ?>">
+				<a class="button button-secondary" href="<?php echo esc_url( $table_view_url ); ?>">
 					<?php esc_html_e( 'Switch to Table View', 'wpfaevent' ); ?>
 				</a>
 			</div>
@@ -168,14 +176,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 							}
 							?>
 						</span>
-						<a class="wpfaevent-module-link" href="<?php echo esc_url( add_query_arg( 'wpfa_view', 'table' ) ); ?>">
+						<a class="wpfaevent-module-link" href="<?php echo esc_url( $table_view_url ); ?>">
 							<?php esc_html_e( 'Manage All Speakers &rarr;', 'wpfaevent' ); ?>
 						</a>
 					</div>
 				<?php else : ?>
 					<p class="description"><?php esc_html_e( 'No speakers were found yet.', 'wpfaevent' ); ?></p>
 					<div style="margin-top: 15px; border-top: 1px solid var(--wpfa-border); padding-top: 10px;">
-						<a class="wpfaevent-module-link" href="<?php echo esc_url( admin_url( 'post-new.php?post_type=wpfa_speaker' ) ); ?>">
+						<a class="wpfaevent-module-link" href="<?php echo esc_url( $new_speaker_url ); ?>">
 							<?php esc_html_e( 'Add New Speaker &rarr;', 'wpfaevent' ); ?>
 						</a>
 					</div>
