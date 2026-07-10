@@ -484,14 +484,14 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 							$field_key   = 'wpfa_event_header_image_url';
 						}
 						?>
-						<div class="wpfaevent-asset <?php echo $is_editable ? 'wpfaevent-editable-asset' : ''; ?>" 
+						<div class="wpfaevent-asset <?php echo $is_editable ? 'wpfaevent-editable-asset' : ''; ?>"
 							<?php if ( $is_editable ) : ?>
-								data-field="<?php echo esc_attr( $field_key ); ?>" 
-								data-type="media" 
-								data-label="<?php echo esc_attr( $asset['label'] ); ?>" 
+								data-field="<?php echo esc_attr( $field_key ); ?>"
+								data-type="media"
+								data-label="<?php echo esc_attr( $asset['label'] ); ?>"
 								data-raw-value="<?php echo esc_attr( $asset['url'] ); ?>"
 							<?php endif; ?>>
-							
+
 							<div class="wpfaevent-asset-preview">
 								<?php if ( ! empty( $asset['url'] ) ) : ?>
 									<img class="wpfaevent-asset-img" src="<?php echo esc_url( $asset['url'] ); ?>" alt="<?php echo esc_attr( $asset['label'] ); ?>">
@@ -501,14 +501,14 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 									</div>
 								<?php endif; ?>
 							</div>
-							
+
 							<div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
 								<strong><?php echo esc_html( $asset['label'] ); ?></strong>
 								<?php if ( $is_editable ) : ?>
 									<button type="button" class="wpfaevent-edit-field-btn button button-small button-link"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></button>
 								<?php endif; ?>
 							</div>
-							
+
 							<div class="description"><?php echo esc_html( ! empty( $asset['source'] ) ? $asset['source'] : __( 'Saved asset', 'wpfaevent' ) ); ?></div>
 						</div>
 					<?php endforeach; ?>
@@ -856,13 +856,13 @@ document.addEventListener('DOMContentLoaded', function () {
 		notice.className = 'notice notice-' + type + ' is-dismissible';
 		notice.style.margin = '0 0 20px';
 		notice.innerHTML = '<p>' + message + '</p>';
-		
+
 		const existing = container.querySelectorAll('.notice.wpfaevent-edit-notice');
 		existing.forEach(el => el.remove());
-		
+
 		notice.classList.add('wpfaevent-edit-notice');
 		container.insertBefore(notice, container.firstChild);
-		
+
 		notice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 	};
 });
