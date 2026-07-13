@@ -34,45 +34,14 @@ if ( ! empty( $event_filter ) ) {
 
 	<div class="wpfaevent-dashboard-shell">
 		<!-- Hero Section -->
-		<div class="wpfaevent-dashboard-hero">
-			<div class="wpfaevent-dashboard-meta">
-				<div class="wpfaevent-badge"><?php esc_html_e( 'Speakers Hub', 'wpfaevent' ); ?></div>
-			</div>
-			<p><?php esc_html_e( 'Manage all speakers across your site events. Review attached speaker records, standalone profiles, and categories.', 'wpfaevent' ); ?></p>
-			<div class="wpfaevent-dashboard-actions">
-				<a class="button" href="<?php echo esc_url( $new_speaker_url ); ?>">
-					<?php esc_html_e( 'Add New Speaker', 'wpfaevent' ); ?>
-				</a>
-				<a class="button button-secondary" href="<?php echo esc_url( $table_view_url ); ?>">
-					<?php esc_html_e( 'Switch to Table View', 'wpfaevent' ); ?>
-				</a>
-			</div>
-		</div>
-
+		<?php
+		$switch_view_url   = $table_view_url;
+		$switch_view_label = __( 'Switch to Table View', 'wpfaevent' );
+		require WPFAEVENT_PATH . 'admin/partials/speaker-dashboard-header.php';
+		?>
 
 		<!-- Statistics Grid -->
-		<div id="wpfaevent-overview" class="wpfaevent-dashboard-grid wpfaevent-dashboard-section">
-			<div class="wpfaevent-dashboard-card">
-				<h2><?php esc_html_e( 'Total Speakers', 'wpfaevent' ); ?></h2>
-				<p class="wpfaevent-kpi"><?php echo esc_html( (string) $total_speakers_count ); ?></p>
-				<p class="description"><?php esc_html_e( 'Speaker posts registered on this site.', 'wpfaevent' ); ?></p>
-			</div>
-			<div class="wpfaevent-dashboard-card">
-				<h2><?php esc_html_e( 'Standalone Speakers', 'wpfaevent' ); ?></h2>
-				<p class="wpfaevent-kpi"><?php echo esc_html( (string) $standalone_count ); ?></p>
-				<p class="description"><?php esc_html_e( 'Speakers not attached to any event.', 'wpfaevent' ); ?></p>
-			</div>
-			<div class="wpfaevent-dashboard-card">
-				<h2><?php esc_html_e( 'Event-Owned Speakers', 'wpfaevent' ); ?></h2>
-				<p class="wpfaevent-kpi"><?php echo esc_html( (string) $event_owned_count ); ?></p>
-				<p class="description"><?php esc_html_e( 'Speakers linked to one or more events.', 'wpfaevent' ); ?></p>
-			</div>
-			<div class="wpfaevent-dashboard-card">
-				<h2><?php esc_html_e( 'Speaker Categories', 'wpfaevent' ); ?></h2>
-				<p class="wpfaevent-kpi"><?php echo esc_html( (string) $total_categories_count ); ?></p>
-				<p class="description"><?php esc_html_e( 'Taxonomy categories used for speakers.', 'wpfaevent' ); ?></p>
-			</div>
-		</div>
+		<?php require WPFAEVENT_PATH . 'admin/partials/speaker-dashboard-stats.php'; ?>
 
 		<!-- Split Section (List Previews) -->
 		<div class="wpfaevent-dashboard-split">
@@ -81,53 +50,11 @@ if ( ! empty( $event_filter ) ) {
 				<h2><?php esc_html_e( 'Speakers List', 'wpfaevent' ); ?></h2>
 				<?php if ( ! empty( $speakers_preview ) ) : ?>
 					<div class="wpfaevent-list">
-						<?php foreach ( $speakers_preview as $sp ) : ?>
-							<?php
-							$position     = get_post_meta( $sp->ID, 'wpfa_speaker_position', true );
-							$organization = get_post_meta( $sp->ID, 'wpfa_speaker_organization', true );
-							$headshot_url = get_post_meta( $sp->ID, 'wpfa_speaker_headshot_url', true );
-							if ( empty( $headshot_url ) ) {
-								$headshot_url = get_the_post_thumbnail_url( $sp->ID, 'thumbnail' );
-							}
-
-							$linked_events = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_speaker_event_ids( $sp->ID ) : array();
-
-							$initials = '';
-							if ( ! $headshot_url ) {
-								$name_parts = explode( ' ', $sp->post_title );
-								$initials   = strtoupper( substr( $name_parts[0], 0, 1 ) );
-								if ( count( $name_parts ) > 1 ) {
-									$initials .= strtoupper( substr( end( $name_parts ), 0, 1 ) );
-								}
-							}
-							?>
-							<div class="wpfaevent-list-item">
-								<?php if ( $headshot_url ) : ?>
-									<img src="<?php echo esc_url( $headshot_url ); ?>" alt="<?php echo esc_attr( $sp->post_title ); ?>">
-								<?php else : ?>
-									<div class="wpfaevent-list-avatar-fallback">
-										<?php echo esc_html( $initials ); ?>
-									</div>
-								<?php endif; ?>
-								<div class="wpfaevent-list-copy">
-									<strong><?php echo esc_html( $sp->post_title ); ?></strong>
-									<div class="description">
-										<?php echo esc_html( trim( $position . ( ! empty( $organization ) ? ' - ' . $organization : '' ) ) ); ?>
-									</div>
-									<?php if ( ! empty( $linked_events ) ) : ?>
-										<div class="wpfaevent-tag-list">
-											<?php foreach ( $linked_events as $event_id ) : ?>
-												<span class="wpfaevent-tag"><?php echo esc_html( get_the_title( $event_id ) ); ?></span>
-											<?php endforeach; ?>
-										</div>
-									<?php else : ?>
-										<div class="wpfaevent-tag-list">
-											<span class="wpfaevent-tag is-standalone"><?php esc_html_e( 'Standalone', 'wpfaevent' ); ?></span>
-										</div>
-									<?php endif; ?>
-								</div>
-							</div>
-						<?php endforeach; ?>
+						<?php
+						foreach ( $speakers_preview as $sp ) {
+							require WPFAEVENT_PATH . 'admin/partials/speaker-dashboard-card.php';
+						}
+						?>
 					</div>
 					<div class="wpfaevent-dashboard-card-footer is-flex">
 						<span class="description">

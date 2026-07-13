@@ -29,50 +29,6 @@ $about_excerpt      = isset( $sections['about_excerpt'] ) ? (string) $sections['
 $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections['custom_tab_count'] ) : 0;
 ?>
 <div class="wrap">
-	<style>
-		.wpfaevent-dashboard-shell { --wpfa-blue: #1683d9; --wpfa-blue-dark: #0d5ea8; --wpfa-slate: #5f6b7a; --wpfa-border: #d9e2ec; --wpfa-bg: #f4f8fb; --wpfa-card: #ffffff; }
-		.wpfaevent-dashboard-shell { background: linear-gradient(180deg, #eff6fc 0%, #f9fbfd 240px); margin-left: -20px; padding: 24px 20px 28px; }
-		.wpfaevent-dashboard-hero { background: linear-gradient(135deg, var(--wpfa-blue) 0%, #40a1f2 100%); border-radius: 16px; color: #fff; padding: 24px; box-shadow: 0 18px 40px rgba(22, 131, 217, 0.18); margin-bottom: 20px; }
-		.wpfaevent-dashboard-hero p { color: rgba(255,255,255,0.88); max-width: 820px; }
-		.wpfaevent-dashboard-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
-		.wpfaevent-dashboard-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin:20px 0; }
-		.wpfaevent-dashboard-card { background: var(--wpfa-card); border: 1px solid var(--wpfa-border); border-radius: 14px; padding: 18px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05); }
-		.wpfaevent-dashboard-card h2, .wpfaevent-dashboard-card h3 { margin-top: 0; }
-		.wpfaevent-kpi { font-size: 32px; line-height: 1; color: var(--wpfa-blue-dark); font-weight: 700; margin: 10px 0 8px; }
-		.wpfaevent-dashboard-tabs { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 18px; padding:12px; background:#fff; border:1px solid var(--wpfa-border); border-radius:14px; box-shadow:0 10px 24px rgba(15, 23, 42, 0.04); position:sticky; top:32px; z-index:5; }
-		.wpfaevent-dashboard-tab { display:inline-flex; align-items:center; justify-content:center; min-height:38px; padding:8px 14px; border-radius:999px; background:#eef5fb; color:var(--wpfa-blue-dark); text-decoration:none; font-weight:600; font-size:13px; border:1px solid transparent; }
-		.wpfaevent-dashboard-tab:hover, .wpfaevent-dashboard-tab:focus { background:#dcecfb; color:var(--wpfa-blue-dark); }
-		.wpfaevent-dashboard-tab.is-muted { background:#f3f6f8; color:#66788a; }
-		.wpfaevent-dashboard-section { scroll-margin-top: 96px; }
-		.wpfaevent-dashboard-columns { display:grid; grid-template-columns: 1.2fr 1fr; gap:20px; align-items:start; margin-top:20px; }
-		.wpfaevent-dashboard-split { display:grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap:20px; margin-top:20px; }
-		.wpfaevent-badge { display:inline-flex; align-items:center; gap:6px; background:#e8f4fe; color:var(--wpfa-blue-dark); border-radius:999px; padding:6px 12px; font-weight:600; font-size:12px; }
-		.wpfaevent-badge.is-neutral { background:#eef2f5; color:#52606d; }
-		.wpfaevent-tag-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-		.wpfaevent-tag { background:#eef4f8; border:1px solid #d7e3ee; border-radius:999px; padding:6px 10px; font-size:12px; }
-		.wpfaevent-list { display:grid; gap:12px; margin-top:12px; }
-		.wpfaevent-list-item { display:flex; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid #e4ebf3; border-radius:12px; background:#fbfdff; }
-		.wpfaevent-list-item img { width:52px; height:52px; border-radius:50%; object-fit:cover; }
-		.wpfaevent-list-copy { flex:1; }
-		.wpfaevent-assets { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:16px; }
-		.wpfaevent-asset img { width:100%; height:140px; object-fit:cover; border-radius:10px; border:1px solid #d9e2ec; background:#fff; }
-		.wpfaevent-asset code { display:block; margin-top:8px; }
-		.wpfaevent-sync-form { display:grid; gap:12px; margin-top:12px; }
-		.wpfaevent-sync-feedback { display:none; margin-top:4px; padding:12px 14px; border-radius:12px; border:1px solid transparent; }
-		.wpfaevent-sync-feedback.is-active { display:block; }
-		.wpfaevent-sync-feedback.is-loading { background:#eef5fb; border-color:#cfe0f2; color:#184b73; }
-		.wpfaevent-sync-feedback.is-success { background:#edf9f0; border-color:#bad8c2; color:#1f5f33; }
-		.wpfaevent-sync-feedback.is-error { background:#fdf0f0; border-color:#efc4c4; color:#8a1f1f; }
-		.wpfaevent-sync-form button[disabled] { opacity:0.7; cursor:not-allowed; }
-		.wpfaevent-dashboard-shell .notice { margin: 0 0 20px; }
-		.wpfaevent-dashboard-module-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:16px; margin-top:20px; }
-		.wpfaevent-module-card { min-height:158px; display:flex; flex-direction:column; justify-content:space-between; }
-		.wpfaevent-module-card p { margin:0 0 12px; color:#5d6b78; }
-		.wpfaevent-module-link { color:var(--wpfa-blue); font-weight:600; text-decoration:none; }
-		.wpfaevent-dashboard-meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-		@media (max-width: 1200px) { .wpfaevent-dashboard-module-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
-		@media (max-width: 1024px) { .wpfaevent-dashboard-columns, .wpfaevent-dashboard-split, .wpfaevent-dashboard-module-grid { grid-template-columns: 1fr; } .wpfaevent-dashboard-tabs { position:static; } }
-	</style>
 	<?php $edit_nonce = wp_create_nonce( 'wpfaevent_edit_event_dashboard_' . absint( $event['id'] ) ); ?>
 	<div class="wpfaevent-dashboard-shell" data-event-id="<?php echo esc_attr( (string) $event['id'] ); ?>" data-edit-nonce="<?php echo esc_attr( $edit_nonce ); ?>">
 		<div class="wpfaevent-notification-container"></div>

@@ -120,6 +120,11 @@ class Wpfaevent_Admin {
 		 */
 
 		wp_enqueue_style( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'css/wpfaevent-admin.css', array(), $this->version, 'all' );
+
+		$screen = get_current_screen();
+		if ( $screen && ( 'wpfa_speaker' === $screen->post_type || 'edit-wpfa_speaker' === $screen->id || 'wpfa_event' === $screen->post_type ) ) {
+			wp_enqueue_style( $this->plugin_name . '-speaker-dashboard', plugin_dir_url( __FILE__ ) . 'css/speaker-dashboard.css', array(), $this->version, 'all' );
+		}
 	}
 
 	/**
@@ -760,74 +765,17 @@ class Wpfaevent_Admin {
 		$total_categories_count = ! is_wp_error( $categories_count_raw ) ? (int) $categories_count_raw : 0;
 
 		?>
-		<style>
-			.wpfaevent-dashboard-shell { --wpfa-blue: #1683d9; --wpfa-blue-dark: #0d5ea8; --wpfa-slate: #5f6b7a; --wpfa-border: #d9e2ec; --wpfa-bg: #f4f8fb; --wpfa-card: #ffffff; }
-			.wpfaevent-dashboard-shell { background: linear-gradient(180deg, #eff6fc 0%, #f9fbfd 240px); margin-left: -20px; padding: 24px 20px 28px; }
-			.wpfaevent-dashboard-hero { background: linear-gradient(135deg, var(--wpfa-blue) 0%, #40a1f2 100%); border-radius: 16px; color: #fff; padding: 24px; box-shadow: 0 18px 40px rgba(22, 131, 217, 0.18); margin-bottom: 20px; }
-			.wpfaevent-dashboard-hero p { color: rgba(255,255,255,0.88); max-width: 820px; }
-			.wpfaevent-dashboard-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
-			.wpfaevent-dashboard-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin:20px 0; }
-			.wpfaevent-dashboard-card { background: var(--wpfa-card); border: 1px solid var(--wpfa-border); border-radius: 14px; padding: 18px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05); }
-			.wpfaevent-dashboard-card h2, .wpfaevent-dashboard-card h3 { margin-top: 0; }
-			.wpfaevent-kpi { font-size: 32px; line-height: 1; color: var(--wpfa-blue-dark); font-weight: 700; margin: 10px 0 8px; }
-			.wpfaevent-badge { display:inline-flex; align-items:center; gap:6px; background:#e8f4fe; color:var(--wpfa-blue-dark); border-radius:999px; padding:6px 12px; font-weight:600; font-size:12px; }
-			.wpfaevent-badge.is-neutral { background:#eef2f5; color:#52606d; }
-			.wpfaevent-tag-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-			.wpfaevent-tag { background:#eef4f8; border:1px solid #d7e3ee; border-radius:999px; padding:6px 10px; font-size:12px; }
-			.wpfaevent-list { display:grid; gap:12px; margin-top:12px; }
-			.wpfaevent-list-item { display:flex; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid #e4ebf3; border-radius:12px; background:#fbfdff; }
-			.wpfaevent-list-item img { width:52px; height:52px; border-radius:50%; object-fit:cover; }
-			.wpfaevent-list-avatar-fallback { width:52px; height:52px; border-radius:50%; background:#e0f2fe; color:#0284c7; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; }
-			.wpfaevent-list-copy { flex:1; }
-			.wpfaevent-module-link { color:var(--wpfa-blue); font-weight:600; text-decoration:none; }
-			.wpfaevent-dashboard-meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-			@media (max-width: 1024px) { .wpfaevent-dashboard-columns, .wpfaevent-dashboard-split { grid-template-columns: 1fr; } }
-			/* Custom wrap styling overrides for Table View integration */
-			.edit-php.post-type-wpfa_speaker #wpbody-content > .wrap > h1 { display: none; }
-			.edit-php.post-type-wpfa_speaker #wpbody-content > .wrap > .wp-header-end { display: none; }
-			.edit-php.post-type-wpfa_speaker #wpbody-content > .wrap > .subsubsub { margin: 0 0 15px; padding: 0; }
-		</style>
-
 		<div class="wpfaevent-dashboard-shell">
 			<!-- Hero Section -->
-			<div class="wpfaevent-dashboard-hero">
-				<div class="wpfaevent-dashboard-meta">
-					<div class="wpfaevent-badge"><?php esc_html_e( 'Speakers Hub', 'wpfaevent' ); ?></div>
-				</div>
-				<p><?php esc_html_e( 'Manage all speakers across your site events. Review attached speaker records, standalone profiles, and categories.', 'wpfaevent' ); ?></p>
-				<div class="wpfaevent-dashboard-actions">
-					<a class="button" href="<?php echo esc_url( admin_url( 'post-new.php?post_type=wpfa_speaker' ) ); ?>">
-						<?php esc_html_e( 'Add New Speaker', 'wpfaevent' ); ?>
-					</a>
-					<a class="button button-secondary" href="<?php echo esc_url( remove_query_arg( 'wpfa_view' ) ); ?>">
-						<?php esc_html_e( 'Switch to Dashboard View', 'wpfaevent' ); ?>
-					</a>
-				</div>
-			</div>
+			<?php
+			$new_speaker_url   = admin_url( 'post-new.php?post_type=wpfa_speaker' );
+			$switch_view_url   = remove_query_arg( 'wpfa_view' );
+			$switch_view_label = __( 'Switch to Dashboard View', 'wpfaevent' );
+			require WPFAEVENT_PATH . 'admin/partials/speaker-dashboard-header.php';
+			?>
 
 			<!-- Statistics Grid -->
-			<div id="wpfaevent-overview" class="wpfaevent-dashboard-grid">
-				<div class="wpfaevent-dashboard-card">
-					<h2><?php esc_html_e( 'Total Speakers', 'wpfaevent' ); ?></h2>
-					<p class="wpfaevent-kpi"><?php echo esc_html( (string) $total_speakers_count ); ?></p>
-					<p class="description"><?php esc_html_e( 'Speaker posts registered on this site.', 'wpfaevent' ); ?></p>
-				</div>
-				<div class="wpfaevent-dashboard-card">
-					<h2><?php esc_html_e( 'Standalone Speakers', 'wpfaevent' ); ?></h2>
-					<p class="wpfaevent-kpi"><?php echo esc_html( (string) $standalone_count ); ?></p>
-					<p class="description"><?php esc_html_e( 'Speakers not attached to any event.', 'wpfaevent' ); ?></p>
-				</div>
-				<div class="wpfaevent-dashboard-card">
-					<h2><?php esc_html_e( 'Event-Owned Speakers', 'wpfaevent' ); ?></h2>
-					<p class="wpfaevent-kpi"><?php echo esc_html( (string) $event_owned_count ); ?></p>
-					<p class="description"><?php esc_html_e( 'Speakers linked to one or more events.', 'wpfaevent' ); ?></p>
-				</div>
-				<div class="wpfaevent-dashboard-card">
-					<h2><?php esc_html_e( 'Speaker Categories', 'wpfaevent' ); ?></h2>
-					<p class="wpfaevent-kpi"><?php echo esc_html( (string) $total_categories_count ); ?></p>
-					<p class="description"><?php esc_html_e( 'Taxonomy categories used for speakers.', 'wpfaevent' ); ?></p>
-				</div>
-			</div>
+			<?php require WPFAEVENT_PATH . 'admin/partials/speaker-dashboard-stats.php'; ?>
 
 			<!-- Table Card Wrapper -->
 			<div class="wpfaevent-dashboard-card">
