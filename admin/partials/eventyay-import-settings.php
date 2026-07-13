@@ -13,6 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $settings         = isset( $settings ) ? $settings : array(
 	'base_url'           => 'https://eventyay.com',
 	'organizer_slug'     => '',
+	'event_slug'         => '',
 	'api_token'          => '',
 	'post_status'        => 'draft',
 	'auto_sync_enabled'  => false,
@@ -22,6 +23,11 @@ $auto_sync_next   = class_exists( 'Wpfaevent_Cron_Scheduler' ) ? Wpfaevent_Cron_
 $auto_sync_result = class_exists( 'Wpfaevent_Cron_Scheduler' ) ? Wpfaevent_Cron_Scheduler::get_last_result() : null;
 $endpoint_preview = isset( $endpoint_preview ) ? $endpoint_preview : '';
 $notice           = isset( $notice ) ? $notice : false;
+$event_url        = '';
+
+if ( ! empty( $settings['base_url'] ) && ! empty( $settings['organizer_slug'] ) && ! empty( $settings['event_slug'] ) ) {
+	$event_url = trailingslashit( untrailingslashit( $settings['base_url'] ) ) . rawurlencode( $settings['organizer_slug'] ) . '/' . rawurlencode( $settings['event_slug'] ) . '/';
+}
 ?>
 <div class="wrap">
 	<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
@@ -58,6 +64,20 @@ $notice           = isset( $notice ) ? $notice : false;
 					<th scope="row"><label for="wpfaevent_eventyay_organizer_slug"><?php esc_html_e( 'Organizer slug', 'wpfaevent' ); ?></label></th>
 					<td>
 						<input type="text" class="regular-text" id="wpfaevent_eventyay_organizer_slug" name="wpfaevent_eventyay_import_settings[organizer_slug]" value="<?php echo esc_attr( $settings['organizer_slug'] ); ?>" placeholder="bigevents">
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="wpfaevent_eventyay_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
+					<td>
+						<input type="url" class="regular-text" id="wpfaevent_eventyay_event_url" name="wpfaevent_eventyay_import_settings[event_url]" value="<?php echo esc_attr( $event_url ); ?>" placeholder="https://eventyay.com/bigevents/sampleconf/">
+						<p class="description"><?php esc_html_e( 'Imports and updates now run one event at a time. Paste the full public Eventyay event URL here.', 'wpfaevent' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="wpfaevent_eventyay_event_slug"><?php esc_html_e( 'Event slug', 'wpfaevent' ); ?></label></th>
+					<td>
+						<input type="text" class="regular-text" id="wpfaevent_eventyay_event_slug" name="wpfaevent_eventyay_import_settings[event_slug]" value="<?php echo esc_attr( $settings['event_slug'] ); ?>" placeholder="sampleconf">
+						<p class="description"><?php esc_html_e( 'This is filled from the Event URL above and is required for single-event imports.', 'wpfaevent' ); ?></p>
 					</td>
 				</tr>
 
@@ -112,7 +132,7 @@ $notice           = isset( $notice ) ? $notice : false;
 
 		<hr>
 
-		<h3><?php esc_html_e( 'Import Events', 'wpfaevent' ); ?></h3>
+		<h3><?php esc_html_e( 'Import Event', 'wpfaevent' ); ?></h3>
 		<?php if ( is_wp_error( $endpoint_preview ) ) : ?>
 			<p><?php echo esc_html( $endpoint_preview->get_error_message() ); ?></p>
 		<?php elseif ( $endpoint_preview ) : ?>
@@ -121,17 +141,17 @@ $notice           = isset( $notice ) ? $notice : false;
 				<code><?php echo esc_html( $endpoint_preview ); ?></code>
 			</p>
 		<?php else : ?>
-			<p><?php esc_html_e( 'Save an organizer slug before importing.', 'wpfaevent' ); ?></p>
+			<p><?php esc_html_e( 'Save an Eventyay event URL before importing.', 'wpfaevent' ); ?></p>
 		<?php endif; ?>
 		<p class="description">
-			<?php esc_html_e( 'Use this to import Eventyay events for the configured organizer. Use the Update Events menu item when Eventyay data changes after the initial import.', 'wpfaevent' ); ?>
+			<?php esc_html_e( 'Use this to import the configured Eventyay event. Use the Update Event menu item when that event changes after the initial import.', 'wpfaevent' ); ?>
 		</p>
 
 		<form id="wpfaevent-import-events-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<input type="hidden" name="action" value="wpfaevent_import_eventyay_events">
 			<input type="hidden" name="wpfaevent_eventyay_return_page" value="wpfaevent-import-events">
 			<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
-			<?php submit_button( __( 'Import Events from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, empty( $settings['organizer_slug'] ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
+			<?php submit_button( __( 'Import Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, ( empty( $settings['organizer_slug'] ) || empty( $settings['event_slug'] ) ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
 		</form>
 	</div>
 

@@ -60,8 +60,9 @@ class Wpfaevent_Eventyay_Importer {
 		$current  = $this->get_eventyay_import_settings();
 		$settings = $defaults;
 
-		$base_url = isset( $input['base_url'] ) ? trim( (string) wp_unslash( $input['base_url'] ) ) : '';
-		$base_url = $base_url ? esc_url_raw( $base_url ) : $defaults['base_url'];
+		$base_url  = isset( $input['base_url'] ) ? trim( (string) wp_unslash( $input['base_url'] ) ) : '';
+		$base_url  = $base_url ? esc_url_raw( $base_url ) : $defaults['base_url'];
+		$event_url = isset( $input['event_url'] ) ? trim( (string) wp_unslash( $input['event_url'] ) ) : '';
 
 		if ( ! wp_http_validate_url( $base_url ) ) {
 			add_settings_error(
@@ -75,7 +76,24 @@ class Wpfaevent_Eventyay_Importer {
 
 		$settings['organizer_slug'] = isset( $input['organizer_slug'] ) ? $this->sanitize_eventyay_path_segment( $input['organizer_slug'] ) : '';
 		$settings['event_slug']     = isset( $input['event_slug'] ) ? $this->sanitize_eventyay_path_segment( $input['event_slug'] ) : '';
-		$parsed_event_url           = $this->parse_eventyay_public_event_url( $base_url );
+		$parsed_event_url           = array();
+
+		if ( '' !== $event_url ) {
+			$parsed_event_url = $this->parse_eventyay_public_event_url( $event_url );
+
+			if ( empty( $parsed_event_url ) ) {
+				add_settings_error(
+					'wpfaevent_eventyay_import',
+					'wpfaevent_eventyay_invalid_event_url',
+					esc_html__( 'Please enter a valid public Eventyay event URL with both organizer and event slugs.', 'wpfaevent' ),
+					'error'
+				);
+			}
+		}
+
+		if ( empty( $parsed_event_url ) ) {
+			$parsed_event_url = $this->parse_eventyay_public_event_url( $base_url );
+		}
 
 		if ( $parsed_event_url ) {
 			$base_url = $parsed_event_url['base_url'];
@@ -90,6 +108,15 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		$settings['base_url'] = untrailingslashit( $base_url );
+
+		if ( empty( $settings['event_slug'] ) ) {
+			add_settings_error(
+				'wpfaevent_eventyay_import',
+				'wpfaevent_eventyay_missing_event_url',
+				esc_html__( 'A single Eventyay event URL is required. Save the event URL before importing or updating.', 'wpfaevent' ),
+				'error'
+			);
+		}
 
 		if ( ! empty( $input['clear_api_token'] ) ) {
 			$settings['api_token'] = '';
@@ -129,6 +156,7 @@ class Wpfaevent_Eventyay_Importer {
 
 		$settings         = $this->get_eventyay_import_settings();
 		$endpoint_preview = ! empty( $settings['organizer_slug'] ) ? $this->build_eventyay_events_endpoint( $settings ) : '';
+		$event_url        = $this->get_eventyay_public_event_url_from_settings( $settings );
 		$notice_key       = 'wpfaevent_eventyay_import_notice_' . get_current_user_id();
 		$notice           = get_transient( $notice_key );
 
@@ -174,10 +202,17 @@ class Wpfaevent_Eventyay_Importer {
 							</td>
 						</tr>
 						<tr>
+							<th scope="row"><label for="wpfaevent_eventyay_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
+							<td>
+								<input type="url" class="regular-text" id="wpfaevent_eventyay_event_url" name="wpfaevent_eventyay_import_settings[event_url]" value="<?php echo esc_attr( $event_url ); ?>" placeholder="https://eventyay.com/bigevents/sampleconf/">
+								<p class="description"><?php esc_html_e( 'Imports and updates now run one event at a time. Paste the full public Eventyay event URL here.', 'wpfaevent' ); ?></p>
+							</td>
+						</tr>
+						<tr>
 							<th scope="row"><label for="wpfaevent_eventyay_event_slug"><?php esc_html_e( 'Event slug', 'wpfaevent' ); ?></label></th>
 							<td>
 								<input type="text" class="regular-text" id="wpfaevent_eventyay_event_slug" name="wpfaevent_eventyay_import_settings[event_slug]" value="<?php echo esc_attr( $settings['event_slug'] ); ?>" placeholder="sampleconf">
-								<p class="description"><?php esc_html_e( 'Leave empty to import all events visible to the token for this organizer.', 'wpfaevent' ); ?></p>
+								<p class="description"><?php esc_html_e( 'This is filled from the Event URL above and is required for single-event imports.', 'wpfaevent' ); ?></p>
 							</td>
 						</tr>
 						<tr>
@@ -211,7 +246,7 @@ class Wpfaevent_Eventyay_Importer {
 
 				<hr>
 
-				<h3><?php esc_html_e( 'Import Events', 'wpfaevent' ); ?></h3>
+				<h3><?php esc_html_e( 'Import Event', 'wpfaevent' ); ?></h3>
 				<?php if ( is_wp_error( $endpoint_preview ) ) : ?>
 					<p><?php echo esc_html( $endpoint_preview->get_error_message() ); ?></p>
 				<?php elseif ( $endpoint_preview ) : ?>
@@ -220,17 +255,17 @@ class Wpfaevent_Eventyay_Importer {
 						<code><?php echo esc_html( $endpoint_preview ); ?></code>
 					</p>
 				<?php else : ?>
-					<p><?php esc_html_e( 'Save an organizer slug before importing.', 'wpfaevent' ); ?></p>
+					<p><?php esc_html_e( 'Save an Eventyay event URL before importing.', 'wpfaevent' ); ?></p>
 				<?php endif; ?>
 				<p class="description">
-					<?php esc_html_e( 'Use this to import Eventyay events for the configured organizer. Use the Update Events menu item when Eventyay data changes after the initial import.', 'wpfaevent' ); ?>
+					<?php esc_html_e( 'Use this to import the configured Eventyay event. Use the Update Event menu item when that event changes after the initial import.', 'wpfaevent' ); ?>
 				</p>
 
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="wpfaevent_import_eventyay_events">
 					<input type="hidden" name="wpfaevent_eventyay_return_page" value="wpfaevent-import-events">
 					<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
-					<?php submit_button( __( 'Import Events from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, empty( $settings['organizer_slug'] ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
+					<?php submit_button( __( 'Import Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, ( empty( $settings['organizer_slug'] ) || empty( $settings['event_slug'] ) ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
 				</form>
 			</div>
 
@@ -260,6 +295,7 @@ class Wpfaevent_Eventyay_Importer {
 
 		$settings         = $this->get_eventyay_import_settings();
 		$endpoint_preview = ! empty( $settings['organizer_slug'] ) ? $this->build_eventyay_events_endpoint( $settings ) : '';
+		$event_url        = $this->get_eventyay_public_event_url_from_settings( $settings );
 		$notice_key       = 'wpfaevent_eventyay_import_notice_' . get_current_user_id();
 		$notice           = get_transient( $notice_key );
 
@@ -279,7 +315,7 @@ class Wpfaevent_Eventyay_Importer {
 			<?php endif; ?>
 
 			<div class="card" style="max-width: 960px;">
-				<h2><?php esc_html_e( 'Update Events from Eventyay', 'wpfaevent' ); ?></h2>
+				<h2><?php esc_html_e( 'Update Event from Eventyay', 'wpfaevent' ); ?></h2>
 				<p><?php esc_html_e( 'Run this when Eventyay data changes after events have already been imported.', 'wpfaevent' ); ?></p>
 				<p class="description">
 					<?php esc_html_e( 'Existing Eventyay-owned event posts, speakers, schedules, sponsors, exhibitors, and event Info content are updated in place.', 'wpfaevent' ); ?>
@@ -293,14 +329,27 @@ class Wpfaevent_Eventyay_Importer {
 						<code><?php echo esc_html( $endpoint_preview ); ?></code>
 					</p>
 				<?php else : ?>
-					<p><?php esc_html_e( 'Save an organizer slug on the Import Events page before updating.', 'wpfaevent' ); ?></p>
+					<p><?php esc_html_e( 'Enter an Eventyay event URL below before updating.', 'wpfaevent' ); ?></p>
 				<?php endif; ?>
 
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="wpfaevent_import_eventyay_events">
 					<input type="hidden" name="wpfaevent_eventyay_return_page" value="wpfaevent-update-events">
+					<input type="hidden" name="wpfaevent_eventyay_import_settings[base_url]" value="<?php echo esc_attr( $settings['base_url'] ); ?>">
+					<input type="hidden" name="wpfaevent_eventyay_import_settings[organizer_slug]" value="<?php echo esc_attr( $settings['organizer_slug'] ); ?>">
+					<input type="hidden" name="wpfaevent_eventyay_import_settings[event_slug]" value="<?php echo esc_attr( $settings['event_slug'] ); ?>">
+					<input type="hidden" name="wpfaevent_eventyay_import_settings[post_status]" value="<?php echo esc_attr( $settings['post_status'] ); ?>">
+					<table class="form-table" role="presentation">
+						<tr>
+							<th scope="row"><label for="wpfaevent_eventyay_update_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
+							<td>
+								<input type="url" class="regular-text" id="wpfaevent_eventyay_update_event_url" name="wpfaevent_eventyay_import_settings[event_url]" value="<?php echo esc_attr( $event_url ); ?>" placeholder="https://eventyay.com/bigevents/sampleconf/">
+								<p class="description"><?php esc_html_e( 'Paste the public Eventyay event URL you want to update. This page updates one event at a time.', 'wpfaevent' ); ?></p>
+							</td>
+						</tr>
+					</table>
 					<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
-					<?php submit_button( __( 'Update Events from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, empty( $settings['organizer_slug'] ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
+					<?php submit_button( __( 'Update Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false ); ?>
 				</form>
 
 				<p>
@@ -332,6 +381,14 @@ class Wpfaevent_Eventyay_Importer {
 
 		if ( ! in_array( $return_page, array( 'wpfaevent-import-events', 'wpfaevent-update-events' ), true ) ) {
 			$return_page = 'wpfaevent-import-events';
+		}
+
+		if ( isset( $_POST['wpfaevent_eventyay_import_settings'] ) && is_array( $_POST['wpfaevent_eventyay_import_settings'] ) ) {
+			$raw_settings = wp_unslash( $_POST['wpfaevent_eventyay_import_settings'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Array values are sanitized immediately by sanitize_eventyay_import_settings().
+			$raw_settings = wp_parse_args( $raw_settings, $this->get_eventyay_import_settings() );
+			$sanitized    = $this->sanitize_eventyay_import_settings( $raw_settings );
+
+			update_option( 'wpfaevent_eventyay_import_settings', $sanitized, false );
 		}
 
 		$result     = $this->import_eventyay_events_from_settings();
@@ -497,21 +554,26 @@ class Wpfaevent_Eventyay_Importer {
 			);
 		}
 
+		if ( empty( $settings['event_slug'] ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_missing_event_slug',
+				esc_html__( 'Please save a single Eventyay event URL before importing or updating.', 'wpfaevent' )
+			);
+		}
+
 		$fetched = $this->fetch_eventyay_event_resources( $settings );
 		if ( is_wp_error( $fetched ) ) {
 			return $fetched;
 		}
 
 		$events = isset( $fetched['events'] ) && is_array( $fetched['events'] ) ? $fetched['events'] : array();
-		if ( empty( $events ) ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_no_events',
-				esc_html__( 'No Eventyay events were returned by the configured endpoint.', 'wpfaevent' )
-			);
+		$event  = $this->match_configured_eventyay_event( $events, $settings );
+		if ( is_wp_error( $event ) ) {
+			return $event;
 		}
 
 		$result = array(
-			'fetched'          => count( $events ),
+			'fetched'          => 1,
 			'created'          => 0,
 			'updated'          => 0,
 			'skipped'          => 0,
@@ -529,56 +591,149 @@ class Wpfaevent_Eventyay_Importer {
 
 		$sync_service = new Wpfaevent_Eventyay_Ajax_Sync();
 
-		foreach ( $events as $event ) {
-			$upsert = $this->upsert_eventyay_event_post( $event, $settings );
+		$upsert = $this->upsert_eventyay_event_post( $event, $settings );
 
-			if ( is_wp_error( $upsert ) ) {
-				++$result['skipped'];
-				continue;
-			}
-
-			$event_slug = $this->parser->eventyay_event_slug( $event );
-			if ( $event_slug && ! empty( $upsert['id'] ) ) {
-				$sync_service->sync_speakers_for_event( $upsert['id'], $event_slug, $settings );
-			}
-
-			if ( ! empty( $upsert['created'] ) ) {
-				++$result['created'];
-			} else {
-				++$result['updated'];
-			}
-
-			$dashboard = $this->sync_eventyay_event_dashboard_data( $upsert['id'], $event, $settings, $upsert['event_slug'] );
-			if ( is_wp_error( $dashboard ) ) {
-				++$result['program_skipped'];
-				continue;
-			}
-
-			$result['about_updates'] += absint( $dashboard['about_updated'] );
-
-			$partners = $this->import_eventyay_event_partner_data( $upsert['id'], $event, $settings, $upsert['event_slug'] );
-			if ( is_wp_error( $partners ) ) {
-				++$result['partner_skipped'];
-			} else {
-				$result['sponsors']        += absint( $partners['sponsor_count'] );
-				$result['exhibitors']      += absint( $partners['exhibitor_count'] );
-				$result['partner_skipped'] += absint( $partners['skipped'] );
-			}
-
-			$program = $this->import_eventyay_event_program( $upsert['id'], $settings, $upsert['event_slug'] );
-			if ( is_wp_error( $program ) ) {
-				++$result['program_skipped'];
-				continue;
-			}
-
-			$result['sessions']         += absint( $program['session_count'] );
-			$result['speakers']         += absint( $program['speaker_count'] );
-			$result['created_speakers'] += absint( $program['created_speakers'] );
-			$result['updated_speakers'] += absint( $program['updated_speakers'] );
-			$result['schedule_rows']    += absint( $program['schedule_rows'] );
+		if ( is_wp_error( $upsert ) ) {
+			++$result['skipped'];
+			return $result;
 		}
 
+		$event_slug = $this->parser->eventyay_event_slug( $event );
+		if ( $event_slug && ! empty( $upsert['id'] ) ) {
+			$sync_service->sync_speakers_for_event( $upsert['id'], $event_slug, $settings );
+		}
+
+		if ( ! empty( $upsert['created'] ) ) {
+			++$result['created'];
+		} else {
+			++$result['updated'];
+		}
+
+		$dashboard = $this->sync_eventyay_event_dashboard_data( $upsert['id'], $event, $settings, $upsert['event_slug'] );
+		if ( is_wp_error( $dashboard ) ) {
+			++$result['program_skipped'];
+			return $result;
+		}
+
+		$result['about_updates'] += absint( $dashboard['about_updated'] );
+
+		$partners = $this->import_eventyay_event_partner_data( $upsert['id'], $event, $settings, $upsert['event_slug'] );
+		if ( is_wp_error( $partners ) ) {
+			++$result['partner_skipped'];
+		} else {
+			$result['sponsors']        += absint( $partners['sponsor_count'] );
+			$result['exhibitors']      += absint( $partners['exhibitor_count'] );
+			$result['partner_skipped'] += absint( $partners['skipped'] );
+		}
+
+		$program = $this->import_eventyay_event_program( $upsert['id'], $settings, $upsert['event_slug'] );
+		if ( is_wp_error( $program ) ) {
+			++$result['program_skipped'];
+			return $result;
+		}
+
+		$result['sessions']         += absint( $program['session_count'] );
+		$result['speakers']         += absint( $program['speaker_count'] );
+		$result['created_speakers'] += absint( $program['created_speakers'] );
+		$result['updated_speakers'] += absint( $program['updated_speakers'] );
+		$result['schedule_rows']    += absint( $program['schedule_rows'] );
+
 		return $result;
+	}
+
+	/**
+	 * Fetch the one configured Eventyay event from saved settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $settings Import settings.
+	 * @return array|WP_Error
+	 */
+	public function fetch_single_eventyay_event_from_settings( $settings ) {
+		$settings = wp_parse_args( is_array( $settings ) ? $settings : array(), $this->get_eventyay_import_default_settings() );
+
+		if ( empty( $settings['organizer_slug'] ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_missing_organizer',
+				esc_html__( 'Please save an Eventyay organizer slug before importing.', 'wpfaevent' )
+			);
+		}
+
+		if ( empty( $settings['event_slug'] ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_missing_event_slug',
+				esc_html__( 'Please save a single Eventyay event URL before importing or updating.', 'wpfaevent' )
+			);
+		}
+
+		$fetched = $this->fetch_eventyay_event_resources( $settings );
+		if ( is_wp_error( $fetched ) ) {
+			return $fetched;
+		}
+
+		$events = isset( $fetched['events'] ) && is_array( $fetched['events'] ) ? $fetched['events'] : array();
+
+		return $this->match_configured_eventyay_event( $events, $settings );
+	}
+
+	/**
+	 * Match the configured event slug against fetched Eventyay events.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $events   Fetched Eventyay event resources.
+	 * @param array $settings Import settings.
+	 * @return array|WP_Error
+	 */
+	private function match_configured_eventyay_event( $events, $settings ) {
+		$event_slug = isset( $settings['event_slug'] ) ? $this->sanitize_eventyay_path_segment( $settings['event_slug'] ) : '';
+
+		if ( empty( $event_slug ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_missing_event_slug',
+				esc_html__( 'Please save a single Eventyay event URL before importing or updating.', 'wpfaevent' )
+			);
+		}
+
+		if ( empty( $events ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_no_events',
+				esc_html__( 'No Eventyay events were returned by the configured endpoint.', 'wpfaevent' )
+			);
+		}
+
+		foreach ( $events as $event ) {
+			if ( $event_slug === $this->parser->eventyay_event_slug( $event ) ) {
+				return $event;
+			}
+		}
+
+		return new WP_Error(
+			'wpfaevent_eventyay_event_mismatch',
+			esc_html__( 'The configured Eventyay event URL did not resolve to a matching single event.', 'wpfaevent' )
+		);
+	}
+
+	/**
+	 * Build the public Eventyay event URL from saved settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $settings Import settings.
+	 * @return string
+	 */
+	private function get_eventyay_public_event_url_from_settings( $settings ) {
+		$settings = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
+
+		if ( empty( $settings['base_url'] ) || empty( $settings['organizer_slug'] ) || empty( $settings['event_slug'] ) ) {
+			return '';
+		}
+
+		return esc_url_raw(
+			trailingslashit( untrailingslashit( $settings['base_url'] ) ) .
+			rawurlencode( $settings['organizer_slug'] ) . '/' .
+			rawurlencode( $settings['event_slug'] ) . '/'
+		);
 	}
 
 	/**

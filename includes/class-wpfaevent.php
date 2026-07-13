@@ -239,6 +239,7 @@ class Wpfaevent {
 
 		// Register settings page.
 		$this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
+		$this->loader->add_action( 'admin_head', $this->plugin_admin, 'remove_event_taxonomy_submenus' );
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_plugin_settings' );
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_eventyay_import_settings' );
 

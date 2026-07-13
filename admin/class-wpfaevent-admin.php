@@ -161,7 +161,7 @@ class Wpfaevent_Admin {
 		$import_link = sprintf(
 			'<a href="%s">%s</a>',
 			esc_url( admin_url( 'edit.php?post_type=wpfa_event&page=wpfaevent-import-events' ) ),
-			esc_html__( 'Import Events', 'wpfaevent' )
+			esc_html__( 'Import Event', 'wpfaevent' )
 		);
 
 		array_unshift( $links, $settings_link, $import_link );
@@ -195,8 +195,8 @@ class Wpfaevent_Admin {
 
 		add_submenu_page(
 			'edit.php?post_type=wpfa_event',
-			esc_html__( 'Import Events from Eventyay', 'wpfaevent' ),
-			esc_html__( 'Import Events', 'wpfaevent' ),
+			esc_html__( 'Import Event from Eventyay', 'wpfaevent' ),
+			esc_html__( 'Import Event', 'wpfaevent' ),
 			Wpfaevent_Roles::CAP_IMPORT_EVENTYAY,
 			'wpfaevent-import-events',
 			array( $this, 'render_eventyay_import_page' )
@@ -204,12 +204,22 @@ class Wpfaevent_Admin {
 
 		add_submenu_page(
 			'edit.php?post_type=wpfa_event',
-			esc_html__( 'Update Events from Eventyay', 'wpfaevent' ),
-			esc_html__( 'Update Events', 'wpfaevent' ),
+			esc_html__( 'Update Event from Eventyay', 'wpfaevent' ),
+			esc_html__( 'Update Event', 'wpfaevent' ),
 			Wpfaevent_Roles::CAP_IMPORT_EVENTYAY,
 			'wpfaevent-update-events',
 			array( $this, 'render_eventyay_update_page' )
 		);
+	}
+
+	/**
+	 * Remove taxonomy submenu items from the Events admin menu.
+	 *
+	 * @since 1.0.0
+	 */
+	public function remove_event_taxonomy_submenus() {
+		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'edit-tags.php?taxonomy=wpfa_event_track&post_type=wpfa_event' );
+		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'edit-tags.php?taxonomy=wpfa_event_tag&post_type=wpfa_event' );
 	}
 
 	/**
