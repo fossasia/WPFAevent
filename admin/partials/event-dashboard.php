@@ -220,7 +220,7 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 						<?php esc_html_e( 'Overwrite existing logo', 'wpfaevent' ); ?>
 					</label>
 					<p class="description"><?php esc_html_e( 'When enabled, a saved event logo in dashboard settings can be replaced with the Eventyay logo if one is available.', 'wpfaevent' ); ?></p>
-					<?php submit_button( __( 'Synchronize Event', 'wpfaevent' ), 'primary', 'wpfaevent_sync_submit', false ); ?>
+					<?php submit_button( __( 'Update Event', 'wpfaevent' ), 'primary', 'wpfaevent_sync_submit', false ); ?>
 					<div class="wpfaevent-sync-feedback" data-sync-feedback aria-live="polite"></div>
 				</form>
 			<?php else : ?>

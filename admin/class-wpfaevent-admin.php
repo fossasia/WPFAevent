@@ -220,6 +220,8 @@ class Wpfaevent_Admin {
 	public function remove_event_taxonomy_submenus() {
 		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'edit-tags.php?taxonomy=wpfa_event_track&post_type=wpfa_event' );
 		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'edit-tags.php?taxonomy=wpfa_event_tag&post_type=wpfa_event' );
+		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'edit.php?post_type=wpfa_speaker' );
+		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'wpfaevent-update-events' );
 	}
 
 	/**
