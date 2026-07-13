@@ -384,8 +384,7 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		if ( isset( $_POST['wpfaevent_eventyay_import_settings'] ) && is_array( $_POST['wpfaevent_eventyay_import_settings'] ) ) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Array values are sanitized immediately by sanitize_eventyay_import_settings().
-			$raw_settings = wp_unslash( $_POST['wpfaevent_eventyay_import_settings'] );
+			$raw_settings = wp_unslash( $_POST['wpfaevent_eventyay_import_settings'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Array values are sanitized immediately by sanitize_eventyay_import_settings().
 			$raw_settings = wp_parse_args( $raw_settings, $this->get_eventyay_import_settings() );
 			$sanitized    = $this->sanitize_eventyay_import_settings( $raw_settings );
 
@@ -682,8 +681,8 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $events    Fetched Eventyay event resources.
-	 * @param array $settings  Import settings.
+	 * @param array $events   Fetched Eventyay event resources.
+	 * @param array $settings Import settings.
 	 * @return array|WP_Error
 	 */
 	private function match_configured_eventyay_event( $events, $settings ) {
