@@ -1341,6 +1341,10 @@ class Wpfaevent_Eventyay_API_Client {
 				$display_body = wp_strip_all_tags( (string) $body );
 			}
 
+			if ( is_string( $display_body ) && strlen( $display_body ) > 2000 ) {
+				$display_body = substr( $display_body, 0, 2000 ) . '...';
+			}
+
 			$full_msg = sprintf(
 				/* translators: 1: HTTP status code, 2: Eventyay API URL. */
 				esc_html__( 'Eventyay API returned HTTP %1$d for %2$s.', 'wpfaevent' ),

@@ -562,7 +562,10 @@ class Wpfaevent_Event_Dashboard_Page {
 		}
 
 		if ( $json_updated ) {
-			$store->write_dashboard_json_file( $settings_file, $settings );
+			$write_result = $store->write_dashboard_json_file( $settings_file, $settings );
+			if ( is_wp_error( $write_result ) ) {
+				return $write_result;
+			}
 		}
 
 		return array(

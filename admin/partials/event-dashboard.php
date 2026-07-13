@@ -868,7 +868,9 @@ document.addEventListener('DOMContentLoaded', function () {
 		const notice = document.createElement('div');
 		notice.className = 'notice notice-' + type + ' is-dismissible';
 		notice.style.margin = '0 0 20px';
-		notice.innerHTML = '<p>' + message + '</p>';
+		const p = document.createElement('p');
+		p.textContent = message;
+		notice.appendChild(p);
 
 		const existing = container.querySelectorAll('.notice.wpfaevent-edit-notice');
 		existing.forEach(el => el.remove());

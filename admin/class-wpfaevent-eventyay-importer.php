@@ -2848,6 +2848,10 @@ class Wpfaevent_Eventyay_Importer {
 				$display_body = wp_strip_all_tags( (string) $body );
 			}
 
+			if ( is_string( $display_body ) && strlen( $display_body ) > 2000 ) {
+				$display_body = substr( $display_body, 0, 2000 ) . '...';
+			}
+
 			$full_msg = sprintf(
 				/* translators: 1: HTTP status code, 2: Eventyay API URL. */
 				esc_html__( 'Eventyay API returned HTTP %1$d for %2$s.', 'wpfaevent' ),
@@ -4825,6 +4829,10 @@ class Wpfaevent_Eventyay_Importer {
 				$display_body = wp_strip_all_tags( (string) $body );
 			}
 
+			if ( is_string( $display_body ) && strlen( $display_body ) > 2000 ) {
+				$display_body = substr( $display_body, 0, 2000 ) . '...';
+			}
+
 			$full_msg = sprintf(
 				/* translators: 1: HTTP status code, 2: Eventyay API URL. */
 				esc_html__( 'Eventyay API returned HTTP %1$d for %2$s.', 'wpfaevent' ),
@@ -6068,12 +6076,24 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $context Additional context data.
 	 */
 	private function safe_debug_log( $message, $context = array() ) {
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
-			$log_entry = '[WPFAevent Eventyay Debug] ' . $message;
-			if ( ! empty( $context ) ) {
-				$log_entry .= ' | Context: ' . wp_json_encode( $context, JSON_UNESCAPED_SLASHES );
-			}
-			error_log( $log_entry ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		if ( ! ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) ) {
+			return;
 		}
+
+		$context = is_array( $context ) ? $context : array();
+
+		if ( isset( $context['headers']['Authorization'] ) ) {
+			$context['headers']['Authorization'] = '[redacted]';
+		}
+
+		if ( isset( $context['response_body'] ) && is_string( $context['response_body'] ) && strlen( $context['response_body'] ) > 2000 ) {
+			$context['response_body'] = substr( $context['response_body'], 0, 2000 ) . '...';
+		}
+
+		$log_entry = '[WPFAevent Eventyay Debug] ' . $message;
+		if ( ! empty( $context ) ) {
+			$log_entry .= ' | Context: ' . wp_json_encode( $context, JSON_UNESCAPED_SLASHES );
+		}
+		error_log( $log_entry ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 	}
 }
