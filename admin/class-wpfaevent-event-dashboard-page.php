@@ -378,7 +378,7 @@ class Wpfaevent_Event_Dashboard_Page {
 		$event_edit_url = isset( $dashboard_data['event']['edit_url'] ) ? (string) $dashboard_data['event']['edit_url'] : '';
 
 		return array(
-			'speakers' => add_query_arg(
+			'speakers'   => add_query_arg(
 				array(
 					'post_type'               => 'wpfa_speaker',
 					'wpfaevent_speaker_scope' => 'event',
@@ -386,11 +386,27 @@ class Wpfaevent_Event_Dashboard_Page {
 				),
 				admin_url( 'edit.php' )
 			),
-			'sessions' => $dashboard_url . '#wpfaevent-sessions',
-			'tracks'   => admin_url( 'edit-tags.php?taxonomy=wpfa_event_track&post_type=wpfa_event' ),
-			'settings' => $event_edit_url ? $event_edit_url : $dashboard_url . '#wpfaevent-settings',
-			'source'   => $dashboard_url . '#wpfaevent-source',
-			'sync'     => $dashboard_url . '#wpfaevent-sync',
+			'sponsors'   => add_query_arg(
+				array(
+					'post_type' => 'wpfa_event',
+					'page'      => 'wpfaevent-sponsors',
+					'event_id'  => $event_id,
+				),
+				admin_url( 'edit.php' )
+			),
+			'exhibitors' => add_query_arg(
+				array(
+					'post_type' => 'wpfa_event',
+					'page'      => 'wpfaevent-exhibitors',
+					'event_id'  => $event_id,
+				),
+				admin_url( 'edit.php' )
+			),
+			'sessions'   => $dashboard_url . '#wpfaevent-sessions',
+			'tracks'     => admin_url( 'edit-tags.php?taxonomy=wpfa_event_track&post_type=wpfa_event&event_id=' . $event_id ),
+			'settings'   => $event_edit_url ? $event_edit_url : $dashboard_url . '#wpfaevent-settings',
+			'source'     => $dashboard_url . '#wpfaevent-source',
+			'sync'       => $dashboard_url . '#wpfaevent-sync',
 		);
 	}
 
@@ -486,6 +502,8 @@ class Wpfaevent_Event_Dashboard_Page {
 			'wpfa_event_registration_link',
 			'wpfa_event_url',
 			'wpfa_event_cfs_link',
+			'wpfa_event_languages',
+			'post_content',
 		);
 
 		if ( ! in_array( $field, $allowed_fields, true ) ) {
@@ -527,10 +545,35 @@ class Wpfaevent_Event_Dashboard_Page {
 					$display_value = esc_html__( 'Not set', 'wpfaevent' );
 				}
 				break;
+			case 'wpfa_event_languages':
+				$languages_array = array_map( 'sanitize_text_field', array_map( 'trim', explode( ',', (string) $value ) ) );
+				$languages_array = array_filter( $languages_array );
+				$formatted_value = $languages_array;
+				$display_value   = esc_html( implode( ', ', $languages_array ) );
+				if ( empty( $display_value ) ) {
+					$display_value = esc_html__( 'Not set', 'wpfaevent' );
+				}
+				break;
+			case 'post_content':
+				$formatted_value = wp_kses_post( $value );
+				$display_value   = wp_strip_all_tags( $formatted_value );
+				if ( empty( $display_value ) ) {
+					$display_value = esc_html__( 'No description set.', 'wpfaevent' );
+				}
+				break;
 		}
 
-		// 2. Persist in underlying post meta
-		update_post_meta( $event_id, $field, $formatted_value );
+		// 2. Persist in underlying post table or post meta
+		if ( 'post_content' === $field ) {
+			wp_update_post(
+				array(
+					'ID'           => $event_id,
+					'post_content' => $formatted_value,
+				)
+			);
+		} else {
+			update_post_meta( $event_id, $field, $formatted_value );
+		}
 
 		// Mirror post meta keys to their alias/legacy counterparts.
 		if ( 'wpfa_event_location' === $field ) {

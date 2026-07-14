@@ -155,6 +155,7 @@ class Wpfaevent {
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-schedule-sync.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-importer.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-ajax-sync.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-bookmark-controller.php';
@@ -245,6 +246,7 @@ class Wpfaevent {
 		$this->loader->add_action( 'admin_head', $this->plugin_admin, 'remove_event_taxonomy_submenus' );
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_plugin_settings' );
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_eventyay_import_settings' );
+		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'render_back_to_dashboard_button' );
 
 		$event_dashboard_page = new Wpfaevent_Event_Dashboard_Page();
 		$this->loader->add_action( 'admin_menu', $event_dashboard_page, 'register_page' );
@@ -253,6 +255,11 @@ class Wpfaevent {
 		$this->loader->add_action( 'admin_post_wpfaevent_sync_event_dashboard', $event_dashboard_page, 'handle_sync' );
 		$this->loader->add_action( 'wp_ajax_wpfaevent_sync_event_dashboard', $event_dashboard_page, 'handle_sync_ajax' );
 		$this->loader->add_action( 'wp_ajax_wpfaevent_save_dashboard_field', $event_dashboard_page, 'handle_save_field_ajax' );
+
+		$partner_dashboard = new Wpfaevent_Partner_Dashboard();
+		$this->loader->add_action( 'admin_menu', $partner_dashboard, 'register_menu_pages' );
+		$this->loader->add_action( 'admin_post_wpfaevent_save_partner', $partner_dashboard, 'handle_save_partner' );
+		$this->loader->add_action( 'admin_post_wpfaevent_delete_partner', $partner_dashboard, 'handle_delete_partner' );
 
 		// Add settings link to the plugins page.
 		$plugin_basename = plugin_basename( dirname( __DIR__ ) . '/wpfaevent.php' );

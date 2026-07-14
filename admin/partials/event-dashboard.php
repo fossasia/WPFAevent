@@ -17,6 +17,8 @@ $import             = isset( $dashboard_data['import'] ) && is_array( $dashboard
 $sync               = isset( $dashboard_data['sync'] ) && is_array( $dashboard_data['sync'] ) ? $dashboard_data['sync'] : array();
 $settings           = isset( $dashboard_data['settings'] ) && is_array( $dashboard_data['settings'] ) ? $dashboard_data['settings'] : array();
 $speakers           = isset( $dashboard_data['speakers'] ) && is_array( $dashboard_data['speakers'] ) ? $dashboard_data['speakers'] : array();
+$sponsors           = isset( $dashboard_data['sponsors'] ) && is_array( $dashboard_data['sponsors'] ) ? $dashboard_data['sponsors'] : array();
+$exhibitors         = isset( $dashboard_data['exhibitors'] ) && is_array( $dashboard_data['exhibitors'] ) ? $dashboard_data['exhibitors'] : array();
 $sessions           = isset( $dashboard_data['sessions'] ) && is_array( $dashboard_data['sessions'] ) ? $dashboard_data['sessions'] : array();
 $tracks             = isset( $dashboard_data['tracks'] ) && is_array( $dashboard_data['tracks'] ) ? $dashboard_data['tracks'] : array();
 $assets             = isset( $dashboard_data['assets'] ) && is_array( $dashboard_data['assets'] ) ? $dashboard_data['assets'] : array();
@@ -82,6 +84,8 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 		<nav class="wpfaevent-dashboard-tabs" aria-label="<?php esc_attr_e( 'Event dashboard sections', 'wpfaevent' ); ?>">
 			<a class="wpfaevent-dashboard-tab" href="#wpfaevent-overview"><?php esc_html_e( 'Overview', 'wpfaevent' ); ?></a>
 			<a class="wpfaevent-dashboard-tab" href="#wpfaevent-speakers"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></a>
+			<a class="wpfaevent-dashboard-tab" href="#wpfaevent-sponsors"><?php esc_html_e( 'Sponsors', 'wpfaevent' ); ?></a>
+			<a class="wpfaevent-dashboard-tab" href="#wpfaevent-exhibitors"><?php esc_html_e( 'Exhibitors', 'wpfaevent' ); ?></a>
 			<a class="wpfaevent-dashboard-tab" href="#wpfaevent-sessions"><?php esc_html_e( 'Sessions', 'wpfaevent' ); ?></a>
 			<a class="wpfaevent-dashboard-tab" href="#wpfaevent-tracks"><?php esc_html_e( 'Tracks', 'wpfaevent' ); ?></a>
 			<a class="wpfaevent-dashboard-tab" href="#wpfaevent-settings"><?php esc_html_e( 'Settings', 'wpfaevent' ); ?></a>
@@ -143,6 +147,15 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 							</div>
 						</td>
 					</tr>
+					<tr class="wpfaevent-editable-row" data-field="wpfa_event_languages" data-type="text" data-label="<?php esc_attr_e( 'Language', 'wpfaevent' ); ?>" data-raw-value="<?php echo esc_attr( ! empty( $event['languages'] ) ? implode( ', ', $event['languages'] ) : '' ); ?>">
+						<th scope="row"><?php esc_html_e( 'Language', 'wpfaevent' ); ?></th>
+						<td>
+							<div class="wpfaevent-field-container">
+								<span class="wpfaevent-field-value"><?php echo esc_html( ! empty( $event['languages'] ) ? implode( ', ', $event['languages'] ) : __( 'Not set', 'wpfaevent' ) ); ?></span>
+								<button type="button" class="wpfaevent-edit-field-btn button button-small button-link" style="margin-left: 8px;"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></button>
+							</div>
+						</td>
+					</tr>
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Tracks', 'wpfaevent' ); ?></th>
 						<td><?php echo esc_html( ! empty( $event['tracks'] ) ? implode( ', ', $event['tracks'] ) : __( 'None', 'wpfaevent' ) ); ?></td>
@@ -157,6 +170,16 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 					</tr>
 				</tbody>
 			</table>
+
+			<div style="margin-top: 20px; border-top: 1px solid var(--wpfa-border); padding-top: 15px;">
+				<h3 style="margin-bottom: 10px; font-weight: 600; font-size: 14px; color: #1e293b;"><?php esc_html_e( 'Description / Additional Information', 'wpfaevent' ); ?></h3>
+				<div class="wpfaevent-editable-row" data-field="post_content" data-type="textarea" data-label="<?php esc_attr_e( 'Description', 'wpfaevent' ); ?>" data-raw-value="<?php echo esc_attr( ! empty( $event['description'] ) ? $event['description'] : '' ); ?>">
+					<div class="wpfaevent-field-container">
+						<span class="wpfaevent-field-value" style="display: block; font-size: 14px; line-height: 1.5; color: #555; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; min-height: 80px; white-space: pre-wrap; margin-bottom: 8px;"><?php echo esc_html( ! empty( $event['description'] ) ? wp_strip_all_tags( $event['description'] ) : __( 'No description set.', 'wpfaevent' ) ); ?></span>
+						<button type="button" class="wpfaevent-edit-field-btn button button-small button-link"><?php esc_html_e( 'Edit Description', 'wpfaevent' ); ?></button>
+					</div>
+				</div>
+			</div>
 		</div>
 
 		<div class="wpfaevent-dashboard-card">
@@ -409,6 +432,135 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 				</div>
 			<?php else : ?>
 				<p class="description"><?php esc_html_e( 'No imported sessions were found for this event yet.', 'wpfaevent' ); ?></p>
+			<?php endif; ?>
+		</div>
+	</div>
+
+	<div class="wpfaevent-dashboard-split">
+		<div id="wpfaevent-sponsors" class="wpfaevent-dashboard-card wpfaevent-dashboard-section">
+			<h2><?php esc_html_e( 'Sponsors', 'wpfaevent' ); ?></h2>
+			<?php if ( ! empty( $sponsors ) ) : ?>
+				<?php
+				$flat_sponsors = array();
+				foreach ( $sponsors as $group ) {
+					if ( is_array( $group ) && ! empty( $group['sponsors'] ) && is_array( $group['sponsors'] ) ) {
+						foreach ( $group['sponsors'] as $sponsor ) {
+							if ( is_array( $sponsor ) ) {
+								$flat_sponsors[] = $sponsor;
+							}
+						}
+					}
+				}
+				$total_sponsors_count = count( $flat_sponsors );
+				?>
+				<?php if ( ! empty( $flat_sponsors ) ) : ?>
+					<div class="wpfaevent-list">
+						<?php foreach ( array_slice( $flat_sponsors, 0, 5 ) as $sponsor ) : ?>
+							<?php
+							$sp_name    = isset( $sponsor['name'] ) ? $sponsor['name'] : '';
+							$sp_logo    = isset( $sponsor['image'] ) ? $sponsor['image'] : '';
+							$sp_company = isset( $sponsor['company'] ) ? $sponsor['company'] : '';
+							?>
+							<div class="wpfaevent-list-item">
+								<?php if ( ! empty( $sp_logo ) ) : ?>
+									<img src="<?php echo esc_url( $sp_logo ); ?>" alt="<?php echo esc_attr( $sp_name ); ?>">
+								<?php else : ?>
+									<div class="wpfaevent-list-avatar-fallback">
+										<?php echo esc_html( strtoupper( substr( $sp_name, 0, 1 ) ) ); ?>
+									</div>
+								<?php endif; ?>
+								<div class="wpfaevent-list-copy">
+									<strong><?php echo esc_html( $sp_name ); ?></strong>
+									<div class="description"><?php echo esc_html( $sp_company ); ?></div>
+								</div>
+								<span class="wpfaevent-tag"><?php echo esc_html( isset( $sponsor['type'] ) ? $sponsor['type'] : __( 'Sponsor', 'wpfaevent' ) ); ?></span>
+							</div>
+						<?php endforeach; ?>
+					</div>
+					<div style="margin-top: 15px; border-top: 1px solid var(--wpfa-border); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+						<span class="description">
+							<?php
+							if ( $total_sponsors_count <= 5 ) {
+								/* translators: %d: count of sponsors */
+								printf( esc_html( _n( 'Showing %d sponsor', 'Showing %d sponsors', $total_sponsors_count, 'wpfaevent' ) ), absint( $total_sponsors_count ) );
+							} else {
+								/* translators: %d: count of sponsors */
+								printf( esc_html__( 'Showing 5 of %d sponsors', 'wpfaevent' ), absint( $total_sponsors_count ) );
+							}
+							?>
+						</span>
+						<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['sponsors'] ); ?>">
+							<?php esc_html_e( 'View All Sponsors &rarr;', 'wpfaevent' ); ?>
+						</a>
+					</div>
+				<?php else : ?>
+					<p class="description"><?php esc_html_e( 'No sponsors were found for this event yet.', 'wpfaevent' ); ?></p>
+					<div style="margin-top: 15px; border-top: 1px solid var(--wpfa-border); padding-top: 10px;">
+						<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['sponsors'] ); ?>">
+							<?php esc_html_e( 'Go to Sponsors &rarr;', 'wpfaevent' ); ?>
+						</a>
+					</div>
+				<?php endif; ?>
+			<?php else : ?>
+				<p class="description"><?php esc_html_e( 'No sponsors were found for this event yet.', 'wpfaevent' ); ?></p>
+				<div style="margin-top: 15px; border-top: 1px solid var(--wpfa-border); padding-top: 10px;">
+					<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['sponsors'] ); ?>">
+						<?php esc_html_e( 'Go to Sponsors &rarr;', 'wpfaevent' ); ?>
+					</a>
+				</div>
+			<?php endif; ?>
+		</div>
+
+		<div id="wpfaevent-exhibitors" class="wpfaevent-dashboard-card wpfaevent-dashboard-section">
+			<h2><?php esc_html_e( 'Exhibitors', 'wpfaevent' ); ?></h2>
+			<?php if ( ! empty( $exhibitors ) ) : ?>
+				<?php $total_exhibitors_count = count( $exhibitors ); ?>
+				<div class="wpfaevent-list">
+					<?php foreach ( array_slice( $exhibitors, 0, 5 ) as $exhibitor ) : ?>
+						<?php
+						$ex_name    = isset( $exhibitor['name'] ) ? $exhibitor['name'] : '';
+						$ex_logo    = isset( $exhibitor['logo'] ) ? $exhibitor['logo'] : '';
+						$ex_company = isset( $exhibitor['company'] ) ? $exhibitor['company'] : '';
+						?>
+						<div class="wpfaevent-list-item">
+							<?php if ( ! empty( $ex_logo ) ) : ?>
+								<img src="<?php echo esc_url( $ex_logo ); ?>" alt="<?php echo esc_attr( $ex_name ); ?>">
+							<?php else : ?>
+								<div class="wpfaevent-list-avatar-fallback">
+									<?php echo esc_html( strtoupper( substr( $ex_name, 0, 1 ) ) ); ?>
+								</div>
+							<?php endif; ?>
+							<div class="wpfaevent-list-copy">
+								<strong><?php echo esc_html( $ex_name ); ?></strong>
+								<div class="description"><?php echo esc_html( $ex_company ); ?></div>
+							</div>
+							<span class="wpfaevent-tag"><?php echo esc_html( isset( $exhibitor['type'] ) ? $exhibitor['type'] : __( 'Exhibitor', 'wpfaevent' ) ); ?></span>
+						</div>
+					<?php endforeach; ?>
+				</div>
+				<div style="margin-top: 15px; border-top: 1px solid var(--wpfa-border); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+					<span class="description">
+						<?php
+						if ( $total_exhibitors_count <= 5 ) {
+							/* translators: %d: count of exhibitors */
+							printf( esc_html( _n( 'Showing %d exhibitor', 'Showing %d exhibitors', $total_exhibitors_count, 'wpfaevent' ) ), absint( $total_exhibitors_count ) );
+						} else {
+							/* translators: %d: count of exhibitors */
+							printf( esc_html__( 'Showing 5 of %d exhibitors', 'wpfaevent' ), absint( $total_exhibitors_count ) );
+						}
+						?>
+					</span>
+					<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['exhibitors'] ); ?>">
+						<?php esc_html_e( 'View All Exhibitors &rarr;', 'wpfaevent' ); ?>
+					</a>
+				</div>
+			<?php else : ?>
+				<p class="description"><?php esc_html_e( 'No exhibitors were found for this event yet.', 'wpfaevent' ); ?></p>
+				<div style="margin-top: 15px; border-top: 1px solid var(--wpfa-border); padding-top: 10px;">
+					<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['exhibitors'] ); ?>">
+						<?php esc_html_e( 'Go to Exhibitors &rarr;', 'wpfaevent' ); ?>
+					</a>
+				</div>
 			<?php endif; ?>
 		</div>
 	</div>
@@ -693,21 +845,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
 			frame.open();
 		} else {
-			// For text, date, url
+			// For text, date, url, textarea
 			let inputHTML = '';
+			let isTextarea = (type === 'textarea');
 			if (type === 'date') {
 				inputHTML = '<input type="date" class="wpfaevent-inline-input" value="' + rawValue + '" style="vertical-align: middle;">';
 			} else if (type === 'url') {
 				inputHTML = '<input type="url" class="wpfaevent-inline-input regular-text" value="' + rawValue + '" placeholder="https://" style="vertical-align: middle;">';
+			} else if (type === 'textarea') {
+				inputHTML = '<textarea class="wpfaevent-inline-input" style="width:100%; min-height:120px; font-family:inherit; vertical-align: middle; margin-bottom: 8px;">' + rawValue + '</textarea>';
 			} else {
 				inputHTML = '<input type="text" class="wpfaevent-inline-input regular-text" value="' + rawValue + '" style="vertical-align: middle;">';
 			}
 
 			container.innerHTML = `
-				<div class="wpfaevent-inline-editor-form" style="display:inline-flex; align-items:center; gap:6px;">
+				<div class="wpfaevent-inline-editor-form" style="${isTextarea ? 'display:block; width:100%;' : 'display:inline-flex; align-items:center; gap:6px;'}">
 					${inputHTML}
-					<button type="button" class="wpfaevent-save-field-btn button button-primary button-small">Save</button>
-					<button type="button" class="wpfaevent-cancel-field-btn button button-small">Cancel</button>
+					<div style="${isTextarea ? 'display:flex; gap:6px;' : 'display:inline-flex; gap:6px;'}">
+						<button type="button" class="wpfaevent-save-field-btn button button-primary button-small">Save</button>
+						<button type="button" class="wpfaevent-cancel-field-btn button button-small">Cancel</button>
+					</div>
 				</div>
 			`;
 
@@ -804,10 +961,17 @@ document.addEventListener('DOMContentLoaded', function () {
 					displayHTML = payload.data.display;
 				}
 
-				parent.querySelector('.wpfaevent-field-container').innerHTML = `
-					<span class="wpfaevent-field-value">${displayHTML}</span>
-					<button type="button" class="wpfaevent-edit-field-btn button button-small button-link" style="margin-left: 8px;">Edit</button>
-				`;
+				if (type === 'textarea') {
+					parent.querySelector('.wpfaevent-field-container').innerHTML = `
+						<span class="wpfaevent-field-value" style="display: block; font-size: 14px; line-height: 1.5; color: #555; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; min-height: 80px; white-space: pre-wrap; margin-bottom: 8px;">${displayHTML}</span>
+						<button type="button" class="wpfaevent-edit-field-btn button button-small button-link">Edit Description</button>
+					`;
+				} else {
+					parent.querySelector('.wpfaevent-field-container').innerHTML = `
+						<span class="wpfaevent-field-value">${displayHTML}</span>
+						<button type="button" class="wpfaevent-edit-field-btn button button-small button-link" style="margin-left: 8px;">Edit</button>
+					`;
+				}
 			}
 
 			delete activeEditors[field];

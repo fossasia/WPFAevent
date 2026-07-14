@@ -44,11 +44,13 @@ class Wpfaevent_Event_Dashboard_Data {
 		$speakers      = $this->read_json( 'speakers-' . $event_id . '.json', array() );
 		$schedule      = $this->read_json( 'schedule-' . $event_id . '.json', array() );
 		$sponsors      = $this->read_json( 'sponsors-' . $event_id . '.json', array() );
+		$exhibitors    = $this->read_json( 'exhibitors-' . $event_id . '.json', array() );
 
 		$site_settings = is_array( $site_settings ) ? $site_settings : array();
 		$speakers      = is_array( $speakers ) ? $speakers : array();
 		$schedule      = is_array( $schedule ) ? $schedule : array();
 		$sponsors      = is_array( $sponsors ) ? $sponsors : array();
+		$exhibitors    = is_array( $exhibitors ) ? $exhibitors : array();
 		$sessions      = $this->get_schedule_sessions( $schedule );
 		$tracks        = $this->get_track_names( $event_id, $sessions );
 
@@ -107,7 +109,7 @@ class Wpfaevent_Event_Dashboard_Data {
 		$cfs_link           = esc_url_raw( get_post_meta( $event_id, 'wpfa_event_cfs_link', true ) );
 
 		return array(
-			'event'     => array(
+			'event'      => array(
 				'id'            => $event_id,
 				'title'         => get_the_title( $event_id ),
 				'status'        => get_post_status( $event_id ),
@@ -125,8 +127,10 @@ class Wpfaevent_Event_Dashboard_Data {
 				'register_url'  => $registration_link,
 				'cfs_url'       => $cfs_link,
 				'speaker_count' => count( $event_speaker_ids ),
+				'languages'     => class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array(),
+				'description'   => get_post_field( 'post_content', $event_id ),
 			),
-			'stats'     => array(
+			'stats'      => array(
 				array(
 					'label' => __( 'Linked speakers', 'wpfaevent' ),
 					'value' => count( $event_speaker_ids ),
@@ -148,17 +152,22 @@ class Wpfaevent_Event_Dashboard_Data {
 					'help'  => __( 'Sponsor items stored in dashboard data.', 'wpfaevent' ),
 				),
 				array(
+					'label' => __( 'Exhibitors', 'wpfaevent' ),
+					'value' => count( $exhibitors ),
+					'help'  => __( 'Exhibitor items stored in dashboard data.', 'wpfaevent' ),
+				),
+				array(
 					'label' => __( 'Tracks', 'wpfaevent' ),
 					'value' => count( $tracks ),
 					'help'  => __( 'Resolved from event tracks and imported sessions.', 'wpfaevent' ),
 				),
 			),
-			'sections'  => array(
+			'sections'   => array(
 				'visibility'       => $section_visibility,
 				'custom_tab_count' => count( $custom_tabs ),
 				'about_excerpt'    => $about_content,
 			),
-			'import'    => array(
+			'import'     => array(
 				'source'           => $this->get_import_source_label( $event_id ),
 				'is_eventyay'      => $this->is_eventyay_event( $event_id ),
 				'event_id'         => sanitize_text_field( get_post_meta( $event_id, '_wpfa_eventyay_event_id', true ) ),
@@ -168,23 +177,25 @@ class Wpfaevent_Event_Dashboard_Data {
 				'last_synced_at'   => $this->format_meta_datetime( get_post_meta( $event_id, '_wpfa_eventyay_last_synced_at', true ) ),
 				'last_program_at'  => $this->format_meta_datetime( get_post_meta( $event_id, '_wpfa_eventyay_speakers_synced_at', true ) ),
 			),
-			'sync'      => array(
+			'sync'       => array(
 				'status'           => $this->get_sync_status( $event_id ),
 				'can_sync'         => $this->is_eventyay_event( $event_id ) && Wpfaevent_Roles::current_user_can_import_eventyay(),
 				'eventyay_api_url' => ! empty( $site_settings['eventyay_api_url'] ) ? esc_url_raw( $site_settings['eventyay_api_url'] ) : '',
 			),
-			'settings'  => array(
+			'settings'   => array(
 				'eventyay_api_url' => ! empty( $site_settings['eventyay_api_url'] ) ? esc_url_raw( $site_settings['eventyay_api_url'] ) : '',
 				'reg_button_text'  => ! empty( $site_settings['reg_button_text'] ) ? sanitize_text_field( $site_settings['reg_button_text'] ) : '',
 				'reg_button_link'  => ! empty( $site_settings['reg_button_link'] ) ? esc_url_raw( $site_settings['reg_button_link'] ) : '',
 				'event_logo_url'   => ! empty( $site_settings['event_logo_url'] ) ? esc_url_raw( $site_settings['event_logo_url'] ) : '',
 				'hero_image_url'   => ! empty( $site_settings['hero_image_url'] ) ? esc_url_raw( $site_settings['hero_image_url'] ) : '',
 			),
-			'speakers'  => $speakers_list,
-			'sessions'  => array_slice( $sessions, 0, 6 ),
-			'tracks'    => $tracks,
-			'assets'    => $assets,
-			'resources' => array(
+			'speakers'   => $speakers_list,
+			'sponsors'   => $sponsors,
+			'exhibitors' => $exhibitors,
+			'sessions'   => array_slice( $sessions, 0, 6 ),
+			'tracks'     => $tracks,
+			'assets'     => $assets,
+			'resources'  => array(
 				array(
 					'label'   => __( 'Site settings', 'wpfaevent' ),
 					'file'    => 'site-settings-' . $event_id . '.json',
@@ -219,6 +230,16 @@ class Wpfaevent_Event_Dashboard_Data {
 						/* translators: %d: sponsor count. */
 						_n( '%d sponsor', '%d sponsors', $this->count_sponsors( $sponsors ), 'wpfaevent' ),
 						$this->count_sponsors( $sponsors )
+					),
+				),
+				array(
+					'label'   => __( 'Exhibitors', 'wpfaevent' ),
+					'file'    => 'exhibitors-' . $event_id . '.json',
+					'present' => ! empty( $exhibitors ),
+					'summary' => sprintf(
+						/* translators: %d: exhibitor count. */
+						_n( '%d exhibitor', '%d exhibitors', count( $exhibitors ), 'wpfaevent' ),
+						count( $exhibitors )
 					),
 				),
 			),
