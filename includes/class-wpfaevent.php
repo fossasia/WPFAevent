@@ -155,6 +155,10 @@ class Wpfaevent {
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-schedule-sync.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-importer.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-ajax-sync.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard-statistics.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard-renderer.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard-controller.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard-hooks.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
