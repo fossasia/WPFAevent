@@ -115,6 +115,9 @@ class Wpfaevent_Partner_Dashboard_Controller {
 		}
 
 		if ( ! $found ) {
+			if ( empty( $new_record['created_at'] ) ) {
+				$new_record['created_at'] = current_time( 'Y-m-d H:i:s' );
+			}
 			$updated_records[] = $new_record;
 		}
 
