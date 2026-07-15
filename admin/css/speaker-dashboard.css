@@ -117,3 +117,173 @@
 	box-shadow: 0 6px 16px rgba(13, 94, 168, 0.25) !important;
 	transform: translateY(-1px);
 }
+
+/* Partner Dashboard Specific Styles */
+.wpfaevent-dashboard-meta-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	width: 100%;
+	margin-top: 0 !important;
+	margin-bottom: 10px;
+}
+.wpfaevent-dashboard-tab.is-light-outline {
+	background: rgba(255, 255, 255, 0.15);
+	color: #fff;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	border-radius: 8px;
+	padding: 6px 12px;
+	font-weight: 600;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+.wpfaevent-dashboard-tab.is-light-outline:hover,
+.wpfaevent-dashboard-tab.is-light-outline:focus {
+	background: rgba(255, 255, 255, 0.25);
+	color: #fff;
+}
+.wpfaevent-hero-actions {
+	margin-top: 16px;
+}
+.wpfaevent-kpi.is-success {
+	color: #22c55e;
+}
+.wpfaevent-kpi.is-danger {
+	color: #ef4444;
+}
+.wpfaevent-list-toolbar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 30px;
+	gap: 15px;
+	flex-wrap: wrap;
+}
+.wpfaevent-list-toolbar-actions {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+.wpfaevent-list-toolbar-form {
+	display: inline-flex;
+	gap: 10px;
+	align-items: center;
+}
+.wpfaevent-dashboard-card.is-table-wrapper {
+	margin-top: 15px;
+	padding: 0;
+}
+.wpfaevent-table-borderless {
+	border: none !important;
+}
+.wpfaevent-dashboard-card.is-table-wrapper table td {
+	vertical-align: middle;
+}
+th.wpfaevent-col-logo,
+td.wpfaevent-col-logo {
+	width: 80px;
+	padding-left: 20px !important;
+}
+th.wpfaevent-col-actions,
+td.wpfaevent-col-actions {
+	width: 150px;
+	text-align: right;
+	padding-right: 20px !important;
+}
+.wpfaevent-table-no-records {
+	text-align: center !important;
+	padding: 30px !important;
+	color: #888;
+}
+.wpfaevent-sort-icon {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	line-height: 20px;
+}
+.wpfaevent-table-logo-img {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 1px solid #ddd;
+}
+.wpfaevent-table-logo-fallback {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: #e0f2fe;
+	color: #0284c7;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: bold;
+	font-size: 14px;
+	border: 1px solid #bfdbfe;
+}
+.wpfaevent-font-semibold {
+	font-weight: 600;
+}
+.wpfaevent-badge.is-small {
+	font-size: 10px;
+	padding: 2px 6px;
+	margin-left: 6px;
+}
+.wpfaevent-contact-email {
+	font-size: 11px;
+}
+.wpfaevent-contact-phone {
+	font-size: 11px;
+	color: #666;
+}
+.wpfaevent-status-active {
+	color: #22c55e;
+	font-weight: 600;
+}
+.wpfaevent-status-active .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	line-height: 16px;
+	vertical-align: middle;
+}
+.wpfaevent-status-inactive {
+	color: #ef4444;
+	font-weight: 600;
+}
+.wpfaevent-status-inactive .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	line-height: 16px;
+	vertical-align: middle;
+}
+.wpfaevent-col-date {
+	font-size: 12px;
+	color: #555;
+}
+.wpfaevent-row-actions {
+	display: inline-flex;
+	gap: 6px;
+}
+.wpfaevent-tablenav-bottom {
+	padding: 10px 20px !important;
+	border-top: 1px solid #f0f0f0 !important;
+}
+.wpfaevent-dashboard-shell.is-form-width {
+	max-width: 800px;
+}
+.wpfaevent-mt-20 {
+	margin-top: 20px;
+}
+.wpfaevent-required-star {
+	color: red;
+}
+.wpfaevent-form-actions {
+	margin-top: 20px;
+	display: flex;
+	gap: 10px;
+}

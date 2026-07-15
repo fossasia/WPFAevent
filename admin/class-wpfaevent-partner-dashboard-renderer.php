@@ -144,13 +144,13 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 			<div class="wpfaevent-dashboard-shell">
 				<!-- Hero Section -->
 				<div class="wpfaevent-dashboard-hero">
-					<div class="wpfaevent-dashboard-meta" style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
+					<div class="wpfaevent-dashboard-meta wpfaevent-dashboard-meta-header">
 						<div class="wpfaevent-badge"><?php echo esc_html( $type_label_plural ); ?> Hub</div>
 						<?php
 						$dashboard_page = new Wpfaevent_Event_Dashboard_Page();
 						$dashboard_url  = $dashboard_page->get_dashboard_url( $event_id );
 						?>
-						<a href="<?php echo esc_url( $dashboard_url ); ?>" class="wpfaevent-dashboard-tab" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:8px; padding:6px 12px; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+						<a href="<?php echo esc_url( $dashboard_url ); ?>" class="wpfaevent-dashboard-tab is-light-outline">
 							&larr; <?php esc_html_e( 'Back to Event Dashboard', 'wpfaevent' ); ?>
 						</a>
 					</div>
@@ -161,7 +161,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 						?>
 					</p>
 
-					<div style="margin-top:16px;">
+					<div class="wpfaevent-hero-actions">
 						<form method="get" action="">
 							<input type="hidden" name="post_type" value="wpfa_event">
 							<input type="hidden" name="page" value="<?php echo esc_attr( $current_page_slug ); ?>">
@@ -207,27 +207,27 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 					</div>
 					<div class="wpfaevent-dashboard-card">
 						<h2><?php esc_html_e( 'Active Records', 'wpfaevent' ); ?></h2>
-						<div class="wpfaevent-kpi" style="color: #22c55e;"><?php echo esc_html( (string) $active_count ); ?></div>
+						<div class="wpfaevent-kpi is-success"><?php echo esc_html( (string) $active_count ); ?></div>
 						<div class="description"><?php esc_html_e( 'Currently active and visible.', 'wpfaevent' ); ?></div>
 					</div>
 					<div class="wpfaevent-dashboard-card">
 						<h2><?php esc_html_e( 'Inactive Records', 'wpfaevent' ); ?></h2>
-						<div class="wpfaevent-kpi" style="color: #ef4444;"><?php echo esc_html( (string) $inactive_count ); ?></div>
+						<div class="wpfaevent-kpi is-danger"><?php echo esc_html( (string) $inactive_count ); ?></div>
 						<div class="description"><?php esc_html_e( 'Hidden or legacy profiles.', 'wpfaevent' ); ?></div>
 					</div>
 				</div>
 
 				<!-- CRUD Search & Filter Header -->
-				<div class="wpfaevent-list-toolbar" style="display:flex; justify-content:space-between; align-items:center; margin-top:30px; gap:15px; flex-wrap:wrap;">
+				<div class="wpfaevent-list-toolbar">
 					<h3>
 						<?php
 						/* translators: %s: Type label plural. */
 						printf( esc_html__( 'All %s List', 'wpfaevent' ), esc_html( $type_label_plural ) );
 						?>
 					</h3>
-					<div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+					<div class="wpfaevent-list-toolbar-actions">
 						<!-- Filter form -->
-						<form method="get" action="" style="display:inline-flex; gap:10px; align-items:center;">
+						<form method="get" action="" class="wpfaevent-list-toolbar-form">
 							<input type="hidden" name="post_type" value="wpfa_event">
 							<input type="hidden" name="page" value="<?php echo esc_attr( $current_page_slug ); ?>">
 							<input type="hidden" name="event_id" value="<?php echo esc_attr( (string) $event_id ); ?>">
@@ -254,11 +254,11 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 				</div>
 
 				<!-- CRUD List Table -->
-				<div class="wpfaevent-dashboard-card" style="margin-top:15px; padding: 0;">
-					<table class="wp-list-table widefat fixed striped" style="border:none;">
+				<div class="wpfaevent-dashboard-card is-table-wrapper">
+					<table class="wp-list-table widefat fixed striped wpfaevent-table-borderless">
 						<thead>
 							<tr>
-								<th style="width: 80px; padding-left:20px;"><?php esc_html_e( 'Logo', 'wpfaevent' ); ?></th>
+								<th class="wpfaevent-col-logo"><?php esc_html_e( 'Logo', 'wpfaevent' ); ?></th>
 								<th>
 									<a href="
 									<?php
@@ -274,7 +274,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 												">
 										<?php esc_html_e( 'Name', 'wpfaevent' ); ?>
 										<?php if ( 'name' === $orderby ) : ?>
-											<span class="dashicons dashicons-arrow-<?php echo 'asc' === $order ? 'up' : 'down'; ?>" style="font-size:16px; width:16px; height:16px; line-height:20px;"></span>
+											<span class="dashicons dashicons-arrow-<?php echo 'asc' === $order ? 'up' : 'down'; ?> wpfaevent-sort-icon"></span>
 										<?php endif; ?>
 									</a>
 								</th>
@@ -293,7 +293,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 												">
 										<?php esc_html_e( 'Company/Organization', 'wpfaevent' ); ?>
 										<?php if ( 'company' === $orderby ) : ?>
-											<span class="dashicons dashicons-arrow-<?php echo 'asc' === $order ? 'up' : 'down'; ?>" style="font-size:16px; width:16px; height:16px; line-height:20px;"></span>
+											<span class="dashicons dashicons-arrow-<?php echo 'asc' === $order ? 'up' : 'down'; ?> wpfaevent-sort-icon"></span>
 										<?php endif; ?>
 									</a>
 								</th>
@@ -314,7 +314,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 												">
 										<?php esc_html_e( 'Status', 'wpfaevent' ); ?>
 										<?php if ( 'status' === $orderby ) : ?>
-											<span class="dashicons dashicons-arrow-<?php echo 'asc' === $order ? 'up' : 'down'; ?>" style="font-size:16px; width:16px; height:16px; line-height:20px;"></span>
+											<span class="dashicons dashicons-arrow-<?php echo 'asc' === $order ? 'up' : 'down'; ?> wpfaevent-sort-icon"></span>
 										<?php endif; ?>
 									</a>
 								</th>
@@ -333,17 +333,17 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 												">
 										<?php esc_html_e( 'Date Created', 'wpfaevent' ); ?>
 										<?php if ( 'date' === $orderby ) : ?>
-											<span class="dashicons dashicons-arrow-<?php echo 'asc' === $order ? 'up' : 'down'; ?>" style="font-size:16px; width:16px; height:16px; line-height:20px;"></span>
+											<span class="dashicons dashicons-arrow-<?php echo 'asc' === $order ? 'up' : 'down'; ?> wpfaevent-sort-icon"></span>
 										<?php endif; ?>
 									</a>
 								</th>
-								<th style="width: 150px; text-align:right; padding-right:20px;"><?php esc_html_e( 'Actions', 'wpfaevent' ); ?></th>
+								<th class="wpfaevent-col-actions"><?php esc_html_e( 'Actions', 'wpfaevent' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
 							<?php if ( empty( $paged_items ) ) : ?>
 								<tr>
-									<td colspan="8" style="text-align:center; padding: 30px; color:#888;">
+									<td colspan="8" class="wpfaevent-table-no-records">
 										<?php esc_html_e( 'No records found matching filters.', 'wpfaevent' ); ?>
 									</td>
 								</tr>
@@ -364,51 +364,51 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 									$item_logo  = 'sponsor' === $type ? ( isset( $item['image'] ) ? $item['image'] : '' ) : ( isset( $item['logo'] ) ? $item['logo'] : '' );
 									?>
 									<tr>
-										<td style="padding-left:20px; vertical-align:middle;">
+										<td class="wpfaevent-col-logo">
 											<?php if ( $item_logo ) : ?>
-												<img src="<?php echo esc_url( $item_logo ); ?>" alt="<?php echo esc_attr( $item_name ); ?>" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid #ddd;">
+												<img src="<?php echo esc_url( $item_logo ); ?>" alt="<?php echo esc_attr( $item_name ); ?>" class="wpfaevent-table-logo-img">
 											<?php else : ?>
-												<div style="width:36px; height:36px; border-radius:50%; background:#e0f2fe; color:#0284c7; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; border:1px solid #bfdbfe;">
+												<div class="wpfaevent-table-logo-fallback">
 													<?php echo esc_html( strtoupper( substr( $item_name, 0, 1 ) ) ); ?>
 												</div>
 											<?php endif; ?>
 										</td>
-										<td style="vertical-align:middle; font-weight:600;">
+										<td class="wpfaevent-font-semibold">
 											<?php if ( $item_link ) : ?>
 												<a href="<?php echo esc_url( $item_link ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $item_name ); ?></a>
 											<?php else : ?>
 												<?php echo esc_html( $item_name ); ?>
 											<?php endif; ?>
 											<?php if ( ! $is_manual ) : ?>
-												<span class="wpfaevent-badge is-neutral" style="font-size:10px; padding:2px 6px; margin-left:6px;"><?php esc_html_e( 'Eventyay', 'wpfaevent' ); ?></span>
+												<span class="wpfaevent-badge is-neutral is-small"><?php esc_html_e( 'Eventyay', 'wpfaevent' ); ?></span>
 											<?php endif; ?>
 										</td>
-										<td style="vertical-align:middle;"><?php echo esc_html( $item_company ); ?></td>
-										<td style="vertical-align:middle;">
+										<td><?php echo esc_html( $item_company ); ?></td>
+										<td>
 											<?php if ( $item_email ) : ?>
-												<div style="font-size:11px;"><?php echo esc_html( $item_email ); ?></div>
+												<div class="wpfaevent-contact-email"><?php echo esc_html( $item_email ); ?></div>
 											<?php endif; ?>
 											<?php if ( $item_phone ) : ?>
-												<div style="font-size:11px; color:#666;"><?php echo esc_html( $item_phone ); ?></div>
+												<div class="wpfaevent-contact-phone"><?php echo esc_html( $item_phone ); ?></div>
 											<?php endif; ?>
 										</td>
-										<td style="vertical-align:middle;">
+										<td>
 											<?php if ( $item_cat ) : ?>
 												<span class="wpfaevent-tag"><?php echo esc_html( $item_cat ); ?></span>
 											<?php else : ?>
 												&mdash;
 											<?php endif; ?>
 										</td>
-										<td style="vertical-align:middle;">
+										<td>
 											<?php if ( 'active' === $item_status ) : ?>
-												<span style="color:#22c55e; font-weight:600;"><span class="dashicons dashicons-yes" style="font-size:16px; width:16px; height:16px; line-height:16px; vertical-align:middle;"></span> <?php esc_html_e( 'Active', 'wpfaevent' ); ?></span>
+												<span class="wpfaevent-status-active"><span class="dashicons dashicons-yes"></span> <?php esc_html_e( 'Active', 'wpfaevent' ); ?></span>
 											<?php else : ?>
-												<span style="color:#ef4444; font-weight:600;"><span class="dashicons dashicons-no" style="font-size:16px; width:16px; height:16px; line-height:16px; vertical-align:middle;"></span> <?php esc_html_e( 'Inactive', 'wpfaevent' ); ?></span>
+												<span class="wpfaevent-status-inactive"><span class="dashicons dashicons-no"></span> <?php esc_html_e( 'Inactive', 'wpfaevent' ); ?></span>
 											<?php endif; ?>
 										</td>
-										<td style="vertical-align:middle; font-size:12px; color:#555;"><?php echo wp_kses_post( $created_date ); ?></td>
-										<td style="text-align:right; padding-right:20px; vertical-align:middle;">
-											<div style="display:inline-flex; gap:6px;">
+										<td class="wpfaevent-col-date"><?php echo wp_kses_post( $created_date ); ?></td>
+										<td class="wpfaevent-col-actions">
+											<div class="wpfaevent-row-actions">
 												<a class="button button-small" href="
 												<?php
 												echo esc_url(
@@ -448,7 +448,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 
 					<!-- Pagination Footer -->
 					<?php if ( $total_pages > 1 ) : ?>
-						<div class="tablenav bottom" style="padding: 10px 20px; border-top:1px solid #f0f0f0;">
+						<div class="tablenav bottom wpfaevent-tablenav-bottom">
 							<div class="tablenav-pages">
 								<span class="displaying-num">
 									<?php
@@ -504,15 +504,15 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 		$back_url = remove_query_arg( array( 'action', 'id' ) );
 		?>
 		<div class="wrap">
-			<div class="wpfaevent-dashboard-shell" style="max-width: 800px;">
+			<div class="wpfaevent-dashboard-shell is-form-width">
 				<div class="wpfaevent-dashboard-hero">
-					<div class="wpfaevent-dashboard-meta" style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
+					<div class="wpfaevent-dashboard-meta wpfaevent-dashboard-meta-header">
 						<div class="wpfaevent-badge"><?php echo esc_html( $type_label_plural ); ?> Hub</div>
 						<?php
 						$dashboard_page = new Wpfaevent_Event_Dashboard_Page();
 						$dashboard_url  = $dashboard_page->get_dashboard_url( $event_id );
 						?>
-						<a href="<?php echo esc_url( $dashboard_url ); ?>" class="wpfaevent-dashboard-tab" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:8px; padding:6px 12px; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+						<a href="<?php echo esc_url( $dashboard_url ); ?>" class="wpfaevent-dashboard-tab is-light-outline">
 							&larr; <?php esc_html_e( 'Back to Event Dashboard', 'wpfaevent' ); ?>
 						</a>
 					</div>
@@ -525,7 +525,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 					<p><?php esc_html_e( 'Provide the details below. All manually created profiles are marked as manual and will be preserved.', 'wpfaevent' ); ?></p>
 				</div>
 
-				<div class="wpfaevent-dashboard-card" style="margin-top:20px;">
+				<div class="wpfaevent-dashboard-card wpfaevent-mt-20">
 					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 						<input type="hidden" name="action" value="wpfaevent_save_partner">
 						<input type="hidden" name="type" value="<?php echo esc_attr( $type ); ?>">
@@ -535,7 +535,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 
 						<table class="form-table">
 							<tr>
-								<th scope="row"><label for="partner-name"><?php esc_html_e( 'Name', 'wpfaevent' ); ?> <span class="description" style="color:red;">*</span></label></th>
+								<th scope="row"><label for="partner-name"><?php esc_html_e( 'Name', 'wpfaevent' ); ?> <span class="description wpfaevent-required-star">*</span></label></th>
 								<td>
 									<input type="text" id="partner-name" name="name" class="regular-text" value="<?php echo esc_attr( $name ); ?>" required>
 								</td>
@@ -594,7 +594,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 							</tr>
 						</table>
 
-						<div style="margin-top:20px; display:flex; gap:10px;">
+						<div class="wpfaevent-form-actions">
 							<?php submit_button( __( 'Save Profile', 'wpfaevent' ), 'primary', 'submit', false ); ?>
 							<a class="button" href="<?php echo esc_url( $back_url ); ?>"><?php esc_html_e( 'Cancel', 'wpfaevent' ); ?></a>
 						</div>
