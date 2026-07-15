@@ -913,11 +913,11 @@ document.addEventListener('DOMContentLoaded', function () {
 			body: formData
 		}).then(function (response) {
 			return response.json().catch(function () {
-				return { success: false, data: { message: 'Unexpected server response.' } };
+				return { success: false, data: { message: <?php echo wp_json_encode( __( 'The server returned an unexpected response.', 'wpfaevent' ) ); ?> } };
 			});
 		}).then(function (payload) {
 			if (!payload || !payload.success) {
-				const msg = payload && payload.data && payload.data.message ? payload.data.message : 'Failed to save field.';
+				const msg = payload && payload.data && payload.data.message ? payload.data.message : <?php echo wp_json_encode( __( 'Failed to save field.', 'wpfaevent' ) ); ?>;
 				showNotice('error', msg);
 				if (saveBtn) saveBtn.disabled = false;
 				if (cancelBtn) cancelBtn.disabled = false;
