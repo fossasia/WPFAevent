@@ -2867,7 +2867,13 @@ class Wpfaevent_Eventyay_Importer {
 				);
 			}
 
-			$full_msg .= "\n\n" . sprintf( "HTTP Status: %d\nURL: %s\nResponse:\n%s", $status, esc_url_raw( $api_url ), $display_body );
+			$full_msg .= "\n\n" . sprintf(
+				/* translators: 1: HTTP status code, 2: Eventyay API URL, 3: API response body. */
+				esc_html__( "HTTP Status: %1\$d\nURL: %2\$s\nResponse:\n%3\$s", 'wpfaevent' ),
+				$status,
+				esc_url_raw( $api_url ),
+				$display_body
+			);
 
 			return new WP_Error(
 				'wpfaevent_eventyay_http_error',
