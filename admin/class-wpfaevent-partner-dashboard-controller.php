@@ -45,11 +45,12 @@ class Wpfaevent_Partner_Dashboard_Controller {
 			wp_die( esc_html__( 'You do not have sufficient permissions to modify this page.', 'wpfaevent' ) );
 		}
 
-		$id = isset( $_POST['id'] ) ? sanitize_key( $_POST['id'] ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified via check_admin_referer() below.
+		$id = isset( $_POST['id'] ) ? sanitize_key( wp_unslash( $_POST['id'] ) ) : '';
 		check_admin_referer( 'wpfaevent_save_partner_' . $id );
 
-		$type     = isset( $_POST['type'] ) ? sanitize_key( $_POST['type'] ) : '';
-		$event_id = isset( $_POST['event_id'] ) ? absint( $_POST['event_id'] ) : 0;
+		$type     = isset( $_POST['type'] ) ? sanitize_key( wp_unslash( $_POST['type'] ) ) : '';
+		$event_id = isset( $_POST['event_id'] ) ? absint( wp_unslash( $_POST['event_id'] ) ) : 0;
 
 		if ( ! $event_id || ! in_array( $type, array( 'sponsor', 'exhibitor' ), true ) ) {
 			wp_die( esc_html__( 'Invalid request parameters.', 'wpfaevent' ) );
@@ -62,7 +63,8 @@ class Wpfaevent_Partner_Dashboard_Controller {
 		$logo        = isset( $_POST['logo'] ) ? esc_url_raw( wp_unslash( $_POST['logo'] ) ) : '';
 		$link        = isset( $_POST['link'] ) ? esc_url_raw( wp_unslash( $_POST['link'] ) ) : '';
 		$cat         = isset( $_POST['cat'] ) ? sanitize_text_field( wp_unslash( $_POST['cat'] ) ) : '';
-		$status      = isset( $_POST['status'] ) && 'inactive' === $_POST['status'] ? 'inactive' : 'active';
+		$status_raw  = isset( $_POST['status'] ) ? sanitize_key( wp_unslash( $_POST['status'] ) ) : '';
+		$status      = ( 'inactive' === $status_raw ) ? 'inactive' : 'active';
 		$description = isset( $_POST['description'] ) ? wp_kses_post( wp_unslash( $_POST['description'] ) ) : '';
 
 		if ( ! $name ) {
