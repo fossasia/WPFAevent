@@ -746,7 +746,6 @@ document.addEventListener('DOMContentLoaded', function () {
 			window.setTimeout(function () {
 				const nextUrl = payload.data && payload.data.dashboard_url ? payload.data.dashboard_url + '#wpfaevent-sync' : window.location.href.split('#')[0] + '#wpfaevent-sync';
 				window.location.href = nextUrl;
-				window.location.reload();
 			}, 900);
 		}).catch(function () {
 			setFeedback('error', <?php echo wp_json_encode( __( 'Synchronization failed. Please try again.', 'wpfaevent' ) ); ?>);
