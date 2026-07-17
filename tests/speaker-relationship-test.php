@@ -252,6 +252,7 @@ function wpfa_relationship_test_assert_same( $expected, $actual, $message ) {
 	exit( 1 );
 }
 
+require_once dirname( __DIR__ ) . '/includes/class-wpfaevent-event-speaker-relation-manager.php';
 require_once dirname( __DIR__ ) . '/includes/meta/class-wpfaevent-meta-event.php';
 require_once dirname( __DIR__ ) . '/includes/meta/class-wpfaevent-meta-speaker.php';
 

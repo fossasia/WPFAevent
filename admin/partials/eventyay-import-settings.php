@@ -36,7 +36,7 @@ if ( ! empty( $settings['base_url'] ) && ! empty( $settings['organizer_slug'] ) 
 
 	<?php if ( is_array( $notice ) && ! empty( $notice['message'] ) ) : ?>
 		<div class="notice notice-<?php echo esc_attr( ! empty( $notice['type'] ) ? $notice['type'] : 'info' ); ?> is-dismissible">
-			<p><?php echo esc_html( $notice['message'] ); ?></p>
+			<p style="white-space: pre-wrap;"><?php echo esc_html( $notice['message'] ); ?></p>
 		</div>
 	<?php endif; ?>
 

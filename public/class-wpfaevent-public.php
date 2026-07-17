@@ -81,7 +81,6 @@ class Wpfaevent_Public {
 			'public/partials/additional-information-page.php',
 			'page-speakers.php',
 			'page-landing.php',
-			'admin-dashboard.php',
 		);
 
 		foreach ( $wpfa_templates as $template ) {
