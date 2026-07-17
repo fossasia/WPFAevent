@@ -18,13 +18,6 @@ parameters:
         - uninstall.php
         - wpfaevent.php
 
-    # Silencing legacy/backup files that are out of scope for the current cleanup PR.
-    # We use 'analyseAndScan' because these files have no connections to the active
-    # codebase and should be completely hidden from PHPStan until they are refactored.
-    # TODO: Remove individual file exclusions below as they are refactored into the core codebase.
-    excludePaths:
-        analyseAndScan:
-            - admin/partials/admin-dashboard.php
 
     # IMPORTANT: phpstan/extension-installer auto-loads installed PHPStan extensions
     # and rulesets that expose `extra.phpstan.includes`. php-stubs/wp-cli-stubs is

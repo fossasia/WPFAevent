@@ -120,6 +120,11 @@ class Wpfaevent_Admin {
 		 */
 
 		wp_enqueue_style( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'css/wpfaevent-admin.css', array(), $this->version, 'all' );
+
+		$screen = get_current_screen();
+		if ( $screen && ( 'wpfa_speaker' === $screen->post_type || 'edit-wpfa_speaker' === $screen->id || 'wpfa_event' === $screen->post_type || false !== strpos( $screen->id, 'wpfaevent-sponsors' ) || false !== strpos( $screen->id, 'wpfaevent-exhibitors' ) ) ) {
+			wp_enqueue_style( $this->plugin_name . '-speaker-dashboard', plugin_dir_url( __FILE__ ) . 'css/speaker-dashboard.css', array(), $this->version, 'all' );
+		}
 	}
 
 	/**
@@ -220,6 +225,10 @@ class Wpfaevent_Admin {
 	public function remove_event_taxonomy_submenus() {
 		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'edit-tags.php?taxonomy=wpfa_event_track&post_type=wpfa_event' );
 		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'edit-tags.php?taxonomy=wpfa_event_tag&post_type=wpfa_event' );
+		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'edit.php?post_type=wpfa_speaker' );
+		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'wpfaevent-update-events' );
+		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'wpfaevent-sponsors' );
+		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'wpfaevent-exhibitors' );
 	}
 
 	/**
@@ -534,6 +543,10 @@ class Wpfaevent_Admin {
 			<?php endforeach; ?>
 		</select>
 		<?php
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['wpfa_view'] ) && 'table' === $_GET['wpfa_view'] ) {
+			echo '<input type="hidden" name="wpfa_view" value="table">';
+		}
 	}
 
 	/**
@@ -590,22 +603,23 @@ class Wpfaevent_Admin {
 	 * @return array
 	 */
 	public function filter_speaker_admin_views( $views ) {
-		if ( ! is_array( $views ) ) {
-			$views = array();
-		}
-
+		unset( $views );
 		$current_scope = $this->get_current_speaker_admin_scope();
 		$scope_options = $this->get_speaker_admin_scope_options();
 		$custom_views  = array();
 
 		foreach ( $scope_options as $scope => $label ) {
-			$url = add_query_arg(
-				array(
-					'post_type'               => 'wpfa_speaker',
-					'wpfaevent_speaker_scope' => $scope,
-				),
-				admin_url( 'edit.php' )
+			$args = array(
+				'post_type'               => 'wpfa_speaker',
+				'wpfaevent_speaker_scope' => $scope,
 			);
+
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if ( isset( $_GET['wpfa_view'] ) && 'table' === $_GET['wpfa_view'] ) {
+				$args['wpfa_view'] = 'table';
+			}
+
+			$url = add_query_arg( $args, admin_url( 'edit.php' ) );
 
 			$custom_views[ 'wpfaevent_scope_' . $scope ] = sprintf(
 				'<a href="%s" %s>%s</a>',
@@ -615,7 +629,182 @@ class Wpfaevent_Admin {
 			);
 		}
 
-		return array_merge( $custom_views, $views );
+		return $custom_views;
+	}
+
+	/**
+	 * Intercept the Speakers admin list screen to render our custom dashboard layout.
+	 *
+	 * @since 1.0.0
+	 */
+	public function intercept_speaker_list_screen() {
+		$screen = get_current_screen();
+		if ( ! $screen || 'edit-wpfa_speaker' !== $screen->id ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['wpfa_view'] ) && 'table' === $_GET['wpfa_view'] ) {
+			return;
+		}
+
+		$event_filter = $this->get_current_speaker_admin_event_filter();
+
+		if ( $event_filter ) {
+			$db_speaker_ids       = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_admin_event_speaker_ids( $event_filter ) : array();
+			$total_speakers_count = count( $db_speaker_ids );
+			$event_owned_count    = $total_speakers_count;
+			$standalone_count     = 0;
+
+			$speaker_cat_ids = array();
+			if ( ! empty( $db_speaker_ids ) ) {
+				foreach ( $db_speaker_ids as $sp_id ) {
+					$terms = wp_get_post_terms( $sp_id, 'wpfa_speaker_category', array( 'fields' => 'ids' ) );
+					if ( is_array( $terms ) ) {
+						$speaker_cat_ids = array_merge( $speaker_cat_ids, $terms );
+					}
+				}
+			}
+			$speaker_cat_ids        = array_unique( $speaker_cat_ids );
+			$total_categories_count = count( $speaker_cat_ids );
+
+			$speakers_preview = array();
+			if ( ! empty( $db_speaker_ids ) ) {
+				$speakers_preview = get_posts(
+					array(
+						'post_type'      => 'wpfa_speaker',
+						'post_status'    => 'any',
+						'post__in'       => $db_speaker_ids,
+						'posts_per_page' => 5,
+						'orderby'        => 'post__in',
+					)
+				);
+			}
+
+			$categories_preview = array();
+			if ( ! empty( $speaker_cat_ids ) ) {
+				$categories_preview = get_terms(
+					array(
+						'taxonomy'   => 'wpfa_speaker_category',
+						'hide_empty' => false,
+						'number'     => 5,
+						'include'    => $speaker_cat_ids,
+					)
+				);
+				$categories_preview = is_array( $categories_preview ) ? $categories_preview : array();
+			}
+		} else {
+			// Calculate counts.
+			$all_posts_count      = wp_count_posts( 'wpfa_speaker' );
+			$total_speakers_count = isset( $all_posts_count->publish ) ? (int) $all_posts_count->publish : 0;
+			$event_speaker_ids    = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_all_event_owned_speaker_ids() : array();
+			$event_owned_count    = count( $event_speaker_ids );
+			$standalone_count     = max( 0, $total_speakers_count - $event_owned_count );
+
+			$categories_count_raw   = wp_count_terms( array( 'taxonomy' => 'wpfa_speaker_category' ) );
+			$total_categories_count = ! is_wp_error( $categories_count_raw ) ? (int) $categories_count_raw : 0;
+
+			// Fetch preview arrays (limited to 5).
+			$speakers_preview = get_posts(
+				array(
+					'post_type'      => 'wpfa_speaker',
+					'post_status'    => 'any',
+					'posts_per_page' => 5,
+				)
+			);
+
+			$categories_preview = get_terms(
+				array(
+					'taxonomy'   => 'wpfa_speaker_category',
+					'hide_empty' => false,
+					'number'     => 5,
+				)
+			);
+			$categories_preview = is_array( $categories_preview ) ? $categories_preview : array();
+		}
+
+		// Set up global variables so that admin-header.php renders the correct sidebar menu and highlighted items.
+		global $parent_file, $submenu_file, $title, $post_type;
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Required to load admin-header.php in custom context.
+		$title = __( 'Speakers Dashboard', 'wpfaevent' );
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Required to load admin-header.php in custom context.
+		$parent_file = 'edit.php?post_type=wpfa_event';
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Required to load admin-header.php in custom context.
+		$submenu_file = 'edit.php?post_type=wpfa_speaker';
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Required to load admin-header.php in custom context.
+		$post_type = 'wpfa_speaker';
+
+		require_once ABSPATH . 'wp-admin/admin-header.php';
+		require WPFAEVENT_PATH . 'admin/partials/speakers-dashboard.php';
+		require_once ABSPATH . 'wp-admin/admin-footer.php';
+		exit;
+	}
+
+	/**
+	 * Render the opening of the dashboard layout wrapper on the classic list table screen.
+	 *
+	 * @since 1.0.0
+	 */
+	public function begin_speaker_table_layout() {
+		$screen = get_current_screen();
+		if ( ! $screen || 'edit-wpfa_speaker' !== $screen->id ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( ! isset( $_GET['wpfa_view'] ) || 'table' !== $_GET['wpfa_view'] ) {
+			return;
+		}
+
+		// Calculate counts for stats.
+		$all_posts_count      = wp_count_posts( 'wpfa_speaker' );
+		$total_speakers_count = isset( $all_posts_count->publish ) ? (int) $all_posts_count->publish : 0;
+		$event_speaker_ids    = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_all_event_owned_speaker_ids() : array();
+		$event_owned_count    = count( $event_speaker_ids );
+		$standalone_count     = max( 0, $total_speakers_count - $event_owned_count );
+
+		$categories_count_raw   = wp_count_terms( array( 'taxonomy' => 'wpfa_speaker_category' ) );
+		$total_categories_count = ! is_wp_error( $categories_count_raw ) ? (int) $categories_count_raw : 0;
+
+		?>
+		<div class="wpfaevent-dashboard-shell">
+			<!-- Hero Section -->
+			<?php
+			$new_speaker_url   = admin_url( 'post-new.php?post_type=wpfa_speaker' );
+			$switch_view_url   = remove_query_arg( 'wpfa_view' );
+			$switch_view_label = __( 'Switch to Dashboard View', 'wpfaevent' );
+			require WPFAEVENT_PATH . 'admin/partials/speaker-dashboard-header.php';
+			?>
+
+			<!-- Statistics Grid -->
+			<?php require WPFAEVENT_PATH . 'admin/partials/speaker-dashboard-stats.php'; ?>
+
+			<!-- Table Card Wrapper -->
+			<div class="wpfaevent-dashboard-card">
+				<h2 style="margin-bottom:15px;"><?php esc_html_e( 'All Speakers List Table', 'wpfaevent' ); ?></h2>
+		<?php
+	}
+
+	/**
+	 * Render the closing of the dashboard layout wrapper on the classic list table screen.
+	 *
+	 * @since 1.0.0
+	 */
+	public function end_speaker_table_layout() {
+		$screen = get_current_screen();
+		if ( ! $screen || 'edit-wpfa_speaker' !== $screen->id ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( ! isset( $_GET['wpfa_view'] ) || 'table' !== $_GET['wpfa_view'] ) {
+			return;
+		}
+
+		?>
+			</div> <!-- Close wpfaevent-dashboard-card -->
+		</div> <!-- Close wpfaevent-dashboard-shell -->
+		<?php
 	}
 
 	// ========================================
@@ -651,10 +840,10 @@ class Wpfaevent_Admin {
 	 */
 	private function get_current_speaker_admin_scope() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin list filter persisted via query string.
-		$scope = isset( $_GET['wpfaevent_speaker_scope'] ) ? sanitize_key( wp_unslash( $_GET['wpfaevent_speaker_scope'] ) ) : 'standalone';
+		$scope = isset( $_GET['wpfaevent_speaker_scope'] ) ? sanitize_key( wp_unslash( $_GET['wpfaevent_speaker_scope'] ) ) : 'all';
 
 		if ( ! array_key_exists( $scope, $this->get_speaker_admin_scope_options() ) ) {
-			return 'standalone';
+			return 'all';
 		}
 
 		return $scope;
@@ -692,9 +881,9 @@ class Wpfaevent_Admin {
 	 */
 	private function get_speaker_admin_scope_options() {
 		return array(
+			'all'        => __( 'All Speakers', 'wpfaevent' ),
 			'standalone' => __( 'Standalone Speakers', 'wpfaevent' ),
 			'event'      => __( 'Event-Owned Speakers', 'wpfaevent' ),
-			'all'        => __( 'All Speakers', 'wpfaevent' ),
 		);
 	}
 
@@ -987,6 +1176,21 @@ class Wpfaevent_Admin {
 				$this->get_events_linked_to_speaker( $post->ID )
 			)
 		);
+		if ( empty( $events ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading referer/query parameter to pre-populate event field in edit screen metabox.
+			if ( isset( $_GET['wpfa_speaker_event'] ) ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$events[] = absint( $_GET['wpfa_speaker_event'] );
+			} elseif ( wp_get_referer() ) {
+				$referer_query = wp_parse_url( wp_get_referer(), PHP_URL_QUERY );
+				if ( $referer_query ) {
+					parse_str( $referer_query, $referer_args );
+					if ( ! empty( $referer_args['wpfa_speaker_event'] ) ) {
+						$events[] = absint( $referer_args['wpfa_speaker_event'] );
+					}
+				}
+			}
+		}
 		?>
 		<table class="form-table">
 			<tr>
@@ -1463,5 +1667,49 @@ class Wpfaevent_Admin {
 		$speaker_ids = array_diff( $this->get_event_speaker_ids( $event_id ), array( $speaker_id ) );
 
 		$this->update_post_id_list_meta( $event_id, 'wpfa_event_speakers', $speaker_ids );
+	}
+
+	/**
+	 * Render a "Back to Event Dashboard" button on standard admin list pages.
+	 *
+	 * @since 1.0.0
+	 */
+	public function render_back_to_dashboard_button() {
+		$screen = get_current_screen();
+		if ( ! $screen ) {
+			return;
+		}
+
+		$is_speaker_list = ( 'edit-wpfa_speaker' === $screen->id );
+		$is_track_list   = ( 'edit-wpfa_event_track' === $screen->id );
+
+		if ( ! $is_speaker_list && ! $is_track_list ) {
+			return;
+		}
+
+		$event_id = 0;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['wpfa_speaker_event'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$event_id = absint( wp_unslash( $_GET['wpfa_speaker_event'] ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		} elseif ( isset( $_GET['event_id'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$event_id = absint( wp_unslash( $_GET['event_id'] ) );
+		}
+
+		if ( ! $event_id ) {
+			return;
+		}
+
+		$dashboard_page = new Wpfaevent_Event_Dashboard_Page();
+		$dashboard_url  = $dashboard_page->get_dashboard_url( $event_id );
+		?>
+		<div style="margin: 10px 0 20px 0; display: flex; align-items: center;">
+			<a href="<?php echo esc_url( $dashboard_url ); ?>" class="button" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; padding:6px 12px; border-radius:6px; border:1px solid #ccd0d4; background:#f6f7f7; color:#2c3338; text-decoration:none;">
+				&larr; <?php esc_html_e( 'Back to Event Dashboard', 'wpfaevent' ); ?>
+			</a>
+		</div>
+		<?php
 	}
 }
