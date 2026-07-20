@@ -23,7 +23,7 @@ jobs:
       # 1️⃣ Checkout the repository (full history needed for pushes)
       # --------------------------------------------------------------
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0   # fetch all commits so we can push new branch
 
