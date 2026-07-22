@@ -194,9 +194,33 @@ $header_vars = array(
 								),
 							);
 						}
-
 						$image_url = get_the_post_thumbnail_url( $event_id, 'medium' );
-
+						if ( ! $image_url ) {
+							$image_url = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
+						}
+						if ( ! $image_url ) {
+							$image_url = get_post_meta( $event_id, 'wpfa_event_header_image_url', true );
+						}
+						if ( ! $image_url ) {
+							$upload_dir = wp_upload_dir();
+							if ( empty( $upload_dir['error'] ) ) {
+								$settings_file = trailingslashit( $upload_dir['basedir'] ) . 'fossasia-data/site-settings-' . absint( $event_id ) . '.json';
+								if ( file_exists( $settings_file ) && is_readable( $settings_file ) ) {
+									$settings_contents = file_get_contents( $settings_file );
+									if ( $settings_contents ) {
+										$settings_data = json_decode( $settings_contents, true );
+										if ( is_array( $settings_data ) ) {
+											if ( ! empty( $settings_data['event_logo_url'] ) ) {
+												$image_url = $settings_data['event_logo_url'];
+											} elseif ( ! empty( $settings_data['event_header_image_url'] ) ) {
+												$image_url = $settings_data['event_header_image_url'];
+											}
+										}
+									}
+								}
+							}
+						}
+						$image_url = $image_url ? $image_url : '';
 						// Format date for display.
 						$display_date      = '';
 						$display_time_meta = '';
