@@ -442,6 +442,11 @@
 	display: none;
 }
 
+/* Suppress Eventyay/Pretix ticket widget error alert overlay icon */
+.pretix-widget-alert-holder {
+	display: none !important;
+}
+
 .wpfaevent .wpfa-event-ticket-widget-loaded .wpfa-event-ticket-backup {
 	display: none;
 }

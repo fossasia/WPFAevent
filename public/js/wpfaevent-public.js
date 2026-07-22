@@ -30,9 +30,56 @@
 	 */
 
 	$(function() {
-		$('.wpfa-event-timezone-select').on('change', function() {
-			if (this.form) {
-				this.form.submit();
+		// Client-side Schedule View Switch (List vs Calendar)
+		$(document).on('click', '.wpfa-schedule-view-switch a', function(e) {
+			e.preventDefault();
+			const $btn = $(this);
+			const href = $btn.attr('href') || '';
+			const isCalendar = href.indexOf('view=calendar') !== -1 || href.indexOf('schedule_view=calendar') !== -1;
+
+			$btn.addClass('is-active').siblings().removeClass('is-active');
+
+			if (isCalendar) {
+				$('.wpfa-schedule-calendar').show();
+				$('.wpfa-schedule-program').hide();
+			} else {
+				$('.wpfa-schedule-program').show();
+				$('.wpfa-schedule-calendar').hide();
+			}
+
+			if (window.history && window.history.replaceState) {
+				window.history.replaceState(null, '', href);
+			}
+		});
+
+		// Client-side Timezone Converter
+		$(document).on('change', '.wpfa-event-timezone-select, #wpfa-schedule-timezone', function(e) {
+			e.preventDefault();
+			const selectedTz = $(this).val();
+			if (!selectedTz) return;
+
+			$('time[data-utc-start]').each(function() {
+				const rawDate = $(this).attr('data-utc-start');
+				if (!rawDate) return;
+				try {
+					const dateObj = new Date(rawDate);
+					if (isNaN(dateObj.getTime())) return;
+					const formatted = new Intl.DateTimeFormat([], {
+						timeZone: selectedTz,
+						hour: 'numeric',
+						minute: '2-digit',
+						hour12: true
+					}).format(dateObj);
+					$(this).text(formatted);
+				} catch (err) {
+					// Timezone fallback if unsupported string
+				}
+			});
+
+			if (window.history && window.history.replaceState) {
+				const currentUrl = new URL(window.location.href);
+				currentUrl.searchParams.set('schedule_tz', selectedTz);
+				window.history.replaceState(null, '', currentUrl.toString());
 			}
 		});
 
@@ -68,6 +115,56 @@
 				}
 			});
 
+		const eventPlaceholderSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#f1f5f9"/><path d="M60 50h80v100H60z" fill="#e2e8f0"/><path d="M70 70h60v15H70z" fill="#cbd5e1"/><circle cx="85" cy="115" r="10" fill="#cbd5e1"/><circle cx="115" cy="115" r="10" fill="#cbd5e1"/><path d="M60 40h80v15H60z" fill="#d51007"/></svg>';
+		const eventPlaceholderSrc = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(eventPlaceholderSvg);
+
+		$('.event-card-thumb img, .wpfa-past-event-card-image img, .wpfa-event-partner-logo img, .wpfa-event-exhibitor-logo img')
+			.on('error', function() {
+				this.src = eventPlaceholderSrc;
+			})
+			.each(function() {
+				if (this.complete && this.naturalWidth === 0) {
+					this.src = eventPlaceholderSrc;
+				}
+			});
+
+		function showLoginModal(loginUrl, message) {
+			let $modal = $('#wpfa-login-modal');
+			if (!$modal.length) {
+				const modalHtml = `
+					<div class="wpfa-login-modal-overlay" id="wpfa-login-modal" role="dialog" aria-modal="true">
+						<div class="wpfa-login-modal-card">
+							<button type="button" class="wpfa-login-modal-close" aria-label="Close">&times;</button>
+							<div class="wpfa-login-modal-header">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px; color: #d51007; margin-bottom: 8px;">
+									<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+									<circle cx="12" cy="7" r="4"></circle>
+								</svg>
+								<h3>Log In Required</h3>
+							</div>
+							<p class="wpfa-login-modal-body">${message || 'Please log in to your account to bookmark events and view your saved schedule.'}</p>
+							<div class="wpfa-login-modal-actions">
+								<a href="${loginUrl || '/wp-login.php'}" class="btn btn-primary wpfa-login-btn">Log In</a>
+								<button type="button" class="btn btn-secondary wpfa-login-modal-close-btn">Cancel</button>
+							</div>
+						</div>
+					</div>
+				`;
+				$('body').append(modalHtml);
+				$modal = $('#wpfa-login-modal');
+
+				$modal.on('click', '.wpfa-login-modal-close, .wpfa-login-modal-close-btn', function() {
+					$modal.removeClass('is-visible');
+				});
+				$modal.on('click', function(e) {
+					if ($(e.target).is('#wpfa-login-modal')) {
+						$modal.removeClass('is-visible');
+					}
+				});
+			}
+			$modal.addClass('is-visible');
+		}
+
 		// Bookmark Toggle Handler
 		$(document).on('click', '.wpfa-bookmark-btn', function(e) {
 			e.preventDefault();
@@ -78,7 +175,7 @@
 			const settings = window.wpfaeventPublic || {};
 
 			if (!settings.isLoggedIn) {
-				alert(settings.i18n?.loginRequired || 'Please log in to bookmark events.');
+				showLoginModal(settings.loginUrl, settings.i18n?.loginRequired);
 				return;
 			}
 
