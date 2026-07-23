@@ -594,7 +594,7 @@ class Wpfaevent_Public {
 				'ajaxUrl'               => admin_url( 'admin-ajax.php' ),
 				'nonce'                 => wp_create_nonce( 'wpfa_bookmark_nonce' ),
 				'isLoggedIn'            => is_user_logged_in(),
-				'loginUrl'              => wp_login_url( is_singular() ? get_permalink() : home_url( isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '/' ) ),
+				'loginUrl'              => wp_login_url( is_singular() ? get_permalink() : home_url( isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/' ) ),
 				'bookmarkedEvents'      => class_exists( 'Wpfaevent_User_Preferences_Service' ) ? Wpfaevent_User_Preferences_Service::get_bookmarked_events() : array(),
 				'i18n'                  => array(
 					'bookmark'          => __( 'Bookmark', 'wpfaevent' ),

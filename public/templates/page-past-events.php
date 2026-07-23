@@ -206,6 +206,7 @@ $header_vars = array(
 							if ( empty( $upload_dir['error'] ) ) {
 								$settings_file = trailingslashit( $upload_dir['basedir'] ) . 'fossasia-data/site-settings-' . absint( $event_id ) . '.json';
 								if ( file_exists( $settings_file ) && is_readable( $settings_file ) ) {
+									// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 									$settings_contents = file_get_contents( $settings_file );
 									if ( $settings_contents ) {
 										$settings_data = json_decode( $settings_contents, true );

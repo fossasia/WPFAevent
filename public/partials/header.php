@@ -26,8 +26,9 @@ $register_button_text        = isset( $register_button_text ) ? $register_button
 $coc_page_id = Wpfaevent_Cache::get_coc_page_id();
 
 // Determine active state for navigation links.
-$current_path          = isset( $_SERVER['REQUEST_URI'] ) ? trim( (string) parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' ) : '';
-$current_filter        = isset( $_GET['filter'] ) ? sanitize_text_field( $_GET['filter'] ) : '';
+$current_path = isset( $_SERVER['REQUEST_URI'] ) ? trim( (string) wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH ), '/' ) : '';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$current_filter        = isset( $_GET['filter'] ) ? sanitize_text_field( wp_unslash( $_GET['filter'] ) ) : '';
 $is_past_events_active = ( 'past-events' === $current_path || is_page_template( 'page-past-events.php' ) || 'past' === $current_filter ) ? 'active' : '';
 $is_events_active      = ( ( 'events' === $current_path || is_post_type_archive( 'wpfa_event' ) || is_page_template( 'page-events.php' ) ) && 'past' !== $current_filter ) ? 'active' : '';
 $is_coc_active         = ( 'code-of-conduct' === $current_path || ( $coc_page_id && is_page( $coc_page_id ) ) || is_page_template( 'page-code-of-conduct.php' ) ) ? 'active' : '';

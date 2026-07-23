@@ -609,6 +609,7 @@ class Wpfaevent_Event_Template_Controller {
 				}
 
 				if ( empty( $sponsor['description'] ) ) {
+					/* translators: %s: event title */
 					$sponsor['description'] = sprintf( __( 'Event partner and supporter of %s.', 'wpfaevent' ), $event_title );
 				}
 
@@ -637,6 +638,7 @@ class Wpfaevent_Event_Template_Controller {
 			}
 
 			if ( empty( $exhibitor['description'] ) ) {
+				/* translators: %s: event title */
 				$exhibitor['description'] = sprintf( __( 'Exhibitor booth at %s.', 'wpfaevent' ), $event_title );
 			}
 

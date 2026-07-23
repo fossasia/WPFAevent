@@ -190,12 +190,12 @@ class Wpfaevent_Templates {
 	 * @since 1.0.0
 	 *
 	 * @param string|false $redirect_url The proposed canonical redirect URL.
-	 * @param string       $requested_url The requested URL.
+	 * @param string       $_requested_url The requested URL.
 	 * @return string|false
 	 */
-	public static function prevent_canonical_redirect_for_virtual_routes( $redirect_url, $requested_url ) {
+	public static function prevent_canonical_redirect_for_virtual_routes( $redirect_url, $_requested_url ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
 		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-			$req_path = trim( (string) parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
+			$req_path = trim( (string) wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH ), '/' );
 
 			$virtual_routes = array(
 				'past-events',
@@ -226,8 +226,8 @@ class Wpfaevent_Templates {
 		}
 
 		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-			$req_path = trim( (string) parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
-			$home_path = trim( (string) parse_url( home_url(), PHP_URL_PATH ), '/' );
+			$req_path  = trim( (string) wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH ), '/' );
+			$home_path = trim( (string) wp_parse_url( home_url(), PHP_URL_PATH ), '/' );
 			if ( ! empty( $home_path ) && 0 === strpos( $req_path, $home_path ) ) {
 				$req_path = trim( substr( $req_path, strlen( $home_path ) ), '/' );
 			}
@@ -338,7 +338,7 @@ class Wpfaevent_Templates {
 
 		// Virtual path fallback for plugin routes (past-events, schedule, full-schedule, code-of-conduct, events, speakers).
 		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-			$req_path = trim( (string) parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
+			$req_path = trim( (string) wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH ), '/' );
 
 			$virtual_routes = array(
 				'past-events'     => 'page-past-events.php',
@@ -354,50 +354,51 @@ class Wpfaevent_Templates {
 				if ( file_exists( $candidate ) ) {
 					global $wp_query, $post;
 
-					$dummy_data                      = new stdClass();
-					$dummy_data->ID                  = -999;
-					$dummy_data->post_author         = 1;
-					$dummy_data->post_date           = current_time( 'mysql' );
-					$dummy_data->post_date_gmt       = current_time( 'mysql', 1 );
-					$dummy_data->post_content        = '';
-					$dummy_data->post_title          = ucwords( str_replace( '-', ' ', $req_path ) );
-					$dummy_data->post_excerpt        = '';
-					$dummy_data->post_status         = 'publish';
-					$dummy_data->comment_status      = 'closed';
-					$dummy_data->ping_status         = 'closed';
-					$dummy_data->post_password       = '';
-					$dummy_data->post_name           = $req_path;
-					$dummy_data->to_ping             = '';
-					$dummy_data->pinged              = '';
-					$dummy_data->post_modified       = current_time( 'mysql' );
-					$dummy_data->post_modified_gmt   = current_time( 'mysql', 1 );
+					$dummy_data                        = new stdClass();
+					$dummy_data->ID                    = -999;
+					$dummy_data->post_author           = 1;
+					$dummy_data->post_date             = current_time( 'mysql' );
+					$dummy_data->post_date_gmt         = current_time( 'mysql', true );
+					$dummy_data->post_content          = '';
+					$dummy_data->post_title            = ucwords( str_replace( '-', ' ', $req_path ) );
+					$dummy_data->post_excerpt          = '';
+					$dummy_data->post_status           = 'publish';
+					$dummy_data->comment_status        = 'closed';
+					$dummy_data->ping_status           = 'closed';
+					$dummy_data->post_password         = '';
+					$dummy_data->post_name             = $req_path;
+					$dummy_data->to_ping               = '';
+					$dummy_data->pinged                = '';
+					$dummy_data->post_modified         = current_time( 'mysql' );
+					$dummy_data->post_modified_gmt     = current_time( 'mysql', true );
 					$dummy_data->post_content_filtered = '';
-					$dummy_data->post_parent         = 0;
-					$dummy_data->guid                = home_url( '/' . $req_path );
-					$dummy_data->menu_order          = 0;
-					$dummy_data->post_type           = 'page';
-					$dummy_data->post_mime_type      = '';
-					$dummy_data->comment_count       = 0;
-					$dummy_data->filter              = 'raw';
+					$dummy_data->post_parent           = 0;
+					$dummy_data->guid                  = home_url( '/' . $req_path );
+					$dummy_data->menu_order            = 0;
+					$dummy_data->post_type             = 'page';
+					$dummy_data->post_mime_type        = '';
+					$dummy_data->comment_count         = 0;
+					$dummy_data->filter                = 'raw';
 
 					$dummy_post = new WP_Post( $dummy_data );
 
 					if ( is_object( $wp_query ) ) {
-						$wp_query->post             = $dummy_post;
-						$wp_query->posts            = array( $dummy_post );
-						$wp_query->post_count       = 1;
-						$wp_query->found_posts      = 1;
-						$wp_query->max_num_pages    = 1;
-						$wp_query->queried_object   = $dummy_post;
+						$wp_query->post              = $dummy_post;
+						$wp_query->posts             = array( $dummy_post );
+						$wp_query->post_count        = 1;
+						$wp_query->found_posts       = 1;
+						$wp_query->max_num_pages     = 1;
+						$wp_query->queried_object    = $dummy_post;
 						$wp_query->queried_object_id = -999;
-						$wp_query->is_404           = false;
-						$wp_query->is_page          = true;
-						$wp_query->is_singular      = true;
-						$wp_query->is_single        = false;
-						$wp_query->is_home          = false;
-						$wp_query->is_archive       = false;
+						$wp_query->is_404            = false;
+						$wp_query->is_page           = true;
+						$wp_query->is_singular       = true;
+						$wp_query->is_single         = false;
+						$wp_query->is_home           = false;
+						$wp_query->is_archive        = false;
 					}
 
+					// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 					$post = $dummy_post;
 					status_header( 200 );
 					return $candidate;

@@ -1864,6 +1864,7 @@ class Wpfaevent_Eventyay_Importer {
 			$image = WPFAEVENT_URL . 'assets/images/logo.png';
 		}
 		if ( empty( $desc ) ) {
+			/* translators: %s: sponsor name */
 			$desc = sprintf( __( 'Event sponsor and partner %s.', 'wpfaevent' ), $name );
 		}
 
@@ -2043,6 +2044,7 @@ class Wpfaevent_Eventyay_Importer {
 			$logo = WPFAEVENT_URL . 'assets/images/logo.png';
 		}
 		if ( empty( $desc ) ) {
+			/* translators: %s: exhibitor name */
 			$desc = sprintf( __( 'Exhibitor booth for %s.', 'wpfaevent' ), $name );
 		}
 

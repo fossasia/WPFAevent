@@ -48,6 +48,7 @@ if ( ! $featured_img_url ) {
 	if ( empty( $upload_dir['error'] ) ) {
 		$settings_file = trailingslashit( $upload_dir['basedir'] ) . 'fossasia-data/site-settings-' . absint( $event_id ) . '.json';
 		if ( file_exists( $settings_file ) && is_readable( $settings_file ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 			$settings_contents = file_get_contents( $settings_file );
 			if ( $settings_contents ) {
 				$settings_data = json_decode( $settings_contents, true );
@@ -62,8 +63,8 @@ if ( ! $featured_img_url ) {
 		}
 	}
 }
-$featured_img_url  = $featured_img_url ? $featured_img_url : '';
-$event_time_value  = $event_start_time ? $event_start_time : $event_legacy_time;
+$featured_img_url = $featured_img_url ? $featured_img_url : '';
+$event_time_value = $event_start_time ? $event_start_time : $event_legacy_time;
 
 $calendar_data = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_calendar_data( $event_id ) : array();
 $calendar_data = is_wp_error( $calendar_data ) ? array() : $calendar_data;
