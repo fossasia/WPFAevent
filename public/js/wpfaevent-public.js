@@ -146,8 +146,13 @@
 			});
 
 		function showLoginModal(loginUrl, message) {
+			const escapeHtml = function(value) {
+				return $('<div/>').text(String(value == null ? '' : value)).html();
+			};
 			let $modal = $('#wpfa-login-modal');
 			if (!$modal.length) {
+				const safeMessage = escapeHtml(message || 'Please log in to your account to bookmark events and view your saved schedule.');
+				const safeLoginUrl = escapeHtml(loginUrl || '/wp-login.php');
 				const modalHtml = `
 					<div class="wpfa-login-modal-overlay" id="wpfa-login-modal" role="dialog" aria-modal="true">
 						<div class="wpfa-login-modal-card">
@@ -159,9 +164,9 @@
 								</svg>
 								<h3>Log In Required</h3>
 							</div>
-							<p class="wpfa-login-modal-body">${message || 'Please log in to your account to bookmark events and view your saved schedule.'}</p>
+							<p class="wpfa-login-modal-body">${safeMessage}</p>
 							<div class="wpfa-login-modal-actions">
-								<a href="${loginUrl || '/wp-login.php'}" class="btn btn-primary wpfa-login-btn">Log In</a>
+								<a href="${safeLoginUrl}" class="btn btn-primary wpfa-login-btn">Log In</a>
 								<button type="button" class="btn btn-secondary wpfa-login-modal-close-btn">Cancel</button>
 							</div>
 						</div>
