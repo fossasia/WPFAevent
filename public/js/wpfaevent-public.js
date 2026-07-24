@@ -58,19 +58,36 @@
 			const selectedTz = $(this).val();
 			if (!selectedTz) return;
 
+			let formatter;
+			try {
+				formatter = new Intl.DateTimeFormat([], {
+					timeZone: selectedTz,
+					hour: 'numeric',
+					minute: '2-digit',
+					hour12: true
+				});
+			} catch (err) {
+				return;
+			}
+
 			$('time[data-utc-start]').each(function() {
-				const rawDate = $(this).attr('data-utc-start');
-				if (!rawDate) return;
+				const rawStart = $(this).attr('data-utc-start');
+				const rawEnd = $(this).attr('data-utc-end');
+
 				try {
-					const dateObj = new Date(rawDate);
-					if (isNaN(dateObj.getTime())) return;
-					const formatted = new Intl.DateTimeFormat([], {
-						timeZone: selectedTz,
-						hour: 'numeric',
-						minute: '2-digit',
-						hour12: true
-					}).format(dateObj);
-					$(this).text(formatted);
+					const startObj = rawStart ? new Date(rawStart) : null;
+					if (!startObj || isNaN(startObj.getTime())) return;
+
+					const startLabel = formatter.format(startObj);
+
+					if (rawEnd) {
+						const endObj = new Date(rawEnd);
+						const endLabel = !isNaN(endObj.getTime()) ? formatter.format(endObj) : '';
+						$(this).text(endLabel && endLabel !== startLabel ? `${startLabel} - ${endLabel}` : startLabel);
+						return;
+					}
+
+					$(this).text(startLabel);
 				} catch (err) {
 					// Timezone fallback if unsupported string
 				}
