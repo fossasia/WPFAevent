@@ -25,12 +25,18 @@ $register_button_text        = isset( $register_button_text ) ? $register_button
 // Get the Code of Conduct page ID, with caching handled by the cache class.
 $coc_page_id = Wpfaevent_Cache::get_coc_page_id();
 
-// Determine whether the current page is the Code of Conduct page.
-$is_current = ( $coc_page_id && is_page( $coc_page_id ) ) ? 'active' : '';
+// Determine active state for navigation links.
+$current_path = isset( $_SERVER['REQUEST_URI'] ) ? trim( (string) wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH ), '/' ) : '';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$current_filter        = isset( $_GET['filter'] ) ? sanitize_text_field( wp_unslash( $_GET['filter'] ) ) : '';
+$is_past_events_active = ( 'past-events' === $current_path || is_page_template( 'page-past-events.php' ) || 'past' === $current_filter ) ? 'active' : '';
+$is_events_active      = ( ( 'events' === $current_path || is_post_type_archive( 'wpfa_event' ) || is_page_template( 'page-events.php' ) ) && 'past' !== $current_filter ) ? 'active' : '';
+$is_coc_active         = ( 'code-of-conduct' === $current_path || ( $coc_page_id && is_page( $coc_page_id ) ) || is_page_template( 'page-code-of-conduct.php' ) ) ? 'active' : '';
 
 // Allow customization of events URLs via filters while keeping current behavior as default.
 $events_url      = apply_filters( 'wpfaevent_events_url', home_url( '/events/' ) );
-$past_events_url = apply_filters( 'wpfaevent_past_events_url', home_url( '/past-events/' ) );
+$past_events_url = apply_filters( 'wpfaevent_past_events_url', home_url( '/events/?filter=past' ) );
+$coc_url         = $coc_page_id ? get_permalink( $coc_page_id ) : home_url( '/code-of-conduct/' );
 ?>
 
 <header class="nav" role="banner">
@@ -40,11 +46,9 @@ $past_events_url = apply_filters( 'wpfaevent_past_events_url', home_url( '/past-
 		</a>
 		<nav class="nav-links" role="navigation" aria-label="<?php esc_attr_e( 'Primary', 'wpfaevent' ); ?>">
 			<div class="nav-links-main">
-				<a href="<?php echo esc_url( $events_url ); ?>"><?php esc_html_e( 'Upcoming Events', 'wpfaevent' ); ?></a>
-				<a href="<?php echo esc_url( $past_events_url ); ?>"><?php esc_html_e( 'Past Events', 'wpfaevent' ); ?></a>
-				<?php if ( $coc_page_id ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $coc_page_id ) ); ?>" class="<?php echo esc_attr( $is_current ); ?>"><?php esc_html_e( 'Code of Conduct', 'wpfaevent' ); ?></a>
-				<?php endif; ?>
+				<a href="<?php echo esc_url( $events_url ); ?>" class="<?php echo esc_attr( $is_events_active ); ?>"><?php esc_html_e( 'Upcoming Events', 'wpfaevent' ); ?></a>
+				<a href="<?php echo esc_url( $past_events_url ); ?>" class="<?php echo esc_attr( $is_past_events_active ); ?>"><?php esc_html_e( 'Past Events', 'wpfaevent' ); ?></a>
+				<a href="<?php echo esc_url( $coc_url ); ?>" class="<?php echo esc_attr( $is_coc_active ); ?>"><?php esc_html_e( 'Code of Conduct', 'wpfaevent' ); ?></a>
 			</div>
 			
 			<?php if ( $show_back_button || $show_register_button ) : ?>

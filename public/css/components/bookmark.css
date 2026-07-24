@@ -88,3 +88,107 @@
 .wpfaevent .wpfa-event-bookmark-btn.is-bookmarked .wpfa-bookmark-icon {
 	fill: #fff;
 }
+
+/* Login Modal Overlay & Card */
+.wpfa-login-modal-overlay {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(15, 23, 42, 0.65);
+	backdrop-filter: blur(4px);
+	z-index: 99999;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	box-sizing: border-box;
+}
+
+.wpfa-login-modal-overlay.is-visible {
+	display: flex;
+}
+
+.wpfa-login-modal-card {
+	background: #ffffff;
+	border-radius: 16px;
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+	max-width: 420px;
+	width: 100%;
+	padding: 28px;
+	position: relative;
+	text-align: center;
+	animation: wpfaModalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes wpfaModalPop {
+	0% { opacity: 0; transform: scale(0.92); }
+	100% { opacity: 1; transform: scale(1); }
+}
+
+.wpfa-login-modal-close {
+	position: absolute;
+	top: 14px;
+	right: 18px;
+	background: none;
+	border: none;
+	font-size: 24px;
+	color: #64748b;
+	cursor: pointer;
+	line-height: 1;
+	padding: 4px 8px;
+}
+
+.wpfa-login-modal-close:hover {
+	color: #0f172a;
+}
+
+.wpfa-login-modal-header h3 {
+	margin: 8px 0 6px 0;
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.wpfa-login-modal-body {
+	color: #475569;
+	font-size: 0.95rem;
+	line-height: 1.5;
+	margin: 0 0 20px 0;
+}
+
+.wpfa-login-modal-actions {
+	display: flex;
+	gap: 12px;
+	justify-content: center;
+}
+
+.wpfa-login-modal-actions .btn {
+	padding: 10px 22px;
+	font-weight: 600;
+	border-radius: 8px;
+	text-decoration: none;
+	cursor: pointer;
+	font-size: 0.95rem;
+}
+
+.wpfa-login-modal-actions .btn-primary {
+	background: #d51007;
+	color: #ffffff;
+	border: none;
+}
+
+.wpfa-login-modal-actions .btn-primary:hover {
+	background: #b20d06;
+}
+
+.wpfa-login-modal-actions .btn-secondary {
+	background: #f1f5f9;
+	color: #334155;
+	border: 1px solid #cbd5e1;
+}
+
+.wpfa-login-modal-actions .btn-secondary:hover {
+	background: #e2e8f0;
+}

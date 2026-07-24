@@ -37,8 +37,34 @@ $event_place       = get_post_meta( $event_id, 'wpfa_event_location', true );
 $event_lead_text   = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_lead_text', true ) );
 $event_description = $event_lead_text ? $event_lead_text : get_the_excerpt( $event_id );
 $featured_img_url  = get_the_post_thumbnail_url( $event_id, 'large' );
-$featured_img_url  = $featured_img_url ? $featured_img_url : '';
-$event_time_value  = $event_start_time ? $event_start_time : $event_legacy_time;
+if ( ! $featured_img_url ) {
+	$featured_img_url = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
+}
+if ( ! $featured_img_url ) {
+	$featured_img_url = get_post_meta( $event_id, 'wpfa_event_header_image_url', true );
+}
+if ( ! $featured_img_url ) {
+	$upload_dir = wp_upload_dir();
+	if ( empty( $upload_dir['error'] ) ) {
+		$settings_file = trailingslashit( $upload_dir['basedir'] ) . 'fossasia-data/site-settings-' . absint( $event_id ) . '.json';
+		if ( file_exists( $settings_file ) && is_readable( $settings_file ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			$settings_contents = file_get_contents( $settings_file );
+			if ( $settings_contents ) {
+				$settings_data = json_decode( $settings_contents, true );
+				if ( is_array( $settings_data ) ) {
+					if ( ! empty( $settings_data['event_logo_url'] ) ) {
+						$featured_img_url = $settings_data['event_logo_url'];
+					} elseif ( ! empty( $settings_data['event_header_image_url'] ) ) {
+						$featured_img_url = $settings_data['event_header_image_url'];
+					}
+				}
+			}
+		}
+	}
+}
+$featured_img_url = $featured_img_url ? $featured_img_url : '';
+$event_time_value = $event_start_time ? $event_start_time : $event_legacy_time;
 
 $calendar_data = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_calendar_data( $event_id ) : array();
 $calendar_data = is_wp_error( $calendar_data ) ? array() : $calendar_data;
@@ -105,20 +131,12 @@ $is_bookmarked       = class_exists( 'Wpfaevent_User_Preferences_Service' ) && W
 	data-all-day="<?php echo esc_attr( $event_all_day ? '1' : '0' ); ?>"
 	data-time="<?php echo esc_attr( $event_time_value ); ?>">
 
-	<?php if ( $can_manage_content && ( ! $is_valid_date || $is_past_event ) ) : ?>
+	<?php if ( $can_manage_content && ! $is_valid_date ) : ?>
 		<div class="wpfaevent-admin-warning">
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="wpfaevent-warning-icon" aria-hidden="true">
 				<path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
 			</svg>
-			<span>
-				<?php
-				if ( ! $is_valid_date ) {
-					esc_html_e( 'Invalid date format', 'wpfaevent' );
-				} elseif ( $is_past_event ) {
-					esc_html_e( 'Past event', 'wpfaevent' );
-				}
-				?>
-			</span>
+			<span><?php esc_html_e( 'Invalid date format', 'wpfaevent' ); ?></span>
 		</div>
 	<?php endif; ?>
 
@@ -126,7 +144,16 @@ $is_bookmarked       = class_exists( 'Wpfaevent_User_Preferences_Service' ) && W
 		<?php if ( $featured_img_url ) : ?>
 			<img src="<?php echo esc_url( $featured_img_url ); ?>" alt="<?php echo esc_attr( get_the_title( $event_id ) ); ?>" loading="lazy">
 		<?php else : ?>
-			<div class="event-card-thumb-placeholder" aria-hidden="true"></div>
+			<div class="event-card-thumb-placeholder" aria-hidden="true">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" style="width:100%;height:100%;display:block;">
+					<rect width="200" height="200" fill="#f1f5f9"/>
+					<path d="M60 50h80v100H60z" fill="#e2e8f0"/>
+					<path d="M70 70h60v15H70z" fill="#cbd5e1"/>
+					<circle cx="85" cy="115" r="10" fill="#cbd5e1"/>
+					<circle cx="115" cy="115" r="10" fill="#cbd5e1"/>
+					<path d="M60 40h80v15H60z" fill="#d51007"/>
+				</svg>
+			</div>
 		<?php endif; ?>
 	</a>
 

@@ -109,9 +109,134 @@ class Wpfaevent_Templates {
 		add_filter( 'theme_page_templates', array( __CLASS__, 'register' ) );
 		add_filter( 'single_template', array( __CLASS__, 'load' ), 99 );
 		add_filter( 'template_include', array( __CLASS__, 'load' ), 99 );
+		add_filter( 'redirect_canonical', array( __CLASS__, 'prevent_canonical_redirect_for_virtual_routes' ), 10, 2 );
+		add_action( 'template_redirect', array( __CLASS__, 'maybe_redirect_old_routes' ) );
 		add_action( 'init', array( __CLASS__, 'register_shortcodes' ) );
 		add_action( 'init', array( __CLASS__, 'register_blocks' ) );
 		add_action( 'init', array( __CLASS__, 'register_patterns' ) );
+		add_action( 'init', array( __CLASS__, 'ensure_all_plugin_pages' ) );
+	}
+
+	/**
+	 * Auto-ensures essential plugin WordPress pages exist in wp_posts.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public static function ensure_all_plugin_pages() {
+		if ( ! function_exists( 'wp_insert_post' ) ) {
+			return;
+		}
+
+		$plugin_pages = array(
+			'full-schedule'   => array(
+				'title'    => __( 'Full Schedule', 'wpfaevent' ),
+				'template' => 'page-schedule.php',
+				'option'   => 'wpfaevent_schedule_page_id',
+			),
+			'past-events'     => array(
+				'title'    => __( 'Past Events', 'wpfaevent' ),
+				'template' => 'page-past-events.php',
+				'option'   => 'wpfaevent_past_events_page_id',
+			),
+			'speakers'        => array(
+				'title'    => __( 'Speakers', 'wpfaevent' ),
+				'template' => 'page-speakers.php',
+				'option'   => 'wpfaevent_speakers_page_id',
+			),
+			'code-of-conduct' => array(
+				'title'    => __( 'Code of Conduct', 'wpfaevent' ),
+				'template' => 'page-code-of-conduct.php',
+				'option'   => 'wpfaevent_coc_page_id',
+			),
+		);
+
+		foreach ( $plugin_pages as $slug => $data ) {
+			$page_id = (int) get_option( $data['option'], 0 );
+			if ( $page_id && 'page' === get_post_type( $page_id ) && 'trash' !== get_post_status( $page_id ) ) {
+				update_post_meta( $page_id, '_wp_page_template', $data['template'] );
+				continue;
+			}
+
+			$page = get_page_by_path( $slug );
+			if ( $page instanceof WP_Post ) {
+				update_post_meta( $page->ID, '_wp_page_template', $data['template'] );
+				update_option( $data['option'], $page->ID, false );
+				continue;
+			}
+
+			$new_id = wp_insert_post(
+				array(
+					'post_title'     => $data['title'],
+					'post_name'      => $slug,
+					'post_type'      => 'page',
+					'post_status'    => 'publish',
+					'post_content'   => '',
+					'comment_status' => 'closed',
+					'ping_status'    => 'closed',
+				)
+			);
+
+			if ( $new_id && ! is_wp_error( $new_id ) ) {
+				update_post_meta( $new_id, '_wp_page_template', $data['template'] );
+				update_option( $data['option'], $new_id, false );
+			}
+		}
+	}
+
+	/**
+	 * Prevents WordPress canonical redirects from hijacking virtual plugin routes.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string|false $redirect_url The proposed canonical redirect URL.
+	 * @param string       $_requested_url The requested URL.
+	 * @return string|false
+	 */
+	public static function prevent_canonical_redirect_for_virtual_routes( $redirect_url, $_requested_url ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+			$req_path = trim( (string) wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH ), '/' );
+
+			$virtual_routes = array(
+				'past-events',
+				'schedule',
+				'full-schedule',
+				'code-of-conduct',
+				'events',
+				'speakers',
+			);
+
+			if ( in_array( $req_path, $virtual_routes, true ) ) {
+				return false;
+			}
+		}
+
+		return $redirect_url;
+	}
+
+	/**
+	 * Redirects legacy/old paths to new hub views.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public static function maybe_redirect_old_routes() {
+		if ( is_admin() ) {
+			return;
+		}
+
+		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+			$req_path  = trim( (string) wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH ), '/' );
+			$home_path = trim( (string) wp_parse_url( home_url(), PHP_URL_PATH ), '/' );
+			if ( ! empty( $home_path ) && 0 === strpos( $req_path, $home_path ) ) {
+				$req_path = trim( substr( $req_path, strlen( $home_path ) ), '/' );
+			}
+
+			if ( 'past-events' === $req_path ) {
+				wp_safe_redirect( home_url( '/events/?filter=past' ), 301 );
+				exit;
+			}
+		}
 	}
 
 	/**
@@ -192,14 +317,90 @@ class Wpfaevent_Templates {
 			}
 		}
 
-		if ( is_singular( 'page' ) ) {
-			$chosen = get_page_template_slug( get_queried_object_id() );
-			$key    = self::get_template_key_by_file( $chosen );
+		if ( is_singular( 'page' ) || is_front_page() ) {
+			$page_id = get_queried_object_id();
+			if ( ! $page_id && is_front_page() ) {
+				$page_id = (int) get_option( 'page_on_front' );
+			}
+			if ( $page_id ) {
+				$chosen = get_page_template_slug( $page_id );
+				$key    = self::get_template_key_by_file( $chosen );
 
-			if ( $key ) {
-				$candidate = WPFAEVENT_PATH . 'public/templates/' . self::$templates[ $key ]['file'];
+				if ( $key ) {
+					$candidate = WPFAEVENT_PATH . 'public/templates/' . self::$templates[ $key ]['file'];
 
+					if ( file_exists( $candidate ) ) {
+						return $candidate;
+					}
+				}
+			}
+		}
+
+		// Virtual path fallback for plugin routes (past-events, schedule, full-schedule, code-of-conduct, events, speakers).
+		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+			$req_path = trim( (string) wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH ), '/' );
+
+			$virtual_routes = array(
+				'past-events'     => 'page-past-events.php',
+				'schedule'        => 'page-schedule.php',
+				'full-schedule'   => 'page-schedule.php',
+				'code-of-conduct' => 'page-code-of-conduct.php',
+				'events'          => 'page-events.php',
+				'speakers'        => 'page-speakers.php',
+			);
+
+			if ( isset( $virtual_routes[ $req_path ] ) ) {
+				$candidate = WPFAEVENT_PATH . 'public/templates/' . $virtual_routes[ $req_path ];
 				if ( file_exists( $candidate ) ) {
+					global $wp_query, $post;
+
+					$dummy_data                        = new stdClass();
+					$dummy_data->ID                    = -999;
+					$dummy_data->post_author           = 1;
+					$dummy_data->post_date             = current_time( 'mysql' );
+					$dummy_data->post_date_gmt         = current_time( 'mysql', true );
+					$dummy_data->post_content          = '';
+					$dummy_data->post_title            = ucwords( str_replace( '-', ' ', $req_path ) );
+					$dummy_data->post_excerpt          = '';
+					$dummy_data->post_status           = 'publish';
+					$dummy_data->comment_status        = 'closed';
+					$dummy_data->ping_status           = 'closed';
+					$dummy_data->post_password         = '';
+					$dummy_data->post_name             = $req_path;
+					$dummy_data->to_ping               = '';
+					$dummy_data->pinged                = '';
+					$dummy_data->post_modified         = current_time( 'mysql' );
+					$dummy_data->post_modified_gmt     = current_time( 'mysql', true );
+					$dummy_data->post_content_filtered = '';
+					$dummy_data->post_parent           = 0;
+					$dummy_data->guid                  = home_url( '/' . $req_path );
+					$dummy_data->menu_order            = 0;
+					$dummy_data->post_type             = 'page';
+					$dummy_data->post_mime_type        = '';
+					$dummy_data->comment_count         = 0;
+					$dummy_data->filter                = 'raw';
+
+					$dummy_post = new WP_Post( $dummy_data );
+
+					if ( is_object( $wp_query ) ) {
+						$wp_query->post              = $dummy_post;
+						$wp_query->posts             = array( $dummy_post );
+						$wp_query->post_count        = 1;
+						$wp_query->found_posts       = 1;
+						$wp_query->max_num_pages     = 1;
+						$wp_query->queried_object    = $dummy_post;
+						$wp_query->queried_object_id = -999;
+						$wp_query->is_404            = false;
+						$wp_query->is_page           = true;
+						$wp_query->is_singular       = true;
+						$wp_query->is_single         = false;
+						$wp_query->is_home           = false;
+						$wp_query->is_archive        = false;
+					}
+
+					// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+					$post = $dummy_post;
+					status_header( 200 );
 					return $candidate;
 				}
 			}

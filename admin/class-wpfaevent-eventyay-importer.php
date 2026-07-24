@@ -818,7 +818,10 @@ class Wpfaevent_Eventyay_Importer {
 				return $fetched;
 			}
 
-			if ( ! $this->eventyay_error_has_http_status( $fetched, 404 ) ) {
+			if ( ! $this->eventyay_error_has_http_status( $fetched, 404 )
+				&& ! $this->eventyay_error_has_http_status( $fetched, 401 )
+				&& ! $this->eventyay_error_has_http_status( $fetched, 403 )
+			) {
 				return $fetched;
 			}
 
@@ -1854,14 +1857,25 @@ class Wpfaevent_Eventyay_Importer {
 		$type             = $this->eventyay_first_present_text( $sponsor_resource, array( 'type', 'level_name', 'level-name', 'tier', 'category' ) );
 		$level            = $this->eventyay_first_present_raw( $sponsor_resource, array( 'level', 'position', 'order', 'sort_order', 'sort-order' ) );
 
+		$desc  = $this->eventyay_first_present_rich_text( $sponsor_resource, array( 'description', 'subtitle', 'summary' ) );
+		$image = $this->eventyay_url_value( $this->eventyay_first_present_raw( $sponsor_resource, array( 'logo-url', 'logo_url', 'logo', 'image', 'image-url', 'image_url' ) ), $settings['base_url'] );
+
+		if ( empty( $image ) ) {
+			$image = WPFAEVENT_URL . 'assets/images/logo.png';
+		}
+		if ( empty( $desc ) ) {
+			/* translators: %s: sponsor name */
+			$desc = sprintf( __( 'Event sponsor and partner %s.', 'wpfaevent' ), $name );
+		}
+
 		return array(
 			'id'          => $source_id ? 'eventyay-sponsor-' . sanitize_key( $source_id ) : 'eventyay-sponsor-' . sanitize_title( $name ),
 			'source'      => 'eventyay',
 			'eventyay_id' => sanitize_text_field( $source_id ),
 			'name'        => sanitize_text_field( $name ),
-			'description' => $this->eventyay_first_present_rich_text( $sponsor_resource, array( 'description', 'subtitle', 'summary' ) ),
+			'description' => $desc,
 			'link'        => $this->eventyay_url_value( $this->eventyay_first_present_raw( $sponsor_resource, array( 'url', 'link', 'website', 'website-url', 'website_url' ) ), $settings['base_url'] ),
-			'image'       => $this->eventyay_url_value( $this->eventyay_first_present_raw( $sponsor_resource, array( 'logo-url', 'logo_url', 'logo', 'image', 'image-url', 'image_url' ) ), $settings['base_url'] ),
+			'image'       => $image,
 			'type'        => sanitize_text_field( $type ),
 			'level'       => is_numeric( $level ) ? absint( $level ) : 0,
 		);
@@ -2023,14 +2037,25 @@ class Wpfaevent_Eventyay_Importer {
 		$name               = $this->eventyay_first_present_text( $exhibitor_resource, array( 'name', 'title', 'label' ) );
 		$position           = $this->eventyay_first_present_raw( $exhibitor_resource, array( 'position', 'order', 'sort_order', 'sort-order' ) );
 
+		$desc = $this->eventyay_first_present_rich_text( $exhibitor_resource, array( 'description', 'subtitle', 'summary' ) );
+		$logo = $this->eventyay_url_value( $this->eventyay_first_present_raw( $exhibitor_resource, array( 'logo-url', 'logo_url', 'logo', 'image', 'image-url', 'image_url' ) ), $settings['base_url'] );
+
+		if ( empty( $logo ) ) {
+			$logo = WPFAEVENT_URL . 'assets/images/logo.png';
+		}
+		if ( empty( $desc ) ) {
+			/* translators: %s: exhibitor name */
+			$desc = sprintf( __( 'Exhibitor booth for %s.', 'wpfaevent' ), $name );
+		}
+
 		return array(
 			'id'            => $source_id ? 'eventyay-exhibitor-' . sanitize_key( $source_id ) : 'eventyay-exhibitor-' . sanitize_title( $name ),
 			'source'        => 'eventyay',
 			'eventyay_id'   => sanitize_text_field( $source_id ),
 			'name'          => sanitize_text_field( $name ),
-			'description'   => $this->eventyay_first_present_rich_text( $exhibitor_resource, array( 'description', 'subtitle', 'summary' ) ),
+			'description'   => $desc,
 			'link'          => $this->eventyay_url_value( $this->eventyay_first_present_raw( $exhibitor_resource, array( 'url', 'link', 'website', 'website-url', 'website_url' ) ), $settings['base_url'] ),
-			'logo'          => $this->eventyay_url_value( $this->eventyay_first_present_raw( $exhibitor_resource, array( 'logo-url', 'logo_url', 'logo', 'image', 'image-url', 'image_url' ) ), $settings['base_url'] ),
+			'logo'          => $logo,
 			'banner'        => $this->eventyay_url_value( $this->eventyay_first_present_raw( $exhibitor_resource, array( 'banner-url', 'banner_url', 'banner' ) ), $settings['base_url'] ),
 			'video'         => $this->eventyay_url_value( $this->eventyay_first_present_raw( $exhibitor_resource, array( 'video-url', 'video_url', 'video' ) ), $settings['base_url'] ),
 			'slides'        => $this->eventyay_url_value( $this->eventyay_first_present_raw( $exhibitor_resource, array( 'slides-url', 'slides_url', 'slides' ) ), $settings['base_url'] ),
