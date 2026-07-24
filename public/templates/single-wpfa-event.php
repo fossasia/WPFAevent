@@ -571,7 +571,7 @@ if ( $show_ticket_widget ) {
 										<?php foreach ( $day_sessions as $item ) : ?>
 											<article class="wpfa-schedule-calendar-slot">
 												<?php if ( ! empty( $item['time_label'] ) ) : ?>
-													<time datetime="<?php echo esc_attr( $item['start_datetime'] ); ?>" data-utc-start="<?php echo esc_attr( $item['start_datetime'] ); ?>"><?php echo esc_html( $item['time_label'] ); ?></time>
+													<time datetime="<?php echo esc_attr( $item['start_datetime'] ); ?>" data-utc-start="<?php echo esc_attr( $item['start_datetime'] ); ?>" data-utc-end="<?php echo esc_attr( $item['end_datetime'] ); ?>"><?php echo esc_html( $item['time_label'] ); ?></time>
 												<?php endif; ?>
 												<h4><?php echo esc_html( $item['title'] ); ?></h4>
 												<?php if ( ! empty( $item['speakers'] ) || ! empty( $item['room'] ) || ! empty( $item['track'] ) ) : ?>
@@ -640,7 +640,7 @@ if ( $show_ticket_widget ) {
 														</time>
 													<?php endif; ?>
 													<?php if ( ! empty( $item['time_end'] ) ) : ?>
-														<span class="wpfa-schedule-session-end"><?php echo esc_html( $item['time_end'] ); ?></span>
+														<time class="wpfa-schedule-session-end" datetime="<?php echo esc_attr( $item['end_datetime'] ); ?>" data-utc-start="<?php echo esc_attr( $item['end_datetime'] ); ?>"><?php echo esc_html( $item['time_end'] ); ?></time>
 													<?php endif; ?>
 												</div>
 
