@@ -523,7 +523,7 @@ if ( ! empty( $languages ) ) {
 													</time>
 												<?php endif; ?>
 													<?php if ( ! empty( $item['time_end'] ) ) : ?>
-														<span class="wpfa-schedule-session-end"><?php echo esc_html( $item['time_end'] ); ?></span>
+														<time class="wpfa-schedule-session-end" datetime="<?php echo esc_attr( $item['end_datetime'] ); ?>" data-utc-start="<?php echo esc_attr( $item['end_datetime'] ); ?>"><?php echo esc_html( $item['time_end'] ); ?></time>
 													<?php endif; ?>
 												</div>
 
