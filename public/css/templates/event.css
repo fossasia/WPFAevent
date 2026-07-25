@@ -443,7 +443,7 @@
 }
 
 /* Suppress Eventyay/Pretix ticket widget error alert overlay icon */
-.pretix-widget-alert-holder {
+.wpfaevent .pretix-widget-alert-holder {
 	display: none !important;
 }
 
