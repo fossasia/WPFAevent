@@ -555,7 +555,7 @@ class Wpfaevent_Event_Template_Controller {
 
 		$event_style_attr = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
 
-		if ( empty( $sponsor_groups ) ) {
+		if ( empty( $sponsor_groups ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			$sponsor_groups = array(
 				array(
 					'group_name' => __( 'Sponsors & Partners', 'wpfaevent' ),
@@ -578,7 +578,7 @@ class Wpfaevent_Event_Template_Controller {
 			);
 		}
 
-		if ( empty( $exhibitors ) ) {
+		if ( empty( $exhibitors ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			$exhibitors = array(
 				array(
 					'id'          => 'sample-exhibitor-1',

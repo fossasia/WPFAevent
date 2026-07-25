@@ -124,6 +124,10 @@ class Wpfaevent_Templates {
 	 * @return void
 	 */
 	public static function ensure_all_plugin_pages() {
+		if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
 		if ( ! function_exists( 'wp_insert_post' ) ) {
 			return;
 		}
