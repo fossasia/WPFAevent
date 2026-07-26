@@ -555,42 +555,6 @@ class Wpfaevent_Event_Template_Controller {
 
 		$event_style_attr = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
 
-		if ( empty( $sponsor_groups ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			$sponsor_groups = array(
-				array(
-					'group_name' => __( 'Sponsors & Partners', 'wpfaevent' ),
-					'logo_size'  => 160,
-					'sponsors'   => array(
-						array(
-							'id'          => 'sample-sponsor-1',
-							'name'        => 'FOSSASIA Foundation',
-							'image'       => WPFAEVENT_URL . 'assets/images/logo.png',
-							'description' => __( 'FOSSASIA develops open source software and hardware solutions with a global developer community.', 'wpfaevent' ),
-						),
-						array(
-							'id'          => 'sample-sponsor-2',
-							'name'        => 'Eventyay Platform',
-							'image'       => WPFAEVENT_URL . 'assets/images/logo.png',
-							'description' => __( 'Eventyay is an open source event management and ticketing platform for global conferences.', 'wpfaevent' ),
-						),
-					),
-				),
-			);
-		}
-
-		if ( empty( $exhibitors ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			$exhibitors = array(
-				array(
-					'id'          => 'sample-exhibitor-1',
-					'name'        => 'Open Source Showcase Booth',
-					'company'     => 'FOSSASIA Community',
-					'description' => __( 'Discover latest open source software projects, developer tools, and community initiatives at the FOSSASIA booth.', 'wpfaevent' ),
-					'logo'        => WPFAEVENT_URL . 'assets/images/logo.png',
-					'banner'      => '',
-				),
-			);
-		}
-
 		foreach ( $sponsor_groups as $sponsor_group ) {
 			if ( ! is_array( $sponsor_group ) ) {
 				continue;
