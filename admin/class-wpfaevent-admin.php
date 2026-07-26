@@ -1171,7 +1171,8 @@ class Wpfaevent_Admin {
 					});
 			});
 		}());
-		// End eventyay sync meta box
+		</script>
+		<?php
 	}
 
 	/**
@@ -1183,55 +1184,55 @@ class Wpfaevent_Admin {
 	public function render_event_schedule_meta_box( $post ) {
 		$sessions = array();
 		if ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
-			$store = new Wpfaevent_Eventyay_Dashboard_Store();
+			$store          = new Wpfaevent_Eventyay_Dashboard_Store();
 			$schedule_table = $store->read_dashboard_json_file( 'schedule-' . $post->ID . '.json', array() );
-			$schedule_rows = isset( $schedule_table['data'] ) && is_array( $schedule_table['data'] ) ? $schedule_table['data'] : array();
-			$schedule_meta = isset( $schedule_table['sessions'] ) && is_array( $schedule_table['sessions'] ) ? $schedule_table['sessions'] : array();
-			$schedule_body = ! empty( $schedule_rows ) && is_array( $schedule_rows[0] ) ? array_slice( $schedule_rows, 1 ) : array();
+			$schedule_rows  = isset( $schedule_table['data'] ) && is_array( $schedule_table['data'] ) ? $schedule_table['data'] : array();
+			$schedule_meta  = isset( $schedule_table['sessions'] ) && is_array( $schedule_table['sessions'] ) ? $schedule_table['sessions'] : array();
+			$schedule_body  = ! empty( $schedule_rows ) && is_array( $schedule_rows[0] ) ? array_slice( $schedule_rows, 1 ) : array();
 
 			foreach ( $schedule_body as $row_index => $row ) {
 				$row_meta = isset( $schedule_meta[ $row_index + 1 ] ) && is_array( $schedule_meta[ $row_index + 1 ] ) ? $schedule_meta[ $row_index + 1 ] : array();
-				
+
 				$starts_at = isset( $row_meta['starts_at'] ) ? $row_meta['starts_at'] : '';
-				$ends_at = isset( $row_meta['ends_at'] ) ? $row_meta['ends_at'] : '';
-				
-				$date_val = '';
+				$ends_at   = isset( $row_meta['ends_at'] ) ? $row_meta['ends_at'] : '';
+
+				$date_val       = '';
 				$start_time_val = '';
-				$end_time_val = '';
-				
+				$end_time_val   = '';
+
 				if ( $starts_at ) {
 					$tz = get_post_meta( $post->ID, 'wpfa_event_timezone', true );
 					if ( ! $tz ) {
 						$tz = wp_timezone_string();
 					}
 					try {
-						$dt = new DateTimeImmutable( $starts_at );
-						$dt = $dt->setTimezone( new DateTimeZone( $tz ) );
-						$date_val = $dt->format( 'Y-m-d' );
+						$dt             = new DateTimeImmutable( $starts_at );
+						$dt             = $dt->setTimezone( new DateTimeZone( $tz ) );
+						$date_val       = $dt->format( 'Y-m-d' );
 						$start_time_val = $dt->format( 'H:i' );
 					} catch ( Exception $e ) {
-						// Ignored.
+						unset( $e );
 					}
 				}
-				
+
 				if ( $ends_at ) {
 					$tz = get_post_meta( $post->ID, 'wpfa_event_timezone', true );
 					if ( ! $tz ) {
 						$tz = wp_timezone_string();
 					}
 					try {
-						$dt = new DateTimeImmutable( $ends_at );
-						$dt = $dt->setTimezone( new DateTimeZone( $tz ) );
+						$dt           = new DateTimeImmutable( $ends_at );
+						$dt           = $dt->setTimezone( new DateTimeZone( $tz ) );
 						$end_time_val = $dt->format( 'H:i' );
 					} catch ( Exception $e ) {
-						// Ignored.
+						unset( $e );
 					}
 				}
-				
+
 				if ( ! $date_val && isset( $row[0] ) ) {
 					$date_val = sanitize_text_field( $row[0] );
 				}
-				
+
 				$sessions[] = array(
 					'date'       => $date_val,
 					'start_time' => $start_time_val,
