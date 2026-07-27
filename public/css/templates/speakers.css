@@ -179,9 +179,10 @@
 
 /* Speaker Photo */
 .wpfaevent .wpfa-speaker-photo {
+	position: relative;
 	display: block;
 	height: 220px;
-	background: linear-gradient(135deg, #e9e9e9, #f6f6f6);
+	background: #000;
 	overflow: hidden;
 }
 
@@ -193,7 +194,24 @@
 	transition: transform 0.3s ease;
 }
 
-.wpfaevent .wpfa-speaker-card:hover .wpfa-speaker-photo img {
+.wpfaevent .wpfa-speaker-photo-blur {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	filter: blur(12px) brightness(0.75);
+	transform: scale(1.15);
+	z-index: 1;
+}
+
+.wpfaevent .wpfa-speaker-photo-main {
+	position: relative;
+	z-index: 2;
+}
+
+.wpfaevent .wpfa-speaker-card:hover .wpfa-speaker-photo-main {
 	transform: scale(1.05);
 }
 

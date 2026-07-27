@@ -26,8 +26,9 @@ $is_featured_speaker = ! empty( $wpfa_dashboard_speaker_is_featured ) || ! empty
 <article class="wpfa-speaker-card visible <?php echo esc_attr( $is_featured_speaker ? 'is-featured' : '' ); ?>">
 	<div class="wpfa-speaker-photo">
 		<?php if ( ! empty( $speaker['image'] ) ) : ?>
+			<img class="wpfa-speaker-photo-blur" src="<?php echo esc_url( $speaker['image'] ); ?>" aria-hidden="true" alt="" />
 			<?php /* translators: %s: Speaker name. */ ?>
-			<img src="<?php echo esc_url( $speaker['image'] ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $speaker_name ) ); ?>" loading="lazy">
+			<img class="wpfa-speaker-photo-main" src="<?php echo esc_url( $speaker['image'] ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $speaker_name ) ); ?>" loading="lazy">
 		<?php else : ?>
 			<img src="<?php echo esc_url( $placeholder_url ); ?>" alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>" loading="lazy" class="wpfa-speaker-placeholder-img">
 		<?php endif; ?>
