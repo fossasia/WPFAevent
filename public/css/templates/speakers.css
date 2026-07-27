@@ -179,39 +179,20 @@
 
 /* Speaker Photo */
 .wpfaevent .wpfa-speaker-photo {
-	position: relative;
 	display: block;
-	height: 220px;
+	height: auto;
 	background: #000;
 	overflow: hidden;
 }
 
 .wpfaevent .wpfa-speaker-photo img {
 	width: 100%;
-	height: 100%;
-	object-fit: contain;
-	object-position: center;
+	height: auto;
+	display: block;
 	transition: transform 0.3s ease;
 }
 
-.wpfaevent .wpfa-speaker-photo-blur {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	filter: blur(12px) brightness(0.75);
-	transform: scale(1.15);
-	z-index: 1;
-}
-
-.wpfaevent .wpfa-speaker-photo-main {
-	position: relative;
-	z-index: 2;
-}
-
-.wpfaevent .wpfa-speaker-card:hover .wpfa-speaker-photo-main {
+.wpfaevent .wpfa-speaker-card:hover .wpfa-speaker-photo img {
 	transform: scale(1.05);
 }
 
@@ -225,7 +206,7 @@
 	align-items: center;
 	justify-content: center;
 	width: 100%;
-	height: 100%;
+	height: 220px;
 	background: linear-gradient(135deg, #e0e4ea, #eef0f3);
 }
 
@@ -245,6 +226,13 @@
 	-webkit-mask-size: contain;
 	-webkit-mask-repeat: no-repeat;
 	-webkit-mask-position: center;
+}
+
+.wpfaevent .wpfa-speaker-placeholder-img {
+	width: 100%;
+	height: 220px !important;
+	object-fit: contain;
+	background: linear-gradient(135deg, #e0e4ea, #eef0f3);
 }
 
 /* Speaker Meta (Name, Role, Category) */

@@ -1335,7 +1335,7 @@
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-photo {
 	background: #eaf1f8;
-	height: 190px;
+	height: auto;
 }
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-meta {
