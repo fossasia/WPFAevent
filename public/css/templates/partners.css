@@ -77,22 +77,24 @@
 }
 
 .wpfaevent .wpfa-event-partner-logo {
-	align-items: center;
+	position: relative;
 	background:
 		linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(247, 250, 252, 0.95)),
 		#f7fafc;
 	border-bottom: 1px solid var(--event-line);
-	display: flex;
-	justify-content: center;
-	min-height: 148px;
-	padding: 28px 24px 22px;
+	display: block;
+	height: 148px;
+	padding: 0;
+	overflow: hidden;
 }
 
 .wpfaevent .wpfa-event-partner-logo img {
-	display: block;
-	max-height: var(--partner-logo-size, 160px);
-	max-width: 100%;
-	object-fit: contain;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }
 
 .wpfaevent .wpfa-event-partner-body,
