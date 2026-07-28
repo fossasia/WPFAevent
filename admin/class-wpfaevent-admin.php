@@ -1373,46 +1373,106 @@ class Wpfaevent_Admin {
 
 		?>
 		<style>
-			#wpfaevent-sponsors-table th { font-weight: bold; text-align: left; padding: 10px; }
-			#wpfaevent-sponsors-table td { padding: 10px; vertical-align: middle; }
-			#wpfaevent-sponsors-table input { width: 100%; box-sizing: border-box; }
-			.wpfaevent-remove-sponsor { color: #a00; cursor: pointer; font-weight: bold; text-decoration: none; }
-			.wpfaevent-remove-sponsor:hover { color: #f00; }
+			.wpfaevent-meta-cards-container {
+				margin-top: 10px;
+			}
+			.wpfaevent-meta-card {
+				background: #fff;
+				border: 1px solid #ccd0d4;
+				border-radius: 4px;
+				padding: 15px;
+				margin-bottom: 15px;
+				position: relative;
+				box-shadow: 0 1px 1px rgba(0,0,0,.04);
+			}
+			.wpfaevent-meta-card-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+				gap: 15px;
+			}
+			.wpfaevent-meta-card-field {
+				display: flex;
+				flex-direction: column;
+			}
+			.wpfaevent-meta-card-field label {
+				font-weight: 600;
+				margin-bottom: 5px;
+				font-size: 12px;
+				color: #23282d;
+			}
+			.wpfaevent-meta-card-field input {
+				padding: 6px 10px;
+				font-size: 14px;
+				line-height: 1.4;
+				color: #32373c;
+				background-color: #fff;
+				border: 1px solid #7e8993;
+				border-radius: 4px;
+				box-shadow: inset 0 1px 2px rgba(0,0,0,.07);
+				width: 100%;
+				box-sizing: border-box;
+			}
+			.wpfaevent-meta-card-field input:focus {
+				border-color: #007cba;
+				box-shadow: 0 0 0 1px #007cba;
+				outline: 2px solid transparent;
+			}
+			.wpfaevent-remove-card-btn {
+				position: absolute;
+				top: 10px;
+				right: 15px;
+				color: #b32d2e;
+				text-decoration: none;
+				font-weight: 600;
+				font-size: 13px;
+			}
+			.wpfaevent-remove-card-btn:hover {
+				color: #dc3232;
+			}
 		</style>
-		<table class="wp-list-table widefat fixed striped" id="wpfaevent-sponsors-table" style="margin-top: 10px;">
-			<thead>
-				<tr>
-					<th style="width: 15%;"><?php esc_html_e( 'Tier/Group Name', 'wpfaevent' ); ?></th>
-					<th style="width: 10%;"><?php esc_html_e( 'Logo Size', 'wpfaevent' ); ?></th>
-					<th style="width: 15%;"><?php esc_html_e( 'Sponsor Name', 'wpfaevent' ); ?></th>
-					<th style="width: 20%;"><?php esc_html_e( 'Logo URL', 'wpfaevent' ); ?></th>
-					<th style="width: 20%;"><?php esc_html_e( 'Website URL', 'wpfaevent' ); ?></th>
-					<th style="width: 10%;"><?php esc_html_e( 'Sort Level', 'wpfaevent' ); ?></th>
-					<th><?php esc_html_e( 'Description', 'wpfaevent' ); ?></th>
-					<th style="width: 80px; text-align: center;"><?php esc_html_e( 'Action', 'wpfaevent' ); ?></th>
-				</tr>
-			</thead>
-			<tbody id="wpfaevent-sponsors-body">
-				<?php
-				if ( ! empty( $sponsors ) ) :
-					foreach ( $sponsors as $index => $sp ) :
-						?>
-						<tr>
-							<td><input type="text" name="wpfa_sponsors[<?php echo absint( $index ); ?>][group_name]" value="<?php echo esc_attr( $sp['group_name'] ); ?>" required placeholder="e.g. Gold Sponsors"></td>
-							<td><input type="number" name="wpfa_sponsors[<?php echo absint( $index ); ?>][logo_size]" value="<?php echo esc_attr( $sp['logo_size'] ); ?>" required min="50" max="500"></td>
-							<td><input type="text" name="wpfa_sponsors[<?php echo absint( $index ); ?>][name]" value="<?php echo esc_attr( $sp['name'] ); ?>" required></td>
-							<td><input type="url" name="wpfa_sponsors[<?php echo absint( $index ); ?>][image]" value="<?php echo esc_attr( $sp['image'] ); ?>" required placeholder="https://"></td>
-							<td><input type="url" name="wpfa_sponsors[<?php echo absint( $index ); ?>][link]" value="<?php echo esc_attr( $sp['link'] ); ?>" placeholder="https://"></td>
-							<td><input type="number" name="wpfa_sponsors[<?php echo absint( $index ); ?>][level]" value="<?php echo esc_attr( $sp['level'] ); ?>" min="0"></td>
-							<td><input type="text" name="wpfa_sponsors[<?php echo absint( $index ); ?>][description]" value="<?php echo esc_attr( $sp['description'] ); ?>"></td>
-							<td style="text-align: center;"><a href="#" class="wpfaevent-remove-sponsor"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a></td>
-						</tr>
-						<?php
-					endforeach;
-				endif;
-				?>
-			</tbody>
-		</table>
+		<div class="wpfaevent-meta-cards-container" id="wpfaevent-sponsors-container">
+			<?php
+			if ( ! empty( $sponsors ) ) :
+				foreach ( $sponsors as $index => $sp ) :
+					?>
+					<div class="wpfaevent-meta-card">
+						<a href="#" class="wpfaevent-remove-sponsor wpfaevent-remove-card-btn"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a>
+						<div class="wpfaevent-meta-card-grid">
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Tier/Group Name', 'wpfaevent' ); ?></label>
+								<input type="text" name="wpfa_sponsors[<?php echo absint( $index ); ?>][group_name]" value="<?php echo esc_attr( $sp['group_name'] ); ?>" required placeholder="e.g. Gold Sponsors">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Logo Size', 'wpfaevent' ); ?></label>
+								<input type="number" name="wpfa_sponsors[<?php echo absint( $index ); ?>][logo_size]" value="<?php echo esc_attr( $sp['logo_size'] ); ?>" required min="50" max="500">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Sponsor Name', 'wpfaevent' ); ?></label>
+								<input type="text" name="wpfa_sponsors[<?php echo absint( $index ); ?>][name]" value="<?php echo esc_attr( $sp['name'] ); ?>" required>
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Logo URL', 'wpfaevent' ); ?></label>
+								<input type="url" name="wpfa_sponsors[<?php echo absint( $index ); ?>][image]" value="<?php echo esc_attr( $sp['image'] ); ?>" required placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Website URL', 'wpfaevent' ); ?></label>
+								<input type="url" name="wpfa_sponsors[<?php echo absint( $index ); ?>][link]" value="<?php echo esc_attr( $sp['link'] ); ?>" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Sort Level', 'wpfaevent' ); ?></label>
+								<input type="number" name="wpfa_sponsors[<?php echo absint( $index ); ?>][level]" value="<?php echo esc_attr( $sp['level'] ); ?>" min="0">
+							</div>
+							<div class="wpfaevent-meta-card-field" style="grid-column: span 2;">
+								<label><?php esc_html_e( 'Description', 'wpfaevent' ); ?></label>
+								<input type="text" name="wpfa_sponsors[<?php echo absint( $index ); ?>][description]" value="<?php echo esc_attr( $sp['description'] ); ?>">
+							</div>
+						</div>
+					</div>
+					<?php
+				endforeach;
+			endif;
+			?>
+		</div>
 
 		<button type="button" class="button button-primary" id="wpfaevent-add-sponsor-row" style="margin-top: 15px;">
 			<?php esc_html_e( 'Add Sponsor', 'wpfaevent' ); ?>
@@ -1420,27 +1480,50 @@ class Wpfaevent_Admin {
 
 		<script>
 			jQuery(document).ready(function($) {
-				let sponsorIndex = $('#wpfaevent-sponsors-body tr').length;
+				let sponsorIndex = $('#wpfaevent-sponsors-container .wpfaevent-meta-card').length;
 
 				$('#wpfaevent-add-sponsor-row').on('click', function(e) {
 					e.preventDefault();
-					const html = `<tr>
-						<td><input type="text" name="wpfa_sponsors[\${sponsorIndex}][group_name]" required placeholder="e.g. Gold Sponsors"></td>
-						<td><input type="number" name="wpfa_sponsors[\${sponsorIndex}][logo_size]" value="160" required min="50" max="500"></td>
-						<td><input type="text" name="wpfa_sponsors[\${sponsorIndex}][name]" required></td>
-						<td><input type="url" name="wpfa_sponsors[\${sponsorIndex}][image]" required placeholder="https://"></td>
-						<td><input type="url" name="wpfa_sponsors[\${sponsorIndex}][link]" placeholder="https://"></td>
-						<td><input type="number" name="wpfa_sponsors[\${sponsorIndex}][level]" value="0" min="0"></td>
-						<td><input type="text" name="wpfa_sponsors[\${sponsorIndex}][description]"></td>
-						<td style="text-align: center;"><a href="#" class="wpfaevent-remove-sponsor">Remove</a></td>
-					</tr>`;
-					$('#wpfaevent-sponsors-body').append(html);
+					const html = `<div class="wpfaevent-meta-card">
+						<a href="#" class="wpfaevent-remove-sponsor wpfaevent-remove-card-btn">Remove</a>
+						<div class="wpfaevent-meta-card-grid">
+							<div class="wpfaevent-meta-card-field">
+								<label>Tier/Group Name</label>
+								<input type="text" name="wpfa_sponsors[\${sponsorIndex}][group_name]" required placeholder="e.g. Gold Sponsors">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Logo Size</label>
+								<input type="number" name="wpfa_sponsors[\${sponsorIndex}][logo_size]" value="160" required min="50" max="500">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Sponsor Name</label>
+								<input type="text" name="wpfa_sponsors[\${sponsorIndex}][name]" required>
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Logo URL</label>
+								<input type="url" name="wpfa_sponsors[\${sponsorIndex}][image]" required placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Website URL</label>
+								<input type="url" name="wpfa_sponsors[\${sponsorIndex}][link]" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Sort Level</label>
+								<input type="number" name="wpfa_sponsors[\${sponsorIndex}][level]" value="0" min="0">
+							</div>
+							<div class="wpfaevent-meta-card-field" style="grid-column: span 2;">
+								<label>Description</label>
+								<input type="text" name="wpfa_sponsors[\${sponsorIndex}][description]">
+							</div>
+						</div>
+					</div>`;
+					$('#wpfaevent-sponsors-container').append(html);
 					sponsorIndex++;
 				});
 
-				$('#wpfaevent-sponsors-body').on('click', '.wpfaevent-remove-sponsor', function(e) {
+				$('#wpfaevent-sponsors-container').on('click', '.wpfaevent-remove-sponsor', function(e) {
 					e.preventDefault();
-					$(this).closest('tr').remove();
+					$(this).closest('.wpfaevent-meta-card').remove();
 				});
 			});
 		</script>
@@ -1461,49 +1544,53 @@ class Wpfaevent_Admin {
 		}
 
 		?>
-		<style>
-			#wpfaevent-exhibitors-table th { font-weight: bold; text-align: left; padding: 10px; }
-			#wpfaevent-exhibitors-table td { padding: 10px; vertical-align: middle; }
-			#wpfaevent-exhibitors-table input { width: 100%; box-sizing: border-box; }
-			.wpfaevent-remove-exhibitor { color: #a00; cursor: pointer; font-weight: bold; text-decoration: none; }
-			.wpfaevent-remove-exhibitor:hover { color: #f00; }
-		</style>
-		<table class="wp-list-table widefat fixed striped" id="wpfaevent-exhibitors-table" style="margin-top: 10px;">
-			<thead>
-				<tr>
-					<th style="width: 15%;"><?php esc_html_e( 'Exhibitor Name', 'wpfaevent' ); ?></th>
-					<th style="width: 15%;"><?php esc_html_e( 'Logo URL', 'wpfaevent' ); ?></th>
-					<th style="width: 15%;"><?php esc_html_e( 'Banner URL', 'wpfaevent' ); ?></th>
-					<th style="width: 15%;"><?php esc_html_e( 'Website URL', 'wpfaevent' ); ?></th>
-					<th style="width: 12%;"><?php esc_html_e( 'Email', 'wpfaevent' ); ?></th>
-					<th style="width: 12%;"><?php esc_html_e( 'Contact Link', 'wpfaevent' ); ?></th>
-					<th style="width: 8%;"><?php esc_html_e( 'Sort Order', 'wpfaevent' ); ?></th>
-					<th><?php esc_html_e( 'Description', 'wpfaevent' ); ?></th>
-					<th style="width: 80px; text-align: center;"><?php esc_html_e( 'Action', 'wpfaevent' ); ?></th>
-				</tr>
-			</thead>
-			<tbody id="wpfaevent-exhibitors-body">
-				<?php
-				if ( ! empty( $exhibitors ) && is_array( $exhibitors ) ) :
-					foreach ( $exhibitors as $index => $ex ) :
-						?>
-						<tr>
-							<td><input type="text" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][name]" value="<?php echo esc_attr( $ex['name'] ); ?>" required></td>
-							<td><input type="url" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][logo]" value="<?php echo esc_attr( isset( $ex['logo'] ) ? $ex['logo'] : '' ); ?>" required placeholder="https://"></td>
-							<td><input type="url" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][banner]" value="<?php echo esc_attr( isset( $ex['banner'] ) ? $ex['banner'] : '' ); ?>" placeholder="https://"></td>
-							<td><input type="url" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][link]" value="<?php echo esc_attr( isset( $ex['link'] ) ? $ex['link'] : '' ); ?>" placeholder="https://"></td>
-							<td><input type="email" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][contact_email]" value="<?php echo esc_attr( isset( $ex['contact_email'] ) ? $ex['contact_email'] : '' ); ?>"></td>
-							<td><input type="url" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][contact_link]" value="<?php echo esc_attr( isset( $ex['contact_link'] ) ? $ex['contact_link'] : '' ); ?>" placeholder="https://"></td>
-							<td><input type="number" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][position]" value="<?php echo esc_attr( isset( $ex['position'] ) ? $ex['position'] : 0 ); ?>" min="0"></td>
-							<td><input type="text" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][description]" value="<?php echo esc_attr( isset( $ex['description'] ) ? $ex['description'] : '' ); ?>"></td>
-							<td style="text-align: center;"><a href="#" class="wpfaevent-remove-exhibitor"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a></td>
-						</tr>
-						<?php
-					endforeach;
-				endif;
-				?>
-			</tbody>
-		</table>
+		<div class="wpfaevent-meta-cards-container" id="wpfaevent-exhibitors-container">
+			<?php
+			if ( ! empty( $exhibitors ) && is_array( $exhibitors ) ) :
+				foreach ( $exhibitors as $index => $ex ) :
+					?>
+					<div class="wpfaevent-meta-card">
+						<a href="#" class="wpfaevent-remove-exhibitor wpfaevent-remove-card-btn"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a>
+						<div class="wpfaevent-meta-card-grid">
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Exhibitor Name', 'wpfaevent' ); ?></label>
+								<input type="text" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][name]" value="<?php echo esc_attr( $ex['name'] ); ?>" required>
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Logo URL', 'wpfaevent' ); ?></label>
+								<input type="url" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][logo]" value="<?php echo esc_attr( isset( $ex['logo'] ) ? $ex['logo'] : '' ); ?>" required placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Banner URL', 'wpfaevent' ); ?></label>
+								<input type="url" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][banner]" value="<?php echo esc_attr( isset( $ex['banner'] ) ? $ex['banner'] : '' ); ?>" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Website URL', 'wpfaevent' ); ?></label>
+								<input type="url" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][link]" value="<?php echo esc_attr( isset( $ex['link'] ) ? $ex['link'] : '' ); ?>" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Email', 'wpfaevent' ); ?></label>
+								<input type="email" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][contact_email]" value="<?php echo esc_attr( isset( $ex['contact_email'] ) ? $ex['contact_email'] : '' ); ?>">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Contact Link', 'wpfaevent' ); ?></label>
+								<input type="url" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][contact_link]" value="<?php echo esc_attr( isset( $ex['contact_link'] ) ? $ex['contact_link'] : '' ); ?>" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Sort Order', 'wpfaevent' ); ?></label>
+								<input type="number" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][position]" value="<?php echo esc_attr( isset( $ex['position'] ) ? $ex['position'] : 0 ); ?>" min="0">
+							</div>
+							<div class="wpfaevent-meta-card-field" style="grid-column: span 2;">
+								<label><?php esc_html_e( 'Description', 'wpfaevent' ); ?></label>
+								<input type="text" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][description]" value="<?php echo esc_attr( isset( $ex['description'] ) ? $ex['description'] : '' ); ?>">
+							</div>
+						</div>
+					</div>
+					<?php
+				endforeach;
+			endif;
+			?>
+		</div>
 
 		<button type="button" class="button button-primary" id="wpfaevent-add-exhibitor-row" style="margin-top: 15px;">
 			<?php esc_html_e( 'Add Exhibitor', 'wpfaevent' ); ?>
@@ -1511,28 +1598,54 @@ class Wpfaevent_Admin {
 
 		<script>
 			jQuery(document).ready(function($) {
-				let exhibitorIndex = $('#wpfaevent-exhibitors-body tr').length;
+				let exhibitorIndex = $('#wpfaevent-exhibitors-container .wpfaevent-meta-card').length;
 
 				$('#wpfaevent-add-exhibitor-row').on('click', function(e) {
 					e.preventDefault();
-					const html = `<tr>
-						<td><input type="text" name="wpfa_exhibitors[\${exhibitorIndex}][name]" required></td>
-						<td><input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][logo]" required placeholder="https://"></td>
-						<td><input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][banner]" placeholder="https://"></td>
-						<td><input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][link]" placeholder="https://"></td>
-						<td><input type="email" name="wpfa_exhibitors[\${exhibitorIndex}][contact_email]"></td>
-						<td><input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][contact_link]" placeholder="https://"></td>
-						<td><input type="number" name="wpfa_exhibitors[\${exhibitorIndex}][position]" value="0" min="0"></td>
-						<td><input type="text" name="wpfa_exhibitors[\${exhibitorIndex}][description]"></td>
-						<td style="text-align: center;"><a href="#" class="wpfaevent-remove-exhibitor">Remove</a></td>
-					</tr>`;
-					$('#wpfaevent-exhibitors-body').append(html);
+					const html = `<div class="wpfaevent-meta-card">
+						<a href="#" class="wpfaevent-remove-exhibitor wpfaevent-remove-card-btn">Remove</a>
+						<div class="wpfaevent-meta-card-grid">
+							<div class="wpfaevent-meta-card-field">
+								<label>Exhibitor Name</label>
+								<input type="text" name="wpfa_exhibitors[\${exhibitorIndex}][name]" required>
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Logo URL</label>
+								<input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][logo]" required placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Banner URL</label>
+								<input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][banner]" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Website URL</label>
+								<input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][link]" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Email</label>
+								<input type="email" name="wpfa_exhibitors[\${exhibitorIndex}][contact_email]">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Contact Link</label>
+								<input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][contact_link]" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Sort Order</label>
+								<input type="number" name="wpfa_exhibitors[\${exhibitorIndex}][position]" value="0" min="0">
+							</div>
+							<div class="wpfaevent-meta-card-field" style="grid-column: span 2;">
+								<label>Description</label>
+								<input type="text" name="wpfa_exhibitors[\${exhibitorIndex}][description]">
+							</div>
+						</div>
+					</div>`;
+					$('#wpfaevent-exhibitors-container').append(html);
 					exhibitorIndex++;
 				});
 
-				$('#wpfaevent-exhibitors-body').on('click', '.wpfaevent-remove-exhibitor', function(e) {
+				$('#wpfaevent-exhibitors-container').on('click', '.wpfaevent-remove-exhibitor', function(e) {
 					e.preventDefault();
-					$(this).closest('tr').remove();
+					$(this).closest('.wpfaevent-meta-card').remove();
 				});
 			});
 		</script>
