@@ -21,7 +21,7 @@ Before implementing:
 - No features beyond what was asked.
 - No abstractions for single-use code.
 - No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
+- Avoid adding error handling for scenarios that can’t occur given validated inputs and explicit invariants (but still handle real-world failures at I/O/parsing/network boundaries).
 - If you write 200 lines and it could be 50, rewrite it.
 
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
