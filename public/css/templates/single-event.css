@@ -704,6 +704,15 @@
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-photo {
 	background: #eaf1f8;
+	aspect-ratio: 1 / 1;
+}
+
+.wpfaevent .wpfa-event-detail .wpfa-speaker-photo img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center top;
+	display: block;
 }
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-meta {
@@ -799,24 +808,22 @@
 }
 
 .wpfaevent .wpfa-event-partner-logo {
-	position: relative;
+	align-items: center;
 	background:
 		linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(247, 250, 252, 0.95)),
 		#f7fafc;
 	border-bottom: 1px solid var(--event-line);
-	display: block;
-	height: 148px;
-	padding: 0;
-	overflow: hidden;
+	display: flex;
+	justify-content: center;
+	min-height: 148px;
+	padding: 20px 24px;
 }
 
 .wpfaevent .wpfa-event-partner-logo img {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
+	display: block;
+	max-height: var(--partner-logo-size, 160px);
+	max-width: 100%;
+	object-fit: contain;
 }
 
 .wpfaevent .wpfa-event-partner-body,
@@ -1365,15 +1372,15 @@
 }
 
 .wpfaevent .wpfa-event-exhibitor-logo {
-	position: relative;
+	align-items: center;
 	background: #f7fafc;
 	border: 1px solid var(--event-line);
 	border-radius: var(--event-radius);
-	display: block;
+	display: flex;
 	height: 70px;
-	padding: 0;
+	justify-content: center;
+	padding: 10px;
 	width: 88px;
-	overflow: hidden;
 }
 
 .wpfaevent .wpfa-event-exhibitor-card.has-banner .wpfa-event-exhibitor-logo {
@@ -1384,12 +1391,10 @@
 }
 
 .wpfaevent .wpfa-event-exhibitor-logo img {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
+	display: block;
+	max-height: 100%;
+	max-width: 100%;
+	object-fit: contain;
 }
 
 .wpfaevent .wpfa-event-exhibitor-placeholder {
