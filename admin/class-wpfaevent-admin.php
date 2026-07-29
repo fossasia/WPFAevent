@@ -1267,13 +1267,6 @@ class Wpfaevent_Admin {
 
 		$this->schedule_sessions = $sessions;
 		?>
-		<style>
-			#wpfaevent-schedule-sessions-table th { font-weight: bold; text-align: left; padding: 10px; }
-			#wpfaevent-schedule-sessions-table td { padding: 10px; vertical-align: middle; }
-			#wpfaevent-schedule-sessions-table input { width: 100%; box-sizing: border-box; }
-			.wpfaevent-remove-session { color: #a00; cursor: pointer; font-weight: bold; text-decoration: none; }
-			.wpfaevent-remove-session:hover { color: #f00; }
-		</style>
 		<table class="wp-list-table widefat fixed striped" id="wpfaevent-schedule-sessions-table" style="margin-top: 10px;">
 			<thead>
 				<tr>

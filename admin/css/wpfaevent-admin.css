@@ -342,3 +342,32 @@
 	color: #dc3232;
 }
 
+/**
+ * Schedule Sessions Metabox Styling
+ */
+#wpfaevent-schedule-sessions-table th {
+	font-weight: bold;
+	text-align: left;
+	padding: 10px;
+}
+
+#wpfaevent-schedule-sessions-table td {
+	padding: 10px;
+	vertical-align: middle;
+}
+
+#wpfaevent-schedule-sessions-table input {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.wpfaevent-remove-session {
+	color: #a00;
+	cursor: pointer;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+.wpfaevent-remove-session:hover {
+	color: #f00;
+}
