@@ -16,7 +16,7 @@
  * Plugin URI:        https://github.com/fossasia/WPFAevent
  * Description:       Display Eventyay/FOSSASIA event templates with classic page templates, blocks, shortcodes, and embeddable output.
  *
- * Version:           1.0.1
+ * Version:           1.0.0
  * Author:            FOSSASIA
  * Author URI:        https://fossasia.org/
  * License:           GPL-2.0+
