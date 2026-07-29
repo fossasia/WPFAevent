@@ -158,7 +158,7 @@
 						<div class="wpfa-login-modal-card">
 							<button type="button" class="wpfa-login-modal-close" aria-label="Close">&times;</button>
 							<div class="wpfa-login-modal-header">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px; color: #d51007; margin-bottom: 8px;">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 									<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
 									<circle cx="12" cy="7" r="4"></circle>
 								</svg>

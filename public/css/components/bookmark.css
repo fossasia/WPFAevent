@@ -4,6 +4,10 @@
 }
 
 .wpfaevent .wpfa-bookmark-btn .wpfa-bookmark-icon {
+	width: 14px;
+	height: 14px;
+	margin-right: 6px;
+	vertical-align: middle;
 	transition: fill 0.2s ease-in-out, stroke 0.2s ease-in-out;
 }
 
@@ -191,4 +195,18 @@
 
 .wpfa-login-modal-actions .btn-secondary:hover {
 	background: #e2e8f0;
+}
+
+.wpfaevent .wpfa-event-bookmark-btn .wpfa-bookmark-icon {
+	width: 16px;
+	height: 16px;
+	margin-right: 8px;
+	vertical-align: middle;
+}
+
+.wpfa-login-modal-header svg {
+	width: 32px;
+	height: 32px;
+	color: #d51007;
+	margin-bottom: 8px;
 }

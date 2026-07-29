@@ -239,7 +239,7 @@ if ( $show_ticket_widget ) {
 						</a>
 					<?php endif; ?>
 					<button class="wpfa-event-bookmark-btn wpfa-bookmark-btn<?php echo $is_bookmarked ? ' is-bookmarked' : ''; ?>" data-event-id="<?php echo esc_attr( (string) $event_id ); ?>">
-						<svg class="wpfa-bookmark-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="width: 16px; height: 16px; margin-right: 8px; vertical-align: middle;">
+						<svg class="wpfa-bookmark-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
 							<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
 						</svg>
 						<span class="wpfa-bookmark-text"><?php echo $is_bookmarked ? esc_html__( 'Remove Bookmark', 'wpfaevent' ) : esc_html__( 'Bookmark Event', 'wpfaevent' ); ?></span>
