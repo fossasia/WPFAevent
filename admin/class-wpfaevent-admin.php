@@ -1267,17 +1267,17 @@ class Wpfaevent_Admin {
 
 		$this->schedule_sessions = $sessions;
 		?>
-		<table class="wp-list-table widefat fixed striped" id="wpfaevent-schedule-sessions-table" style="margin-top: 10px;">
+		<table class="wp-list-table widefat fixed striped" id="wpfaevent-schedule-sessions-table">
 			<thead>
 				<tr>
-					<th style="width: 15%;"><?php esc_html_e( 'Date', 'wpfaevent' ); ?></th>
-					<th style="width: 12%;"><?php esc_html_e( 'Start Time', 'wpfaevent' ); ?></th>
-					<th style="width: 12%;"><?php esc_html_e( 'End Time', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-date"><?php esc_html_e( 'Date', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-start-time"><?php esc_html_e( 'Start Time', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-end-time"><?php esc_html_e( 'End Time', 'wpfaevent' ); ?></th>
 					<th><?php esc_html_e( 'Session Title', 'wpfaevent' ); ?></th>
 					<th><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></th>
-					<th style="width: 15%;"><?php esc_html_e( 'Track', 'wpfaevent' ); ?></th>
-					<th style="width: 12%;"><?php esc_html_e( 'Room', 'wpfaevent' ); ?></th>
-					<th style="width: 80px; text-align: center;"><?php esc_html_e( 'Action', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-track"><?php esc_html_e( 'Track', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-room"><?php esc_html_e( 'Room', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-action"><?php esc_html_e( 'Action', 'wpfaevent' ); ?></th>
 				</tr>
 			</thead>
 			<tbody id="wpfaevent-schedule-sessions-body">
@@ -1294,13 +1294,13 @@ class Wpfaevent_Admin {
 							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][speakers]" value="<?php echo esc_attr( $sess['speakers'] ); ?>"></td>
 							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][track]" value="<?php echo esc_attr( $sess['track'] ); ?>"></td>
 							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][room]" value="<?php echo esc_attr( $sess['room'] ); ?>"></td>
-							<td style="text-align: center;"><a href="#" class="wpfaevent-remove-session"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a></td>
+							<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a></td>
 						</tr>
 					<?php endforeach; ?>
 				<?php endif; ?>
 			</tbody>
 		</table>
-		<button type="button" class="button button-primary" id="wpfaevent-add-session-row" style="margin-top: 15px;">
+		<button type="button" class="button button-primary" id="wpfaevent-add-session-row">
 			<?php esc_html_e( 'Add Session', 'wpfaevent' ); ?>
 		</button>
 
@@ -1318,7 +1318,7 @@ class Wpfaevent_Admin {
 						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][speakers]"></td>
 						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][track]"></td>
 						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][room]"></td>
-						<td style="text-align: center;"><a href="#" class="wpfaevent-remove-session">Remove</a></td>
+						<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session">Remove</a></td>
 					</tr>`;
 					$('#wpfaevent-schedule-sessions-body').append(html);
 					sessionIndex++;
@@ -1397,7 +1397,7 @@ class Wpfaevent_Admin {
 								<label><?php esc_html_e( 'Sort Level', 'wpfaevent' ); ?></label>
 								<input type="number" name="wpfa_sponsors[<?php echo absint( $index ); ?>][level]" value="<?php echo esc_attr( $sp['level'] ); ?>" min="0">
 							</div>
-							<div class="wpfaevent-meta-card-field" style="grid-column: span 2;">
+							<div class="wpfaevent-meta-card-field span-2">
 								<label><?php esc_html_e( 'Description', 'wpfaevent' ); ?></label>
 								<input type="text" name="wpfa_sponsors[<?php echo absint( $index ); ?>][description]" value="<?php echo esc_attr( $sp['description'] ); ?>">
 							</div>
@@ -1409,7 +1409,7 @@ class Wpfaevent_Admin {
 			?>
 		</div>
 
-		<button type="button" class="button button-primary" id="wpfaevent-add-sponsor-row" style="margin-top: 15px;">
+		<button type="button" class="button button-primary" id="wpfaevent-add-sponsor-row">
 			<?php esc_html_e( 'Add Sponsor', 'wpfaevent' ); ?>
 		</button>
 
@@ -1446,7 +1446,7 @@ class Wpfaevent_Admin {
 								<label>Sort Level</label>
 								<input type="number" name="wpfa_sponsors[\${sponsorIndex}][level]" value="0" min="0">
 							</div>
-							<div class="wpfaevent-meta-card-field" style="grid-column: span 2;">
+							<div class="wpfaevent-meta-card-field span-2">
 								<label>Description</label>
 								<input type="text" name="wpfa_sponsors[\${sponsorIndex}][description]">
 							</div>
@@ -1515,7 +1515,7 @@ class Wpfaevent_Admin {
 								<label><?php esc_html_e( 'Sort Order', 'wpfaevent' ); ?></label>
 								<input type="number" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][position]" value="<?php echo esc_attr( isset( $ex['position'] ) ? $ex['position'] : 0 ); ?>" min="0">
 							</div>
-							<div class="wpfaevent-meta-card-field" style="grid-column: span 2;">
+							<div class="wpfaevent-meta-card-field span-2">
 								<label><?php esc_html_e( 'Description', 'wpfaevent' ); ?></label>
 								<input type="text" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][description]" value="<?php echo esc_attr( isset( $ex['description'] ) ? $ex['description'] : '' ); ?>">
 							</div>
@@ -1527,7 +1527,7 @@ class Wpfaevent_Admin {
 			?>
 		</div>
 
-		<button type="button" class="button button-primary" id="wpfaevent-add-exhibitor-row" style="margin-top: 15px;">
+		<button type="button" class="button button-primary" id="wpfaevent-add-exhibitor-row">
 			<?php esc_html_e( 'Add Exhibitor', 'wpfaevent' ); ?>
 		</button>
 
@@ -1568,7 +1568,7 @@ class Wpfaevent_Admin {
 								<label>Sort Order</label>
 								<input type="number" name="wpfa_exhibitors[\${exhibitorIndex}][position]" value="0" min="0">
 							</div>
-							<div class="wpfaevent-meta-card-field" style="grid-column: span 2;">
+							<div class="wpfaevent-meta-card-field span-2">
 								<label>Description</label>
 								<input type="text" name="wpfa_exhibitors[\${exhibitorIndex}][description]">
 							</div>

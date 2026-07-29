@@ -145,7 +145,7 @@ $is_bookmarked       = class_exists( 'Wpfaevent_User_Preferences_Service' ) && W
 			<img src="<?php echo esc_url( $featured_img_url ); ?>" alt="<?php echo esc_attr( get_the_title( $event_id ) ); ?>" loading="lazy">
 		<?php else : ?>
 			<div class="event-card-thumb-placeholder" aria-hidden="true">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" style="width:100%;height:100%;display:block;">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
 					<rect width="200" height="200" fill="#f1f5f9"/>
 					<path d="M60 50h80v100H60z" fill="#e2e8f0"/>
 					<path d="M70 70h60v15H70z" fill="#cbd5e1"/>
