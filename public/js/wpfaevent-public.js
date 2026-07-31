@@ -37,7 +37,9 @@
 			const href = $btn.attr('href') || '';
 			const isCalendar = href.indexOf('view=calendar') !== -1 || href.indexOf('schedule_view=calendar') !== -1;
 
-			$btn.addClass('is-active').siblings().removeClass('is-active');
+			const $switch = $btn.closest('.wpfa-schedule-view-switch');
+			$switch.find('a').removeClass('is-active').removeAttr('aria-current');
+			$btn.addClass('is-active').attr('aria-current', 'page');
 
 			if (isCalendar) {
 				$('.wpfa-schedule-calendar').show();
