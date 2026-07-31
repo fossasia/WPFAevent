@@ -199,7 +199,11 @@ class Wpfaevent_Templates {
 	 */
 	public static function prevent_canonical_redirect_for_virtual_routes( $redirect_url, $_requested_url ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
 		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-			$req_path = trim( (string) wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH ), '/' );
+			$req_path  = trim( (string) wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH ), '/' );
+			$home_path = trim( (string) wp_parse_url( home_url(), PHP_URL_PATH ), '/' );
+			if ( ! empty( $home_path ) && 0 === strpos( $req_path, $home_path ) ) {
+				$req_path = trim( substr( $req_path, strlen( $home_path ) ), '/' );
+			}
 
 			$virtual_routes = array(
 				'past-events',
@@ -342,7 +346,11 @@ class Wpfaevent_Templates {
 
 		// Virtual path fallback for plugin routes (past-events, schedule, full-schedule, code-of-conduct, events, speakers).
 		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-			$req_path = trim( (string) wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH ), '/' );
+			$req_path  = trim( (string) wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH ), '/' );
+			$home_path = trim( (string) wp_parse_url( home_url(), PHP_URL_PATH ), '/' );
+			if ( ! empty( $home_path ) && 0 === strpos( $req_path, $home_path ) ) {
+				$req_path = trim( substr( $req_path, strlen( $home_path ) ), '/' );
+			}
 
 			$virtual_routes = array(
 				'past-events'     => 'page-past-events.php',

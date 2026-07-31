@@ -44,23 +44,30 @@ if ( ! $featured_img_url ) {
 	$featured_img_url = get_post_meta( $event_id, 'wpfa_event_header_image_url', true );
 }
 if ( ! $featured_img_url ) {
-	$upload_dir = wp_upload_dir();
-	if ( empty( $upload_dir['error'] ) ) {
-		$settings_file = trailingslashit( $upload_dir['basedir'] ) . 'fossasia-data/site-settings-' . absint( $event_id ) . '.json';
-		if ( file_exists( $settings_file ) && is_readable( $settings_file ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-			$settings_contents = file_get_contents( $settings_file );
-			if ( $settings_contents ) {
-				$settings_data = json_decode( $settings_contents, true );
-				if ( is_array( $settings_data ) ) {
-					if ( ! empty( $settings_data['event_logo_url'] ) ) {
-						$featured_img_url = $settings_data['event_logo_url'];
-					} elseif ( ! empty( $settings_data['event_header_image_url'] ) ) {
-						$featured_img_url = $settings_data['event_header_image_url'];
+	$settings_data = wp_cache_get( $event_id, 'wpfaevent_event_settings' );
+	if ( false === $settings_data ) {
+		$settings_data = array();
+		$upload_dir    = wp_upload_dir();
+		if ( empty( $upload_dir['error'] ) ) {
+			$settings_file = trailingslashit( $upload_dir['basedir'] ) . 'fossasia-data/site-settings-' . absint( $event_id ) . '.json';
+			if ( file_exists( $settings_file ) && is_readable( $settings_file ) ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+				$settings_contents = file_get_contents( $settings_file );
+				if ( $settings_contents ) {
+					$decoded = json_decode( $settings_contents, true );
+					if ( is_array( $decoded ) ) {
+						$settings_data = $decoded;
 					}
 				}
 			}
 		}
+		wp_cache_set( $event_id, $settings_data, 'wpfaevent_event_settings' );
+	}
+
+	if ( ! empty( $settings_data['event_logo_url'] ) ) {
+		$featured_img_url = $settings_data['event_logo_url'];
+	} elseif ( ! empty( $settings_data['event_header_image_url'] ) ) {
+		$featured_img_url = $settings_data['event_header_image_url'];
 	}
 }
 $featured_img_url = $featured_img_url ? $featured_img_url : '';
