@@ -153,23 +153,30 @@
 			};
 			let $modal = $('#wpfa-login-modal');
 			if (!$modal.length) {
-				const safeMessage = escapeHtml(message || 'Please log in to your account to bookmark events and view your saved schedule.');
+				const settings = window.wpfaeventPublic || {};
+				const defaultMessage = settings.i18n?.loginRequiredMessage || 'Please log in to your account to bookmark events and view your saved schedule.';
+				const safeMessage = escapeHtml(message || defaultMessage);
 				const safeLoginUrl = escapeHtml(loginUrl || '/wp-login.php');
+				const loginRequiredHeader = escapeHtml(settings.i18n?.loginRequiredHeader || 'Log In Required');
+				const loginText = escapeHtml(settings.i18n?.login || 'Log In');
+				const cancelText = escapeHtml(settings.i18n?.cancel || 'Cancel');
+				const closeText = escapeHtml(settings.i18n?.close || 'Close');
+
 				const modalHtml = `
 					<div class="wpfa-login-modal-overlay" id="wpfa-login-modal" role="dialog" aria-modal="true">
 						<div class="wpfa-login-modal-card">
-							<button type="button" class="wpfa-login-modal-close" aria-label="Close">&times;</button>
+							<button type="button" class="wpfa-login-modal-close" aria-label="${closeText}">&times;</button>
 							<div class="wpfa-login-modal-header">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 									<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
 									<circle cx="12" cy="7" r="4"></circle>
 								</svg>
-								<h3>Log In Required</h3>
+								<h3>${loginRequiredHeader}</h3>
 							</div>
 							<p class="wpfa-login-modal-body">${safeMessage}</p>
 							<div class="wpfa-login-modal-actions">
-								<a href="${safeLoginUrl}" class="btn btn-primary wpfa-login-btn">Log In</a>
-								<button type="button" class="btn btn-secondary wpfa-login-modal-close-btn">Cancel</button>
+								<a href="${safeLoginUrl}" class="btn btn-primary wpfa-login-btn">${loginText}</a>
+								<button type="button" class="btn btn-secondary wpfa-login-modal-close-btn">${cancelText}</button>
 							</div>
 						</div>
 					</div>
