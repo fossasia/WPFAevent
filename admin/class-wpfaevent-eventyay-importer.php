@@ -818,10 +818,7 @@ class Wpfaevent_Eventyay_Importer {
 				return $fetched;
 			}
 
-			if ( ! $this->eventyay_error_has_http_status( $fetched, 404 )
-				&& ! $this->eventyay_error_has_http_status( $fetched, 401 )
-				&& ! $this->eventyay_error_has_http_status( $fetched, 403 )
-			) {
+			if ( ! $this->eventyay_error_has_http_status( $fetched, 404 ) ) {
 				return $fetched;
 			}
 
