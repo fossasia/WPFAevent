@@ -30,10 +30,112 @@
 	 */
 
 	$(function () {
-		$('.wpfa-event-timezone-select').on('change', function () {
-			if (this.form) {
-				this.form.submit();
+		// Client-side Schedule View Switch (List vs Calendar)
+		$(document).on('click', '.wpfa-schedule-view-switch a', function (e) {
+			e.preventDefault();
+			const $btn = $(this);
+			const href = $btn.attr('href') || '';
+			const isCalendar =
+				href.indexOf('view=calendar') !== -1 ||
+				href.indexOf('schedule_view=calendar') !== -1;
+
+			const $switch = $btn.closest('.wpfa-schedule-view-switch');
+			$switch
+				.find('a')
+				.removeClass('is-active')
+				.removeAttr('aria-current');
+			$btn.addClass('is-active').attr('aria-current', 'page');
+
+			if (isCalendar) {
+				$('.wpfa-schedule-calendar').css('display', '');
+				$('.wpfa-schedule-program').css('display', 'none');
+			} else {
+				$('.wpfa-schedule-program').css('display', '');
+				$('.wpfa-schedule-calendar').css('display', 'none');
 			}
+
+			if (window.history && window.history.replaceState) {
+				window.history.replaceState(null, '', href);
+			}
+		});
+
+		// Client-side Timezone Converter
+		$(document).on(
+			'change',
+			'.wpfa-event-timezone-select, #wpfa-schedule-timezone',
+			function (e) {
+				e.preventDefault();
+				const selectedTz = $(this).val();
+				if (!selectedTz) {
+					return;
+				}
+
+				let formatter;
+				try {
+					formatter = new Intl.DateTimeFormat([], {
+						timeZone: selectedTz,
+						hour: 'numeric',
+						minute: '2-digit',
+					});
+				} catch {
+					return;
+				}
+
+				$('time[data-utc-start]').each(function () {
+					const rawStart = $(this).attr('data-utc-start');
+
+					try {
+						const startObj = rawStart ? new Date(rawStart) : null;
+						if (!startObj || isNaN(startObj.getTime())) {
+							return;
+						}
+
+						const rawEnd = $(this).attr('data-utc-end');
+						const startLabel = formatter.format(startObj);
+
+						if (rawEnd) {
+							const endObj = new Date(rawEnd);
+							const endLabel = !isNaN(endObj.getTime())
+								? formatter.format(endObj)
+								: '';
+							$(this).text(
+								endLabel && endLabel !== startLabel
+									? `${startLabel} - ${endLabel}`
+									: startLabel
+							);
+							return;
+						}
+
+						$(this).text(startLabel);
+					} catch {
+						// Timezone fallback if unsupported string
+					}
+				});
+
+				if (window.history && window.history.replaceState) {
+					const currentUrl = new URL(window.location.href);
+					currentUrl.searchParams.set('schedule_tz', selectedTz);
+					window.history.replaceState(
+						null,
+						'',
+						currentUrl.toString()
+					);
+				}
+			}
+		);
+
+		// Progressive enhancement: Hide timezone forms submit/apply buttons when JS is loaded
+		$('.wpfa-event-timezone-form, .wpfa-schedule-filter-form').each(
+			function () {
+				if ($(this).find('.wpfa-event-timezone-select').length) {
+					$(this).find('button[type="submit"]').hide();
+				}
+			}
+		);
+
+		// Auto-submit filter form if language selection changes (since Apply button is hidden)
+		$(document).on('change', '#wpfa-schedule-language', function () {
+			$(this).closest('form').submit();
 		});
 
 		const speakerPlaceholderSvg =
@@ -199,8 +301,6 @@
 			e.preventDefault();
 			e.stopPropagation();
 
-			const $btn = $(this);
-			const eventId = $btn.data('event-id');
 			const settings = window.wpfaeventPublic || {};
 
 			if (!settings.isLoggedIn) {
@@ -211,6 +311,8 @@
 				return;
 			}
 
+			const $btn = $(this);
+			const eventId = $btn.data('event-id');
 			$btn.prop('disabled', true);
 
 			$.ajax({
@@ -221,7 +323,7 @@
 					nonce: settings.nonce,
 					event_id: eventId,
 				},
-				success: function (response) {
+				success(response) {
 					$btn.prop('disabled', false);
 					if (response.success) {
 						const isBookmarked = response.data.bookmarked;
@@ -307,16 +409,20 @@
 							}
 						}
 					} else {
-						alert(
+						// eslint-disable-next-line no-alert
+						window.alert(
 							response.data?.message ||
 								settings.i18n?.error ||
 								'Something went wrong.'
 						);
 					}
 				},
-				error: function () {
+				error() {
 					$btn.prop('disabled', false);
-					alert(settings.i18n?.error || 'Something went wrong.');
+					// eslint-disable-next-line no-alert
+					window.alert(
+						settings.i18n?.error || 'Something went wrong.'
+					);
 				},
 			});
 		});
