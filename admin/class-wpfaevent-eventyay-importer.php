@@ -818,6 +818,13 @@ class Wpfaevent_Eventyay_Importer {
 				return $fetched;
 			}
 
+			if (
+				$this->eventyay_error_has_http_status( $fetched, 401 )
+				|| $this->eventyay_error_has_http_status( $fetched, 403 )
+			) {
+				return $fetched;
+			}
+
 			if ( ! $this->eventyay_error_has_http_status( $fetched, 404 ) ) {
 				return $fetched;
 			}
@@ -1686,6 +1693,13 @@ class Wpfaevent_Eventyay_Importer {
 		foreach ( $endpoints as $endpoint ) {
 			$fetched = $this->fetch_eventyay_partner_resources( $endpoint, $settings, $resource_type );
 			if ( ! is_wp_error( $fetched ) ) {
+				return $fetched;
+			}
+
+			if (
+				$this->eventyay_error_has_http_status( $fetched, 401 )
+				|| $this->eventyay_error_has_http_status( $fetched, 403 )
+			) {
 				return $fetched;
 			}
 
@@ -2816,11 +2830,13 @@ class Wpfaevent_Eventyay_Importer {
 
 			$last_error = $decoded;
 			if (
-				! $this->eventyay_error_has_http_status( $decoded, 401 )
-				&& ! $this->eventyay_error_has_http_status( $decoded, 403 )
+				$this->eventyay_error_has_http_status( $decoded, 401 )
+				|| $this->eventyay_error_has_http_status( $decoded, 403 )
 			) {
 				return $decoded;
 			}
+
+			return $decoded;
 		}
 
 		return is_wp_error( $last_error ) ? $last_error : new WP_Error(
