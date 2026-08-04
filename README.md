@@ -68,11 +68,11 @@ This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible 
 | `npm run lint:fix` | `eslint . --fix` | Auto‑fix fixable lint errors |
 | `npm run format` | `prettier --write "**/*.{js,json}"` | Apply Prettier formatting |
 | `npm run phpcs` | `composer phpcs` | Run PHP_CodeSniffer on PHP files |
-| `npm run phpcb` | `composer phpcb` | Auto‑fix PHP coding‑standard violations |
+| `npm run phpcbf` | `composer phpcbf` | Auto‑fix PHP coding‑standard violations |
 | `npm run phpstan` | `composer phpstan` | Run PHPStan static analysis |
-| `npm run test` | `npm run lint && npm run phpcs && npm run phpstan` | One‑command quality check (JS + PHP) |
+| `npm run check` | `npm run lint && npm run phpcs && npm run phpstan` | One‑command quality check (JS + PHP) |
 
-> **Tip:** Before opening a Pull Request, run `npm run test` locally to ensure both JavaScript and PHP code meet the project’s standards.
+> **Tip:** Before opening a Pull Request, run `npm run check` locally to ensure both JavaScript and PHP code meet the project’s standards.
 
 ## Directory Structure
 
@@ -262,8 +262,8 @@ composer test -- --testsuite Integration
 
 Before submitting:
 
-* Run `npm run test` to ensure both JS and PHP quality checks pass.
-* Run `phpcs` with the WordPress standard
+* Run `npm run check` to ensure both JS and PHP quality checks pass.
+* Run `npm run phpcs` with the WordPress standard
 * Avoid committing binary or large files
 * Test locally with caching disabled
 * Ensure translations are wrapped correctly in `__()` or `_e()`

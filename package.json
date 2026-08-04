@@ -28,7 +28,7 @@
 		"phpcs": "composer phpcs",
 		"phpcbf": "composer phpcbf",
 		"phpstan": "composer phpstan",
-		"test": "npm run lint && npm run phpcs && npm run phpstan"
+		"check": "npm run lint && npm run phpcs && npm run phpstan"
 	},
 	"devDependencies": {
 		"@wordpress/eslint-plugin": "^25.4.1",
