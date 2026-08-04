@@ -45,9 +45,14 @@ class APIClientTest extends WP_UnitTestCase {
 
 	/**
 	 * Mock API requests to return specific HTTP status codes.
+	 *
+	 * @param false|array|WP_Error $pre         A preemptive return value of the request.
+	 * @param array                $parsed_args The HTTP request arguments.
+	 * @param string               $url         The request URL.
+	 * @return array Mocked response array.
 	 */
 	public function mock_api_request( $pre, $parsed_args, $url ) {
-		$this->request_count++;
+		++$this->request_count;
 
 		return array(
 			'headers'  => array(),
