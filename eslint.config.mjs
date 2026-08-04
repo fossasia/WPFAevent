@@ -8,6 +8,8 @@ export default [
 				wp: 'readonly',
 				ajaxurl: 'readonly',
 				wpfaeventSpeakersConfig: 'readonly',
+				wpfaeventEventsConfig: 'readonly',
+				wpfaeventFooterConfig: 'readonly',
 				jQuery: 'readonly',
 			},
 		},
