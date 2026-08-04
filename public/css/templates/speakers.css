@@ -186,16 +186,40 @@
 	overflow: hidden;
 }
 
-.wpfaevent .wpfa-speaker-photo img {
+.wpfaevent .wpfa-speaker-photo-container {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.wpfaevent .wpfa-speaker-photo-blur {
+	position: absolute;
+	top: 0;
+	left: 0;
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
 	object-position: center top;
+	filter: blur(10px);
+	transform: scale(1.1);
+	opacity: 0.5;
 	display: block;
-	transition: transform 0.3s ease;
+	z-index: 1;
 }
 
-.wpfaevent .wpfa-speaker-card:hover .wpfa-speaker-photo img {
+.wpfaevent .wpfa-speaker-photo-img {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	object-position: center;
+	display: block;
+	transition: transform 0.3s ease;
+	z-index: 2;
+}
+
+.wpfaevent .wpfa-speaker-card:hover .wpfa-speaker-photo-img {
 	transform: scale(1.05);
 }
 

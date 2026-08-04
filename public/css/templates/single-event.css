@@ -707,14 +707,6 @@
 	aspect-ratio: 1 / 1;
 }
 
-.wpfaevent .wpfa-event-detail .wpfa-speaker-photo img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	object-position: center top;
-	display: block;
-}
-
 .wpfaevent .wpfa-event-detail .wpfa-speaker-meta {
 	padding: 18px 18px 14px;
 }
@@ -2400,5 +2392,3 @@
 		padding: 20px;
 	}
 }
-
-
