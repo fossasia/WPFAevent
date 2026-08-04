@@ -27,9 +27,10 @@ This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible 
 
 - WordPress **5.8** or higher
 - PHP **7.4** or newer
-- **Node.js >= 24** (required for the npm development toolchain)
 - HTTPS‑enabled server (for API calls)
 - The WordPress REST API and `wp_remote_get()` must be available
+
+> **For contributors only:** Node.js >= 24 is required for the npm-based lint/format toolchain (`npm install`, `npm run lint`, etc.). It is not needed to install or use the plugin.
 
 ## Installation
 
@@ -37,7 +38,7 @@ This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible 
    ```bash
    git clone https://github.com/fossasia/WPFAevent.git event-plugin
    ```
-2. **Install the JavaScript tooling** (Node 24 required):
+2. **Install JavaScript dev tooling** *(contributors only — not required to use the plugin)*:
    ```bash
    # If you use nvm:
    nvm install 24 && nvm use 24
@@ -65,7 +66,7 @@ This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible 
 | Script | Command | Description |
 |--------|---------|-------------|
 | `npm run lint` | `eslint .` | Lint all JavaScript files using the WordPress ESLint config |
-| `npm run lint:fix` | `eslint . --fix` | Auto‑fix fixable lint errors |
+| `npm run lint:fix` | `eslint . --fix` | Auto‑fix lint errors |
 | `npm run format` | `prettier --write "**/*.{js,json}"` | Apply Prettier formatting |
 | `npm run phpcs` | `composer phpcs` | Run PHP_CodeSniffer on PHP files |
 | `npm run phpcbf` | `composer phpcbf` | Auto‑fix PHP coding‑standard violations |
@@ -263,7 +264,7 @@ composer test -- --testsuite Integration
 Before submitting:
 
 * Run `npm run check` to ensure both JS and PHP quality checks pass.
-* Run `npm run phpcs` with the WordPress standard
+* Run `composer test` to ensure the full PHP test suite passes.
 * Avoid committing binary or large files
 * Test locally with caching disabled
 * Ensure translations are wrapped correctly in `__()` or `_e()`
