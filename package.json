@@ -26,7 +26,7 @@
 		"lint:fix": "eslint . --fix",
 		"format": "prettier --write \"**/*.{js,json}\"",
 		"phpcs": "composer phpcs",
-		"phpcbf": "composer phpcb",
+		"phpcbf": "composer phpcbf",
 		"phpstan": "composer phpstan",
 		"test": "npm run lint && npm run phpcs && npm run phpstan"
 	},
