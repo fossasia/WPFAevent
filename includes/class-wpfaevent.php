@@ -84,6 +84,7 @@ class Wpfaevent {
 		$this->define_cpt_hooks();
 		$this->define_taxonomy_hooks();
 		$this->define_meta_hooks();
+		$this->define_page_hooks();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
 	}
@@ -121,29 +122,55 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'taxonomies/class-wpfaevent-taxonomies-speaker.php';
 
 		// Data model classes - Meta Fields.
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-user-preferences-service.php';
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-event-speaker-relation-manager.php';
 		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-event.php';
 		require_once plugin_dir_path( __FILE__ ) . 'meta/class-wpfaevent-meta-speaker.php';
 
 		// Calendar export support.
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-calendar.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-navigation-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-additional-information-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-partner-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-controller.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-template-controller.php';
 
 		// Eventyay Importer modular classes.
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-jsonapi-resource-utils.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-jsonapi-parser.php';
-		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-api-client.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-partner-json-store.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-event-repository.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-speaker-repository.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-api-client.php';
+		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-post-manager.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-admin-settings-renderer.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-ajax-controller.php';
 
 		// Admin and Public classes.
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-dashboard-store.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-event-dashboard-data.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-event-dashboard-sync-service.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-event-dashboard-page.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-schedule-sync.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-importer.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-eventyay-ajax-sync.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard-statistics.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard-renderer.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard-controller.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard-hooks.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
+		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-bookmark-controller.php';
 
 		// AJAX handler classes.
 		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-footer-handler.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-event-handler.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/ajax-handlers/class-wpfaevent-speakers-handler.php';
+
+		// Cron scheduler for auto-sync.
+		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-cron-scheduler.php';
 
 		// Optional utilities if present.
 		if ( file_exists( plugin_dir_path( __FILE__ ) . 'class-wpfa-cli.php' ) ) {
@@ -193,6 +220,17 @@ class Wpfaevent {
 	}
 
 	/**
+	 * Register hooks for plugin-managed pages.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_page_hooks() {
+		$this->loader->add_action( 'init', 'Wpfaevent_Additional_Information_Helper', 'ensure_additional_information_page', 21 );
+		$this->loader->add_action( 'init', 'Wpfaevent_Partner_Helper', 'ensure_partner_page', 22 );
+	}
+
+	/**
 	 * Register all of the hooks related to the admin area functionality
 	 * of the plugin.
 	 *
@@ -209,8 +247,23 @@ class Wpfaevent {
 
 		// Register settings page.
 		$this->loader->add_action( 'admin_menu', $this->plugin_admin, 'register_settings_page' );
+		$this->loader->add_action( 'admin_head', $this->plugin_admin, 'remove_event_taxonomy_submenus' );
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_plugin_settings' );
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_eventyay_import_settings' );
+		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'render_back_to_dashboard_button' );
+
+		$event_dashboard_page = new Wpfaevent_Event_Dashboard_Page();
+		$this->loader->add_action( 'admin_menu', $event_dashboard_page, 'register_page' );
+		$this->loader->add_action( 'admin_menu', $event_dashboard_page, 'hide_submenu', 999 );
+		$this->loader->add_filter( 'post_row_actions', $event_dashboard_page, 'add_row_action', 10, 2 );
+		$this->loader->add_action( 'admin_post_wpfaevent_sync_event_dashboard', $event_dashboard_page, 'handle_sync' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_sync_event_dashboard', $event_dashboard_page, 'handle_sync_ajax' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_save_dashboard_field', $event_dashboard_page, 'handle_save_field_ajax' );
+
+		$partner_dashboard = new Wpfaevent_Partner_Dashboard();
+		$this->loader->add_action( 'admin_menu', $partner_dashboard, 'register_menu_pages' );
+		$this->loader->add_action( 'admin_post_wpfaevent_save_partner', $partner_dashboard, 'handle_save_partner' );
+		$this->loader->add_action( 'admin_post_wpfaevent_delete_partner', $partner_dashboard, 'handle_delete_partner' );
 
 		// Add settings link to the plugins page.
 		$plugin_basename = plugin_basename( dirname( __DIR__ ) . '/wpfaevent.php' );
@@ -223,14 +276,22 @@ class Wpfaevent {
 		$this->loader->add_action( 'save_post_wpfa_event', $this->plugin_admin, 'save_event_meta' );
 		$this->loader->add_action( 'save_post_wpfa_speaker', $this->plugin_admin, 'save_speaker_meta' );
 
-		// Register AJAX handlers for speakers page.
+		// Keep event-owned speakers out of the global speaker admin list.
+		$this->loader->add_action( 'restrict_manage_posts', $this->plugin_admin, 'render_speaker_event_filter' );
+		$this->loader->add_action( 'pre_get_posts', $this->plugin_admin, 'filter_speaker_admin_list' );
+		$this->loader->add_filter( 'views_edit-wpfa_speaker', $this->plugin_admin, 'filter_speaker_admin_views' );
+		$this->loader->add_action( 'load-edit.php', $this->plugin_admin, 'intercept_speaker_list_screen' );
+		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'begin_speaker_table_layout' );
+		$this->loader->add_action( 'admin_footer', $this->plugin_admin, 'end_speaker_table_layout' );
+
+		// Register AJAX handlers for the speakers page.
 		$plugin_speakers_handler = new Wpfaevent_Speakers_Handler();
 		$this->loader->add_action( 'wp_ajax_wpfa_get_speaker', $plugin_speakers_handler, 'ajax_get_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_add_speaker', $plugin_speakers_handler, 'ajax_add_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_update_speaker', $plugin_speakers_handler, 'ajax_update_speaker' );
 		$this->loader->add_action( 'wp_ajax_wpfa_delete_speaker', $plugin_speakers_handler, 'ajax_delete_speaker' );
 
-		// Register AJAX handlers for events page.
+		// Register AJAX handlers for the events page.
 		$plugin_event_handler = new Wpfaevent_Event_Handler();
 		$this->loader->add_action( 'wp_ajax_wpfa_get_event', $plugin_event_handler, 'ajax_get_event' );
 		$this->loader->add_action( 'wp_ajax_wpfa_add_event', $plugin_event_handler, 'ajax_add_event' );
@@ -241,14 +302,21 @@ class Wpfaevent {
 		$plugin_footer_handler = new Wpfaevent_Footer_Handler();
 		$this->loader->add_action( 'wp_ajax_wpfa_update_footer_text', $plugin_footer_handler, 'ajax_update_footer_text' );
 
-		// Register AJAX actions for Eventyay Importer.
-		$eventyay_ajax = new Wpfaevent_AJAX_Controller();
-		$this->loader->add_action( 'wp_ajax_wpfaevent_import_get_events', $eventyay_ajax, 'ajax_import_get_events' );
-		$this->loader->add_action( 'wp_ajax_wpfaevent_import_single_event', $eventyay_ajax, 'ajax_import_single_event' );
-		$this->loader->add_action( 'wp_ajax_wpfaevent_import_save_summary', $eventyay_ajax, 'ajax_import_save_summary' );
+		// Register AJAX handler for Eventyay sync and chunked imports.
+		$eventyay_ajax_controller = new Wpfaevent_AJAX_Controller();
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_get_events', $eventyay_ajax_controller, 'ajax_import_get_events' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_single_event', $eventyay_ajax_controller, 'ajax_import_single_event' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_save_summary', $eventyay_ajax_controller, 'ajax_import_save_summary' );
 
-		// Register Eventyay import form handler.
+		// Register AJAX handler for dashboard JSON:API sync.
+		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $this->plugin_admin, 'ajax_sync_eventyay' );
 		$this->loader->add_action( 'admin_post_wpfaevent_import_eventyay_events', $this->plugin_admin, 'handle_eventyay_events_import' );
+
+		// Scheduled auto-sync cron callback.
+		$this->loader->add_action( Wpfaevent_Cron_Scheduler::HOOK, 'Wpfaevent_Cron_Scheduler', 'run' );
+
+		// Re-schedule when import settings are saved.
+		$this->loader->add_action( 'update_option_wpfaevent_eventyay_import_settings', 'Wpfaevent_Cron_Scheduler', 'handle_settings_update', 10, 2 );
 	}
 
 	/**
@@ -264,6 +332,14 @@ class Wpfaevent {
 
 		// Register public-specific stylesheet.
 		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_styles' );
+
+		// Register public-specific script.
+		$this->loader->add_action( 'wp_enqueue_scripts', $this->plugin_public, 'enqueue_scripts' );
+
+		// Register AJAX actions for bookmarking.
+		$bookmark_controller = new Wpfaevent_Bookmark_Controller();
+		$this->loader->add_action( 'wp_ajax_wpfa_toggle_bookmark', $bookmark_controller, 'ajax_toggle_bookmark' );
+		$this->loader->add_action( 'wp_ajax_nopriv_wpfa_toggle_bookmark', $bookmark_controller, 'ajax_toggle_bookmark' );
 
 		// Cache invalidation hooks (static method calls).
 		$this->loader->add_action( 'save_post', 'Wpfaevent_Cache', 'clear_page_cache' );

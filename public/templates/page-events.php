@@ -166,8 +166,8 @@ $header_vars = array(
 						<h1><?php esc_html_e( 'Open source events from the FOSSASIA community', 'wpfaevent' ); ?></h1>
 						<p class="events-hub-subtitle"><?php esc_html_e( 'Search by event name, topic, track, date, location, and language and find the right event faster.', 'wpfaevent' ); ?></p>
 					</div>
-					<div class="events-hub-stat-box">
-						<span class="events-hub-stat-number"><?php echo esc_html( $total_events ); ?></span>
+						<div class="events-hub-stat-box">
+							<span class="events-hub-stat-number"><?php echo esc_html( number_format_i18n( $total_events ) ); ?></span>
 						<span class="events-hub-stat-label"><?php esc_html_e( 'PUBLISHED EVENTS', 'wpfaevent' ); ?></span>
 					</div>
 				</div>
@@ -227,6 +227,9 @@ $header_vars = array(
 							<button class="date-filter-btn active" data-filter="all"><?php esc_html_e( 'All', 'wpfaevent' ); ?></button>
 							<button class="date-filter-btn" data-filter="upcoming"><?php esc_html_e( 'Upcoming', 'wpfaevent' ); ?></button>
 							<button class="date-filter-btn" data-filter="past"><?php esc_html_e( 'Past', 'wpfaevent' ); ?></button>
+							<?php if ( is_user_logged_in() ) : ?>
+								<button class="date-filter-btn" data-filter="bookmarked"><?php esc_html_e( 'Favorites', 'wpfaevent' ); ?></button>
+							<?php endif; ?>
 						</div>
 						<button id="searchEventsBtn" class="btn btn-primary">
 							<?php esc_html_e( 'Search Events', 'wpfaevent' ); ?>
@@ -243,9 +246,9 @@ $header_vars = array(
 					<h2><?php esc_html_e( 'Events', 'wpfaevent' ); ?></h2>
 					<p class="results-info">
 						<?php esc_html_e( 'Showing', 'wpfaevent' ); ?>
-						<span id="resultsCount"><?php echo esc_html( $total_events ); ?></span>
+							<span id="resultsCount"><?php echo esc_html( number_format_i18n( $total_events ) ); ?></span>
 						<?php esc_html_e( 'of', 'wpfaevent' ); ?>
-						<span id="totalCount"><?php echo esc_html( $total_events ); ?></span>
+							<span id="totalCount"><?php echo esc_html( number_format_i18n( $total_events ) ); ?></span>
 						<?php esc_html_e( 'matching events', 'wpfaevent' ); ?>
 					</p>
 				</div>

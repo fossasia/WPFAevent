@@ -36,42 +36,56 @@ class Wpfaevent_Templates {
 	 * @var   array<string, array<string, string>>
 	 */
 	private static $templates = array(
-		'landing'         => array(
+		'landing'                => array(
 			'file'      => 'page-landing.php',
 			'label'     => 'WPFA - Landing',
 			'shortcode' => 'wpfaevent_landing',
 			'block'     => 'landing',
 			'title'     => 'WPFA Landing',
 		),
-		'speakers'        => array(
+		'speakers'               => array(
 			'file'      => 'page-speakers.php',
 			'label'     => 'WPFA - Speakers',
 			'shortcode' => 'wpfaevent_speakers',
 			'block'     => 'speakers',
 			'title'     => 'WPFA Speakers',
 		),
-		'events'          => array(
+		'events'                 => array(
 			'file'      => 'page-events.php',
 			'label'     => 'WPFA - Events',
 			'shortcode' => 'wpfaevent_events',
 			'block'     => 'events',
 			'title'     => 'WPFA Events',
 		),
-		'past_events'     => array(
+		'past_events'            => array(
 			'file'      => 'page-past-events.php',
 			'label'     => 'WPFA - Past Events',
 			'shortcode' => 'wpfaevent_past_events',
 			'block'     => 'past-events',
 			'title'     => 'WPFA Past Events',
 		),
-		'schedule'        => array(
+		'schedule'               => array(
 			'file'      => 'page-schedule.php',
 			'label'     => 'WPFA - Schedule',
 			'shortcode' => 'wpfaevent_schedule',
 			'block'     => 'schedule',
 			'title'     => 'WPFA Schedule',
 		),
-		'code_of_conduct' => array(
+		'additional_information' => array(
+			'file'      => 'page-additional-information.php',
+			'label'     => 'WPFA - Additional Information',
+			'shortcode' => 'wpfaevent_additional_information',
+			'block'     => 'additional-information',
+			'title'     => 'WPFA Additional Information',
+		),
+		'partner'                => array(
+			'file'      => 'page-partner.php',
+			'label'     => 'WPFA - Partner',
+			'shortcode' => 'wpfaevent_partner',
+			'block'     => 'partner',
+			'title'     => 'WPFA Partner',
+		),
+		'code_of_conduct'        => array(
 			'file'      => 'page-code-of-conduct.php',
 			'label'     => 'WPFA - Code of Conduct',
 			'shortcode' => 'wpfaevent_code_of_conduct',
@@ -170,6 +184,14 @@ class Wpfaevent_Templates {
 			}
 		}
 
+		if ( is_post_type_archive( 'wpfa_speaker' ) ) {
+			$candidate = WPFAEVENT_PATH . 'public/templates/page-speakers.php';
+
+			if ( file_exists( $candidate ) ) {
+				return $candidate;
+			}
+		}
+
 		if ( is_singular( 'page' ) ) {
 			$chosen = get_page_template_slug( get_queried_object_id() );
 			$key    = self::get_template_key_by_file( $chosen );
@@ -233,7 +255,7 @@ class Wpfaevent_Templates {
 			register_block_type(
 				'wpfaevent/' . $template['block'],
 				array(
-					'api_version'     => 2,
+					'api_version'     => '2',
 					'editor_script'   => 'wpfaevent-blocks',
 					'style'           => self::get_block_style_handle( $key ),
 					'supports'        => array(
@@ -609,6 +631,8 @@ class Wpfaevent_Templates {
 				return __( 'WPFA - Past Events', 'wpfaevent' );
 			case 'schedule':
 				return __( 'WPFA - Schedule', 'wpfaevent' );
+			case 'additional_information':
+				return __( 'WPFA - Additional Information', 'wpfaevent' );
 			case 'code_of_conduct':
 				return __( 'WPFA - Code of Conduct', 'wpfaevent' );
 			default:
@@ -636,6 +660,8 @@ class Wpfaevent_Templates {
 				return __( 'WPFA Past Events', 'wpfaevent' );
 			case 'schedule':
 				return __( 'WPFA Schedule', 'wpfaevent' );
+			case 'additional_information':
+				return __( 'WPFA Additional Information', 'wpfaevent' );
 			case 'code_of_conduct':
 				return __( 'WPFA Code of Conduct', 'wpfaevent' );
 			default:
@@ -706,6 +732,30 @@ class Wpfaevent_Templates {
 			WPFAEVENT_VERSION,
 			'all'
 		);
+
+		wp_register_style(
+			'wpfaevent-event',
+			WPFAEVENT_URL . 'public/css/templates/event.css',
+			array( 'wpfaevent', 'wpfaevent-navigation' ),
+			WPFAEVENT_VERSION,
+			'all'
+		);
+
+		wp_register_style(
+			'wpfaevent-additional-information',
+			WPFAEVENT_URL . 'public/css/templates/additional-information.css',
+			array( 'wpfaevent', 'wpfaevent-navigation' ),
+			WPFAEVENT_VERSION,
+			'all'
+		);
+
+		wp_register_style(
+			'wpfaevent-schedule',
+			WPFAEVENT_URL . 'public/css/templates/schedule.css',
+			array( 'wpfaevent', 'wpfaevent-event' ),
+			WPFAEVENT_VERSION,
+			'all'
+		);
 	}
 
 	/**
@@ -718,10 +768,12 @@ class Wpfaevent_Templates {
 	 */
 	private static function get_block_style_handle( $key ) {
 		$handles = array(
-			'events'          => 'wpfaevent-events',
-			'speakers'        => 'wpfaevent-speakers',
-			'past_events'     => 'wpfaevent-past-events',
-			'code_of_conduct' => 'wpfaevent-code-of-conduct',
+			'events'                 => 'wpfaevent-events',
+			'schedule'               => 'wpfaevent-schedule',
+			'speakers'               => 'wpfaevent-speakers',
+			'past_events'            => 'wpfaevent-past-events',
+			'additional_information' => 'wpfaevent-additional-information',
+			'code_of_conduct'        => 'wpfaevent-code-of-conduct',
 		);
 
 		return isset( $handles[ $key ] ) ? $handles[ $key ] : 'wpfaevent';
@@ -740,7 +792,7 @@ class Wpfaevent_Templates {
 			wp_enqueue_style( 'wpfaevent' );
 		}
 
-		if ( in_array( $key, array( 'speakers', 'past_events', 'code_of_conduct' ), true ) && ! wp_style_is( 'wpfaevent-navigation', 'enqueued' ) ) {
+		if ( in_array( $key, array( 'speakers', 'past_events', 'additional_information', 'code_of_conduct' ), true ) && ! wp_style_is( 'wpfaevent-navigation', 'enqueued' ) ) {
 			wp_enqueue_style( 'wpfaevent-navigation' );
 		}
 
@@ -759,6 +811,15 @@ class Wpfaevent_Templates {
 
 		if ( 'events' === $key ) {
 			wp_enqueue_style( 'wpfaevent-events' );
+		}
+
+		if ( 'additional_information' === $key ) {
+			wp_enqueue_style( 'wpfaevent-additional-information' );
+		}
+
+		if ( 'schedule' === $key ) {
+			wp_enqueue_style( 'wpfaevent-event' );
+			wp_enqueue_style( 'wpfaevent-schedule' );
 		}
 
 		if ( 'code_of_conduct' === $key ) {

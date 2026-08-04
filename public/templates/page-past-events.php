@@ -9,6 +9,7 @@
  * Each event displays:
  * - Event featured image
  * - Event title (linked to permalink or external URL)
+ * - Social share buttons
  * - Event excerpt/description
  * - Start and end dates
  * - Location
@@ -156,8 +157,43 @@ $header_vars = array(
 						$location      = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
 						$event_url_raw = get_post_meta( $event_id, 'wpfa_event_url', true );
 						$event_url     = $event_url_raw ? esc_url( $event_url_raw ) : get_permalink();
+						$share_url     = apply_filters( 'wpfa_past_event_share_url', get_permalink( $event_id ), $event_id );
+						$share_url     = esc_url_raw( $share_url );
+						$share_text    = apply_filters(
+							'wpfa_past_event_share_text',
+							sprintf(
+								/* translators: %s: event title */
+								__( 'Check out this past event: %s', 'wpfaevent' ),
+								$event_title
+							),
+							$event_id,
+							$event_title
+						);
+						$share_text    = wp_strip_all_tags( $share_text );
 						$calendar_data = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_calendar_data( $event_id ) : array();
 						$calendar_data = is_wp_error( $calendar_data ) ? array() : $calendar_data;
+						$share_links   = array();
+
+						if ( ! empty( $share_url ) ) {
+							$share_links = array(
+								array(
+									'label' => __( 'Facebook', 'wpfaevent' ),
+									'url'   => 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode( $share_url ),
+								),
+								array(
+									'label' => __( 'X', 'wpfaevent' ),
+									'url'   => 'https://twitter.com/intent/tweet?url=' . rawurlencode( $share_url ) . '&text=' . rawurlencode( $share_text ),
+								),
+								array(
+									'label' => __( 'LinkedIn', 'wpfaevent' ),
+									'url'   => 'https://www.linkedin.com/sharing/share-offsite/?url=' . rawurlencode( $share_url ),
+								),
+								array(
+									'label' => __( 'WhatsApp', 'wpfaevent' ),
+									'url'   => 'https://api.whatsapp.com/send?text=' . rawurlencode( $share_text . ' ' . $share_url ),
+								),
+							);
+						}
 
 						$image_url = get_the_post_thumbnail_url( $event_id, 'medium' );
 
@@ -253,6 +289,23 @@ $header_vars = array(
 									</div>
 								</div>
 							</a>
+							<?php if ( ! empty( $share_links ) ) : ?>
+								<div class="wpfa-past-event-card-share" aria-label="<?php echo esc_attr__( 'Share this past event', 'wpfaevent' ); ?>">
+									<span class="wpfa-past-event-card-share-label"><?php esc_html_e( 'Share', 'wpfaevent' ); ?></span>
+									<div class="wpfa-past-event-card-share-links">
+										<?php foreach ( $share_links as $share_link ) : ?>
+											<a
+												class="wpfa-past-event-card-share-link"
+												href="<?php echo esc_url( $share_link['url'] ); ?>"
+												target="_blank"
+												rel="noopener noreferrer"
+											>
+												<?php echo esc_html( $share_link['label'] ); ?>
+											</a>
+										<?php endforeach; ?>
+									</div>
+								</div>
+							<?php endif; ?>
 						</article>
 					<?php endwhile; ?>
 				</div>

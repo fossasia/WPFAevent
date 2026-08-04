@@ -39,7 +39,7 @@ class Wpfaevent_Taxonomies_Speaker {
 		$labels = array(
 			'name'                       => _x( 'Speaker Categories', 'taxonomy general name', 'wpfaevent' ),
 			'singular_name'              => _x( 'Speaker Category', 'taxonomy singular name', 'wpfaevent' ),
-			'menu_name'                  => __( 'Categories', 'wpfaevent' ),
+			'menu_name'                  => __( 'Speaker Categories', 'wpfaevent' ),
 			'all_items'                  => __( 'All Categories', 'wpfaevent' ),
 			'new_item_name'              => __( 'New Category Name', 'wpfaevent' ),
 			'add_new_item'               => __( 'Add New Category', 'wpfaevent' ),

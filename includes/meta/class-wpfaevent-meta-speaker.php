@@ -112,6 +112,198 @@ class Wpfaevent_Meta_Speaker {
 	}
 
 	/**
+	 * Register the Speaker Details meta box.
+	 *
+	 * @since 1.0.0
+	 */
+	public static function add_meta_boxes() {
+		add_meta_box(
+			'wpfa_speaker_details',
+			__( 'Speaker Details', 'wpfaevent' ),
+			array( __CLASS__, 'render_meta_box' ),
+			self::$post_type,
+			'normal',
+			'high'
+		);
+
+		remove_meta_box( 'postcustom', self::$post_type, 'normal' );
+	}
+
+	/**
+	 * Render the Speaker Details meta box.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Post $post Speaker post object.
+	 */
+	public static function render_meta_box( $post ) {
+		wp_nonce_field( 'wpfa_speaker_meta_nonce', 'wpfa_speaker_meta_nonce' );
+
+		$position     = get_post_meta( $post->ID, 'wpfa_speaker_position', true );
+		$organization = get_post_meta( $post->ID, 'wpfa_speaker_organization', true );
+		$bio          = get_post_meta( $post->ID, 'wpfa_speaker_bio', true );
+		$headshot_url = get_post_meta( $post->ID, 'wpfa_speaker_headshot_url', true );
+		?>
+		<table class="form-table">
+			<tr>
+				<th><label for="wpfa_speaker_position"><?php esc_html_e( 'Position/Title', 'wpfaevent' ); ?></label></th>
+				<td><input type="text" id="wpfa_speaker_position" name="wpfa_speaker_position" value="<?php echo esc_attr( $position ); ?>" class="regular-text"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_speaker_organization"><?php esc_html_e( 'Organization', 'wpfaevent' ); ?></label></th>
+				<td><input type="text" id="wpfa_speaker_organization" name="wpfa_speaker_organization" value="<?php echo esc_attr( $organization ); ?>" class="regular-text"></td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_speaker_bio"><?php esc_html_e( 'Biography', 'wpfaevent' ); ?></label></th>
+				<td>
+					<?php
+					wp_editor(
+						$bio,
+						'wpfa_speaker_bio',
+						array(
+							'textarea_name' => 'wpfa_speaker_bio',
+							'textarea_rows' => 10,
+							'media_buttons' => false,
+						)
+					);
+					?>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="wpfa_speaker_headshot_url"><?php esc_html_e( 'Headshot URL', 'wpfaevent' ); ?></label></th>
+				<td><input type="url" id="wpfa_speaker_headshot_url" name="wpfa_speaker_headshot_url" value="<?php echo esc_attr( $headshot_url ); ?>" class="regular-text" placeholder="https://"></td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Save Speaker Details meta box data.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $post_id Speaker post ID.
+	 */
+	public static function save_meta( $post_id ) {
+		$speaker_nonce = isset( $_POST['wpfa_speaker_meta_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_speaker_meta_nonce'] ) ) : '';
+
+		if ( ! $speaker_nonce || ! wp_verify_nonce( $speaker_nonce, 'wpfa_speaker_meta_nonce' ) ) {
+			return;
+		}
+
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+
+		if ( isset( $_POST['wpfa_speaker_position'] ) ) {
+			update_post_meta( $post_id, 'wpfa_speaker_position', sanitize_text_field( wp_unslash( $_POST['wpfa_speaker_position'] ) ) );
+		}
+
+		if ( isset( $_POST['wpfa_speaker_organization'] ) ) {
+			update_post_meta( $post_id, 'wpfa_speaker_organization', sanitize_text_field( wp_unslash( $_POST['wpfa_speaker_organization'] ) ) );
+		}
+
+		if ( isset( $_POST['wpfa_speaker_bio'] ) ) {
+			update_post_meta( $post_id, 'wpfa_speaker_bio', wp_kses_post( wp_unslash( $_POST['wpfa_speaker_bio'] ) ) );
+		}
+
+		if ( isset( $_POST['wpfa_speaker_headshot_url'] ) ) {
+			update_post_meta( $post_id, 'wpfa_speaker_headshot_url', esc_url_raw( wp_unslash( $_POST['wpfa_speaker_headshot_url'] ) ) );
+		}
+	}
+
+	/**
+	 * Find speakers whose speaker-side event meta includes an event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int>
+	 */
+	public static function get_speakers_linked_to_event( $event_id ) {
+		return Wpfaevent_Event_Speaker_Relation_Manager::get_speakers_linked_to_event( $event_id );
+	}
+
+	/**
+	 * Find all speakers with any event relationship.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<int>
+	 */
+	public static function get_all_speakers_linked_to_events() {
+		return Wpfaevent_Event_Speaker_Relation_Manager::get_all_speakers_linked_to_events();
+	}
+
+	/**
+	 * Find events whose event-side speaker meta includes a speaker.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int          $speaker_id  Speaker post ID.
+	 * @param string|array $post_status Event post status filter.
+	 * @return array<int>
+	 */
+	public static function get_events_referencing_speaker( $speaker_id, $post_status = 'any' ) {
+		return Wpfaevent_Event_Speaker_Relation_Manager::get_events_referencing_speaker( $speaker_id, $post_status );
+	}
+
+	/**
+	 * Get normalized event IDs linked to a speaker from both relationship sides.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int          $speaker_id  Speaker post ID.
+	 * @param string|array $post_status Event post status filter.
+	 * @return array<int>
+	 */
+	public static function get_events_linked_to_speaker( $speaker_id, $post_status = 'publish' ) {
+		return Wpfaevent_Event_Speaker_Relation_Manager::get_events_linked_to_speaker( $speaker_id, $post_status );
+	}
+
+	/**
+	 * Add an event ID to a speaker's related events.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int  $speaker_id       Speaker post ID.
+	 * @param int  $event_id         Event post ID.
+	 * @param bool $check_capability Whether to require edit access to the speaker.
+	 */
+	public static function add_event_to_speaker( $speaker_id, $event_id, $check_capability = true ) {
+		Wpfaevent_Event_Speaker_Relation_Manager::add_event_to_speaker( $speaker_id, $event_id, $check_capability );
+	}
+
+	/**
+	 * Remove an event ID from a speaker's related events.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int  $speaker_id       Speaker post ID.
+	 * @param int  $event_id         Event post ID.
+	 * @param bool $check_capability Whether to require edit access to the speaker.
+	 */
+	public static function remove_event_from_speaker( $speaker_id, $event_id, $check_capability = true ) {
+		Wpfaevent_Event_Speaker_Relation_Manager::remove_event_from_speaker( $speaker_id, $event_id, $check_capability );
+	}
+
+	/**
+	 * Get normalized event IDs assigned to a speaker.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $speaker_id Speaker post ID.
+	 * @return array<int>
+	 */
+	public static function get_speaker_event_ids( $speaker_id ) {
+		return Wpfaevent_Event_Speaker_Relation_Manager::get_speaker_event_ids( $speaker_id );
+	}
+
+	/**
 	 * Registers a single speaker string meta field.
 	 *
 	 * @since 1.0.0
@@ -143,13 +335,6 @@ class Wpfaevent_Meta_Speaker {
 	 * @return array Sanitized array of integers.
 	 */
 	public static function sanitize_event_ids( $event_ids ) {
-		if ( ! is_array( $event_ids ) ) {
-			return array();
-		}
-
-		$event_ids = array_map( 'absint', $event_ids );
-		$event_ids = array_filter( $event_ids );
-
-		return array_values( array_unique( $event_ids ) );
+		return Wpfaevent_Event_Speaker_Relation_Manager::sanitize_post_id_list( $event_ids );
 	}
 }

@@ -40,7 +40,7 @@ class Wpfaevent_CPT_Speaker {
 			'archives'              => __( 'Speaker Archives', 'wpfaevent' ),
 			'attributes'            => __( 'Speaker Attributes', 'wpfaevent' ),
 			'parent_item_colon'     => __( 'Parent Speaker:', 'wpfaevent' ),
-			'all_items'             => __( 'All Speakers', 'wpfaevent' ),
+			'all_items'             => __( 'Speakers', 'wpfaevent' ),
 			'add_new_item'          => __( 'Add New Speaker', 'wpfaevent' ),
 			'add_new'               => __( 'Add New', 'wpfaevent' ),
 			'new_item'              => __( 'New Speaker', 'wpfaevent' ),
@@ -63,13 +63,20 @@ class Wpfaevent_CPT_Speaker {
 		);
 
 		$capabilities = array(
-			'edit_post'          => 'edit_speaker',
-			'read_post'          => 'read_speaker',
-			'delete_post'        => 'delete_speaker',
-			'edit_posts'         => 'edit_speakers',
-			'edit_others_posts'  => 'edit_others_speakers',
-			'publish_posts'      => 'publish_speakers',
-			'read_private_posts' => 'read_private_speakers',
+			'edit_post'              => 'edit_speaker',
+			'read_post'              => 'read_speaker',
+			'delete_post'            => 'delete_speaker',
+			'edit_posts'             => 'edit_speakers',
+			'edit_others_posts'      => 'edit_others_speakers',
+			'publish_posts'          => 'publish_speakers',
+			'read_private_posts'     => 'read_private_speakers',
+			'delete_posts'           => 'delete_speakers',
+			'delete_private_posts'   => 'delete_private_speakers',
+			'delete_published_posts' => 'delete_published_speakers',
+			'delete_others_posts'    => 'delete_others_speakers',
+			'edit_private_posts'     => 'edit_private_speakers',
+			'edit_published_posts'   => 'edit_published_speakers',
+			'create_posts'           => 'publish_speakers',
 		);
 
 		$args = array(
@@ -80,7 +87,7 @@ class Wpfaevent_CPT_Speaker {
 			'hierarchical'        => false,
 			'public'              => true,
 			'show_ui'             => true,
-			'show_in_menu'        => true,
+			'show_in_menu'        => 'edit.php?post_type=wpfa_event',
 			'menu_position'       => 6,
 			'menu_icon'           => 'dashicons-microphone',
 			'show_in_admin_bar'   => true,

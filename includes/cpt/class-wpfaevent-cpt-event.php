@@ -63,13 +63,20 @@ class Wpfaevent_CPT_Event {
 		);
 
 		$capabilities = array(
-			'edit_post'          => 'edit_event',
-			'read_post'          => 'read_event',
-			'delete_post'        => 'delete_event',
-			'edit_posts'         => 'edit_events',
-			'edit_others_posts'  => 'edit_others_events',
-			'publish_posts'      => 'publish_events',
-			'read_private_posts' => 'read_private_events',
+			'edit_post'              => 'edit_event',
+			'read_post'              => 'read_event',
+			'delete_post'            => 'delete_event',
+			'edit_posts'             => 'edit_events',
+			'edit_others_posts'      => 'edit_others_events',
+			'publish_posts'          => 'publish_events',
+			'read_private_posts'     => 'read_private_events',
+			'delete_posts'           => 'delete_events',
+			'delete_private_posts'   => 'delete_private_events',
+			'delete_published_posts' => 'delete_published_events',
+			'delete_others_posts'    => 'delete_others_events',
+			'edit_private_posts'     => 'edit_private_events',
+			'edit_published_posts'   => 'edit_published_events',
+			'create_posts'           => 'publish_events',
 		);
 
 		$args = array(

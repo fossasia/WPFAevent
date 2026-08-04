@@ -293,4 +293,43 @@ class WPFA_CLI {
 			update_post_meta( $sid, 'wpfa_speaker_events', array_values( array_unique( $cur ) ) );
 		}
 	}
+
+	/**
+	 * Import command entry point to trigger REST API ingestion.
+	 *
+	 * ## EXAMPLES
+	 *   wp wpfa import
+	 *
+	 * @when after_wp_load
+	 *
+	 * @param array $args Positional command arguments.
+	 * @param array $assoc_args Associative command arguments.
+	 * @return void
+	 */
+	public static function import( $args, $assoc_args ) {
+		unset( $args, $assoc_args );
+
+		if ( ! class_exists( 'Wpfaevent_Eventyay_Importer' ) ) {
+			WP_CLI::error( 'Eventyay Importer class not found.' );
+		}
+
+		$importer = new Wpfaevent_Eventyay_Importer();
+		WP_CLI::log( 'Starting Eventyay import from settings...' );
+
+		$result = $importer->import_eventyay_events_from_settings();
+
+		if ( is_wp_error( $result ) ) {
+			WP_CLI::error( $result->get_error_message() );
+		}
+
+		WP_CLI::success(
+			sprintf(
+				'Import completed successfully. Fetched: %1$d, Created: %2$d, Updated: %3$d, Skipped: %4$d.',
+				absint( $result['fetched'] ),
+				absint( $result['created'] ),
+				absint( $result['updated'] ),
+				absint( $result['skipped'] )
+			)
+		);
+	}
 }

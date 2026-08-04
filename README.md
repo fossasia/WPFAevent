@@ -203,6 +203,7 @@ php tests/calendar-test.php
 2. Place this plugin in `wp-content/plugins/`.
 3. Activate it and navigate to **Settings → Event Plugin**.
 4. Test with public Eventyay JSON endpoints or your own mock data.
+5. Use `wp wpfa import` again whenever you need to refresh imported events and speakers from the configured Eventyay source.
 
 To debug API calls, enable WordPress debug logging in `wp-config.php`:
 
@@ -231,6 +232,33 @@ Contributions are welcome!
   ```
 * Commit and push your changes, then submit a **Pull Request**
 * Follow **WordPress PHP coding standards**
+
+### Development commands
+
+```bash
+# Install dev dependencies
+composer install
+
+# Run code style checks
+composer phpcs
+
+# Auto-fix code style violations
+composer phpcbf
+
+# Run static analysis
+composer phpstan
+
+# Bootstrap the WordPress test environment
+# Requires WP_DB_USER and WP_DB_PASS env vars (defaults: wp_test / test_password)
+composer setup-tests
+
+# Run the test suite
+composer test
+
+# Run a specific test suite
+composer test -- --testsuite Unit
+composer test -- --testsuite Integration
+```
 
 Before submitting:
 

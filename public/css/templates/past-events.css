@@ -139,6 +139,52 @@
 	margin-bottom: 8px;
 }
 
+.wpfa-past-event-card-share {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 0 20px 20px;
+	border-top: 1px solid #eee;
+}
+
+.wpfa-past-event-card-share-label {
+	font-size: 0.78rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--muted);
+}
+
+.wpfa-past-event-card-share-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.wpfa-past-event-card-share-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 8px 12px;
+	border-radius: 999px;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	background: #f8f9fa;
+	color: var(--text);
+	font-size: 0.82rem;
+	font-weight: 600;
+	text-decoration: none;
+	transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.wpfa-past-event-card-share-link:hover {
+	background: var(--brand);
+	border-color: var(--brand);
+	color: white;
+	transform: translateY(-1px);
+}
+
 /* Empty State */
 .wpfa-past-events-empty {
 	text-align: center;
@@ -172,5 +218,13 @@
 	
 	.wpfa-past-events-hero h1 {
 		font-size: 2rem;
+	}
+
+	.wpfa-past-event-card-share {
+		padding: 0 16px 16px;
+	}
+
+	.wpfa-past-event-card-share-links {
+		width: 100%;
 	}
 }

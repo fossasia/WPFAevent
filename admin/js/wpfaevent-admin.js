@@ -94,7 +94,7 @@
 					const percent = Math.round((index / events.length) * 100);
 					$bar.css('width', percent + '%');
 
-					const eventTitle = event.name || event.title || event.event_slug || 'Unnamed Event';
+					const eventTitle = getEventTitle(event);
 					$status.text('Importing ' + (index + 1) + ' of ' + events.length + ': ' + eventTitle);
 					$details.text('Saving event details, location, and dates...');
 
@@ -146,5 +146,59 @@
 			});
 		}
 	});
+
+	function getEventTitle(event) {
+		if (!event) {
+			return 'Unnamed Event';
+		}
+
+		// Helper to extract string from localized object/array
+		function getStringValue(val) {
+			if (typeof val === 'string' && val.trim() !== '') {
+				return val.trim();
+			}
+			if (val && typeof val === 'object') {
+				const preferredKeys = ['en', 'default', 'value', 'name', 'title'];
+				for (let i = 0; i < preferredKeys.length; i++) {
+					const key = preferredKeys[i];
+					if (typeof val[key] === 'string' && val[key].trim() !== '') {
+						return val[key].trim();
+					}
+				}
+				for (const key in val) {
+					if (Object.prototype.hasOwnProperty.call(val, key)) {
+						if (typeof val[key] === 'string' && val[key].trim() !== '') {
+							return val[key].trim();
+						}
+					}
+				}
+			}
+			return null;
+		}
+
+		const name = getStringValue(event.name);
+		if (name) {
+			return name;
+		}
+
+		const title = getStringValue(event.title);
+		if (title) {
+			return title;
+		}
+
+		if (typeof event.slug === 'string' && event.slug.trim() !== '') {
+			return event.slug.trim();
+		}
+
+		if (typeof event.identifier === 'string' && event.identifier.trim() !== '') {
+			return event.identifier.trim();
+		}
+
+		if (typeof event.code === 'string' && event.code.trim() !== '') {
+			return event.code.trim();
+		}
+
+		return 'Unnamed Event';
+	}
 
 })( jQuery );
