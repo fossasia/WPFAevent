@@ -21,9 +21,9 @@ JavaScript tooling is optional. Run npm commands only when `package.json` is pre
 - composer phpcs            # WordPress Coding Standards (phpcs.xml)
 - composer phpcbf           # auto-fix PHPCS violations
 - composer phpstan          # static analysis (phpstan.neon.dist)
-- npm run lint              # ESLint
-- npm run format            # Prettier
-- npm run check             # lint + phpcs + phpstan
+- npm run lint              # ESLint (only if package.json is present)
+- npm run format            # Prettier (only if package.json is present)
+- npm run check             # lint + phpcs + phpstan (only if package.json is present)
 
 ## Where things live
 
@@ -31,7 +31,7 @@ JavaScript tooling is optional. Run npm commands only when `package.json` is pre
 - includes/ — core logic: class-wpfaevent.php (main class), class-wpfaevent-loader.php (hooks), class-wpfaevent-templates.php (page templates), cpt/, taxonomies/, meta/, helpers/, cache/, cli/, eventyay-importer/ (API client, repositories, JSON:API parsing)
 - admin/ — admin settings pages, dashboard, Eventyay sync/importer UI, partner dashboard
 - public/ — public-facing rendering: class-wpfaevent-public.php, partials/, templates/, css/, js/
-- tests/ — PHPUnit; tests/unit/ (Test.php) and tests/integration/ (IntegrationTest.php); see tests/README.md for local test-env setup
+- tests/ — PHPUnit; tests/unit/ (*Test.php) plus tests/*.php in tests/ (e.g., calendar-test.php); phpunit.xml.dist references tests/integration/ for the Integration suite (currently not present in the repo).
 - languages/ — i18n .pot file (Text Domain: wpfaevent)
 - bin/install-wp-tests.sh — bootstraps the local WP test database
 
@@ -41,7 +41,7 @@ JavaScript tooling is optional. Run npm commands only when `package.json` is pre
 - Keep PHPStan clean at the configured level (phpstan.neon.dist).
 - All user-facing strings wrapped in `__()` / `_e()` with Text Domain `wpfaevent`.
 - Core logic in includes/, presentation in public/partials/ and public/templates/ — don't mix business logic into templates.
-- Custom capabilities (delete_events, delete_speakers, edit_events, edit_speakers, publish_events, publish_speakers) are already registered in phpcs.xml — use them, don't invent new ad hoc capability strings.
+- Custom capabilities (delete_events, delete_speakers, edit_events, edit_speakers, publish_events, publish_speakers) are listed in phpcs.xml for the WordPress.WP.Capabilities sniff — use them, don't invent new ad hoc capability strings.
 - No committed real speaker/event images or large demo data — use placeholders only.
 - If JS tooling (package.json) is present in the working tree, JS is linted via `@wordpress/eslint-plugin` and formatted via `@wordpress/prettier-config` — obey those configs, don't restate style rules.
 - Keep styles in the appropriate CSS files; avoid inline CSS unless explicitly required.
