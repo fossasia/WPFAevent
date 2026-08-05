@@ -171,7 +171,7 @@ $is_bookmarked       = class_exists( 'Wpfaevent_User_Preferences_Service' ) && W
 			<a href="<?php echo esc_url( $speakers_url ); ?>" class="btn btn-outline-primary btn-sm"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></a>
 		<?php endif; ?>
 		<button class="btn btn-outline-primary btn-sm wpfa-bookmark-btn<?php echo $is_bookmarked ? ' is-bookmarked' : ''; ?>" data-event-id="<?php echo esc_attr( $event_id ); ?>">
-			<svg class="wpfa-bookmark-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="width: 14px; height: 14px; margin-right: 6px; vertical-align: middle;">
+			<svg class="wpfa-bookmark-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
 				<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
 			</svg>
 			<span class="wpfa-bookmark-text"><?php echo $is_bookmarked ? esc_html__( 'Bookmarked', 'wpfaevent' ) : esc_html__( 'Bookmark', 'wpfaevent' ); ?></span>

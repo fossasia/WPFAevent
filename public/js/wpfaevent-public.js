@@ -68,6 +68,56 @@
 				}
 			});
 
+
+		function showLoginModal(loginUrl, message) {
+			const escapeHtml = function(value) {
+				return $('<div/>').text(String(value == null ? '' : value)).html();
+			};
+			let $modal = $('#wpfa-login-modal');
+			if (!$modal.length) {
+				const settings = window.wpfaeventPublic || {};
+				const defaultMessage = settings.i18n?.loginRequiredMessage || 'Please log in to your account to bookmark events and view your saved schedule.';
+				const safeMessage = escapeHtml(message || defaultMessage);
+				const safeLoginUrl = escapeHtml(loginUrl || '/wp-login.php');
+				const loginRequiredHeader = escapeHtml(settings.i18n?.loginRequiredHeader || 'Log In Required');
+				const loginText = escapeHtml(settings.i18n?.login || 'Log In');
+				const cancelText = escapeHtml(settings.i18n?.cancel || 'Cancel');
+				const closeText = escapeHtml(settings.i18n?.close || 'Close');
+
+				const modalHtml = `
+					<div class="wpfa-login-modal-overlay" id="wpfa-login-modal" role="dialog" aria-modal="true">
+						<div class="wpfa-login-modal-card">
+							<button type="button" class="wpfa-login-modal-close" aria-label="${closeText}">&times;</button>
+							<div class="wpfa-login-modal-header">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+									<circle cx="12" cy="7" r="4"></circle>
+								</svg>
+								<h3>${loginRequiredHeader}</h3>
+							</div>
+							<p class="wpfa-login-modal-body">${safeMessage}</p>
+							<div class="wpfa-login-modal-actions">
+								<a href="${safeLoginUrl}" class="btn btn-primary wpfa-login-btn">${loginText}</a>
+								<button type="button" class="btn btn-secondary wpfa-login-modal-close-btn">${cancelText}</button>
+							</div>
+						</div>
+					</div>
+				`;
+				$('body').append(modalHtml);
+				$modal = $('#wpfa-login-modal');
+
+				$modal.on('click', '.wpfa-login-modal-close, .wpfa-login-modal-close-btn', function() {
+					$modal.removeClass('is-visible');
+				});
+				$modal.on('click', function(e) {
+					if ($(e.target).is('#wpfa-login-modal')) {
+						$modal.removeClass('is-visible');
+					}
+				});
+			}
+			$modal.addClass('is-visible');
+		}
+
 		// Bookmark Toggle Handler
 		$(document).on('click', '.wpfa-bookmark-btn', function(e) {
 			e.preventDefault();
@@ -78,7 +128,7 @@
 			const settings = window.wpfaeventPublic || {};
 
 			if (!settings.isLoggedIn) {
-				alert(settings.i18n?.loginRequired || 'Please log in to bookmark events.');
+				showLoginModal(settings.loginUrl, settings.i18n?.loginRequired);
 				return;
 			}
 

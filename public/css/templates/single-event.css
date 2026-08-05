@@ -704,6 +704,7 @@
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-photo {
 	background: #eaf1f8;
+	height: 190px;
 }
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-meta {
@@ -2390,4 +2391,9 @@
 	.wpfaevent .wpfa-single-event-details {
 		padding: 20px;
 	}
+}
+
+/* Suppress Eventyay/Pretix ticket widget error alert overlay icon */
+.wpfaevent .pretix-widget-alert-holder {
+	display: none !important;
 }
