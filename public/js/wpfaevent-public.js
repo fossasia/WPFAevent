@@ -30,9 +30,75 @@
 	 */
 
 	$(function() {
-		$('.wpfa-event-timezone-select').on('change', function() {
-			if (this.form) {
-				this.form.submit();
+		// Client-side Schedule View Switch (List vs Calendar)
+		$(document).on('click', '.wpfa-schedule-view-switch a', function(e) {
+			e.preventDefault();
+			const $btn = $(this);
+			const href = $btn.attr('href') || '';
+			const isCalendar = href.indexOf('view=calendar') !== -1 || href.indexOf('schedule_view=calendar') !== -1;
+
+			const $switch = $btn.closest('.wpfa-schedule-view-switch');
+			$switch.find('a').removeClass('is-active').removeAttr('aria-current');
+			$btn.addClass('is-active').attr('aria-current', 'page');
+
+			if (isCalendar) {
+				$('.wpfa-schedule-calendar').show();
+				$('.wpfa-schedule-program').hide();
+			} else {
+				$('.wpfa-schedule-program').show();
+				$('.wpfa-schedule-calendar').hide();
+			}
+
+			if (window.history && window.history.replaceState) {
+				window.history.replaceState(null, '', href);
+			}
+		});
+
+		// Client-side Timezone Converter
+		$(document).on('change', '.wpfa-event-timezone-select, #wpfa-schedule-timezone', function(e) {
+			e.preventDefault();
+			const selectedTz = $(this).val();
+			if (!selectedTz) return;
+
+			let formatter;
+			try {
+				formatter = new Intl.DateTimeFormat([], {
+					timeZone: selectedTz,
+					hour: 'numeric',
+					minute: '2-digit',
+					hour12: true
+				});
+			} catch (err) {
+				return;
+			}
+
+			$('time[data-utc-start]').each(function() {
+				const rawStart = $(this).attr('data-utc-start');
+				const rawEnd = $(this).attr('data-utc-end');
+
+				try {
+					const startObj = rawStart ? new Date(rawStart) : null;
+					if (!startObj || isNaN(startObj.getTime())) return;
+
+					const startLabel = formatter.format(startObj);
+
+					if (rawEnd) {
+						const endObj = new Date(rawEnd);
+						const endLabel = !isNaN(endObj.getTime()) ? formatter.format(endObj) : '';
+						$(this).text(endLabel && endLabel !== startLabel ? `${startLabel} - ${endLabel}` : startLabel);
+						return;
+					}
+
+					$(this).text(startLabel);
+				} catch (err) {
+					// Timezone fallback if unsupported string
+				}
+			});
+
+			if (window.history && window.history.replaceState) {
+				const currentUrl = new URL(window.location.href);
+				currentUrl.searchParams.set('schedule_tz', selectedTz);
+				window.history.replaceState(null, '', currentUrl.toString());
 			}
 		});
 

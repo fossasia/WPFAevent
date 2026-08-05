@@ -58,6 +58,14 @@ class Wpfaevent_Admin {
 	private $eventyay_ajax_sync;
 
 	/**
+	 * Temporary event schedule sessions storage.
+	 *
+	 * @since 1.0.0
+	 * @var array<array<string>> $schedule_sessions
+	 */
+	private $schedule_sessions = array();
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -915,6 +923,16 @@ class Wpfaevent_Admin {
 			);
 		}
 
+		// Event schedule meta box.
+		add_meta_box(
+			'wpfa_event_schedule_box',
+			__( 'Event Schedule Sessions', 'wpfaevent' ),
+			array( $this, 'render_event_schedule_meta_box' ),
+			'wpfa_event',
+			'normal',
+			'default'
+		);
+
 		// Speaker meta boxes.
 		add_meta_box(
 			'wpfa_speaker_details',
@@ -1158,6 +1176,144 @@ class Wpfaevent_Admin {
 	}
 
 	/**
+	 * Render Event schedule sessions meta box.
+	 *
+	 * @since 1.0.0
+	 * @param WP_Post $post The post object.
+	 */
+	public function render_event_schedule_meta_box( $post ) {
+		$sessions = array();
+		if ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+			$store          = new Wpfaevent_Eventyay_Dashboard_Store();
+			$schedule_table = $store->read_dashboard_json_file( 'schedule-' . $post->ID . '.json', array() );
+			$schedule_rows  = isset( $schedule_table['data'] ) && is_array( $schedule_table['data'] ) ? $schedule_table['data'] : array();
+			$schedule_meta  = isset( $schedule_table['sessions'] ) && is_array( $schedule_table['sessions'] ) ? $schedule_table['sessions'] : array();
+			$schedule_body  = ! empty( $schedule_rows ) && is_array( $schedule_rows[0] ) ? array_slice( $schedule_rows, 1 ) : array();
+
+			foreach ( $schedule_body as $row_index => $row ) {
+				$row_meta = isset( $schedule_meta[ $row_index + 1 ] ) && is_array( $schedule_meta[ $row_index + 1 ] ) ? $schedule_meta[ $row_index + 1 ] : array();
+
+				$starts_at = isset( $row_meta['starts_at'] ) ? $row_meta['starts_at'] : '';
+				$ends_at   = isset( $row_meta['ends_at'] ) ? $row_meta['ends_at'] : '';
+
+				$date_val       = '';
+				$start_time_val = '';
+				$end_time_val   = '';
+
+				if ( $starts_at ) {
+					$tz = get_post_meta( $post->ID, 'wpfa_event_timezone', true );
+					if ( ! $tz ) {
+						$tz = wp_timezone_string();
+					}
+					try {
+						$dt             = new DateTimeImmutable( $starts_at );
+						$dt             = $dt->setTimezone( new DateTimeZone( $tz ) );
+						$date_val       = $dt->format( 'Y-m-d' );
+						$start_time_val = $dt->format( 'H:i' );
+					} catch ( Exception $e ) {
+						unset( $e );
+					}
+				}
+
+				if ( $ends_at ) {
+					$tz = get_post_meta( $post->ID, 'wpfa_event_timezone', true );
+					if ( ! $tz ) {
+						$tz = wp_timezone_string();
+					}
+					try {
+						$dt           = new DateTimeImmutable( $ends_at );
+						$dt           = $dt->setTimezone( new DateTimeZone( $tz ) );
+						$end_time_val = $dt->format( 'H:i' );
+					} catch ( Exception $e ) {
+						unset( $e );
+					}
+				}
+
+				if ( ! $date_val && isset( $row[0] ) ) {
+					$date_val = sanitize_text_field( $row[0] );
+				}
+
+				$sessions[] = array(
+					'date'       => $date_val,
+					'start_time' => $start_time_val,
+					'end_time'   => $end_time_val,
+					'title'      => isset( $row[2] ) ? sanitize_text_field( $row[2] ) : '',
+					'speakers'   => isset( $row[3] ) ? sanitize_text_field( $row[3] ) : '',
+					'track'      => isset( $row[4] ) ? sanitize_text_field( $row[4] ) : '',
+					'room'       => isset( $row[5] ) ? sanitize_text_field( $row[5] ) : '',
+				);
+			}
+		}
+
+		$this->schedule_sessions = $sessions;
+		?>
+		<table class="wp-list-table widefat fixed striped" id="wpfaevent-schedule-sessions-table">
+			<thead>
+				<tr>
+					<th class="wpfa-col-date"><?php esc_html_e( 'Date', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-start-time"><?php esc_html_e( 'Start Time', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-end-time"><?php esc_html_e( 'End Time', 'wpfaevent' ); ?></th>
+					<th><?php esc_html_e( 'Session Title', 'wpfaevent' ); ?></th>
+					<th><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-track"><?php esc_html_e( 'Track', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-room"><?php esc_html_e( 'Room', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-action"><?php esc_html_e( 'Action', 'wpfaevent' ); ?></th>
+				</tr>
+			</thead>
+			<tbody id="wpfaevent-schedule-sessions-body">
+				<?php
+				$sessions = $this->schedule_sessions;
+				if ( ! empty( $sessions ) ) :
+					foreach ( $sessions as $index => $sess ) :
+						?>
+						<tr>
+							<td><input type="date" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][date]" value="<?php echo esc_attr( $sess['date'] ); ?>" required></td>
+							<td><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][start_time]" value="<?php echo esc_attr( $sess['start_time'] ); ?>" required></td>
+							<td><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][end_time]" value="<?php echo esc_attr( $sess['end_time'] ); ?>"></td>
+							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][title]" value="<?php echo esc_attr( $sess['title'] ); ?>" required></td>
+							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][speakers]" value="<?php echo esc_attr( $sess['speakers'] ); ?>"></td>
+							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][track]" value="<?php echo esc_attr( $sess['track'] ); ?>"></td>
+							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][room]" value="<?php echo esc_attr( $sess['room'] ); ?>"></td>
+							<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a></td>
+						</tr>
+					<?php endforeach; ?>
+				<?php endif; ?>
+			</tbody>
+		</table>
+		<button type="button" class="button button-primary" id="wpfaevent-add-session-row">
+			<?php esc_html_e( 'Add Session', 'wpfaevent' ); ?>
+		</button>
+
+		<script>
+			jQuery(document).ready(function($) {
+				let sessionIndex = $('#wpfaevent-schedule-sessions-body tr').length;
+
+				$('#wpfaevent-add-session-row').on('click', function(e) {
+					e.preventDefault();
+					const html = `<tr>
+						<td><input type="date" name="wpfa_schedule_sessions[\${sessionIndex}][date]" required></td>
+						<td><input type="time" name="wpfa_schedule_sessions[\${sessionIndex}][start_time]" required></td>
+						<td><input type="time" name="wpfa_schedule_sessions[\${sessionIndex}][end_time]"></td>
+						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][title]" required></td>
+						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][speakers]"></td>
+						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][track]"></td>
+						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][room]"></td>
+						<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session">Remove</a></td>
+					</tr>`;
+					$('#wpfaevent-schedule-sessions-body').append(html);
+					sessionIndex++;
+				});
+
+				$('#wpfaevent-schedule-sessions-body').on('click', '.wpfaevent-remove-session', function(e) {
+					e.preventDefault();
+					$(this).closest('tr').remove();
+				});
+			});
+		</script>
+		<?php
+	}
+
+	/**
 	 * Render Speaker meta box.
 	 *
 	 * @since 1.0.0
@@ -1373,6 +1529,102 @@ class Wpfaevent_Admin {
 		$this->update_post_id_list_meta( $post_id, 'wpfa_event_speakers', $speakers );
 
 		Wpfaevent_Meta_Event::sync_event_speaker_relationships( $post_id, $previous_speakers, $speakers );
+
+		// Handle schedule sessions saving.
+		if ( isset( $_POST['wpfa_schedule_sessions'] ) && is_array( $_POST['wpfa_schedule_sessions'] ) ) {
+			$raw_sessions       = wp_unslash( $_POST['wpfa_schedule_sessions'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized in loop below.
+			$formatted_data     = array();
+			$formatted_sessions = array();
+
+			// Add headers to data array.
+			$formatted_data[]     = array( 'Date', 'Time', 'Session', 'Speakers', 'Track', 'Room' );
+			$formatted_sessions[] = array(); // Header row meta is empty.
+
+			$event_tz = get_post_meta( $post_id, 'wpfa_event_timezone', true );
+			if ( ! $event_tz ) {
+				$event_tz = wp_timezone_string();
+			}
+			$timezone_obj = new DateTimeZone( $event_tz );
+
+			foreach ( $raw_sessions as $sess ) {
+				$date       = isset( $sess['date'] ) ? sanitize_text_field( $sess['date'] ) : '';
+				$time_start = isset( $sess['start_time'] ) ? sanitize_text_field( $sess['start_time'] ) : '';
+				$time_end   = isset( $sess['end_time'] ) ? sanitize_text_field( $sess['end_time'] ) : '';
+				$title      = isset( $sess['title'] ) ? sanitize_text_field( $sess['title'] ) : '';
+				$speakers   = isset( $sess['speakers'] ) ? sanitize_text_field( $sess['speakers'] ) : '';
+				$track      = isset( $sess['track'] ) ? sanitize_text_field( $sess['track'] ) : '';
+				$room       = isset( $sess['room'] ) ? sanitize_text_field( $sess['room'] ) : '';
+
+				if ( ! $date || ! $time_start || ! $title ) {
+					continue;
+				}
+
+				// Build ISO 8601 UTC date-time.
+				$starts_at_iso = '';
+				$ends_at_iso   = '';
+				$start_dt      = null;
+				$end_dt        = null;
+
+				try {
+					$start_dt = DateTimeImmutable::createFromFormat( 'Y-m-d H:i', $date . ' ' . $time_start, $timezone_obj );
+					if ( $start_dt ) {
+						$starts_at_iso = $start_dt->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d\TH:i:s\Z' );
+					}
+				} catch ( Exception $e ) {
+					unset( $e );
+				}
+
+				try {
+					if ( $time_end ) {
+						$end_dt = DateTimeImmutable::createFromFormat( 'Y-m-d H:i', $date . ' ' . $time_end, $timezone_obj );
+						if ( $end_dt ) {
+							$ends_at_iso = $end_dt->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d\TH:i:s\Z' );
+						}
+					}
+				} catch ( Exception $e ) {
+					unset( $e );
+				}
+
+				// Build time range string (12-hour format).
+				$start_time_12 = $start_dt ? $start_dt->format( 'g:i A' ) : '';
+				$end_time_12   = ( isset( $end_dt ) && $end_dt ) ? $end_dt->format( 'g:i A' ) : '';
+				$time_label    = $start_time_12 . ( $end_time_12 ? ' - ' . $end_time_12 : '' );
+
+				$formatted_data[] = array(
+					$date,
+					$time_label,
+					$title,
+					$speakers,
+					$track,
+					$room,
+				);
+
+				$formatted_sessions[] = array(
+					'starts_at' => $starts_at_iso,
+					'ends_at'   => $ends_at_iso,
+				);
+			}
+
+			if ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+				$store = new Wpfaevent_Eventyay_Dashboard_Store();
+				$store->write_dashboard_json_file(
+					'schedule-' . $post_id . '.json',
+					array(
+						'data'     => $formatted_data,
+						'sessions' => $formatted_sessions,
+					)
+				);
+			}
+		} elseif ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+			$store = new Wpfaevent_Eventyay_Dashboard_Store();
+			$store->write_dashboard_json_file(
+				'schedule-' . $post_id . '.json',
+				array(
+					'data'     => array( array( 'Date', 'Time', 'Session', 'Speakers', 'Track', 'Room' ) ),
+					'sessions' => array( array() ),
+				)
+			);
+		}
 	}
 
 	/**

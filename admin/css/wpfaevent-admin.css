@@ -273,3 +273,72 @@
 	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
 	outline: none !important;
 }
+
+/**
+ * Schedule Sessions Metabox Styling
+ */
+#wpfaevent-schedule-sessions-table {
+	margin-top: 10px;
+}
+
+#wpfaevent-schedule-sessions-table th {
+	font-weight: bold;
+	text-align: left;
+	padding: 10px;
+}
+
+#wpfaevent-schedule-sessions-table td {
+	padding: 10px;
+	vertical-align: middle;
+}
+
+#wpfaevent-schedule-sessions-table input {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+#wpfaevent-schedule-sessions-table th.wpfa-col-date,
+#wpfaevent-schedule-sessions-table td.wpfa-col-date {
+	width: 15%;
+}
+
+#wpfaevent-schedule-sessions-table th.wpfa-col-start-time,
+#wpfaevent-schedule-sessions-table td.wpfa-col-start-time {
+	width: 12%;
+}
+
+#wpfaevent-schedule-sessions-table th.wpfa-col-end-time,
+#wpfaevent-schedule-sessions-table td.wpfa-col-end-time {
+	width: 12%;
+}
+
+#wpfaevent-schedule-sessions-table th.wpfa-col-track,
+#wpfaevent-schedule-sessions-table td.wpfa-col-track {
+	width: 15%;
+}
+
+#wpfaevent-schedule-sessions-table th.wpfa-col-room,
+#wpfaevent-schedule-sessions-table td.wpfa-col-room {
+	width: 12%;
+}
+
+#wpfaevent-schedule-sessions-table th.wpfa-col-action,
+#wpfaevent-schedule-sessions-table td.wpfa-col-action {
+	width: 80px;
+	text-align: center;
+}
+
+.wpfaevent-remove-session {
+	color: #a00;
+	cursor: pointer;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+.wpfaevent-remove-session:hover {
+	color: #f00;
+}
+
+#wpfaevent-add-session-row {
+	margin-top: 15px;
+}
