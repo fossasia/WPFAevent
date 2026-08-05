@@ -58,6 +58,14 @@ class Wpfaevent_Admin {
 	private $eventyay_ajax_sync;
 
 	/**
+	 * Temporary event schedule sessions storage.
+	 *
+	 * @since 1.0.0
+	 * @var array<array<string>> $schedule_sessions
+	 */
+	private $schedule_sessions = array();
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -915,6 +923,36 @@ class Wpfaevent_Admin {
 			);
 		}
 
+		// Event schedule meta box.
+		add_meta_box(
+			'wpfa_event_schedule_box',
+			__( 'Event Schedule Sessions', 'wpfaevent' ),
+			array( $this, 'render_event_schedule_meta_box' ),
+			'wpfa_event',
+			'normal',
+			'default'
+		);
+
+		// Event sponsors meta box.
+		add_meta_box(
+			'wpfa_event_sponsors_box',
+			__( 'Event Sponsors', 'wpfaevent' ),
+			array( $this, 'render_event_sponsors_meta_box' ),
+			'wpfa_event',
+			'normal',
+			'default'
+		);
+
+		// Event exhibitors meta box.
+		add_meta_box(
+			'wpfa_event_exhibitors_box',
+			__( 'Event Exhibitors', 'wpfaevent' ),
+			array( $this, 'render_event_exhibitors_meta_box' ),
+			'wpfa_event',
+			'normal',
+			'default'
+		);
+
 		// Speaker meta boxes.
 		add_meta_box(
 			'wpfa_speaker_details',
@@ -1158,6 +1196,398 @@ class Wpfaevent_Admin {
 	}
 
 	/**
+	 * Render Event schedule sessions meta box.
+	 *
+	 * @since 1.0.0
+	 * @param WP_Post $post The post object.
+	 */
+	public function render_event_schedule_meta_box( $post ) {
+		$sessions = array();
+		if ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+			$store          = new Wpfaevent_Eventyay_Dashboard_Store();
+			$schedule_table = $store->read_dashboard_json_file( 'schedule-' . $post->ID . '.json', array() );
+			$schedule_rows  = isset( $schedule_table['data'] ) && is_array( $schedule_table['data'] ) ? $schedule_table['data'] : array();
+			$schedule_meta  = isset( $schedule_table['sessions'] ) && is_array( $schedule_table['sessions'] ) ? $schedule_table['sessions'] : array();
+			$schedule_body  = ! empty( $schedule_rows ) && is_array( $schedule_rows[0] ) ? array_slice( $schedule_rows, 1 ) : array();
+
+			foreach ( $schedule_body as $row_index => $row ) {
+				$row_meta = isset( $schedule_meta[ $row_index + 1 ] ) && is_array( $schedule_meta[ $row_index + 1 ] ) ? $schedule_meta[ $row_index + 1 ] : array();
+
+				$starts_at = isset( $row_meta['starts_at'] ) ? $row_meta['starts_at'] : '';
+				$ends_at   = isset( $row_meta['ends_at'] ) ? $row_meta['ends_at'] : '';
+
+				$date_val       = '';
+				$start_time_val = '';
+				$end_time_val   = '';
+
+				if ( $starts_at ) {
+					$tz = get_post_meta( $post->ID, 'wpfa_event_timezone', true );
+					if ( ! $tz ) {
+						$tz = wp_timezone_string();
+					}
+					try {
+						$dt             = new DateTimeImmutable( $starts_at );
+						$dt             = $dt->setTimezone( new DateTimeZone( $tz ) );
+						$date_val       = $dt->format( 'Y-m-d' );
+						$start_time_val = $dt->format( 'H:i' );
+					} catch ( Exception $e ) {
+						unset( $e );
+					}
+				}
+
+				if ( $ends_at ) {
+					$tz = get_post_meta( $post->ID, 'wpfa_event_timezone', true );
+					if ( ! $tz ) {
+						$tz = wp_timezone_string();
+					}
+					try {
+						$dt           = new DateTimeImmutable( $ends_at );
+						$dt           = $dt->setTimezone( new DateTimeZone( $tz ) );
+						$end_time_val = $dt->format( 'H:i' );
+					} catch ( Exception $e ) {
+						unset( $e );
+					}
+				}
+
+				if ( ! $date_val && isset( $row[0] ) ) {
+					$date_val = sanitize_text_field( $row[0] );
+				}
+
+				$sessions[] = array(
+					'date'       => $date_val,
+					'start_time' => $start_time_val,
+					'end_time'   => $end_time_val,
+					'title'      => isset( $row[2] ) ? sanitize_text_field( $row[2] ) : '',
+					'speakers'   => isset( $row[3] ) ? sanitize_text_field( $row[3] ) : '',
+					'track'      => isset( $row[4] ) ? sanitize_text_field( $row[4] ) : '',
+					'room'       => isset( $row[5] ) ? sanitize_text_field( $row[5] ) : '',
+				);
+			}
+		}
+
+		$this->schedule_sessions = $sessions;
+		?>
+		<table class="wp-list-table widefat fixed striped" id="wpfaevent-schedule-sessions-table">
+			<thead>
+				<tr>
+					<th class="wpfa-col-date"><?php esc_html_e( 'Date', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-start-time"><?php esc_html_e( 'Start Time', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-end-time"><?php esc_html_e( 'End Time', 'wpfaevent' ); ?></th>
+					<th><?php esc_html_e( 'Session Title', 'wpfaevent' ); ?></th>
+					<th><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-track"><?php esc_html_e( 'Track', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-room"><?php esc_html_e( 'Room', 'wpfaevent' ); ?></th>
+					<th class="wpfa-col-action"><?php esc_html_e( 'Action', 'wpfaevent' ); ?></th>
+				</tr>
+			</thead>
+			<tbody id="wpfaevent-schedule-sessions-body">
+				<?php
+				$sessions = $this->schedule_sessions;
+				if ( ! empty( $sessions ) ) :
+					foreach ( $sessions as $index => $sess ) :
+						?>
+						<tr>
+							<td><input type="date" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][date]" value="<?php echo esc_attr( $sess['date'] ); ?>" required></td>
+							<td><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][start_time]" value="<?php echo esc_attr( $sess['start_time'] ); ?>" required></td>
+							<td><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][end_time]" value="<?php echo esc_attr( $sess['end_time'] ); ?>"></td>
+							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][title]" value="<?php echo esc_attr( $sess['title'] ); ?>" required></td>
+							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][speakers]" value="<?php echo esc_attr( $sess['speakers'] ); ?>"></td>
+							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][track]" value="<?php echo esc_attr( $sess['track'] ); ?>"></td>
+							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][room]" value="<?php echo esc_attr( $sess['room'] ); ?>"></td>
+							<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a></td>
+						</tr>
+					<?php endforeach; ?>
+				<?php endif; ?>
+			</tbody>
+		</table>
+		<button type="button" class="button button-primary" id="wpfaevent-add-session-row">
+			<?php esc_html_e( 'Add Session', 'wpfaevent' ); ?>
+		</button>
+
+		<script>
+			jQuery(document).ready(function($) {
+				let sessionIndex = $('#wpfaevent-schedule-sessions-body tr').length;
+
+				$('#wpfaevent-add-session-row').on('click', function(e) {
+					e.preventDefault();
+					const html = `<tr>
+						<td><input type="date" name="wpfa_schedule_sessions[\${sessionIndex}][date]" required></td>
+						<td><input type="time" name="wpfa_schedule_sessions[\${sessionIndex}][start_time]" required></td>
+						<td><input type="time" name="wpfa_schedule_sessions[\${sessionIndex}][end_time]"></td>
+						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][title]" required></td>
+						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][speakers]"></td>
+						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][track]"></td>
+						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][room]"></td>
+						<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session">Remove</a></td>
+					</tr>`;
+					$('#wpfaevent-schedule-sessions-body').append(html);
+					sessionIndex++;
+				});
+
+				$('#wpfaevent-schedule-sessions-body').on('click', '.wpfaevent-remove-session', function(e) {
+					e.preventDefault();
+					$(this).closest('tr').remove();
+				});
+			});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Render Event Sponsors meta box.
+	 *
+	 * @since 1.0.1
+	 * @param WP_Post $post The post object.
+	 */
+	public function render_event_sponsors_meta_box( $post ) {
+		$sponsors = array();
+		if ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+			$store          = new Wpfaevent_Eventyay_Dashboard_Store();
+			$sponsor_groups = $store->read_dashboard_json_file( 'sponsors-' . $post->ID . '.json', array() );
+			if ( is_array( $sponsor_groups ) ) {
+				foreach ( $sponsor_groups as $group ) {
+					$group_name     = isset( $group['group_name'] ) ? $group['group_name'] : '';
+					$logo_size      = isset( $group['logo_size'] ) ? $group['logo_size'] : 160;
+					$group_sponsors = isset( $group['sponsors'] ) && is_array( $group['sponsors'] ) ? $group['sponsors'] : array();
+					foreach ( $group_sponsors as $sp ) {
+						$sponsors[] = array(
+							'group_name'  => $group_name,
+							'logo_size'   => $logo_size,
+							'name'        => isset( $sp['name'] ) ? $sp['name'] : '',
+							'image'       => isset( $sp['image'] ) ? $sp['image'] : '',
+							'link'        => isset( $sp['link'] ) ? $sp['link'] : '',
+							'description' => isset( $sp['description'] ) ? $sp['description'] : '',
+							'level'       => isset( $sp['level'] ) ? $sp['level'] : 0,
+						);
+					}
+				}
+			}
+		}
+
+		?>
+		<div class="wpfaevent-meta-cards-container" id="wpfaevent-sponsors-container">
+			<?php
+			if ( ! empty( $sponsors ) ) :
+				foreach ( $sponsors as $index => $sp ) :
+					?>
+					<div class="wpfaevent-meta-card">
+						<a href="#" class="wpfaevent-remove-sponsor wpfaevent-remove-card-btn"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a>
+						<div class="wpfaevent-meta-card-grid">
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Tier/Group Name', 'wpfaevent' ); ?></label>
+								<input type="text" name="wpfa_sponsors[<?php echo absint( $index ); ?>][group_name]" value="<?php echo esc_attr( $sp['group_name'] ); ?>" required placeholder="e.g. Gold Sponsors">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Logo Size', 'wpfaevent' ); ?></label>
+								<input type="number" name="wpfa_sponsors[<?php echo absint( $index ); ?>][logo_size]" value="<?php echo esc_attr( $sp['logo_size'] ); ?>" required min="50" max="500">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Sponsor Name', 'wpfaevent' ); ?></label>
+								<input type="text" name="wpfa_sponsors[<?php echo absint( $index ); ?>][name]" value="<?php echo esc_attr( $sp['name'] ); ?>" required>
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Logo URL', 'wpfaevent' ); ?></label>
+								<input type="url" name="wpfa_sponsors[<?php echo absint( $index ); ?>][image]" value="<?php echo esc_attr( $sp['image'] ); ?>" required placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Website URL', 'wpfaevent' ); ?></label>
+								<input type="url" name="wpfa_sponsors[<?php echo absint( $index ); ?>][link]" value="<?php echo esc_attr( $sp['link'] ); ?>" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Sort Level', 'wpfaevent' ); ?></label>
+								<input type="number" name="wpfa_sponsors[<?php echo absint( $index ); ?>][level]" value="<?php echo esc_attr( $sp['level'] ); ?>" min="0">
+							</div>
+							<div class="wpfaevent-meta-card-field span-2">
+								<label><?php esc_html_e( 'Description', 'wpfaevent' ); ?></label>
+								<input type="text" name="wpfa_sponsors[<?php echo absint( $index ); ?>][description]" value="<?php echo esc_attr( $sp['description'] ); ?>">
+							</div>
+						</div>
+					</div>
+					<?php
+				endforeach;
+			endif;
+			?>
+		</div>
+
+		<button type="button" class="button button-primary" id="wpfaevent-add-sponsor-row">
+			<?php esc_html_e( 'Add Sponsor', 'wpfaevent' ); ?>
+		</button>
+
+		<script>
+			jQuery(document).ready(function($) {
+				let sponsorIndex = $('#wpfaevent-sponsors-container .wpfaevent-meta-card').length;
+
+				$('#wpfaevent-add-sponsor-row').on('click', function(e) {
+					e.preventDefault();
+					const html = `<div class="wpfaevent-meta-card">
+						<a href="#" class="wpfaevent-remove-sponsor wpfaevent-remove-card-btn">Remove</a>
+						<div class="wpfaevent-meta-card-grid">
+							<div class="wpfaevent-meta-card-field">
+								<label>Tier/Group Name</label>
+								<input type="text" name="wpfa_sponsors[\${sponsorIndex}][group_name]" required placeholder="e.g. Gold Sponsors">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Logo Size</label>
+								<input type="number" name="wpfa_sponsors[\${sponsorIndex}][logo_size]" value="160" required min="50" max="500">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Sponsor Name</label>
+								<input type="text" name="wpfa_sponsors[\${sponsorIndex}][name]" required>
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Logo URL</label>
+								<input type="url" name="wpfa_sponsors[\${sponsorIndex}][image]" required placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Website URL</label>
+								<input type="url" name="wpfa_sponsors[\${sponsorIndex}][link]" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Sort Level</label>
+								<input type="number" name="wpfa_sponsors[\${sponsorIndex}][level]" value="0" min="0">
+							</div>
+							<div class="wpfaevent-meta-card-field span-2">
+								<label>Description</label>
+								<input type="text" name="wpfa_sponsors[\${sponsorIndex}][description]">
+							</div>
+						</div>
+					</div>`;
+					$('#wpfaevent-sponsors-container').append(html);
+					sponsorIndex++;
+				});
+
+				$('#wpfaevent-sponsors-container').on('click', '.wpfaevent-remove-sponsor', function(e) {
+					e.preventDefault();
+					$(this).closest('.wpfaevent-meta-card').remove();
+				});
+			});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Render Event Exhibitors meta box.
+	 *
+	 * @since 1.0.1
+	 * @param WP_Post $post The post object.
+	 */
+	public function render_event_exhibitors_meta_box( $post ) {
+		$exhibitors = array();
+		if ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+			$store      = new Wpfaevent_Eventyay_Dashboard_Store();
+			$exhibitors = $store->read_dashboard_json_file( 'exhibitors-' . $post->ID . '.json', array() );
+		}
+
+		?>
+		<div class="wpfaevent-meta-cards-container" id="wpfaevent-exhibitors-container">
+			<?php
+			if ( ! empty( $exhibitors ) && is_array( $exhibitors ) ) :
+				foreach ( $exhibitors as $index => $ex ) :
+					?>
+					<div class="wpfaevent-meta-card">
+						<a href="#" class="wpfaevent-remove-exhibitor wpfaevent-remove-card-btn"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a>
+						<div class="wpfaevent-meta-card-grid">
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Exhibitor Name', 'wpfaevent' ); ?></label>
+								<input type="text" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][name]" value="<?php echo esc_attr( $ex['name'] ); ?>" required>
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Logo URL', 'wpfaevent' ); ?></label>
+								<input type="url" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][logo]" value="<?php echo esc_attr( isset( $ex['logo'] ) ? $ex['logo'] : '' ); ?>" required placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Banner URL', 'wpfaevent' ); ?></label>
+								<input type="url" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][banner]" value="<?php echo esc_attr( isset( $ex['banner'] ) ? $ex['banner'] : '' ); ?>" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Website URL', 'wpfaevent' ); ?></label>
+								<input type="url" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][link]" value="<?php echo esc_attr( isset( $ex['link'] ) ? $ex['link'] : '' ); ?>" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Email', 'wpfaevent' ); ?></label>
+								<input type="email" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][contact_email]" value="<?php echo esc_attr( isset( $ex['contact_email'] ) ? $ex['contact_email'] : '' ); ?>">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Contact Link', 'wpfaevent' ); ?></label>
+								<input type="url" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][contact_link]" value="<?php echo esc_attr( isset( $ex['contact_link'] ) ? $ex['contact_link'] : '' ); ?>" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label><?php esc_html_e( 'Sort Order', 'wpfaevent' ); ?></label>
+								<input type="number" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][position]" value="<?php echo esc_attr( isset( $ex['position'] ) ? $ex['position'] : 0 ); ?>" min="0">
+							</div>
+							<div class="wpfaevent-meta-card-field span-2">
+								<label><?php esc_html_e( 'Description', 'wpfaevent' ); ?></label>
+								<input type="text" name="wpfa_exhibitors[<?php echo absint( $index ); ?>][description]" value="<?php echo esc_attr( isset( $ex['description'] ) ? $ex['description'] : '' ); ?>">
+							</div>
+						</div>
+					</div>
+					<?php
+				endforeach;
+			endif;
+			?>
+		</div>
+
+		<button type="button" class="button button-primary" id="wpfaevent-add-exhibitor-row">
+			<?php esc_html_e( 'Add Exhibitor', 'wpfaevent' ); ?>
+		</button>
+
+		<script>
+			jQuery(document).ready(function($) {
+				let exhibitorIndex = $('#wpfaevent-exhibitors-container .wpfaevent-meta-card').length;
+
+				$('#wpfaevent-add-exhibitor-row').on('click', function(e) {
+					e.preventDefault();
+					const html = `<div class="wpfaevent-meta-card">
+						<a href="#" class="wpfaevent-remove-exhibitor wpfaevent-remove-card-btn">Remove</a>
+						<div class="wpfaevent-meta-card-grid">
+							<div class="wpfaevent-meta-card-field">
+								<label>Exhibitor Name</label>
+								<input type="text" name="wpfa_exhibitors[\${exhibitorIndex}][name]" required>
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Logo URL</label>
+								<input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][logo]" required placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Banner URL</label>
+								<input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][banner]" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Website URL</label>
+								<input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][link]" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Email</label>
+								<input type="email" name="wpfa_exhibitors[\${exhibitorIndex}][contact_email]">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Contact Link</label>
+								<input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][contact_link]" placeholder="https://">
+							</div>
+							<div class="wpfaevent-meta-card-field">
+								<label>Sort Order</label>
+								<input type="number" name="wpfa_exhibitors[\${exhibitorIndex}][position]" value="0" min="0">
+							</div>
+							<div class="wpfaevent-meta-card-field span-2">
+								<label>Description</label>
+								<input type="text" name="wpfa_exhibitors[\${exhibitorIndex}][description]">
+							</div>
+						</div>
+					</div>`;
+					$('#wpfaevent-exhibitors-container').append(html);
+					exhibitorIndex++;
+				});
+
+				$('#wpfaevent-exhibitors-container').on('click', '.wpfaevent-remove-exhibitor', function(e) {
+					e.preventDefault();
+					$(this).closest('.wpfaevent-meta-card').remove();
+				});
+			});
+		</script>
+		<?php
+	}
+
+	/**
 	 * Render Speaker meta box.
 	 *
 	 * @since 1.0.0
@@ -1373,6 +1803,231 @@ class Wpfaevent_Admin {
 		$this->update_post_id_list_meta( $post_id, 'wpfa_event_speakers', $speakers );
 
 		Wpfaevent_Meta_Event::sync_event_speaker_relationships( $post_id, $previous_speakers, $speakers );
+
+		// Handle schedule sessions saving.
+		if ( isset( $_POST['wpfa_schedule_sessions'] ) && is_array( $_POST['wpfa_schedule_sessions'] ) ) {
+			$raw_sessions       = wp_unslash( $_POST['wpfa_schedule_sessions'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized in loop below.
+			$formatted_data     = array();
+			$formatted_sessions = array();
+
+			// Add headers to data array.
+			$formatted_data[]     = array( 'Date', 'Time', 'Session', 'Speakers', 'Track', 'Room' );
+			$formatted_sessions[] = array(); // Header row meta is empty.
+
+			$event_tz = get_post_meta( $post_id, 'wpfa_event_timezone', true );
+			if ( ! $event_tz ) {
+				$event_tz = wp_timezone_string();
+			}
+			$timezone_obj = new DateTimeZone( $event_tz );
+
+			foreach ( $raw_sessions as $sess ) {
+				$date       = isset( $sess['date'] ) ? sanitize_text_field( $sess['date'] ) : '';
+				$time_start = isset( $sess['start_time'] ) ? sanitize_text_field( $sess['start_time'] ) : '';
+				$time_end   = isset( $sess['end_time'] ) ? sanitize_text_field( $sess['end_time'] ) : '';
+				$title      = isset( $sess['title'] ) ? sanitize_text_field( $sess['title'] ) : '';
+				$speakers   = isset( $sess['speakers'] ) ? sanitize_text_field( $sess['speakers'] ) : '';
+				$track      = isset( $sess['track'] ) ? sanitize_text_field( $sess['track'] ) : '';
+				$room       = isset( $sess['room'] ) ? sanitize_text_field( $sess['room'] ) : '';
+
+				if ( ! $date || ! $time_start || ! $title ) {
+					continue;
+				}
+
+				// Build ISO 8601 UTC date-time.
+				$starts_at_iso = '';
+				$ends_at_iso   = '';
+				$start_dt      = null;
+				$end_dt        = null;
+
+				try {
+					$start_dt = DateTimeImmutable::createFromFormat( 'Y-m-d H:i', $date . ' ' . $time_start, $timezone_obj );
+					if ( $start_dt ) {
+						$starts_at_iso = $start_dt->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d\TH:i:s\Z' );
+					}
+				} catch ( Exception $e ) {
+					unset( $e );
+				}
+
+				try {
+					if ( $time_end ) {
+						$end_dt = DateTimeImmutable::createFromFormat( 'Y-m-d H:i', $date . ' ' . $time_end, $timezone_obj );
+						if ( $end_dt ) {
+							$ends_at_iso = $end_dt->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d\TH:i:s\Z' );
+						}
+					}
+				} catch ( Exception $e ) {
+					unset( $e );
+				}
+
+				// Build time range string (12-hour format).
+				$start_time_12 = $start_dt ? $start_dt->format( 'g:i A' ) : '';
+				$end_time_12   = ( isset( $end_dt ) && $end_dt ) ? $end_dt->format( 'g:i A' ) : '';
+				$time_label    = $start_time_12 . ( $end_time_12 ? ' - ' . $end_time_12 : '' );
+
+				$formatted_data[] = array(
+					$date,
+					$time_label,
+					$title,
+					$speakers,
+					$track,
+					$room,
+				);
+
+				$formatted_sessions[] = array(
+					'starts_at' => $starts_at_iso,
+					'ends_at'   => $ends_at_iso,
+				);
+			}
+
+			if ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+				$store = new Wpfaevent_Eventyay_Dashboard_Store();
+				$store->write_dashboard_json_file(
+					'schedule-' . $post_id . '.json',
+					array(
+						'data'     => $formatted_data,
+						'sessions' => $formatted_sessions,
+					)
+				);
+			}
+		} elseif ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+			$store = new Wpfaevent_Eventyay_Dashboard_Store();
+			$store->write_dashboard_json_file(
+				'schedule-' . $post_id . '.json',
+				array(
+					'data'     => array( array( 'Date', 'Time', 'Session', 'Speakers', 'Track', 'Room' ) ),
+					'sessions' => array( array() ),
+				)
+			);
+		}
+
+		// Handle sponsors saving.
+		if ( isset( $_POST['wpfa_sponsors'] ) && is_array( $_POST['wpfa_sponsors'] ) ) {
+			$raw_sponsors = wp_unslash( $_POST['wpfa_sponsors'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized in loop below.
+			$groups       = array();
+
+			foreach ( $raw_sponsors as $sp ) {
+				$group_name  = isset( $sp['group_name'] ) ? sanitize_text_field( $sp['group_name'] ) : '';
+				$logo_size   = isset( $sp['logo_size'] ) ? absint( $sp['logo_size'] ) : 160;
+				$name        = isset( $sp['name'] ) ? sanitize_text_field( $sp['name'] ) : '';
+				$image       = isset( $sp['image'] ) ? esc_url_raw( $sp['image'] ) : '';
+				$link        = isset( $sp['link'] ) ? esc_url_raw( $sp['link'] ) : '';
+				$level       = isset( $sp['level'] ) ? absint( $sp['level'] ) : 0;
+				$description = isset( $sp['description'] ) ? sanitize_text_field( $sp['description'] ) : '';
+
+				if ( ! $group_name || ! $name || ! $image ) {
+					continue;
+				}
+
+				if ( ! isset( $groups[ $group_name ] ) ) {
+					$groups[ $group_name ] = array(
+						'group_name' => $group_name,
+						'logo_size'  => $logo_size,
+						'sponsors'   => array(),
+					);
+				}
+
+				$groups[ $group_name ]['sponsors'][] = array(
+					'id'          => 'sponsor-' . sanitize_title( $name ),
+					'source'      => 'manual',
+					'name'        => $name,
+					'image'       => $image,
+					'link'        => $link,
+					'level'       => $level,
+					'description' => $description,
+					'type'        => $group_name,
+				);
+			}
+
+			// Sort sponsors inside each group by level ASC, name ASC.
+			foreach ( $groups as &$g ) {
+				usort(
+					$g['sponsors'],
+					static function ( $a, $b ) {
+						if ( $a['level'] !== $b['level'] ) {
+							return $a['level'] <=> $b['level'];
+						}
+						return strcasecmp( $a['name'], $b['name'] );
+					}
+				);
+			}
+			unset( $g );
+
+			// Reindex groups.
+			$formatted_sponsors = array_values( $groups );
+
+			if ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+				$store = new Wpfaevent_Eventyay_Dashboard_Store();
+				$store->write_dashboard_json_file(
+					'sponsors-' . $post_id . '.json',
+					$formatted_sponsors
+				);
+			}
+		} elseif ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+			$store = new Wpfaevent_Eventyay_Dashboard_Store();
+			$store->write_dashboard_json_file(
+				'sponsors-' . $post_id . '.json',
+				array()
+			);
+		}
+
+		// Handle exhibitors saving.
+		if ( isset( $_POST['wpfa_exhibitors'] ) && is_array( $_POST['wpfa_exhibitors'] ) ) {
+			$raw_exhibitors       = wp_unslash( $_POST['wpfa_exhibitors'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized in loop below.
+			$formatted_exhibitors = array();
+
+			foreach ( $raw_exhibitors as $ex ) {
+				$name          = isset( $ex['name'] ) ? sanitize_text_field( $ex['name'] ) : '';
+				$logo          = isset( $ex['logo'] ) ? esc_url_raw( $ex['logo'] ) : '';
+				$banner        = isset( $ex['banner'] ) ? esc_url_raw( $ex['banner'] ) : '';
+				$link          = isset( $ex['link'] ) ? esc_url_raw( $ex['link'] ) : '';
+				$contact_email = isset( $ex['contact_email'] ) ? sanitize_email( $ex['contact_email'] ) : '';
+				$contact_link  = isset( $ex['contact_link'] ) ? esc_url_raw( $ex['contact_link'] ) : '';
+				$position      = isset( $ex['position'] ) ? absint( $ex['position'] ) : 0;
+				$description   = isset( $ex['description'] ) ? sanitize_text_field( $ex['description'] ) : '';
+
+				if ( ! $name || ! $logo ) {
+					continue;
+				}
+
+				$formatted_exhibitors[] = array(
+					'id'            => 'exhibitor-' . sanitize_title( $name ),
+					'source'        => 'manual',
+					'name'          => $name,
+					'logo'          => $logo,
+					'banner'        => $banner,
+					'link'          => $link,
+					'contact_email' => $contact_email,
+					'contact_link'  => $contact_link,
+					'position'      => $position,
+					'description'   => $description,
+				);
+			}
+
+			// Sort exhibitors by position ASC, name ASC.
+			usort(
+				$formatted_exhibitors,
+				static function ( $a, $b ) {
+					if ( $a['position'] !== $b['position'] ) {
+						return $a['position'] <=> $b['position'];
+					}
+					return strcasecmp( $a['name'], $b['name'] );
+				}
+			);
+
+			if ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+				$store = new Wpfaevent_Eventyay_Dashboard_Store();
+				$store->write_dashboard_json_file(
+					'exhibitors-' . $post_id . '.json',
+					$formatted_exhibitors
+				);
+			}
+		} elseif ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+			$store = new Wpfaevent_Eventyay_Dashboard_Store();
+			$store->write_dashboard_json_file(
+				'exhibitors-' . $post_id . '.json',
+				array()
+			);
+		}
 	}
 
 	/**
