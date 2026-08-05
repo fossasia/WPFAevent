@@ -93,6 +93,12 @@
 	fill: #fff;
 }
 
+.wpfaevent .wpfa-event-bookmark-btn .wpfa-bookmark-icon {
+	width: 16px;
+	height: 16px;
+	margin-right: 8px;
+	vertical-align: middle;
+}
 /* Login Modal Overlay & Card */
 .wpfa-login-modal-overlay {
 	display: none;
@@ -197,12 +203,6 @@
 	background: #e2e8f0;
 }
 
-.wpfaevent .wpfa-event-bookmark-btn .wpfa-bookmark-icon {
-	width: 16px;
-	height: 16px;
-	margin-right: 8px;
-	vertical-align: middle;
-}
 
 .wpfa-login-modal-header svg {
 	width: 32px;

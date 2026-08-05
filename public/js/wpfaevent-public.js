@@ -68,23 +68,31 @@
 				}
 			});
 
+
 		function showLoginModal(loginUrl, message) {
 			const escapeHtml = function(value) {
 				return $('<div/>').text(String(value == null ? '' : value)).html();
+			};
+			const isSafeUrl = function(url) {
+				if (!url) return false;
+				url = String(url).trim();
+				if (url.startsWith('/') && !url.startsWith('//')) return true;
+				if (url.startsWith('http://') || url.startsWith('https://')) return true;
+				return false;
 			};
 			let $modal = $('#wpfa-login-modal');
 			if (!$modal.length) {
 				const settings = window.wpfaeventPublic || {};
 				const defaultMessage = settings.i18n?.loginRequiredMessage || 'Please log in to your account to bookmark events and view your saved schedule.';
 				const safeMessage = escapeHtml(message || defaultMessage);
-				const safeLoginUrl = escapeHtml(loginUrl || '/wp-login.php');
+				const safeLoginUrl = isSafeUrl(loginUrl) ? escapeHtml(loginUrl) : '/wp-login.php';
 				const loginRequiredHeader = escapeHtml(settings.i18n?.loginRequiredHeader || 'Log In Required');
 				const loginText = escapeHtml(settings.i18n?.login || 'Log In');
 				const cancelText = escapeHtml(settings.i18n?.cancel || 'Cancel');
 				const closeText = escapeHtml(settings.i18n?.close || 'Close');
 
 				const modalHtml = `
-					<div class="wpfa-login-modal-overlay" id="wpfa-login-modal" role="dialog" aria-modal="true">
+					<div class="wpfa-login-modal-overlay wpfaevent" id="wpfa-login-modal" role="dialog" aria-modal="true">
 						<div class="wpfa-login-modal-card">
 							<button type="button" class="wpfa-login-modal-close" aria-label="${closeText}">&times;</button>
 							<div class="wpfa-login-modal-header">
@@ -127,7 +135,7 @@
 			const settings = window.wpfaeventPublic || {};
 
 			if (!settings.isLoggedIn) {
-				showLoginModal(settings.loginUrl, settings.i18n?.loginRequired);
+				showLoginModal(settings.loginUrl, settings.i18n?.loginRequiredMessage);
 				return;
 			}
 

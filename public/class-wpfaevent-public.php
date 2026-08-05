@@ -585,6 +585,14 @@ class Wpfaevent_Public {
 			return;
 		}
 
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/';
+		$home_path   = wp_parse_url( home_url(), PHP_URL_PATH );
+		if ( $home_path && 0 === strpos( $request_uri, $home_path ) ) {
+			$request_uri = substr( $request_uri, strlen( $home_path ) );
+		}
+		$current_url = home_url( $request_uri );
+		$login_url   = wp_login_url( is_singular() ? get_permalink() : $current_url );
+
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-public.js', array( 'jquery' ), $this->version, false );
 		wp_localize_script(
 			$this->plugin_name,
@@ -594,7 +602,7 @@ class Wpfaevent_Public {
 				'ajaxUrl'               => admin_url( 'admin-ajax.php' ),
 				'nonce'                 => wp_create_nonce( 'wpfa_bookmark_nonce' ),
 				'isLoggedIn'            => is_user_logged_in(),
-				'loginUrl'              => wp_login_url( is_singular() ? get_permalink() : home_url( isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/' ) ),
+				'loginUrl'              => $login_url,
 				'bookmarkedEvents'      => class_exists( 'Wpfaevent_User_Preferences_Service' ) ? Wpfaevent_User_Preferences_Service::get_bookmarked_events() : array(),
 				'i18n'                  => array(
 					'bookmark'             => __( 'Bookmark', 'wpfaevent' ),
