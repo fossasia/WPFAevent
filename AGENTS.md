@@ -59,16 +59,16 @@ Before implementing anything:
 
 - Always: Read relevant files before editing. Follow the project conventions. Run the required validation commands before considering work complete.
 - Ask first: running `composer test -- --testsuite Integration` against anything but a local/throwaway DB, adding new dependencies, changing phpcs.xml / phpstan.neon.dist / phpunit.xml.dist, touching bin/install-wp-tests.sh.
-- Never: 
-  - commit vendor/, node_modules/, coverage/, or .phpunit.result.cache. 
-  - commit real speaker/event data or large binaries. 
-  - commit directly to main - branch and open a PR. 
+- Never:
+  - commit vendor/, node_modules/, coverage/, or .phpunit.result.cache.
+  - commit real speaker/event data or large binaries.
+  - commit directly to main - branch and open a PR.
   - commit secrets or API endpoint credentials.
   - Update plugin or package version numbers unless explicitly requested.
 
 ## Definition of Done
 
-Done when: `composer phpcs` exits 0 · `composer phpstan` exits 0 · `composer test` passes · (if JS touched) `npm run lint` exits 0 · changes committed on a feature branch with a clear message.
+Done when: `composer phpcs` exits 0 · `composer phpstan` exits 0 · `composer test` passes · (if package.json is present and JS files were modified) `npm run lint` exits 0 · changes committed on a feature branch with a clear message.
 
 ## When stuck
 
