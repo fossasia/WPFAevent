@@ -267,6 +267,18 @@ const WPFA_Events = (function() {
 				filterEvents();
 			});
 		});
+
+		// Check for URL parameter to pre-select filter tab on load
+		const urlParams = new URLSearchParams(window.location.search);
+		const urlFilter = urlParams.get('filter');
+		if (urlFilter) {
+			const targetBtn = document.querySelector(`.date-filter-btn[data-filter="${urlFilter}"]`);
+			if (targetBtn) {
+				document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active'));
+				targetBtn.classList.add('active');
+				filterEvents();
+			}
+		}
 	}
 
 	/**

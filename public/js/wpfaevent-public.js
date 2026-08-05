@@ -68,6 +68,21 @@
 				}
 			});
 
+		const eventPlaceholderSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#f1f5f9"/><path d="M60 50h80v100H60z" fill="#e2e8f0"/><path d="M70 70h60v15H70z" fill="#cbd5e1"/><circle cx="85" cy="115" r="10" fill="#cbd5e1"/><circle cx="115" cy="115" r="10" fill="#cbd5e1"/><path d="M60 40h80v15H60z" fill="#d51007"/></svg>';
+		const eventPlaceholderSrc = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(eventPlaceholderSvg);
+
+		$('.event-card-thumb img, .wpfa-past-event-card-image img, .wpfa-event-partner-logo img, .wpfa-event-exhibitor-logo img')
+			.on('error', function() {
+				this.src = eventPlaceholderSrc;
+			})
+			.each(function() {
+				if (this.complete && this.naturalWidth === 0) {
+					this.src = eventPlaceholderSrc;
+				}
+			});
+
+
+
 		// Bookmark Toggle Handler
 		$(document).on('click', '.wpfa-bookmark-btn', function(e) {
 			e.preventDefault();
