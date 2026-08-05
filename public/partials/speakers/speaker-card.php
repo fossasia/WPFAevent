@@ -68,7 +68,7 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 <article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>">
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
 		<?php if ( $photo_url ) : ?>
-			<img src="<?php echo esc_url( $photo_url ); ?>"
+			<img class="wpfa-speaker-photo-img" src="<?php echo esc_url( $photo_url ); ?>"
 				alt="<?php echo esc_attr( $photo_alt ); ?>"
 				loading="lazy"
 				itemprop="image"
