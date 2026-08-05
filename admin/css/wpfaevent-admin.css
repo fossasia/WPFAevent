@@ -273,3 +273,146 @@
 	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
 	outline: none !important;
 }
+
+/**
+ * Sponsors and Exhibitors Metabox Styling
+ */
+.wpfaevent-meta-cards-container {
+	margin-top: 10px;
+}
+
+.wpfaevent-meta-card {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	padding: 15px;
+	margin-bottom: 15px;
+	position: relative;
+	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.wpfaevent-meta-card-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 15px;
+}
+
+.wpfaevent-meta-card-field {
+	display: flex;
+	flex-direction: column;
+}
+
+.wpfaevent-meta-card-field label {
+	font-weight: 600;
+	margin-bottom: 5px;
+	font-size: 12px;
+	color: #23282d;
+}
+
+.wpfaevent-meta-card-field input {
+	padding: 6px 10px;
+	font-size: 14px;
+	line-height: 1.4;
+	color: #32373c;
+	background-color: #fff;
+	border: 1px solid #7e8993;
+	border-radius: 4px;
+	box-shadow: inset 0 1px 2px rgba(0,0,0,.07);
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.wpfaevent-meta-card-field input:focus {
+	border-color: #007cba;
+	box-shadow: 0 0 0 1px #007cba;
+	outline: 2px solid transparent;
+}
+
+.wpfaevent-remove-card-btn {
+	position: absolute;
+	top: 10px;
+	right: 15px;
+	color: #b32d2e;
+	text-decoration: none;
+	font-weight: 600;
+	font-size: 13px;
+}
+
+.wpfaevent-remove-card-btn:hover {
+	color: #dc3232;
+}
+
+/**
+ * Schedule Sessions Metabox Styling
+ */
+#wpfaevent-schedule-sessions-table {
+	margin-top: 10px;
+}
+
+#wpfaevent-schedule-sessions-table th {
+	font-weight: bold;
+	text-align: left;
+	padding: 10px;
+}
+
+#wpfaevent-schedule-sessions-table td {
+	padding: 10px;
+	vertical-align: middle;
+}
+
+#wpfaevent-schedule-sessions-table input {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+#wpfaevent-schedule-sessions-table th.wpfa-col-date,
+#wpfaevent-schedule-sessions-table td.wpfa-col-date {
+	width: 15%;
+}
+
+#wpfaevent-schedule-sessions-table th.wpfa-col-start-time,
+#wpfaevent-schedule-sessions-table td.wpfa-col-start-time {
+	width: 12%;
+}
+
+#wpfaevent-schedule-sessions-table th.wpfa-col-end-time,
+#wpfaevent-schedule-sessions-table td.wpfa-col-end-time {
+	width: 12%;
+}
+
+#wpfaevent-schedule-sessions-table th.wpfa-col-track,
+#wpfaevent-schedule-sessions-table td.wpfa-col-track {
+	width: 15%;
+}
+
+#wpfaevent-schedule-sessions-table th.wpfa-col-room,
+#wpfaevent-schedule-sessions-table td.wpfa-col-room {
+	width: 12%;
+}
+
+#wpfaevent-schedule-sessions-table th.wpfa-col-action,
+#wpfaevent-schedule-sessions-table td.wpfa-col-action {
+	width: 80px;
+	text-align: center;
+}
+
+.wpfaevent-remove-session {
+	color: #a00;
+	cursor: pointer;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+.wpfaevent-remove-session:hover {
+	color: #f00;
+}
+
+#wpfaevent-add-session-row,
+#wpfaevent-add-sponsor-row,
+#wpfaevent-add-exhibitor-row {
+	margin-top: 15px;
+}
+
+.wpfaevent-meta-card-field.span-2 {
+	grid-column: span 2;
+}
