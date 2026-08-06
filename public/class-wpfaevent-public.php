@@ -280,10 +280,21 @@ class Wpfaevent_Public {
 		);
 
 		wp_register_style(
+			$this->plugin_name . '-event-base',
+			WPFAEVENT_URL . 'public/css/templates/event-base.css',
+			array(
+				$this->plugin_name,
+			),
+			$this->version,
+			'all'
+		);
+
+		wp_register_style(
 			$this->plugin_name . '-event',
 			WPFAEVENT_URL . 'public/css/templates/event.css',
 			array(
 				$this->plugin_name,
+				$this->plugin_name . '-event-base',
 				$this->plugin_name . '-navigation',
 			),
 			$this->version,
@@ -327,7 +338,11 @@ class Wpfaevent_Public {
 		wp_register_style(
 			$this->plugin_name . '-single-event',
 			WPFAEVENT_URL . 'public/css/templates/single-event.css',
-			array( $this->plugin_name, $this->plugin_name . '-navigation' ),
+			array(
+				$this->plugin_name,
+				$this->plugin_name . '-event-base',
+				$this->plugin_name . '-navigation',
+			),
 			$this->version,
 			'all'
 		);
