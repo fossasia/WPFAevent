@@ -110,9 +110,11 @@
 					settings.i18n?.loginRequiredMessage ||
 					'Please log in to your account to bookmark events and view your saved schedule.';
 				const safeMessage = escapeHtml(message || defaultMessage);
-				const safeLoginUrl = isSafeUrl(loginUrl)
-					? escapeHtml(loginUrl)
-					: '/wp-login.php';
+				const defaultLoginUrl = settings.loginUrl || '/wp-login.php';
+				const candidateLoginUrl = loginUrl || defaultLoginUrl;
+				const safeLoginUrl = isSafeUrl(candidateLoginUrl)
+					? escapeHtml(candidateLoginUrl)
+					: escapeHtml(defaultLoginUrl);
 				const loginRequiredHeader = escapeHtml(
 					settings.i18n?.loginRequiredHeader || 'Log In Required'
 				);
