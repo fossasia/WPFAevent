@@ -29,8 +29,8 @@ $is_featured_speaker = ! empty( $wpfa_dashboard_speaker_is_featured ) || ! empty
 			<div class="wpfa-speaker-photo-container">
 				<img class="wpfa-speaker-photo-blur" src="<?php echo esc_url( $speaker['image'] ); ?>" alt="" aria-hidden="true" loading="lazy">
 				<?php /* translators: %s: Speaker name. */ ?>
-				<img class="wpfa-speaker-photo-img" src="<?php echo esc_url( $speaker['image'] ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $speaker_name ) ); ?>" loading="lazy" onerror="this.style.display='none'; if(this.previousElementSibling) this.previousElementSibling.style.display='none'; this.nextElementSibling.style.display='block';">
-				<img src="<?php echo esc_url( $placeholder_url ); ?>" alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>" loading="lazy" class="wpfa-speaker-placeholder-img" style="display:none;">
+				<img class="wpfa-speaker-photo-img" src="<?php echo esc_url( $speaker['image'] ); ?>" alt="<?php echo esc_attr( sprintf( __( 'Photo of %s', 'wpfaevent' ), $speaker_name ) ); ?>" loading="lazy" onerror="this.style.display='none'; if(this.previousElementSibling) this.previousElementSibling.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+				<span class="wpfa-speaker-placeholder" style="display:none;" aria-hidden="true"></span>
 			</div>
 		<?php else : ?>
 			<img src="<?php echo esc_url( $placeholder_url ); ?>" alt="<?php esc_attr_e( 'Speaker photo placeholder', 'wpfaevent' ); ?>" loading="lazy" class="wpfa-speaker-placeholder-img">
