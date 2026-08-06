@@ -568,7 +568,7 @@ class Wpfaevent_Event_Template_Controller {
 					continue;
 				}
 
-				if ( empty( $sponsor['image'] ) ) {
+				if ( empty( $sponsor['image'] ) && defined( 'WPFAEVENT_URL' ) ) {
 					$sponsor['image'] = WPFAEVENT_URL . 'assets/images/logo.png';
 				}
 
