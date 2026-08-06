@@ -574,7 +574,7 @@ class Wpfaevent_Event_Template_Controller {
 
 				if ( empty( $sponsor['description'] ) ) {
 					/* translators: %s: event title */
-					$sponsor['description'] = sprintf( __( 'Event partner and supporter of %s.', 'wpfaevent' ), $event_title );
+					$sponsor['description'] = sprintf( __( 'Event partner and supporter of %s.', 'wpfaevent' ), wp_strip_all_tags( $event_title ) );
 				}
 
 				// Pre-compute detail URL to satisfy Dependency Inversion (Class Coupling Smell).
@@ -597,13 +597,13 @@ class Wpfaevent_Event_Template_Controller {
 				continue;
 			}
 
-			if ( empty( $exhibitor['logo'] ) ) {
+			if ( empty( $exhibitor['logo'] ) && defined( 'WPFAEVENT_URL' ) ) {
 				$exhibitor['logo'] = WPFAEVENT_URL . 'assets/images/logo.png';
 			}
 
 			if ( empty( $exhibitor['description'] ) ) {
 				/* translators: %s: event title */
-				$exhibitor['description'] = sprintf( __( 'Exhibitor booth at %s.', 'wpfaevent' ), $event_title );
+				$exhibitor['description'] = sprintf( __( 'Exhibitor booth at %s.', 'wpfaevent' ), wp_strip_all_tags( $event_title ) );
 			}
 
 			// Pre-compute detail URL to satisfy Dependency Inversion (Class Coupling Smell).
