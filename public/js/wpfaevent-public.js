@@ -110,11 +110,25 @@
 					settings.i18n?.loginRequiredMessage ||
 					'Please log in to your account to bookmark events and view your saved schedule.';
 				const safeMessage = escapeHtml(message || defaultMessage);
-				const defaultLoginUrl = settings.loginUrl || '/wp-login.php';
-				const candidateLoginUrl = loginUrl || defaultLoginUrl;
-				const safeLoginUrl = isSafeUrl(candidateLoginUrl)
-					? escapeHtml(candidateLoginUrl)
-					: escapeHtml(defaultLoginUrl);
+				let fallbackLoginUrl = '/wp-login.php';
+				if (settings.ajaxUrl) {
+					const wpAdminIndex = settings.ajaxUrl.indexOf('/wp-admin/');
+					if (wpAdminIndex !== -1) {
+						const potentialFallback =
+							settings.ajaxUrl.substring(0, wpAdminIndex) +
+							'/wp-login.php';
+						if (isSafeUrl(potentialFallback)) {
+							fallbackLoginUrl = potentialFallback;
+						}
+					}
+				}
+				let rawLoginUrl = fallbackLoginUrl;
+				if (isSafeUrl(loginUrl)) {
+					rawLoginUrl = loginUrl;
+				} else if (isSafeUrl(settings.loginUrl)) {
+					rawLoginUrl = settings.loginUrl;
+				}
+				const safeLoginUrl = escapeHtml(rawLoginUrl);
 				const loginRequiredHeader = escapeHtml(
 					settings.i18n?.loginRequiredHeader || 'Log In Required'
 				);

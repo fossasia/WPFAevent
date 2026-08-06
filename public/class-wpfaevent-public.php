@@ -587,9 +587,22 @@ class Wpfaevent_Public {
 
 		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/';
 		$home_path   = wp_parse_url( home_url(), PHP_URL_PATH );
-		if ( $home_path && 0 === strpos( $request_uri, $home_path ) ) {
-			$request_uri = substr( $request_uri, strlen( $home_path ) );
+		$home_path   = $home_path ? untrailingslashit( $home_path ) : '';
+
+		if ( ! empty( $home_path ) && '/' !== $home_path ) {
+			if ( $request_uri === $home_path ) {
+				$request_uri = '/';
+			} elseif ( 0 === strpos( $request_uri, $home_path . '/' ) ) {
+				$request_uri = substr( $request_uri, strlen( $home_path ) );
+			} elseif ( 0 === strpos( $request_uri, $home_path . '?' ) ) {
+				$request_uri = '/' . substr( $request_uri, strlen( $home_path ) );
+			}
 		}
+
+		if ( '' === $request_uri ) {
+			$request_uri = '/';
+		}
+
 		$current_url = home_url( $request_uri );
 		$login_url   = wp_login_url( is_singular() ? get_permalink() : $current_url );
 
