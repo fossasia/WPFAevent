@@ -1,4 +1,4 @@
-(function( $ ) {
+(function ($) {
 	'use strict';
 
 	/**
@@ -29,27 +29,37 @@
 	 * practising this, we should strive to set a better example in our own work.
 	 */
 
-	$(function() {
-		$('.wpfa-event-timezone-select').on('change', function() {
+	$(function () {
+		$('.wpfa-event-timezone-select').on('change', function () {
 			if (this.form) {
 				this.form.submit();
 			}
 		});
 
-		const speakerPlaceholderSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" role="img" aria-label="Speaker placeholder"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f8d8d6"/><stop offset="0.58" stop-color="#f4f7fb"/><stop offset="1" stop-color="#dfe9f3"/></linearGradient><linearGradient id="accent" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d51007"/><stop offset="1" stop-color="#b20d06"/></linearGradient></defs><rect width="600" height="600" fill="url(#bg)"/><circle cx="476" cy="118" r="96" fill="#fff" opacity="0.54"/><circle cx="96" cy="486" r="126" fill="#d51007" opacity="0.08"/><circle cx="300" cy="245" r="105" fill="#ffffff"/><circle cx="300" cy="245" r="78" fill="#d8e3ee"/><path d="M128 526c20-108 96-168 172-168s152 60 172 168" fill="#ffffff"/><path d="M164 526c24-77 82-116 136-116s112 39 136 116" fill="#d8e3ee"/><path d="M70 0h92v600H70z" fill="url(#accent)" opacity="0.92"/><path d="M92 120h48v240H92z" fill="#fff" opacity="0.18"/></svg>';
-		const speakerPlaceholderSrc = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(speakerPlaceholderSvg);
-		const getSpeakerPlaceholderAlt = function() {
+		const speakerPlaceholderSvg =
+			'<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" role="img" aria-label="Speaker placeholder"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f8d8d6"/><stop offset="0.58" stop-color="#f4f7fb"/><stop offset="1" stop-color="#dfe9f3"/></linearGradient><linearGradient id="accent" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d51007"/><stop offset="1" stop-color="#b20d06"/></linearGradient></defs><rect width="600" height="600" fill="url(#bg)"/><circle cx="476" cy="118" r="96" fill="#fff" opacity="0.54"/><circle cx="96" cy="486" r="126" fill="#d51007" opacity="0.08"/><circle cx="300" cy="245" r="105" fill="#ffffff"/><circle cx="300" cy="245" r="78" fill="#d8e3ee"/><path d="M128 526c20-108 96-168 172-168s152 60 172 168" fill="#ffffff"/><path d="M164 526c24-77 82-116 136-116s112 39 136 116" fill="#d8e3ee"/><path d="M70 0h92v600H70z" fill="url(#accent)" opacity="0.92"/><path d="M92 120h48v240H92z" fill="#fff" opacity="0.18"/></svg>';
+		const speakerPlaceholderSrc =
+			'data:image/svg+xml;charset=UTF-8,' +
+			encodeURIComponent(speakerPlaceholderSvg);
+		const getSpeakerPlaceholderAlt = function () {
 			const settings = window.wpfaeventPublic || {};
 
-			if (typeof settings.speakerPlaceholderAlt === 'string' && settings.speakerPlaceholderAlt.trim()) {
+			if (
+				typeof settings.speakerPlaceholderAlt === 'string' &&
+				settings.speakerPlaceholderAlt.trim()
+			) {
 				return settings.speakerPlaceholderAlt;
 			}
 
 			return 'Speaker photo placeholder';
 		};
 
-		const applySpeakerPlaceholder = function() {
-			if (!this || this.classList.contains('wpfa-speaker-placeholder-img') || this.src === speakerPlaceholderSrc) {
+		const applySpeakerPlaceholder = function () {
+			if (
+				!this ||
+				this.classList.contains('wpfa-speaker-placeholder-img') ||
+				this.src === speakerPlaceholderSrc
+			) {
 				return;
 			}
 
@@ -60,29 +70,132 @@
 			this.src = speakerPlaceholderSrc;
 		};
 
-		$('.wpfa-speaker-photo img:not(.wpfa-speaker-placeholder-img), .wpfa-speaker-profile-photo img:not(.wpfa-speaker-placeholder-img)')
+		$(
+			'.wpfa-speaker-photo img:not(.wpfa-speaker-placeholder-img), .wpfa-speaker-profile-photo img:not(.wpfa-speaker-placeholder-img)'
+		)
 			.on('error', applySpeakerPlaceholder)
-			.each(function() {
+			.each(function () {
 				if (this.complete && this.naturalWidth === 0) {
 					applySpeakerPlaceholder.call(this);
 				}
 			});
 
-		const eventPlaceholderSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#f1f5f9"/><path d="M60 50h80v100H60z" fill="#e2e8f0"/><path d="M70 70h60v15H70z" fill="#cbd5e1"/><circle cx="85" cy="115" r="10" fill="#cbd5e1"/><circle cx="115" cy="115" r="10" fill="#cbd5e1"/><path d="M60 40h80v15H60z" fill="#d51007"/></svg>';
-		const eventPlaceholderSrc = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(eventPlaceholderSvg);
+		function showLoginModal(loginUrl, message) {
+			const escapeHtml = function (value) {
+				return $('<div/>')
+					.text(
+						String(
+							value === null || value === undefined ? '' : value
+						)
+					)
+					.html();
+			};
+			const isSafeUrl = function (url) {
+				if (!url) {
+					return false;
+				}
+				url = String(url).trim();
+				if (url.startsWith('/') && !url.startsWith('//')) {
+					return true;
+				}
+				if (url.startsWith('http://') || url.startsWith('https://')) {
+					return true;
+				}
+				return false;
+			};
+			let $modal = $('#wpfa-login-modal');
+			if (!$modal.length) {
+				const settings = window.wpfaeventPublic || {};
+				const defaultMessage =
+					settings.i18n?.loginRequiredMessage ||
+					'Please log in to your account to bookmark events and view your saved schedule.';
+				const safeMessage = escapeHtml(message || defaultMessage);
+				let fallbackLoginUrl = '/wp-login.php';
+				if (settings.ajaxUrl) {
+					const wpAdminIndex = settings.ajaxUrl.indexOf('/wp-admin/');
+					if (wpAdminIndex !== -1) {
+						const potentialFallback =
+							settings.ajaxUrl.substring(0, wpAdminIndex) +
+							'/wp-login.php';
+						if (isSafeUrl(potentialFallback)) {
+							fallbackLoginUrl = potentialFallback;
+						}
+					}
+				}
+				let rawLoginUrl = fallbackLoginUrl;
+				if (isSafeUrl(loginUrl)) {
+					rawLoginUrl = loginUrl;
+				} else if (isSafeUrl(settings.loginUrl)) {
+					rawLoginUrl = settings.loginUrl;
+				}
+				const safeLoginUrl = escapeHtml(rawLoginUrl);
+				const loginRequiredHeader = escapeHtml(
+					settings.i18n?.loginRequiredHeader || 'Log In Required'
+				);
+				const loginText = escapeHtml(settings.i18n?.login || 'Log In');
+				const cancelText = escapeHtml(
+					settings.i18n?.cancel || 'Cancel'
+				);
+				const closeText = escapeHtml(settings.i18n?.close || 'Close');
 
-		$('.event-card-thumb img, .wpfa-past-event-card-image img, .wpfa-event-partner-logo img, .wpfa-event-exhibitor-logo img')
-			.on('error', function() {
+				const modalHtml = `
+					<div class="wpfa-login-modal-overlay wpfaevent" id="wpfa-login-modal" role="dialog" aria-modal="true">
+						<div class="wpfa-login-modal-card">
+							<button type="button" class="wpfa-login-modal-close" aria-label="${closeText}">&times;</button>
+							<div class="wpfa-login-modal-header">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+									<circle cx="12" cy="7" r="4"></circle>
+								</svg>
+								<h3>${loginRequiredHeader}</h3>
+							</div>
+							<p class="wpfa-login-modal-body">${safeMessage}</p>
+							<div class="wpfa-login-modal-actions">
+								<a href="${safeLoginUrl}" class="btn btn-primary wpfa-login-btn">${loginText}</a>
+								<button type="button" class="btn btn-secondary wpfa-login-modal-close-btn">${cancelText}</button>
+							</div>
+						</div>
+					</div>
+				`;
+				$('body').append(modalHtml);
+				$modal = $('#wpfa-login-modal');
+
+				$modal.on(
+					'click',
+					'.wpfa-login-modal-close, .wpfa-login-modal-close-btn',
+					function () {
+						$modal.removeClass('is-visible');
+					}
+				);
+				$modal.on('click', function (e) {
+					if ($(e.target).is('#wpfa-login-modal')) {
+						$modal.removeClass('is-visible');
+					}
+				});
+			}
+			$modal.addClass('is-visible');
+		}
+
+		const eventPlaceholderSvg =
+			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#f1f5f9"/><path d="M60 50h80v100H60z" fill="#e2e8f0"/><path d="M70 70h60v15H70z" fill="#cbd5e1"/><circle cx="85" cy="115" r="10" fill="#cbd5e1"/><circle cx="115" cy="115" r="10" fill="#cbd5e1"/><path d="M60 40h80v15H60z" fill="#d51007"/></svg>';
+		const eventPlaceholderSrc =
+			'data:image/svg+xml;charset=UTF-8,' +
+			encodeURIComponent(eventPlaceholderSvg);
+
+		$(
+			'.event-card-thumb img, .wpfa-past-event-card-image img, .wpfa-event-partner-logo img, .wpfa-event-exhibitor-logo img'
+		)
+			.on('error', function () {
 				this.src = eventPlaceholderSrc;
 			})
-			.each(function() {
+			.each(function () {
 				if (this.complete && this.naturalWidth === 0) {
 					this.src = eventPlaceholderSrc;
 				}
 			});
 
 		// Bookmark Toggle Handler
-		$(document).on('click', '.wpfa-bookmark-btn', function(e) {
+		$(document).on('click', '.wpfa-bookmark-btn', function (e) {
 			e.preventDefault();
 			e.stopPropagation();
 
@@ -91,7 +204,10 @@
 			const settings = window.wpfaeventPublic || {};
 
 			if (!settings.isLoggedIn) {
-				alert(settings.i18n?.loginRequired || 'Please log in to bookmark events.');
+				showLoginModal(
+					settings.loginUrl,
+					settings.i18n?.loginRequiredMessage
+				);
 				return;
 			}
 
@@ -103,62 +219,106 @@
 				data: {
 					action: 'wpfa_toggle_bookmark',
 					nonce: settings.nonce,
-					event_id: eventId
+					event_id: eventId,
 				},
-				success: function(response) {
+				success: function (response) {
 					$btn.prop('disabled', false);
 					if (response.success) {
 						const isBookmarked = response.data.bookmarked;
 
 						// Synchronize all bookmark buttons on the page for this specific event
-						const $allTargetBtns = $(`.wpfa-bookmark-btn[data-event-id="${eventId}"]`);
+						const $allTargetBtns = $(
+							`.wpfa-bookmark-btn[data-event-id="${eventId}"]`
+						);
 
 						if (isBookmarked) {
 							$allTargetBtns.addClass('is-bookmarked');
-							$allTargetBtns.each(function() {
+							$allTargetBtns.each(function () {
 								const $thisBtn = $(this);
-								if ($thisBtn.hasClass('wpfa-event-bookmark-btn')) {
-									$thisBtn.find('.wpfa-bookmark-text').text(settings.i18n?.removeBookmark || 'Remove Bookmark');
+								if (
+									$thisBtn.hasClass('wpfa-event-bookmark-btn')
+								) {
+									$thisBtn
+										.find('.wpfa-bookmark-text')
+										.text(
+											settings.i18n?.removeBookmark ||
+												'Remove Bookmark'
+										);
 								} else {
-									$thisBtn.find('.wpfa-bookmark-text').text(settings.i18n?.bookmarked || 'Bookmarked');
+									$thisBtn
+										.find('.wpfa-bookmark-text')
+										.text(
+											settings.i18n?.bookmarked ||
+												'Bookmarked'
+										);
 								}
 							});
 						} else {
 							$allTargetBtns.removeClass('is-bookmarked');
-							$allTargetBtns.each(function() {
+							$allTargetBtns.each(function () {
 								const $thisBtn = $(this);
-								if ($thisBtn.hasClass('wpfa-event-bookmark-btn')) {
-									$thisBtn.find('.wpfa-bookmark-text').text(settings.i18n?.bookmarkEvent || 'Bookmark Event');
+								if (
+									$thisBtn.hasClass('wpfa-event-bookmark-btn')
+								) {
+									$thisBtn
+										.find('.wpfa-bookmark-text')
+										.text(
+											settings.i18n?.bookmarkEvent ||
+												'Bookmark Event'
+										);
 								} else {
-									$thisBtn.find('.wpfa-bookmark-text').text(settings.i18n?.bookmark || 'Bookmark');
+									$thisBtn
+										.find('.wpfa-bookmark-text')
+										.text(
+											settings.i18n?.bookmark ||
+												'Bookmark'
+										);
 								}
 							});
 						}
 
 						// Update dataset attributes on any corresponding event cards
-						const $card = $(`.event-card[data-post-id="${eventId}"]`);
+						const $card = $(
+							`.event-card[data-post-id="${eventId}"]`
+						);
 						if ($card.length) {
-							$card.attr('data-is-bookmarked', isBookmarked ? '1' : '0');
-							$card.data('is-bookmarked', isBookmarked ? '1' : '0');
+							$card.attr(
+								'data-is-bookmarked',
+								isBookmarked ? '1' : '0'
+							);
+							$card.data(
+								'is-bookmarked',
+								isBookmarked ? '1' : '0'
+							);
 						}
 
 						// Dynamically re-filter events hub if on Favorites tab
-						if (window.WPFA_Events && typeof window.WPFA_Events.filterEvents === 'function') {
+						if (
+							window.WPFA_Events &&
+							typeof window.WPFA_Events.filterEvents ===
+								'function'
+						) {
 							const $activeTab = $('.date-filter-btn.active');
-							if ($activeTab.length && $activeTab.data('filter') === 'bookmarked') {
+							if (
+								$activeTab.length &&
+								$activeTab.data('filter') === 'bookmarked'
+							) {
 								window.WPFA_Events.filterEvents();
 							}
 						}
 					} else {
-						alert(response.data?.message || settings.i18n?.error || 'Something went wrong.');
+						alert(
+							response.data?.message ||
+								settings.i18n?.error ||
+								'Something went wrong.'
+						);
 					}
 				},
-				error: function() {
+				error: function () {
 					$btn.prop('disabled', false);
 					alert(settings.i18n?.error || 'Something went wrong.');
-				}
+				},
 			});
 		});
 	});
-
-})( jQuery );
+})(jQuery);

@@ -585,6 +585,27 @@ class Wpfaevent_Public {
 			return;
 		}
 
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/';
+		$home_path   = wp_parse_url( home_url(), PHP_URL_PATH );
+		$home_path   = $home_path ? untrailingslashit( $home_path ) : '';
+
+		if ( ! empty( $home_path ) && '/' !== $home_path ) {
+			if ( $request_uri === $home_path ) {
+				$request_uri = '/';
+			} elseif ( 0 === strpos( $request_uri, $home_path . '/' ) ) {
+				$request_uri = substr( $request_uri, strlen( $home_path ) );
+			} elseif ( 0 === strpos( $request_uri, $home_path . '?' ) ) {
+				$request_uri = '/' . substr( $request_uri, strlen( $home_path ) );
+			}
+		}
+
+		if ( '' === $request_uri ) {
+			$request_uri = '/';
+		}
+
+		$current_url = home_url( $request_uri );
+		$login_url   = wp_login_url( is_singular() ? get_permalink() : $current_url );
+
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wpfaevent-public.js', array( 'jquery' ), $this->version, false );
 		wp_localize_script(
 			$this->plugin_name,
@@ -594,16 +615,22 @@ class Wpfaevent_Public {
 				'ajaxUrl'               => admin_url( 'admin-ajax.php' ),
 				'nonce'                 => wp_create_nonce( 'wpfa_bookmark_nonce' ),
 				'isLoggedIn'            => is_user_logged_in(),
+				'loginUrl'              => $login_url,
 				'bookmarkedEvents'      => class_exists( 'Wpfaevent_User_Preferences_Service' ) ? Wpfaevent_User_Preferences_Service::get_bookmarked_events() : array(),
 				'i18n'                  => array(
-					'bookmark'          => __( 'Bookmark', 'wpfaevent' ),
-					'bookmarked'        => __( 'Bookmarked', 'wpfaevent' ),
-					'bookmarkEvent'     => __( 'Bookmark Event', 'wpfaevent' ),
-					'removeBookmark'    => __( 'Remove Bookmark', 'wpfaevent' ),
-					'bookmarkSuccess'   => __( 'Event bookmarked!', 'wpfaevent' ),
-					'unbookmarkSuccess' => __( 'Event removed from bookmarks!', 'wpfaevent' ),
-					'loginRequired'     => __( 'Please log in to bookmark events.', 'wpfaevent' ),
-					'error'             => __( 'Something went wrong. Please try again.', 'wpfaevent' ),
+					'bookmark'             => __( 'Bookmark', 'wpfaevent' ),
+					'bookmarked'           => __( 'Bookmarked', 'wpfaevent' ),
+					'bookmarkEvent'        => __( 'Bookmark Event', 'wpfaevent' ),
+					'removeBookmark'       => __( 'Remove Bookmark', 'wpfaevent' ),
+					'bookmarkSuccess'      => __( 'Event bookmarked!', 'wpfaevent' ),
+					'unbookmarkSuccess'    => __( 'Event removed from bookmarks!', 'wpfaevent' ),
+					'loginRequired'        => __( 'Please log in to bookmark events.', 'wpfaevent' ),
+					'loginRequiredMessage' => __( 'Please log in to your account to bookmark events and view your saved schedule.', 'wpfaevent' ),
+					'loginRequiredHeader'  => __( 'Log In Required', 'wpfaevent' ),
+					'login'                => __( 'Log In', 'wpfaevent' ),
+					'cancel'               => __( 'Cancel', 'wpfaevent' ),
+					'close'                => __( 'Close', 'wpfaevent' ),
+					'error'                => __( 'Something went wrong. Please try again.', 'wpfaevent' ),
 				),
 			)
 		);
