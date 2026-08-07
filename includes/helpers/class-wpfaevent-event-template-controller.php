@@ -568,6 +568,15 @@ class Wpfaevent_Event_Template_Controller {
 					continue;
 				}
 
+				if ( empty( $sponsor['image'] ) && defined( 'WPFAEVENT_URL' ) ) {
+					$sponsor['image'] = WPFAEVENT_URL . 'assets/images/logo.png';
+				}
+
+				if ( empty( $sponsor['description'] ) ) {
+					/* translators: %s: event title */
+					$sponsor['description'] = sprintf( __( 'Event partner and supporter of %s.', 'wpfaevent' ), wp_strip_all_tags( $event_title ) );
+				}
+
 				// Pre-compute detail URL to satisfy Dependency Inversion (Class Coupling Smell).
 				$sponsor['detail_url'] = self::get_partner_detail_url( $event_id, 'sponsor', $sponsor );
 
@@ -586,6 +595,15 @@ class Wpfaevent_Event_Template_Controller {
 		foreach ( $exhibitors as $exhibitor ) {
 			if ( ! is_array( $exhibitor ) || empty( $exhibitor['name'] ) ) {
 				continue;
+			}
+
+			if ( empty( $exhibitor['logo'] ) && defined( 'WPFAEVENT_URL' ) ) {
+				$exhibitor['logo'] = WPFAEVENT_URL . 'assets/images/logo.png';
+			}
+
+			if ( empty( $exhibitor['description'] ) ) {
+				/* translators: %s: event title */
+				$exhibitor['description'] = sprintf( __( 'Exhibitor booth at %s.', 'wpfaevent' ), wp_strip_all_tags( $event_title ) );
 			}
 
 			// Pre-compute detail URL to satisfy Dependency Inversion (Class Coupling Smell).
@@ -879,6 +897,8 @@ class Wpfaevent_Event_Template_Controller {
 			'build_event_schedule_view_url'            => $build_event_schedule_view_url,
 			'selected_schedule_timezone'               => $selected_schedule_timezone,
 			'main_regular_speaker_ids'                 => $main_regular_speaker_ids,
+			'speaker_ids'                              => $speaker_ids,
+			'regular_speaker_ids'                      => $regular_speaker_ids,
 			'main_dashboard_regular_speakers'          => $main_dashboard_regular_speakers,
 			'main_dashboard_speakers'                  => $main_dashboard_speakers,
 			'dashboard_speaker_overflow_count'         => $dashboard_speaker_overflow_count,
@@ -964,6 +984,8 @@ class Wpfaevent_Event_Template_Controller {
 			},
 			'selected_schedule_timezone'               => wp_timezone(),
 			'main_regular_speaker_ids'                 => array(),
+			'speaker_ids'                              => array(),
+			'regular_speaker_ids'                      => array(),
 			'main_dashboard_regular_speakers'          => array(),
 			'main_dashboard_speakers'                  => array(),
 			'dashboard_speaker_overflow_count'         => 0,

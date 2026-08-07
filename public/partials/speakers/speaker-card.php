@@ -68,12 +68,15 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 <article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>">
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
 		<?php if ( $photo_url ) : ?>
-			<img src="<?php echo esc_url( $photo_url ); ?>"
-				alt="<?php echo esc_attr( $photo_alt ); ?>"
-				loading="lazy"
-				itemprop="image"
-				onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-			<span class="wpfa-speaker-placeholder" style="display:none;" aria-hidden="true"></span>
+			<div class="wpfa-speaker-photo-container">
+				<img class="wpfa-speaker-photo-blur" src="<?php echo esc_url( $photo_url ); ?>" alt="" aria-hidden="true" loading="lazy" />
+				<img class="wpfa-speaker-photo-img" src="<?php echo esc_url( $photo_url ); ?>"
+					alt="<?php echo esc_attr( $photo_alt ); ?>"
+					loading="lazy"
+					itemprop="image"
+					onerror="this.style.display='none'; if(this.previousElementSibling) this.previousElementSibling.style.display='none'; this.nextElementSibling.style.display='flex';" />
+				<span class="wpfa-speaker-placeholder" style="display:none;" aria-hidden="true"></span>
+			</div>
 		<?php else : ?>
 			<span class="wpfa-speaker-placeholder" aria-hidden="true"></span>
 		<?php endif; ?>
