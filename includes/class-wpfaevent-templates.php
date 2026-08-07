@@ -109,9 +109,77 @@ class Wpfaevent_Templates {
 		add_filter( 'theme_page_templates', array( __CLASS__, 'register' ) );
 		add_filter( 'single_template', array( __CLASS__, 'load' ), 99 );
 		add_filter( 'template_include', array( __CLASS__, 'load' ), 99 );
+		add_filter( 'redirect_canonical', array( __CLASS__, 'prevent_canonical_redirect_for_virtual_routes' ), 10, 2 );
+		add_action( 'template_redirect', array( __CLASS__, 'maybe_redirect_old_routes' ), 9 );
 		add_action( 'init', array( __CLASS__, 'register_shortcodes' ) );
 		add_action( 'init', array( __CLASS__, 'register_blocks' ) );
 		add_action( 'init', array( __CLASS__, 'register_patterns' ) );
+	}
+
+	/**
+	 * Prevents WordPress canonical redirects from hijacking virtual plugin routes.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string|false $redirect_url The proposed canonical redirect URL.
+	 * @param string       $_requested_url The requested URL.
+	 * @return string|false
+	 */
+	public static function prevent_canonical_redirect_for_virtual_routes( $redirect_url, $_requested_url ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+			$req_path    = '';
+			$parsed_path = wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH );
+			if ( is_string( $parsed_path ) ) {
+				$req_path = trim( $parsed_path, '/' );
+			}
+			$home_path = trim( (string) wp_parse_url( home_url(), PHP_URL_PATH ), '/' );
+			if ( '' !== $home_path ) {
+				if ( $req_path === $home_path ) {
+					$req_path = '';
+				} elseif ( 0 === strpos( $req_path, $home_path . '/' ) ) {
+					$req_path = trim( substr( $req_path, strlen( $home_path ) ), '/' );
+				}
+			}
+
+			if ( 'past-events' === $req_path ) {
+				return false;
+			}
+		}
+
+		return $redirect_url;
+	}
+
+	/**
+	 * Redirects legacy/old paths to new hub views.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public static function maybe_redirect_old_routes() {
+		if ( is_admin() ) {
+			return;
+		}
+
+		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+			$req_path    = '';
+			$parsed_path = wp_parse_url( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH );
+			if ( is_string( $parsed_path ) ) {
+				$req_path = trim( $parsed_path, '/' );
+			}
+			$home_path = trim( (string) wp_parse_url( home_url(), PHP_URL_PATH ), '/' );
+			if ( '' !== $home_path ) {
+				if ( $req_path === $home_path ) {
+					$req_path = '';
+				} elseif ( 0 === strpos( $req_path, $home_path . '/' ) ) {
+					$req_path = trim( substr( $req_path, strlen( $home_path ) ), '/' );
+				}
+			}
+
+			if ( 'past-events' === $req_path ) {
+				wp_safe_redirect( home_url( '/events/?filter=past' ), 301 );
+				exit;
+			}
+		}
 	}
 
 	/**
