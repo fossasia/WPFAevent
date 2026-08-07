@@ -2,45 +2,6 @@
    Event Detail Custom Template Extensions (Page / Schedule specific overrides)
    ========================================================================== */
 
-.wpfaevent.wpfa-event-template,
-.wpfaevent.wpfa-schedule-template {
-	--event-primary: var(--brand, #D51007);
-	--event-primary-dark: #b20d06;
-	--event-ink: #243447;
-	--event-line: #dfe6ee;
-	--event-soft: #f4f7fb;
-	--event-panel: #fff;
-	--event-muted: #657386;
-	--event-shadow: 0 10px 28px rgba(36, 52, 71, 0.1);
-	--event-radius: 6px;
-	--event-success: #2f8f5b;
-	--event-danger: #D51007;
-
-	background: var(--event-soft);
-	color: var(--event-ink);
-	font-size: 16px;
-	font-weight: 400;
-	letter-spacing: 0;
-	line-height: 1.5;
-	overflow-x: hidden;
-}
-
-.wpfaevent.wpfa-event-template,
-.wpfaevent.wpfa-schedule-template,
-.wpfaevent.wpfa-event-template *,
-.wpfaevent.wpfa-schedule-template *,
-.wpfaevent.wpfa-event-template *::before,
-.wpfaevent.wpfa-schedule-template *::before,
-.wpfaevent.wpfa-event-template *::after,
-.wpfaevent.wpfa-schedule-template *::after {
-	box-sizing: border-box;
-}
-
-.wpfaevent.wpfa-event-template .nav {
-	border-bottom: 1px solid rgba(213, 16, 7, 0.16);
-	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-
 .wpfaevent .wpfa-event-hero.has-event-header-image {
 	background:
 		linear-gradient(90deg, rgba(19, 27, 38, 0.92) 0%, rgba(19, 27, 38, 0.76) 48%, rgba(19, 27, 38, 0.48) 100%),
@@ -974,39 +935,9 @@
 }
 
 @media (max-width: 900px) {
-	.wpfaevent .wpfa-event-hero-inner,
-	.wpfaevent .wpfa-event-section-layout,
 	.wpfaevent .wpfa-event-session,
-	.wpfaevent .wpfa-schedule-session,
-	.wpfaevent .wpfa-partner-detail-hero-inner,
-	.wpfaevent .wpfa-partner-detail-card {
+	.wpfaevent .wpfa-schedule-session {
 		grid-template-columns: 1fr;
-	}
-
-	.wpfaevent .wpfa-event-ticket-panel {
-		align-self: stretch;
-	}
-
-	.wpfaevent .wpfa-partner-detail-hero-meta {
-		max-width: 360px;
-	}
-
-	.wpfaevent .wpfa-partner-detail-media {
-		border-bottom: 1px solid var(--event-line);
-		border-right: 0;
-	}
-
-	.wpfaevent .wpfa-partner-detail.no-banner .wpfa-partner-detail-media {
-		grid-template-rows: auto auto;
-	}
-
-	.wpfaevent .wpfa-event-facts div {
-		column-gap: 28px;
-		grid-template-columns: minmax(126px, 0.28fr) minmax(0, 1fr);
-	}
-
-	.wpfaevent .wpfa-event-section-nav {
-		top: 64px;
 	}
 
 	.wpfaevent .wpfa-schedule-session {
@@ -1089,38 +1020,6 @@
 		padding: 0 18px 18px;
 	}
 
-	.wpfaevent .wpfa-event-directory-hero-inner,
-	.wpfaevent .wpfa-event-directory-card,
-	.wpfaevent .wpfa-event-directory-card-main {
-		grid-template-columns: 1fr;
-	}
-
-	.wpfaevent .wpfa-event-filter-grid {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
-
-	.wpfaevent .wpfa-event-directory-hero {
-		padding-bottom: 82px;
-	}
-
-	.wpfaevent .wpfa-event-directory-count {
-		max-width: 240px;
-	}
-
-	.wpfaevent .wpfa-event-card-media {
-		border-bottom: 1px solid var(--event-line);
-		border-right: 0;
-		min-height: 180px;
-	}
-
-	.wpfaevent .wpfa-event-card-actions {
-		border-left: 0;
-		border-top: 1px solid var(--event-line);
-		flex-direction: row;
-		flex-wrap: wrap;
-		justify-content: flex-start;
-	}
-
 	.wpfaevent .wpfa-schedule-filter-form {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
@@ -1131,53 +1030,6 @@
 }
 
 @media (max-width: 760px) {
-	.wpfaevent.wpfa-event-template .container {
-		box-sizing: border-box;
-		max-width: 100%;
-		padding-left: 20px;
-		padding-right: 20px;
-		width: auto;
-	}
-
-	.wpfaevent.wpfa-event-template .nav-inner {
-		align-items: flex-start;
-		flex-wrap: wrap;
-		gap: 10px;
-	}
-
-	.wpfaevent.wpfa-event-template .nav-links {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		min-width: 0;
-		padding-bottom: 4px;
-		width: 100%;
-	}
-
-	.wpfaevent.wpfa-event-template .nav-links-main,
-	.wpfaevent.wpfa-event-template .nav-links-secondary {
-		display: flex;
-		flex: 1 1 100%;
-		flex-wrap: wrap;
-		gap: 8px;
-	}
-
-	.wpfaevent.wpfa-event-template .nav-links a {
-		font-size: 0.84rem;
-		padding-left: 0.5rem;
-		padding-right: 0.5rem;
-		white-space: nowrap;
-	}
-
-	.wpfaevent.wpfa-event-template .nav-links-secondary .btn {
-		padding-left: 0.75rem;
-		padding-right: 0.75rem;
-	}
-
-	.wpfaevent .wpfa-event-hero {
-		padding: 40px 0;
-	}
-
 	.wpfaevent .wpfa-event-hero.has-event-header-image {
 		padding: 48px 0;
 	}
@@ -1205,41 +1057,6 @@
 		width: 100%;
 	}
 
-	.wpfaevent .wpfa-partner-detail-hero {
-		padding: 44px 0 72px;
-	}
-
-	.wpfaevent .wpfa-partner-detail-hero h1 {
-		font-size: 2.35rem;
-	}
-
-	.wpfaevent .wpfa-partner-detail-body {
-		margin-top: -34px;
-		padding-bottom: 48px;
-	}
-
-	.wpfaevent .wpfa-event-section {
-		padding: 36px 0;
-	}
-
-	.wpfaevent .wpfa-partner-detail-body.wpfa-event-section {
-		padding-bottom: 48px;
-		padding-top: 0;
-	}
-
-	.wpfaevent .wpfa-event-section-head {
-		align-items: flex-start;
-		flex-direction: column;
-	}
-
-	.wpfaevent .wpfa-event-timezone-form {
-		align-items: stretch;
-		flex-direction: column;
-		min-width: 0;
-		width: 100%;
-	}
-
-	.wpfaevent .wpfa-event-section-actions,
 	.wpfaevent .wpfa-schedule-filter-form {
 		align-items: stretch;
 		grid-template-columns: 1fr;
@@ -1264,87 +1081,4 @@
 	.wpfaevent .wpfa-schedule-filter-form select {
 		width: 100%;
 	}
-
-	.wpfaevent .wpfa-event-timezone-form button {
-		width: 100%;
-	}
-
-	.wpfaevent .wpfa-event-section-nav .container {
-		overflow-x: auto;
-	}
-
-	.wpfaevent .wpfa-event-meta-list {
-		align-items: flex-start;
-		flex-direction: column;
-	}
-
-	.wpfaevent .wpfa-event-meta-list span {
-		max-width: 100%;
-		min-width: 0;
-	}
-
-	.wpfaevent .wpfa-event-directory-hero {
-		padding: 40px 0 72px;
-	}
-
-	.wpfaevent .wpfa-event-directory-hero h1 {
-		font-size: 2rem;
-		max-width: calc(100vw - 40px);
-		width: 100%;
-		word-break: break-word;
-	}
-
-	.wpfaevent .wpfa-event-directory-lead,
-	.wpfaevent .wpfa-event-directory-count,
-	.wpfaevent .wpfa-event-filter-form,
-	.wpfaevent .wpfa-event-directory-card {
-		max-width: calc(100vw - 40px);
-		width: 100%;
-	}
-
-	.wpfaevent .wpfa-event-filter-form {
-		padding: 18px;
-	}
-
-	.wpfaevent .wpfa-event-filter-head,
-	.wpfaevent .wpfa-event-results-head {
-		align-items: stretch;
-		flex-direction: column;
-	}
-
-	.wpfaevent .wpfa-event-filter-bottom {
-		align-items: stretch;
-		grid-template-columns: 1fr;
-	}
-
-	.wpfaevent .wpfa-event-filter-grid {
-		grid-template-columns: 1fr;
-	}
-
-	.wpfaevent .wpfa-event-filter-submit {
-		width: 100%;
-	}
-
-	.wpfaevent .wpfa-event-card-body {
-		padding: 20px;
-	}
-
-	.wpfaevent .wpfa-event-card-actions a {
-		flex: 1 1 148px;
-	}
-
-	.wpfaevent .wpfa-partner-detail-content,
-	.wpfaevent .wpfa-partner-detail-identity {
-		padding: 24px;
-	}
-
-	.wpfaevent .wpfa-partner-detail-group {
-		padding-left: 24px;
-		padding-right: 24px;
-	}
-
-	.wpfaevent .wpfa-partner-detail-header h2 {
-		font-size: 1.72rem;
-	}
 }
-
