@@ -1330,7 +1330,7 @@
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-photo {
 	background: #eaf1f8;
-	height: 190px;
+	aspect-ratio: 1 / 1;
 }
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-meta {
@@ -1708,7 +1708,7 @@
 	display: flex;
 	justify-content: center;
 	min-height: 148px;
-	padding: 28px 24px 22px;
+	padding: 20px 24px;
 }
 
 .wpfaevent .wpfa-event-partner-logo img {
@@ -2271,7 +2271,7 @@
 	display: flex;
 	height: 70px;
 	justify-content: center;
-	padding: 12px;
+	padding: 10px;
 	width: 88px;
 }
 
