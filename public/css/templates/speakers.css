@@ -180,20 +180,46 @@
 /* Speaker Photo */
 .wpfaevent .wpfa-speaker-photo {
 	display: block;
-	height: 220px;
-	background: linear-gradient(135deg, #e9e9e9, #f6f6f6);
+	width: 100%;
+	aspect-ratio: 1 / 1;
+	background: #000;
 	overflow: hidden;
 }
 
-.wpfaevent .wpfa-speaker-photo img {
+.wpfaevent .wpfa-speaker-photo-container {
+	position: relative;
 	width: 100%;
 	height: 100%;
-	object-fit: contain;
-	object-position: center;
-	transition: transform 0.3s ease;
+	overflow: hidden;
 }
 
-.wpfaevent .wpfa-speaker-card:hover .wpfa-speaker-photo img {
+.wpfaevent .wpfa-speaker-photo-blur {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center top;
+	filter: blur(10px);
+	transform: scale(1.1);
+	opacity: 0.5;
+	display: block;
+	z-index: 1;
+}
+
+.wpfaevent .wpfa-speaker-photo-img {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center top;
+	display: block;
+	transition: transform 0.3s ease;
+	z-index: 2;
+}
+
+.wpfaevent .wpfa-speaker-card:hover .wpfa-speaker-photo-img {
 	transform: scale(1.05);
 }
 
@@ -227,6 +253,13 @@
 	-webkit-mask-size: contain;
 	-webkit-mask-repeat: no-repeat;
 	-webkit-mask-position: center;
+}
+
+.wpfaevent .wpfa-speaker-placeholder-img {
+	width: 100%;
+	height: 100% !important;
+	object-fit: contain;
+	background: linear-gradient(135deg, #e0e4ea, #eef0f3);
 }
 
 /* Speaker Meta (Name, Role, Category) */
