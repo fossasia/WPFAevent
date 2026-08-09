@@ -190,6 +190,95 @@
 	text-transform: uppercase;
 }
 
+.wpfaevent .wpfa-event-exhibitor-name {
+	color: var(--event-ink);
+	display: block;
+	font-size: 1.12rem;
+	font-weight: 900;
+	line-height: 1.25;
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.wpfaevent .wpfa-event-exhibitor-logo {
+	align-items: center;
+	background: #f7fafc;
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	display: flex;
+	height: 70px;
+	justify-content: center;
+	padding: 10px;
+	width: 88px;
+}
+
+.wpfaevent .wpfa-event-exhibitor-card.has-banner .wpfa-event-exhibitor-logo {
+	background: #fff;
+	box-shadow: 0 10px 24px rgba(36, 52, 71, 0.12);
+	height: 78px;
+	width: 96px;
+}
+
+.wpfaevent .wpfa-event-exhibitor-logo img {
+	display: block;
+	max-height: 100%;
+	max-width: 100%;
+	object-fit: contain;
+}
+
+.wpfaevent .wpfa-event-exhibitor-placeholder {
+	align-items: center;
+	background:
+		linear-gradient(135deg, #fff, var(--event-soft)),
+		#f7fafc;
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	color: var(--event-primary-dark);
+	display: flex;
+	font-size: 1.25rem;
+	font-weight: 900;
+	height: 64px;
+	justify-content: center;
+	width: 64px;
+}
+
+.wpfaevent .wpfa-event-exhibitor-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: auto;
+	padding-top: 4px;
+}
+
+.wpfaevent .wpfa-event-exhibitor-links a {
+	background: #fff;
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	color: var(--event-primary-dark);
+	font-size: 0.86rem;
+	font-weight: 800;
+	padding: 8px 11px;
+	text-decoration: none;
+}
+
+.wpfaevent .wpfa-event-exhibitor-links a:hover,
+.wpfaevent .wpfa-event-exhibitor-links a:focus {
+	background: var(--event-primary);
+	color: #fff;
+}
+
+.wpfaevent .wpfa-event-exhibitor-card-link .wpfa-event-exhibitor-toggle-open {
+	display: none;
+}
+
+.wpfaevent .wpfa-event-exhibitor-card-link .wpfa-event-exhibitor-toggle-closed {
+	display: inline;
+}
+
+.wpfaevent .wpfa-event-exhibitor-card-link .wpfa-event-exhibitor-toggle::after {
+	content: "→";
+}
+
 .wpfaevent .wpfa-event-exhibitor-toggle {
 	align-items: center;
 	align-self: flex-start;
