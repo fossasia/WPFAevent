@@ -261,27 +261,7 @@
 	color: #fff;
 }
 
-.wpfaevent .wpfa-schedule-tabs {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
-	margin: 0 0 24px;
-}
 
-.wpfaevent .wpfa-schedule-tabs a {
-	background: #fff;
-	border: 1px solid var(--event-line);
-	border-radius: var(--event-radius);
-	color: var(--event-primary-dark);
-	font-weight: 800;
-	padding: 9px 14px;
-}
-
-.wpfaevent .wpfa-schedule-tabs a.is-active {
-	background: var(--event-primary);
-	border-color: var(--event-primary);
-	color: #fff;
-}
 
 .wpfaevent .wpfa-schedule-group + .wpfa-schedule-group {
 	margin-top: 28px;
@@ -613,37 +593,11 @@
 	color: #fff;
 }
 
-.wpfaevent.wpfa-additional-information-template .wpfa-schedule-tabs {
-	margin-bottom: 30px;
-}
-
-.wpfaevent.wpfa-additional-information-template .wpfa-schedule-tabs a {
-	color: var(--event-ink);
-}
-
-.wpfaevent.wpfa-additional-information-template .wpfa-schedule-tabs a:hover,
-.wpfaevent.wpfa-additional-information-template .wpfa-schedule-tabs a:focus {
-	background: #f6faf7;
-	color: var(--event-ink);
-}
-
-.wpfaevent.wpfa-additional-information-template .wpfa-schedule-tabs a.is-active {
-	background: var(--event-primary);
-	border-color: var(--event-primary);
-	color: #fff;
-}
-
-.wpfaevent .wpfa-event-speaker-limit-note,
 .wpfaevent .wpfa-event-schedule-preview-note {
 	color: var(--event-muted);
 	font-size: 0.94rem;
 	font-weight: 700;
 	margin: 14px 0 0;
-}
-
-.wpfaevent .wpfa-event-detail .wpfa-speaker-photo {
-	background: #eaf1f8;
-	aspect-ratio: 1 / 1;
 }
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-expand {
@@ -1082,3 +1036,593 @@
 		width: 100%;
 	}
 }
+
+/* ==========================================================================
+   Event Archive & Directory Styles (Moved from event-base.css)
+   ========================================================================== */
+
+.wpfaevent .wpfa-event-section-actions {
+	align-items: end;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	justify-content: flex-end;
+}
+
+.wpfaevent .wpfa-event-timezone-form {
+	align-items: end;
+	display: flex;
+	flex: 0 1 420px;
+	gap: 10px;
+	justify-content: flex-end;
+	min-width: 260px;
+}
+
+.wpfaevent .wpfa-event-timezone-form label {
+	display: grid;
+	flex: 1 1 240px;
+	gap: 6px;
+	margin: 0;
+	min-width: 0;
+}
+
+.wpfaevent .wpfa-event-timezone-form span {
+	color: var(--event-muted);
+	font-size: 0.78rem;
+	font-weight: 800;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+.wpfaevent .wpfa-event-timezone-form select {
+	appearance: none;
+	background:
+		linear-gradient(45deg, transparent 50%, var(--event-muted) 50%) calc(100% - 18px) 19px / 6px 6px no-repeat,
+		linear-gradient(135deg, var(--event-muted) 50%, transparent 50%) calc(100% - 12px) 19px / 6px 6px no-repeat,
+		#fff;
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	color: var(--event-ink);
+	font: inherit;
+	min-height: 42px;
+	min-width: 0;
+	padding: 8px 34px 8px 11px;
+	width: 100%;
+}
+
+.wpfaevent .wpfa-event-timezone-form select:focus {
+	border-color: var(--event-primary);
+	box-shadow: 0 0 0 3px rgba(213, 16, 7, 0.14);
+	outline: none;
+}
+
+.wpfaevent .wpfa-event-timezone-form button {
+	background: var(--event-primary);
+	border: 0;
+	border-radius: var(--event-radius);
+	color: #fff;
+	cursor: pointer;
+	font: inherit;
+	font-weight: 800;
+	min-height: 42px;
+	padding: 8px 14px;
+	white-space: nowrap;
+}
+
+.wpfaevent .wpfa-event-timezone-form button:hover,
+.wpfaevent .wpfa-event-timezone-form button:focus {
+	background: var(--event-primary-dark);
+	color: #fff;
+}
+
+.wpfaevent .wpfa-event-archive {
+	background:
+		linear-gradient(180deg, rgba(213, 16, 7, 0.05), rgba(244, 247, 251, 0) 520px),
+		var(--event-soft);
+	min-height: 70vh;
+}
+
+.wpfaevent .wpfa-event-directory-hero {
+	background: var(--event-primary);
+	color: #fff;
+	padding: 58px 0 92px;
+}
+
+.wpfaevent .wpfa-event-directory-hero-inner {
+	align-items: end;
+	display: grid;
+	gap: 28px;
+	grid-template-columns: minmax(0, 1fr) minmax(170px, 220px);
+}
+
+.wpfaevent .wpfa-event-directory-hero-inner > *,
+.wpfaevent .wpfa-event-filter-form > *,
+.wpfaevent .wpfa-event-filter-grid > *,
+.wpfaevent .wpfa-event-directory-card > *,
+.wpfaevent .wpfa-event-directory-card-main > * {
+	min-width: 0;
+}
+
+.wpfaevent .wpfa-event-directory-hero h1 {
+	color: #fff;
+	font-size: clamp(2.15rem, 5vw, 4.5rem);
+	font-weight: 800;
+	letter-spacing: 0;
+	line-height: 0.98;
+	margin: 0;
+	text-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
+}
+
+.wpfaevent .wpfa-event-directory-lead {
+	color: rgba(255, 255, 255, 0.9);
+	font-size: 1.12rem;
+	line-height: 1.7;
+	margin-top: 14px;
+}
+
+.wpfaevent .wpfa-event-directory-lead p {
+	margin: 0;
+}
+
+.wpfaevent .wpfa-event-directory-count {
+	background: #fff;
+	border-radius: var(--event-radius);
+	box-shadow: 0 14px 34px rgba(9, 42, 71, 0.18);
+	color: var(--event-ink);
+	display: flex;
+	flex-direction: column;
+	padding: 16px 20px;
+}
+
+.wpfaevent .wpfa-event-directory-count span {
+	color: var(--event-muted);
+	font-size: 0.88rem;
+	font-weight: 800;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+.wpfaevent .wpfa-event-directory-count strong {
+	font-size: 2.15rem;
+	font-weight: 900;
+	line-height: 1.1;
+	margin-top: 4px;
+}
+
+.wpfaevent .wpfa-event-directory-body {
+	margin-top: -54px;
+	padding-bottom: 72px;
+}
+
+.wpfaevent .wpfa-event-filter-form {
+	background: #fff;
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	box-shadow: var(--event-shadow);
+	display: grid;
+	gap: 20px;
+	padding: 24px;
+}
+
+.wpfaevent .wpfa-event-filter-head,
+.wpfaevent .wpfa-event-results-head {
+	align-items: center;
+	display: flex;
+	gap: 20px;
+	justify-content: space-between;
+}
+
+.wpfaevent .wpfa-event-filter-title {
+	color: var(--event-ink);
+	font-size: 1.25rem;
+	font-weight: 800;
+	margin: 0;
+}
+
+.wpfaevent .wpfa-event-filter-clear {
+	color: var(--event-muted);
+	font-size: 0.94rem;
+	font-weight: 800;
+	text-decoration: none;
+}
+
+.wpfaevent .wpfa-event-filter-clear:hover,
+.wpfaevent .wpfa-event-filter-clear:focus {
+	color: var(--event-primary);
+}
+
+.wpfaevent .wpfa-event-filter-grid {
+	display: grid;
+	gap: 16px;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.wpfaevent .wpfa-event-filter-item {
+	display: grid;
+	gap: 6px;
+}
+
+.wpfaevent .wpfa-event-filter-item span {
+	color: var(--event-muted);
+	font-size: 0.78rem;
+	font-weight: 800;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+.wpfaevent .wpfa-event-filter-item select,
+.wpfaevent .wpfa-event-filter-item input {
+	appearance: none;
+	background: #fff;
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	color: var(--event-ink);
+	font: inherit;
+	min-height: 42px;
+	padding: 8px 12px;
+	width: 100%;
+}
+
+.wpfaevent .wpfa-event-filter-item select {
+	background:
+		linear-gradient(45deg, transparent 50%, var(--event-muted) 50%) calc(100% - 18px) 19px / 6px 6px no-repeat,
+		linear-gradient(135deg, var(--event-muted) 50%, transparent 50%) calc(100% - 12px) 19px / 6px 6px no-repeat,
+		#fff;
+	padding-right: 34px;
+}
+
+.wpfaevent .wpfa-event-filter-item select:focus,
+.wpfaevent .wpfa-event-filter-item input:focus {
+	border-color: var(--event-primary);
+	box-shadow: 0 0 0 3px rgba(213, 16, 7, 0.14);
+	outline: none;
+}
+
+.wpfaevent .wpfa-event-filter-bottom {
+	align-items: end;
+	border-top: 1px solid var(--event-line);
+	display: grid;
+	gap: 16px;
+	grid-template-columns: minmax(0, 1fr) minmax(130px, 180px);
+	padding-top: 20px;
+}
+
+.wpfaevent .wpfa-event-filter-active-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.wpfaevent .wpfa-event-filter-tag {
+	align-items: center;
+	background: #edf5fc;
+	border-radius: 999px;
+	color: var(--event-primary-dark);
+	display: inline-flex;
+	font-size: 0.88rem;
+	font-weight: 800;
+	gap: 6px;
+	line-height: 1.2;
+	padding: 6px 12px;
+}
+
+.wpfaevent .wpfa-event-filter-tag-remove {
+	color: var(--event-muted);
+	font-size: 1.15rem;
+	font-weight: 400;
+	line-height: 1;
+	text-decoration: none;
+}
+
+.wpfaevent .wpfa-event-filter-tag-remove:hover {
+	color: var(--event-danger);
+}
+
+.wpfaevent .wpfa-event-filter-submit {
+	background: var(--event-primary);
+	border: 0;
+	border-radius: var(--event-radius);
+	color: #fff;
+	cursor: pointer;
+	font: inherit;
+	font-weight: 800;
+	min-height: 42px;
+	padding: 8px 14px;
+	text-align: center;
+	width: 100%;
+}
+
+.wpfaevent .wpfa-event-filter-submit:hover {
+	background: var(--event-primary-dark);
+}
+
+.wpfaevent .wpfa-event-results-head {
+	margin: 36px 0 24px;
+}
+
+.wpfaevent .wpfa-event-results-title {
+	color: var(--event-ink);
+	font-size: 1.45rem;
+	font-weight: 800;
+	margin: 0;
+}
+
+.wpfaevent .wpfa-event-results-count {
+	color: var(--event-muted);
+	font-size: 1rem;
+	font-weight: 700;
+}
+
+.wpfaevent .wpfa-event-directory-grid {
+	display: grid;
+	gap: 28px;
+}
+
+.wpfaevent .wpfa-event-directory-card {
+	background: #fff;
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	box-shadow: var(--event-shadow);
+	display: grid;
+	grid-template-columns: minmax(220px, 0.28fr) minmax(0, 1fr) minmax(160px, 200px);
+	overflow: hidden;
+}
+
+.wpfaevent .wpfa-event-card-media {
+	background: #edf5fc;
+	position: relative;
+}
+
+.wpfaevent .wpfa-event-card-media img {
+	height: 100%;
+	object-fit: cover;
+	position: absolute;
+	width: 100%;
+}
+
+.wpfaevent .wpfa-event-card-body {
+	display: flex;
+	flex-direction: column;
+	padding: 24px;
+}
+
+.wpfaevent .wpfa-event-card-kicker {
+	color: var(--event-primary);
+	font-size: 0.82rem;
+	font-weight: 900;
+	margin: 0 0 6px;
+	text-transform: uppercase;
+}
+
+.wpfaevent .wpfa-event-card-title {
+	font-size: clamp(1.35rem, 2.5vw, 1.72rem);
+	font-weight: 800;
+	margin: 0 0 10px;
+}
+
+.wpfaevent .wpfa-event-card-title a {
+	color: var(--event-ink);
+	text-decoration: none;
+}
+
+.wpfaevent .wpfa-event-card-title a:hover {
+	color: var(--event-primary);
+}
+
+.wpfaevent .wpfa-event-card-excerpt {
+	color: #3f4d5e;
+	font-size: 0.98rem;
+	line-height: 1.5;
+	margin: 0 0 18px;
+}
+
+.wpfaevent .wpfa-event-card-excerpt p {
+	margin: 0;
+}
+
+.wpfaevent .wpfa-event-card-meta {
+	align-items: center;
+	border-top: 1px solid rgba(223, 230, 238, 0.8);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 14px;
+	margin-top: auto;
+	padding-top: 14px;
+}
+
+.wpfaevent .wpfa-event-card-meta span {
+	color: var(--event-muted);
+	font-size: 0.92rem;
+	font-weight: 700;
+}
+
+.wpfaevent .wpfa-event-card-actions {
+	align-items: stretch;
+	border-left: 1px solid var(--event-line);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 20px;
+}
+
+.wpfaevent .wpfa-event-card-actions a {
+	align-items: center;
+	border-radius: var(--event-radius);
+	display: flex;
+	font-size: 0.94rem;
+	font-weight: 800;
+	justify-content: center;
+	min-height: 42px;
+	padding: 8px 14px;
+	text-align: center;
+	text-decoration: none;
+	width: 100%;
+}
+
+.wpfaevent .wpfa-event-card-actions a + a {
+	margin-top: 10px;
+}
+
+.wpfaevent .wpfa-event-card-actions a:first-child {
+	background: var(--event-primary);
+	color: #fff;
+}
+
+.wpfaevent .wpfa-event-card-actions a:first-child:hover {
+	background: var(--event-primary-dark);
+	color: #fff;
+}
+
+.wpfaevent .wpfa-event-empty-state {
+	background: #fff;
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	box-shadow: var(--event-shadow);
+	padding: 34px;
+	text-align: center;
+}
+
+.wpfaevent .wpfa-event-empty-state h3 {
+	color: var(--event-ink);
+	margin: 0 0 8px;
+}
+
+.wpfaevent .wpfa-event-empty-state p {
+	color: var(--event-muted);
+	margin: 0 auto 18px;
+	max-width: 520px;
+}
+
+.wpfaevent .wpfa-event-empty-state a {
+	background: var(--event-primary);
+	border-radius: var(--event-radius);
+	color: #fff;
+	display: inline-flex;
+	font-weight: 800;
+	min-height: 42px;
+	padding: 10px 14px;
+}
+
+.wpfaevent .wpfa-event-empty-state a:hover {
+	background: var(--event-primary-dark);
+	color: #fff;
+}
+
+/* ==========================================================================
+   Responsive Media Queries (Archive & Timezone)
+   ========================================================================== */
+
+@media (max-width: 900px) {
+	.wpfaevent .wpfa-event-directory-hero-inner,
+	.wpfaevent .wpfa-event-directory-card,
+	.wpfaevent .wpfa-event-directory-card-main {
+		grid-template-columns: 1fr;
+	}
+
+	.wpfaevent .wpfa-event-filter-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.wpfaevent .wpfa-event-directory-hero {
+		padding-bottom: 82px;
+	}
+
+	.wpfaevent .wpfa-event-directory-count {
+		max-width: 240px;
+	}
+
+	.wpfaevent .wpfa-event-card-media {
+		border-bottom: 1px solid var(--event-line);
+		border-right: 0;
+		min-height: 180px;
+	}
+
+	.wpfaevent .wpfa-event-card-actions {
+		border-left: 0;
+		border-top: 1px solid var(--event-line);
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: flex-start;
+	}
+}
+
+@media (max-width: 760px) {
+	.wpfaevent .wpfa-event-timezone-form {
+		align-items: stretch;
+		flex-direction: column;
+		min-width: 0;
+		width: 100%;
+	}
+
+	.wpfaevent .wpfa-event-section-actions {
+		align-items: stretch;
+		grid-template-columns: 1fr;
+		width: 100%;
+	}
+
+	.wpfaevent .wpfa-event-timezone-form button {
+		width: 100%;
+	}
+
+	.wpfaevent .wpfa-event-directory-hero {
+		padding: 40px 0 72px;
+	}
+
+	.wpfaevent .wpfa-event-directory-hero h1 {
+		font-size: 2rem;
+		max-width: calc(100vw - 40px);
+		width: 100%;
+		word-break: break-word;
+	}
+
+	.wpfaevent .wpfa-event-directory-lead,
+	.wpfaevent .wpfa-event-directory-count,
+	.wpfaevent .wpfa-event-filter-form,
+	.wpfaevent .wpfa-event-directory-card {
+		max-width: calc(100vw - 40px);
+		width: 100%;
+	}
+
+	.wpfaevent .wpfa-event-filter-form {
+		padding: 18px;
+	}
+
+	.wpfaevent .wpfa-event-filter-head,
+	.wpfaevent .wpfa-event-results-head {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.wpfaevent .wpfa-event-filter-bottom {
+		align-items: stretch;
+		grid-template-columns: 1fr;
+	}
+
+	.wpfaevent .wpfa-event-filter-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.wpfaevent .wpfa-event-filter-submit {
+		width: 100%;
+	}
+
+	.wpfaevent .wpfa-event-card-body {
+		padding: 20px;
+	}
+
+	.wpfaevent .wpfa-event-card-actions a {
+		flex: 1 1 148px;
+	}
+}
+
+@media (max-width: 520px) {
+	.wpfaevent .wpfa-event-directory-hero h1,
+	.wpfaevent .wpfa-event-directory-lead,
+	.wpfaevent .wpfa-event-directory-count,
+	.wpfaevent .wpfa-event-filter-form,
+	.wpfaevent .wpfa-event-directory-card {
+		max-width: 350px;
+		width: calc(100vw - 40px);
+	}
+}
+

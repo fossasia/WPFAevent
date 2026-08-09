@@ -282,3 +282,378 @@
 	border-color: var(--event-primary);
 	color: #fff;
 }
+
+/* ==========================================================================
+   Partner Detail Page Custom Styles (Moved from event-base.css)
+   ========================================================================== */
+
+.wpfaevent .wpfa-partner-detail-hero {
+	background:
+		linear-gradient(135deg, rgba(36, 52, 71, 0.22), rgba(36, 52, 71, 0)),
+		linear-gradient(135deg, var(--event-primary-dark), var(--event-primary));
+	color: #fff;
+	overflow: hidden;
+	padding: 58px 0 84px;
+	position: relative;
+}
+
+.wpfaevent .wpfa-partner-detail-hero::before {
+	background:
+		linear-gradient(115deg, rgba(255, 255, 255, 0.12) 0 18%, transparent 18% 100%),
+		linear-gradient(115deg, transparent 0 64%, rgba(255, 255, 255, 0.1) 64% 72%, transparent 72% 100%);
+	content: "";
+	inset: 0;
+	position: absolute;
+}
+
+.wpfaevent .wpfa-partner-detail-hero-inner {
+	align-items: end;
+	display: grid;
+	gap: 28px;
+	grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+	position: relative;
+	z-index: 1;
+}
+
+.wpfaevent .wpfa-partner-detail-hero-copy {
+	min-width: 0;
+}
+
+.wpfaevent .wpfa-partner-detail-hero .wpfa-event-kicker {
+	color: rgba(255, 255, 255, 0.82);
+}
+
+.wpfaevent .wpfa-partner-detail-hero h1 {
+	color: #fff;
+	font-size: 3.25rem;
+	font-weight: 800;
+	letter-spacing: 0;
+	line-height: 1;
+	margin: 0;
+	max-width: 880px;
+	overflow-wrap: anywhere;
+	text-shadow: 0 2px 18px rgba(0, 0, 0, 0.18);
+}
+
+.wpfaevent .wpfa-partner-detail-lead {
+	color: rgba(255, 255, 255, 0.88);
+	font-size: 1.05rem;
+	line-height: 1.65;
+	margin: 18px 0 0;
+	max-width: 660px;
+}
+
+.wpfaevent .wpfa-partner-detail-hero-meta {
+	background: rgba(255, 255, 255, 0.14);
+	border: 1px solid rgba(255, 255, 255, 0.26);
+	border-radius: var(--event-radius);
+	box-shadow: 0 16px 34px rgba(36, 52, 71, 0.18);
+	display: grid;
+	gap: 7px;
+	padding: 18px;
+}
+
+.wpfaevent .wpfa-partner-detail-hero-meta span,
+.wpfaevent .wpfa-partner-detail-hero-meta em {
+	color: rgba(255, 255, 255, 0.78);
+	font-size: 0.82rem;
+	font-style: normal;
+	font-weight: 800;
+	line-height: 1.35;
+}
+
+.wpfaevent .wpfa-partner-detail-hero-meta span {
+	text-transform: uppercase;
+}
+
+.wpfaevent .wpfa-partner-detail-hero-meta strong {
+	color: #fff;
+	font-size: 1.24rem;
+	line-height: 1.25;
+	overflow-wrap: anywhere;
+}
+
+.wpfaevent .wpfa-partner-detail-body {
+	margin-top: -44px;
+	padding: 0 0 68px;
+	position: relative;
+	z-index: 2;
+}
+
+.wpfaevent .wpfa-partner-detail-banner {
+	display: block;
+	height: 210px;
+	object-fit: cover;
+	width: 100%;
+}
+
+.wpfaevent .wpfa-partner-detail-card {
+	background: #fff;
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	box-shadow: var(--event-shadow);
+	display: grid;
+	grid-template-columns: minmax(260px, 0.38fr) minmax(0, 1fr);
+	overflow: hidden;
+}
+
+.wpfaevent .wpfa-partner-detail-media {
+	background:
+		linear-gradient(180deg, #fff, #f7fafc);
+	border-right: 1px solid var(--event-line);
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	min-width: 0;
+}
+
+.wpfaevent .wpfa-partner-detail.no-banner .wpfa-partner-detail-media {
+	grid-template-rows: 1fr auto;
+}
+
+.wpfaevent .wpfa-partner-detail-identity {
+	align-content: center;
+	display: grid;
+	gap: 18px;
+	justify-items: start;
+	padding: 28px;
+}
+
+.wpfaevent .wpfa-partner-detail-identity-copy {
+	display: grid;
+	gap: 5px;
+	min-width: 0;
+}
+
+.wpfaevent .wpfa-partner-detail-identity-copy span {
+	color: var(--event-primary-dark);
+	font-size: 0.78rem;
+	font-weight: 900;
+	letter-spacing: 0;
+	text-transform: uppercase;
+}
+
+.wpfaevent .wpfa-partner-detail-identity-copy strong {
+	color: var(--event-ink);
+	font-size: 1.2rem;
+	font-weight: 900;
+	line-height: 1.25;
+	overflow-wrap: anywhere;
+}
+
+.wpfaevent .wpfa-partner-detail-logo {
+	align-items: center;
+	background: #fff;
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	box-shadow: 0 12px 26px rgba(36, 52, 71, 0.08);
+	display: flex;
+	height: 112px;
+	justify-content: center;
+	padding: 20px;
+	width: 148px;
+}
+
+.wpfaevent .wpfa-partner-detail-logo img {
+	display: block;
+	max-height: 100%;
+	max-width: 100%;
+	object-fit: contain;
+}
+
+.wpfaevent .wpfa-partner-detail-content {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	padding: 34px;
+}
+
+.wpfaevent .wpfa-partner-detail-header {
+	margin-bottom: 18px;
+	min-width: 0;
+}
+
+.wpfaevent .wpfa-partner-detail-content .wpfa-event-kicker {
+	color: var(--event-primary-dark);
+	margin-bottom: 8px;
+}
+
+.wpfaevent .wpfa-partner-detail-meta {
+	color: #667788;
+	font-size: 0.94rem;
+	margin: 6px 0 0;
+}
+
+.wpfaevent .wpfa-partner-detail-group {
+	border-top: 1px solid var(--event-line);
+	color: #667788;
+	font-size: 0.94rem;
+	margin: 0;
+	padding: 16px 28px;
+}
+
+.wpfaevent .wpfa-partner-detail-description {
+	color: #33465c;
+	font-size: 1.02rem;
+	line-height: 1.72;
+	margin-top: 0;
+	max-width: 760px;
+}
+
+.wpfaevent .wpfa-partner-detail-description p {
+	margin: 0 0 16px;
+}
+
+.wpfaevent .wpfa-partner-detail-description p:last-child {
+	margin-bottom: 0;
+}
+
+.wpfaevent .wpfa-partner-detail-empty {
+	background: #f8fafc;
+	border: 1px solid var(--event-line);
+	border-radius: var(--event-radius);
+	color: var(--event-muted);
+	margin: 0;
+	padding: 16px;
+}
+
+.wpfaevent .wpfa-partner-detail-links {
+	margin-top: 24px;
+	padding-top: 0;
+}
+
+.wpfaevent .wpfa-partner-detail-links a {
+	min-height: 42px;
+	padding: 11px 14px;
+}
+
+.wpfaevent .wpfa-partner-detail-links a:first-child {
+	background: var(--event-primary);
+	border-color: var(--event-primary);
+	color: #fff;
+}
+
+.wpfaevent .wpfa-partner-detail-back {
+	margin: 24px 0 0;
+}
+
+.wpfaevent .wpfa-partner-detail-back a {
+	align-items: center;
+	color: var(--event-primary-dark);
+	display: inline-flex;
+	font-weight: 900;
+	text-decoration: none;
+}
+
+.wpfaevent .wpfa-partner-detail-back a::before {
+	content: "←";
+	margin-right: 8px;
+}
+
+.wpfaevent .wpfa-partner-detail-back a:hover,
+.wpfaevent .wpfa-partner-detail-back a:focus {
+	color: var(--event-primary);
+	text-decoration: underline;
+}
+
+.wpfaevent .wpfa-partner-detail-header h2 {
+	color: var(--event-ink);
+	font-size: 2rem;
+	font-weight: 900;
+	letter-spacing: 0;
+	line-height: 1.12;
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.wpfaevent .wpfa-partner-detail-media .wpfa-event-exhibitor-placeholder {
+	font-size: 2.1rem;
+	height: 112px;
+	width: 112px;
+}
+
+/* ==========================================================================
+   Responsive Media Queries (Partners)
+   ========================================================================== */
+
+@media (max-width: 900px) {
+	.wpfaevent .wpfa-partner-detail-hero-inner,
+	.wpfaevent .wpfa-partner-detail-card {
+		grid-template-columns: 1fr;
+	}
+
+	.wpfaevent .wpfa-partner-detail-hero-meta {
+		max-width: 360px;
+	}
+
+	.wpfaevent .wpfa-partner-detail-media {
+		border-bottom: 1px solid var(--event-line);
+		border-right: 0;
+	}
+
+	.wpfaevent .wpfa-partner-detail.no-banner .wpfa-partner-detail-media {
+		grid-template-rows: auto auto;
+	}
+}
+
+@media (max-width: 760px) {
+	.wpfaevent .wpfa-partner-detail-hero {
+		padding: 44px 0 72px;
+	}
+
+	.wpfaevent .wpfa-partner-detail-hero h1 {
+		font-size: 2.35rem;
+	}
+
+	.wpfaevent .wpfa-partner-detail-body {
+		margin-top: -34px;
+		padding-bottom: 48px;
+	}
+
+	.wpfaevent .wpfa-partner-detail-body.wpfa-event-section {
+		padding-bottom: 48px;
+		padding-top: 0;
+	}
+
+	.wpfaevent .wpfa-partner-detail-content,
+	.wpfaevent .wpfa-partner-detail-identity {
+		padding: 24px;
+	}
+
+	.wpfaevent .wpfa-partner-detail-group {
+		padding-left: 24px;
+		padding-right: 24px;
+	}
+
+	.wpfaevent .wpfa-partner-detail-header h2 {
+		font-size: 1.72rem;
+	}
+}
+
+@media (max-width: 520px) {
+	.wpfaevent .wpfa-partner-detail-hero h1 {
+		font-size: 2rem;
+	}
+
+	.wpfaevent .wpfa-partner-detail-hero-meta,
+	.wpfaevent .wpfa-partner-detail-card,
+	.wpfaevent .wpfa-partner-detail-back {
+		max-width: 350px;
+		width: calc(100vw - 40px);
+	}
+
+	.wpfaevent .wpfa-partner-detail-identity {
+		gap: 14px;
+	}
+
+	.wpfaevent .wpfa-partner-detail-logo,
+	.wpfaevent .wpfa-partner-detail-media .wpfa-event-exhibitor-placeholder {
+		height: 92px;
+		width: 112px;
+	}
+
+	.wpfaevent .wpfa-partner-detail-links a {
+		justify-content: center;
+		width: 100%;
+	}
+}
+

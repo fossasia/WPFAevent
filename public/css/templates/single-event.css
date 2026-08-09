@@ -2,17 +2,7 @@
    Single Event Detail Page Specific Overrides
    ========================================================================== */
 
-.wpfaevent .wpfa-event-speaker-limit-note {
-	color: var(--event-muted);
-	font-size: 0.94rem;
-	font-weight: 700;
-	margin: 14px 0 0;
-}
 
-.wpfaevent .wpfa-event-detail .wpfa-speaker-photo {
-	background: #eaf1f8;
-	aspect-ratio: 1 / 1;
-}
 
 .wpfaevent .wpfa-single-event {
 	font-size: 1rem;
