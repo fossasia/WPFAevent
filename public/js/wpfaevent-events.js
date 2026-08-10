@@ -267,6 +267,20 @@ const WPFA_Events = (function() {
 				filterEvents();
 			});
 		});
+
+		// Check for URL parameter to pre-select filter tab on load
+		const urlParams = new URLSearchParams(window.location.search);
+		const urlFilter = urlParams.get('filter');
+		const allowedFilters = ['all', 'upcoming', 'past', 'bookmarked'];
+		if (urlFilter && allowedFilters.includes(urlFilter)) {
+			const targetBtn = Array.from(document.querySelectorAll('.date-filter-btn'))
+				.find(btn => btn.dataset.filter === urlFilter);
+			if (targetBtn) {
+				document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active'));
+				targetBtn.classList.add('active');
+				filterEvents();
+			}
+		}
 	}
 
 	/**
