@@ -290,6 +290,27 @@ const WPFA_Events = (function () {
 					.querySelectorAll('.date-filter-btn')
 					.forEach((b) => b.classList.remove('active'));
 				this.classList.add('active');
+
+				// Update the URL dynamically
+				if (
+					typeof window !== 'undefined' &&
+					window.history &&
+					window.history.pushState
+				) {
+					const url = new URL(window.location.href);
+					const filter = this.dataset.filter;
+					if (filter && filter !== 'all') {
+						url.searchParams.set('filter', filter);
+					} else {
+						url.searchParams.delete('filter');
+					}
+					window.history.pushState(
+						{ filter: filter },
+						'',
+						url.toString()
+					);
+				}
+
 				filterEvents();
 			});
 		});
@@ -310,6 +331,47 @@ const WPFA_Events = (function () {
 				filterEvents();
 			}
 		}
+
+		// Handle popstate (back/forward browser buttons)
+		if (typeof window !== 'undefined') {
+			window.addEventListener('popstate', function () {
+				const params = new URLSearchParams(window.location.search);
+				const currentFilter = params.get('filter') || 'all';
+				const targetBtn = Array.from(
+					document.querySelectorAll('.date-filter-btn')
+				).find((btn) => btn.dataset.filter === currentFilter);
+				if (targetBtn) {
+					document
+						.querySelectorAll('.date-filter-btn')
+						.forEach((b) => b.classList.remove('active'));
+					targetBtn.classList.add('active');
+					filterEvents();
+				}
+			});
+		}
+	}
+
+	/**
+	 * Update active classes in navigation header based on filter selection.
+	 */
+	function updateNavigationHeader(filter) {
+		const navMain = document.querySelector('.nav-links-main');
+		if (!navMain) return;
+
+		const upcomingLink = navMain.querySelector(
+			'a[href*="/events/"]:not([href*="filter=past"])'
+		);
+		const pastLink = navMain.querySelector('a[href*="filter=past"]');
+
+		if (upcomingLink && pastLink) {
+			if (filter === 'past') {
+				upcomingLink.classList.remove('active');
+				pastLink.classList.add('active');
+			} else {
+				pastLink.classList.remove('active');
+				upcomingLink.classList.add('active');
+			}
+		}
 	}
 
 	/**
@@ -317,6 +379,12 @@ const WPFA_Events = (function () {
 	 */
 	function filterEvents() {
 		if (!elements.eventsContainer) return;
+
+		const activeDateBtn = document.querySelector('.date-filter-btn.active');
+		const dateFilter = activeDateBtn ? activeDateBtn.dataset.filter : 'all';
+
+		// Update active classes in navigation header
+		updateNavigationHeader(dateFilter);
 
 		const searchTerm = (
 			elements.searchInput ? elements.searchInput.value : ''
@@ -327,8 +395,6 @@ const WPFA_Events = (function () {
 		const location = elements.filterLocation
 			? elements.filterLocation.value.toLowerCase()
 			: '';
-		const activeDateBtn = document.querySelector('.date-filter-btn.active');
-		const dateFilter = activeDateBtn ? activeDateBtn.dataset.filter : 'all';
 
 		const allCards =
 			elements.eventsContainer.querySelectorAll('.event-card');
