@@ -6,7 +6,7 @@
  * @subpackage Wpfaevent/public/js
  */
 
-const WPFA_Events = (function() {
+const WPFA_Events = (function () {
 	// Private variables
 	let config = {};
 	let elements = {};
@@ -31,7 +31,7 @@ const WPFA_Events = (function() {
 		config = options || {};
 
 		// Ensure i18n object exists even if PHP fails to provide it
-        config.i18n = config.i18n || {};
+		config.i18n = config.i18n || {};
 
 		// Cache DOM elements
 		cacheElements();
@@ -69,8 +69,12 @@ const WPFA_Events = (function() {
 			editEventModal: document.getElementById('editEventModal'),
 
 			// Modal close buttons
-			closeCreateEventModal: document.querySelector('#createEventModal .close-btn'),
-			closeEditEventModal: document.querySelector('#editEventModal .close-btn'),
+			closeCreateEventModal: document.querySelector(
+				'#createEventModal .close-btn'
+			),
+			closeEditEventModal: document.querySelector(
+				'#editEventModal .close-btn'
+			),
 
 			// Forms
 			createEventForm: document.getElementById('createEventForm'),
@@ -89,38 +93,53 @@ const WPFA_Events = (function() {
 	function setupEventListeners() {
 		// Create event button
 		if (elements.createEventBtn) {
-			elements.createEventBtn.addEventListener('click', openCreateEventModal);
+			elements.createEventBtn.addEventListener(
+				'click',
+				openCreateEventModal
+			);
 		}
 
 		// Modal close buttons
 		if (elements.closeCreateEventModal) {
-			elements.closeCreateEventModal.addEventListener('click', closeCreateEventModal);
+			elements.closeCreateEventModal.addEventListener(
+				'click',
+				closeCreateEventModal
+			);
 		}
 
 		if (elements.closeEditEventModal) {
-			elements.closeEditEventModal.addEventListener('click', closeEditEventModal);
+			elements.closeEditEventModal.addEventListener(
+				'click',
+				closeEditEventModal
+			);
 		}
 
 		// Close modals on background click
 		if (elements.createEventModal) {
-			elements.createEventModal.addEventListener('click', function(e) {
+			elements.createEventModal.addEventListener('click', function (e) {
 				if (e.target === this) closeCreateEventModal();
 			});
 		}
 
 		if (elements.editEventModal) {
-			elements.editEventModal.addEventListener('click', function(e) {
+			elements.editEventModal.addEventListener('click', function (e) {
 				if (e.target === this) closeEditEventModal();
 			});
 		}
 
 		// Form submissions
 		if (elements.createEventForm) {
-			elements.createEventForm.addEventListener('submit', handleCreateEventFormSubmit);
+			elements.createEventForm.addEventListener(
+				'submit',
+				handleCreateEventFormSubmit
+			);
 		}
 
 		if (elements.editEventForm) {
-			elements.editEventForm.addEventListener('submit', handleEditEventFormSubmit);
+			elements.editEventForm.addEventListener(
+				'submit',
+				handleEditEventFormSubmit
+			);
 		}
 
 		setupTimeFormatControls(elements.createEventForm);
@@ -128,7 +147,10 @@ const WPFA_Events = (function() {
 
 		// Event card actions delegation (admin only)
 		if (elements.eventsContainer) {
-			elements.eventsContainer.addEventListener('click', handleCardActions);
+			elements.eventsContainer.addEventListener(
+				'click',
+				handleCardActions
+			);
 		}
 	}
 
@@ -136,7 +158,7 @@ const WPFA_Events = (function() {
 	 * Setup character counters
 	 */
 	function setupCharacterCounters() {
-		document.querySelectorAll('textarea[maxlength]').forEach(textarea => {
+		document.querySelectorAll('textarea[maxlength]').forEach((textarea) => {
 			const counter = textarea.nextElementSibling;
 
 			if (counter?.classList.contains('wpfaevent-char-counter')) {
@@ -195,11 +217,13 @@ const WPFA_Events = (function() {
 	function syncTimeFields(form) {
 		const allDayField = form?.querySelector('[name="all_day"]');
 		const timeFields = form?.querySelector('.wpfaevent-time-fields');
-		const timeInputs = form?.querySelectorAll('[name="start_time"], [name="end_time"]') || [];
+		const timeInputs =
+			form?.querySelectorAll('[name="start_time"], [name="end_time"]') ||
+			[];
 		const isAllDay = Boolean(allDayField?.checked);
 
 		timeFields?.classList.toggle('is-disabled', isAllDay);
-		timeInputs.forEach(input => {
+		timeInputs.forEach((input) => {
 			input.disabled = isAllDay;
 
 			if (isAllDay) {
@@ -260,9 +284,11 @@ const WPFA_Events = (function() {
 		}
 
 		// Date filter tabs
-		document.querySelectorAll('.date-filter-btn').forEach(btn => {
-			btn.addEventListener('click', function() {
-				document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active'));
+		document.querySelectorAll('.date-filter-btn').forEach((btn) => {
+			btn.addEventListener('click', function () {
+				document
+					.querySelectorAll('.date-filter-btn')
+					.forEach((b) => b.classList.remove('active'));
 				this.classList.add('active');
 				filterEvents();
 			});
@@ -273,10 +299,13 @@ const WPFA_Events = (function() {
 		const urlFilter = urlParams.get('filter');
 		const allowedFilters = ['all', 'upcoming', 'past', 'bookmarked'];
 		if (urlFilter && allowedFilters.includes(urlFilter)) {
-			const targetBtn = Array.from(document.querySelectorAll('.date-filter-btn'))
-				.find(btn => btn.dataset.filter === urlFilter);
+			const targetBtn = Array.from(
+				document.querySelectorAll('.date-filter-btn')
+			).find((btn) => btn.dataset.filter === urlFilter);
 			if (targetBtn) {
-				document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active'));
+				document
+					.querySelectorAll('.date-filter-btn')
+					.forEach((b) => b.classList.remove('active'));
 				targetBtn.classList.add('active');
 				filterEvents();
 			}
@@ -289,32 +318,51 @@ const WPFA_Events = (function() {
 	function filterEvents() {
 		if (!elements.eventsContainer) return;
 
-		const searchTerm   = (elements.searchInput ? elements.searchInput.value : '').toLowerCase().trim();
-		const track        = elements.filterTrack ? elements.filterTrack.value : '';
-		const location     = elements.filterLocation ? elements.filterLocation.value.toLowerCase() : '';
+		const searchTerm = (
+			elements.searchInput ? elements.searchInput.value : ''
+		)
+			.toLowerCase()
+			.trim();
+		const track = elements.filterTrack ? elements.filterTrack.value : '';
+		const location = elements.filterLocation
+			? elements.filterLocation.value.toLowerCase()
+			: '';
 		const activeDateBtn = document.querySelector('.date-filter-btn.active');
-		const dateFilter   = activeDateBtn ? activeDateBtn.dataset.filter : 'all';
+		const dateFilter = activeDateBtn ? activeDateBtn.dataset.filter : 'all';
 
-		const allCards  = elements.eventsContainer.querySelectorAll('.event-card');
+		const allCards =
+			elements.eventsContainer.querySelectorAll('.event-card');
 		let visibleCount = 0;
 
-		allCards.forEach(card => {
-			const name        = (card.dataset.name        || '').toLowerCase();
-			const place       = (card.dataset.place       || '').toLowerCase();
+		allCards.forEach((card) => {
+			const name = (card.dataset.name || '').toLowerCase();
+			const place = (card.dataset.place || '').toLowerCase();
 			const description = (card.dataset.description || '').toLowerCase();
-			const cardTrack   = (card.dataset.track       || '').toLowerCase();
-			const isPast      = card.dataset.isPast === '1';
-			const isBookmarked  = card.classList.contains('is-bookmarked') || card.dataset.isBookmarked === '1';
+			const cardTrack = (card.dataset.track || '').toLowerCase();
+			const isPast = card.dataset.isPast === '1';
+			const isBookmarked =
+				card.classList.contains('is-bookmarked') ||
+				card.dataset.isBookmarked === '1';
 
-			const textMatch     = !searchTerm || name.includes(searchTerm) || place.includes(searchTerm) || description.includes(searchTerm);
-			const trackMatch    = !track     || cardTrack.split(',').some(s => s.trim() === track.toLowerCase());
-			const locationMatch = !location  || place === location;
-			const dateMatch     = dateFilter === 'all'
-				|| (dateFilter === 'past'     &&  isPast)
-				|| (dateFilter === 'upcoming' && !isPast)
-				|| (dateFilter === 'bookmarked' && isBookmarked);
+			const textMatch =
+				!searchTerm ||
+				name.includes(searchTerm) ||
+				place.includes(searchTerm) ||
+				description.includes(searchTerm);
+			const trackMatch =
+				!track ||
+				cardTrack
+					.split(',')
+					.some((s) => s.trim() === track.toLowerCase());
+			const locationMatch = !location || place === location;
+			const dateMatch =
+				dateFilter === 'all' ||
+				(dateFilter === 'past' && isPast) ||
+				(dateFilter === 'upcoming' && !isPast) ||
+				(dateFilter === 'bookmarked' && isBookmarked);
 
-			const isVisible = textMatch && trackMatch && locationMatch && dateMatch;
+			const isVisible =
+				textMatch && trackMatch && locationMatch && dateMatch;
 			card.style.display = isVisible ? '' : 'none';
 			if (isVisible) visibleCount++;
 		});
@@ -342,22 +390,32 @@ const WPFA_Events = (function() {
 		const target = e.target;
 
 		// Edit event button
-		if (target.matches('.btn-edit-event') || target.closest('.btn-edit-event')) {
+		if (
+			target.matches('.btn-edit-event') ||
+			target.closest('.btn-edit-event')
+		) {
 			e.preventDefault();
 			e.stopPropagation();
 
-			const button = target.matches('.btn-edit-event') ? target : target.closest('.btn-edit-event');
+			const button = target.matches('.btn-edit-event')
+				? target
+				: target.closest('.btn-edit-event');
 			const card = button.closest('.event-card');
 
 			openEditEventModal(card);
 		}
 
 		// Delete event button
-		else if (target.matches('.btn-delete-event') || target.closest('.btn-delete-event')) {
+		else if (
+			target.matches('.btn-delete-event') ||
+			target.closest('.btn-delete-event')
+		) {
 			e.preventDefault();
 			e.stopPropagation();
 
-			const button = target.matches('.btn-delete-event') ? target : target.closest('.btn-delete-event');
+			const button = target.matches('.btn-delete-event')
+				? target
+				: target.closest('.btn-delete-event');
 			const eventId = button.closest('.event-card').dataset.postId;
 			const eventName = button.closest('.event-card').dataset.name;
 
@@ -401,14 +459,22 @@ const WPFA_Events = (function() {
 
 		// Fill form with data from card dataset
 		document.getElementById('editEventId').value = eventId;
-		document.getElementById('editEventName').value = card.dataset.name || '';
-		document.getElementById('editEventDate').value = card.dataset.date || '';
-		document.getElementById('editEventEndDate').value = card.dataset.endDate || '';
-		document.getElementById('editEventPlace').value = card.dataset.place || '';
-		document.getElementById('editEventDescription').value = card.dataset.description || '';
-		document.getElementById('editEventLeadText').value = card.dataset.leadText || '';
-		document.getElementById('editRegistrationLink').value = card.dataset.registrationLink || '';
-		document.getElementById('editCfsLink').value = card.dataset.cfsLink || '';
+		document.getElementById('editEventName').value =
+			card.dataset.name || '';
+		document.getElementById('editEventDate').value =
+			card.dataset.date || '';
+		document.getElementById('editEventEndDate').value =
+			card.dataset.endDate || '';
+		document.getElementById('editEventPlace').value =
+			card.dataset.place || '';
+		document.getElementById('editEventDescription').value =
+			card.dataset.description || '';
+		document.getElementById('editEventLeadText').value =
+			card.dataset.leadText || '';
+		document.getElementById('editRegistrationLink').value =
+			card.dataset.registrationLink || '';
+		document.getElementById('editCfsLink').value =
+			card.dataset.cfsLink || '';
 
 		const editStartTime = document.getElementById('editEventStartTime');
 		const editEndTime = document.getElementById('editEventEndTime');
@@ -416,7 +482,8 @@ const WPFA_Events = (function() {
 		const editTimezone = document.getElementById('editEventTimezone');
 
 		if (editStartTime) {
-			editStartTime.value = card.dataset.startTime || card.dataset.time || '';
+			editStartTime.value =
+				card.dataset.startTime || card.dataset.time || '';
 		}
 
 		if (editEndTime) {
@@ -424,7 +491,8 @@ const WPFA_Events = (function() {
 		}
 
 		if (editAllDay) {
-			editAllDay.checked = card.dataset.allDay === '1' || card.dataset.allDay === 'true';
+			editAllDay.checked =
+				card.dataset.allDay === '1' || card.dataset.allDay === 'true';
 		}
 
 		setSelectValue(editTimezone, card.dataset.timezone || '');
@@ -447,7 +515,10 @@ const WPFA_Events = (function() {
 		e.preventDefault();
 
 		if (!config.canManageContent) {
-			alert(config.i18n.noPermission || 'You do not have permission to perform this action.');
+			alert(
+				config.i18n.noPermission ||
+					'You do not have permission to perform this action.'
+			);
 			return;
 		}
 
@@ -457,22 +528,32 @@ const WPFA_Events = (function() {
 		const submitBtn = form.querySelector('button[type="submit"]');
 
 		// Validate required fields - using ACTUAL form field names
-		const requiredFields = ['title', 'excerpt', 'start_date', 'location', 'registration_link'];
+		const requiredFields = [
+			'title',
+			'excerpt',
+			'start_date',
+			'location',
+			'registration_link',
+		];
 		let missingFields = [];
 
-		requiredFields.forEach(field => {
+		requiredFields.forEach((field) => {
 			if (!formData.get(field) || formData.get(field).trim() === '') {
 				missingFields.push(field);
 			}
 		});
 
 		if (missingFields.length > 0) {
-			alert(config.i18n.missingFields || 'Missing required fields: ' + missingFields.join(', '));
+			alert(
+				config.i18n.missingFields ||
+					'Missing required fields: ' + missingFields.join(', ')
+			);
 
 			// Re-enable button
 			if (submitBtn) {
 				submitBtn.disabled = false;
-				submitBtn.textContent = config.i18n.addEventButton || 'Create Card';
+				submitBtn.textContent =
+					config.i18n.addEventButton || 'Create Card';
 			}
 			return;
 		}
@@ -490,33 +571,42 @@ const WPFA_Events = (function() {
 		// Send form data
 		fetch(config.ajaxUrl, {
 			method: 'POST',
-			body: formData
+			body: formData,
 		})
-		.then(response => response.json())
-		.then(data => {
-			if (data.success) {
-				alert(config.i18n.addSuccess || 'Event created successfully. The page will now reload.');
-				window.location.reload();
-			} else {
-				const baseMsg = config.i18n.addError || 'Error creating event';
-				alert(getErrorMessage(data, baseMsg));
+			.then((response) => response.json())
+			.then((data) => {
+				if (data.success) {
+					alert(
+						config.i18n.addSuccess ||
+							'Event created successfully. The page will now reload.'
+					);
+					window.location.reload();
+				} else {
+					const baseMsg =
+						config.i18n.addError || 'Error creating event';
+					alert(getErrorMessage(data, baseMsg));
+
+					// Re-enable button
+					if (submitBtn) {
+						submitBtn.disabled = false;
+						submitBtn.textContent =
+							config.i18n.addEventButton || 'Create Card';
+					}
+				}
+			})
+			.catch((error) => {
+				alert(
+					config.i18n.addErrorGeneric ||
+						'Error creating event. Please try again.'
+				);
 
 				// Re-enable button
 				if (submitBtn) {
 					submitBtn.disabled = false;
-					submitBtn.textContent = config.i18n.addEventButton || 'Create Card';
+					submitBtn.textContent =
+						config.i18n.addEventButton || 'Create Card';
 				}
-			}
-		})
-		.catch(error => {
-			alert(config.i18n.addErrorGeneric || 'Error creating event. Please try again.');
-
-			// Re-enable button
-			if (submitBtn) {
-				submitBtn.disabled = false;
-				submitBtn.textContent = config.i18n.addEventButton || 'Create Card';
-			}
-		});
+			});
 	}
 
 	/**
@@ -526,7 +616,10 @@ const WPFA_Events = (function() {
 		e.preventDefault();
 
 		if (!config.canManageContent) {
-			alert(config.i18n.noPermission || 'You do not have permission to perform this action.');
+			alert(
+				config.i18n.noPermission ||
+					'You do not have permission to perform this action.'
+			);
 			return;
 		}
 
@@ -536,22 +629,32 @@ const WPFA_Events = (function() {
 		const submitBtn = form.querySelector('button[type="submit"]');
 
 		// Validate required fields - using ACTUAL form field names
-		const requiredFields = ['title', 'excerpt', 'start_date', 'location', 'registration_link'];
+		const requiredFields = [
+			'title',
+			'excerpt',
+			'start_date',
+			'location',
+			'registration_link',
+		];
 		let missingFields = [];
 
-		requiredFields.forEach(field => {
+		requiredFields.forEach((field) => {
 			if (!formData.get(field) || formData.get(field).trim() === '') {
 				missingFields.push(field);
 			}
 		});
 
 		if (missingFields.length > 0) {
-			alert(config.i18n.missingFields || 'Missing required fields: ' + missingFields.join(', '));
+			alert(
+				config.i18n.missingFields ||
+					'Missing required fields: ' + missingFields.join(', ')
+			);
 
 			// Re-enable button
 			if (submitBtn) {
 				submitBtn.disabled = false;
-				submitBtn.textContent = config.i18n.editEventButton || 'Save Changes';
+				submitBtn.textContent =
+					config.i18n.editEventButton || 'Save Changes';
 			}
 			return;
 		}
@@ -569,33 +672,42 @@ const WPFA_Events = (function() {
 		// Send form data
 		fetch(config.ajaxUrl, {
 			method: 'POST',
-			body: formData
+			body: formData,
 		})
-		.then(response => response.json())
-		.then(data => {
-			if (data.success) {
-				alert(config.i18n.updateSuccess || 'Event updated successfully. The page will now reload.');
-				window.location.reload();
-			} else {
-				const baseMsg = config.i18n.updateError || 'Error updating event';
-				alert(getErrorMessage(data, baseMsg));
+			.then((response) => response.json())
+			.then((data) => {
+				if (data.success) {
+					alert(
+						config.i18n.updateSuccess ||
+							'Event updated successfully. The page will now reload.'
+					);
+					window.location.reload();
+				} else {
+					const baseMsg =
+						config.i18n.updateError || 'Error updating event';
+					alert(getErrorMessage(data, baseMsg));
+
+					// Re-enable button
+					if (submitBtn) {
+						submitBtn.disabled = false;
+						submitBtn.textContent =
+							config.i18n.editEventButton || 'Save Changes';
+					}
+				}
+			})
+			.catch((error) => {
+				alert(
+					config.i18n.updateErrorGeneric ||
+						'Error updating event. Please try again.'
+				);
 
 				// Re-enable button
 				if (submitBtn) {
 					submitBtn.disabled = false;
-					submitBtn.textContent = config.i18n.editEventButton || 'Save Changes';
+					submitBtn.textContent =
+						config.i18n.editEventButton || 'Save Changes';
 				}
-			}
-		})
-		.catch(error => {
-			alert(config.i18n.updateErrorGeneric || 'Error updating event. Please try again.');
-
-			// Re-enable button
-			if (submitBtn) {
-				submitBtn.disabled = false;
-				submitBtn.textContent = config.i18n.editEventButton || 'Save Changes';
-			}
-		});
+			});
 	}
 
 	/**
@@ -618,22 +730,29 @@ const WPFA_Events = (function() {
 			body: new URLSearchParams({
 				action: 'wpfa_delete_event',
 				nonce: config.adminNonce,
-				event_id: eventId
+				event_id: eventId,
+			}),
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				if (data.success) {
+					alert(
+						config.i18n.deleteSuccess ||
+							'Event deleted successfully. The page will now reload.'
+					);
+					window.location.reload();
+				} else {
+					const baseMsg =
+						config.i18n.deleteError || 'Error deleting event';
+					alert(getErrorMessage(data, baseMsg));
+				}
 			})
-		})
-		.then(response => response.json())
-		.then(data => {
-			if (data.success) {
-				alert(config.i18n.deleteSuccess || 'Event deleted successfully. The page will now reload.');
-				window.location.reload();
-			} else {
-				const baseMsg = config.i18n.deleteError || 'Error deleting event';
-				alert(getErrorMessage(data, baseMsg));
-			}
-		})
-		.catch(error => {
-			alert(config.i18n.deleteErrorGeneric || 'Error deleting event. Please try again.');
-		});
+			.catch((error) => {
+				alert(
+					config.i18n.deleteErrorGeneric ||
+						'Error deleting event. Please try again.'
+				);
+			});
 	}
 
 	/**
@@ -661,7 +780,7 @@ const WPFA_Events = (function() {
 		openEditEventModal: openEditEventModal,
 		closeCreateEventModal: closeCreateEventModal,
 		closeEditEventModal: closeEditEventModal,
-		filterEvents: filterEvents
+		filterEvents: filterEvents,
 	};
 })();
 
@@ -672,7 +791,7 @@ if (typeof window !== 'undefined') {
 
 // Initialize when page loads
 if (typeof document !== 'undefined') {
-	document.addEventListener('DOMContentLoaded', function() {
+	document.addEventListener('DOMContentLoaded', function () {
 		// Check if config exists (only on events page)
 		if (typeof wpfaeventEventsConfig !== 'undefined') {
 			WPFA_Events.init(wpfaeventEventsConfig);
