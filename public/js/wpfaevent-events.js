@@ -359,7 +359,7 @@ const WPFA_Events = (function () {
 		if (!navMain) return;
 
 		const upcomingLink = navMain.querySelector(
-			'a[href*="/events/"]:not([href*="filter=past"])'
+			'a[href*="/events"]:not([href*="filter=past"])'
 		);
 		const pastLink = navMain.querySelector('a[href*="filter=past"]');
 

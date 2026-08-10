@@ -415,7 +415,7 @@ class Wpfaevent_Public {
 			$this->plugin_name . '-events',
 			WPFAEVENT_URL . 'public/js/wpfaevent-events.js',
 			array( 'jquery' ),
-			$this->version,
+			$this->version . '-v2',
 			true
 		);
 
