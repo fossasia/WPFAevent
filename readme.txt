@@ -4,7 +4,7 @@ Tags: events
 Requires at least: 5.8
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 1.0.0
 License: Apache2
 License URI: https://www.apache.org/licenses/LICENSE-2.0.txt
 
@@ -25,5 +25,5 @@ Template content can be added with Gutenberg blocks, classic page templates, or 
 The plugin also supports embedded template rendering for shortcodes and blocks, so WPFA content can appear inside existing classic or block theme layouts.
 
 == Changelog ==
-= 0.1.0 =
-* Initial skeleton.
+= 1.0.0 =
+* Initial release of FOSSASIA Event plugin with pages, blocks, shortcodes, and Eventyay API integration.
