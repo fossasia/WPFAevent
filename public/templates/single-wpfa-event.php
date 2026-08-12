@@ -148,7 +148,7 @@ if ( $show_ticket_widget ) {
 				'}',
 				'if(!trigger){return;}',
 				'var label=((trigger.textContent||trigger.value||"")+"").toLowerCase();',
-				'if(label.indexOf("register")===-1&&label.indexOf("checkout")===-1&&label.indexOf("buy")===-1&&label.indexOf("ticket")===-1){return;}',
+				'if(label.indexOf("register")===-1&&label.indexOf("checkout")===-1&&label.indexOf("buy")===-1&&label.indexOf("ticket")===-1&&label.indexOf("cart")===-1&&label.indexOf("add")===-1){return;}',
 				'event.preventDefault();',
 				'event.stopPropagation();',
 				'window.location.href=redirectUrl;',
@@ -270,7 +270,7 @@ if ( $show_ticket_widget ) {
 						<p><?php esc_html_e( 'Registration', 'wpfaevent' ); ?></p>
 						<strong><?php esc_html_e( 'Open', 'wpfaevent' ); ?></strong>
 					</div>
-					<?php if ( $show_ticket_section && $show_ticket_widget ) : ?>
+					<?php if ( $show_ticket_section ) : ?>
 						<a class="wpfa-event-register" href="#tickets">
 							<?php echo esc_html( $register_text ); ?>
 						</a>
@@ -363,10 +363,10 @@ if ( $show_ticket_widget ) {
 					<div class="wpfa-event-section-head">
 						<div>
 							<h2 id="wpfa-event-tickets-title"><?php esc_html_e( 'Tickets', 'wpfaevent' ); ?></h2>
-							<?php if ( $show_ticket_widget ) : ?>
-								<p><?php esc_html_e( 'Select ticket options and continue checkout through Eventyay.', 'wpfaevent' ); ?></p>
-							<?php else : ?>
+							<?php if ( $ticket_widget_redirect ) : ?>
 								<p><?php echo esc_html( $ticket_widget_message ); ?></p>
+							<?php elseif ( $show_ticket_widget ) : ?>
+								<p><?php esc_html_e( 'Select ticket options and continue checkout through Eventyay.', 'wpfaevent' ); ?></p>
 							<?php endif; ?>
 						</div>
 						<a href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>" target="_blank" rel="noopener">
@@ -381,10 +381,10 @@ if ( $show_ticket_widget ) {
 					>
 						<div class="wpfa-event-ticket-backup" role="note">
 							<strong><?php esc_html_e( 'Tickets are handled by Eventyay.', 'wpfaevent' ); ?></strong>
-							<?php if ( $show_ticket_widget ) : ?>
-								<p><?php esc_html_e( 'If ticket options do not appear here, open the Eventyay ticket shop directly.', 'wpfaevent' ); ?></p>
-							<?php else : ?>
+							<?php if ( $ticket_widget_redirect ) : ?>
 								<p><?php echo esc_html( $ticket_widget_message ); ?></p>
+							<?php else : ?>
+								<p><?php esc_html_e( 'If ticket options do not appear here, open the Eventyay ticket shop directly.', 'wpfaevent' ); ?></p>
 							<?php endif; ?>
 							<a class="wpfa-event-ticket-backup-button" href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>" target="_blank" rel="noopener">
 								<?php esc_html_e( 'Buy tickets on Eventyay', 'wpfaevent' ); ?>
