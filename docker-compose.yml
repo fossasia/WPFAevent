@@ -1,0 +1,48 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: wpfaevent-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-wordpress}
+      MYSQL_USER: ${DB_USER:-wordpress}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-wordpress_password}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
+    volumes:
+      - db_data:/var/lib/mysql
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wpfaevent-wordpress
+    restart: always
+    ports:
+      - "${WP_PORT:-8080}:80"
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: ${DB_USER:-wordpress}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD:-wordpress_password}
+      WORDPRESS_DB_NAME: ${DB_NAME:-wordpress}
+    volumes:
+      - wordpress_data:/var/www/html
+      - .:/var/www/html/wp-content/plugins/event-plugin
+    depends_on:
+      - db
+
+  wp-cli:
+    image: wordpress:cli
+    container_name: wpfaevent-wp-cli
+    volumes:
+      - wordpress_data:/var/www/html
+      - .:/var/www/html/wp-content/plugins/event-plugin
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: ${DB_USER:-wordpress}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD:-wordpress_password}
+      WORDPRESS_DB_NAME: ${DB_NAME:-wordpress}
+    depends_on:
+      - db
+      - wordpress
+
+volumes:
+  db_data:
+  wordpress_data:

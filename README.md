@@ -200,7 +200,11 @@ php tests/calendar-test.php
 
 ## Local Development
 
-1. Install WordPress locally (e.g., using LocalWP, Docker, or WP-CLI).
+For the easiest setup, you can run WordPress and the plugin using **Docker**. Refer to the [Docker Setup Guide](DOCKER.md) for detailed instructions.
+
+### Manual Local Setup
+
+1. Install WordPress locally (e.g., using LocalWP or WP-CLI).
 2. Place this plugin in `wp-content/plugins/`.
 3. Activate it and navigate to **Settings → Event Plugin**.
 4. Test with public Eventyay JSON endpoints or your own mock data.

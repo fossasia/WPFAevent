@@ -1,0 +1,19 @@
+# Ignore git files
+.git
+.github
+.gitignore
+
+# Ignore node/composer dependencies
+node_modules
+vendor
+
+# Ignore test caches and config
+.phpunit.result.cache
+phpunit.xml.dist
+phpstan.neon.dist
+phpcs.xml
+
+# Ignore temporary and log files
+tmp
+*.log
+.cursor

@@ -2,7 +2,7 @@
  * WPFA Events JavaScript Module
  * Handles search, admin functionality for events page
  *
- * @package    Wpfaevent
+ * @package
  * @subpackage Wpfaevent/public/js
  */
 
@@ -13,6 +13,8 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Helper to extract error message from AJAX response
+	 * @param data
+	 * @param fallback
 	 */
 	function getErrorMessage(data, fallback) {
 		if (data && typeof data.data === 'object' && data.data?.message) {
@@ -26,6 +28,7 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Initialize the events module
+	 * @param options
 	 */
 	function init(options) {
 		config = options || {};
@@ -117,13 +120,17 @@ const WPFA_Events = (function () {
 		// Close modals on background click
 		if (elements.createEventModal) {
 			elements.createEventModal.addEventListener('click', function (e) {
-				if (e.target === this) closeCreateEventModal();
+				if (e.target === this) {
+					closeCreateEventModal();
+				}
 			});
 		}
 
 		if (elements.editEventModal) {
 			elements.editEventModal.addEventListener('click', function (e) {
-				if (e.target === this) closeEditEventModal();
+				if (e.target === this) {
+					closeEditEventModal();
+				}
 			});
 		}
 
@@ -183,7 +190,8 @@ const WPFA_Events = (function () {
 				// Call update immediately
 				update();
 
-				/** * If data is loaded dynamically (e.g. via AJAX or WP Modal),
+				/**
+				 * * If data is loaded dynamically (e.g. via AJAX or WP Modal),
 				 * we wait a tiny bit to catch the filled value.
 				 */
 				if (textarea.value.length === 0) {
@@ -195,6 +203,7 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Setup all-day toggles for event time inputs
+	 * @param form
 	 */
 	function setupTimeFormatControls(form) {
 		const allDayField = form?.querySelector('[name="all_day"]');
@@ -213,6 +222,7 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Disable time inputs while an event is marked all-day
+	 * @param form
 	 */
 	function syncTimeFields(form) {
 		const allDayField = form?.querySelector('[name="all_day"]');
@@ -234,6 +244,8 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Select a timezone value without losing the server-rendered default
+	 * @param select
+	 * @param value
 	 */
 	function setSelectValue(select, value) {
 		if (!select || !value) {
@@ -250,6 +262,7 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Preserve the legacy time payload expected by older handlers
+	 * @param formData
 	 */
 	function appendLegacyTimeAlias(formData) {
 		const startTime = formData.get('start_time') || '';
@@ -304,11 +317,7 @@ const WPFA_Events = (function () {
 					} else {
 						url.searchParams.delete('filter');
 					}
-					window.history.pushState(
-						{ filter: filter },
-						'',
-						url.toString()
-					);
+					window.history.pushState({ filter }, '', url.toString());
 				}
 
 				filterEvents();
@@ -353,10 +362,13 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Update active classes in navigation header based on filter selection.
+	 * @param filter
 	 */
 	function updateNavigationHeader(filter) {
 		const navMain = document.querySelector('.nav-links-main');
-		if (!navMain) return;
+		if (!navMain) {
+			return;
+		}
 
 		const upcomingLink = navMain.querySelector(
 			'a[href*="/events"]:not([href*="filter=past"])'
@@ -378,7 +390,9 @@ const WPFA_Events = (function () {
 	 * Filter events based on all active filter controls.
 	 */
 	function filterEvents() {
-		if (!elements.eventsContainer) return;
+		if (!elements.eventsContainer) {
+			return;
+		}
 
 		const activeDateBtn = document.querySelector('.date-filter-btn.active');
 		const dateFilter = activeDateBtn ? activeDateBtn.dataset.filter : 'all';
@@ -430,7 +444,9 @@ const WPFA_Events = (function () {
 			const isVisible =
 				textMatch && trackMatch && locationMatch && dateMatch;
 			card.style.display = isVisible ? '' : 'none';
-			if (isVisible) visibleCount++;
+			if (isVisible) {
+				visibleCount++;
+			}
 		});
 
 		if (elements.resultsCount) {
@@ -451,6 +467,7 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Handle event card actions
+	 * @param e
 	 */
 	function handleCardActions(e) {
 		const target = e.target;
@@ -518,6 +535,7 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Open modal for editing event
+	 * @param card
 	 */
 	function openEditEventModal(card) {
 		// Get data from card
@@ -576,6 +594,7 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Handle create event form submission
+	 * @param e
 	 */
 	function handleCreateEventFormSubmit(e) {
 		e.preventDefault();
@@ -601,7 +620,7 @@ const WPFA_Events = (function () {
 			'location',
 			'registration_link',
 		];
-		let missingFields = [];
+		const missingFields = [];
 
 		requiredFields.forEach((field) => {
 			if (!formData.get(field) || formData.get(field).trim() === '') {
@@ -677,6 +696,7 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Handle edit event form submission
+	 * @param e
 	 */
 	function handleEditEventFormSubmit(e) {
 		e.preventDefault();
@@ -702,7 +722,7 @@ const WPFA_Events = (function () {
 			'location',
 			'registration_link',
 		];
-		let missingFields = [];
+		const missingFields = [];
 
 		requiredFields.forEach((field) => {
 			if (!formData.get(field) || formData.get(field).trim() === '') {
@@ -778,6 +798,8 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Delete event confirmation and AJAX call
+	 * @param eventId
+	 * @param eventName
 	 */
 	function deleteEvent(eventId, eventName) {
 		const confirmMsg = config.i18n.confirmDelete
@@ -841,12 +863,12 @@ const WPFA_Events = (function () {
 
 	// Public API
 	return {
-		init: init,
-		openCreateEventModal: openCreateEventModal,
-		openEditEventModal: openEditEventModal,
-		closeCreateEventModal: closeCreateEventModal,
-		closeEditEventModal: closeEditEventModal,
-		filterEvents: filterEvents,
+		init,
+		openCreateEventModal,
+		openEditEventModal,
+		closeCreateEventModal,
+		closeEditEventModal,
+		filterEvents,
 	};
 })();
 

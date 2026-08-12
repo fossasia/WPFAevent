@@ -409,7 +409,6 @@
 							}
 						}
 					} else {
-						// eslint-disable-next-line no-alert
 						window.alert(
 							response.data?.message ||
 								settings.i18n?.error ||
@@ -419,7 +418,7 @@
 				},
 				error() {
 					$btn.prop('disabled', false);
-					// eslint-disable-next-line no-alert
+
 					window.alert(
 						settings.i18n?.error || 'Something went wrong.'
 					);
