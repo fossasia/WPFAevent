@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $GLOBALS['wpfa_relationship_test_meta']       = array();
 $GLOBALS['wpfa_relationship_test_post_types'] = array();
 $GLOBALS['wpfa_relationship_test_statuses']   = array();
+$GLOBALS['wpfa_relationship_test_titles']     = array();
 $GLOBALS['wpfa_relationship_test_can_edit']   = false;
 
 if ( ! function_exists( 'absint' ) ) {
@@ -38,6 +39,188 @@ if ( ! function_exists( '__' ) ) {
 	 */
 	function __( $text ) {
 		return $text;
+	}
+}
+
+if ( ! function_exists( 'sanitize_text_field' ) ) {
+	/**
+	 * Minimal sanitize_text_field() fallback for standalone CLI tests.
+	 *
+	 * @param mixed $text Raw text.
+	 * @return string
+	 */
+	function sanitize_text_field( $text ) {
+		return is_scalar( $text ) ? trim( (string) $text ) : '';
+	}
+}
+
+if ( ! function_exists( 'sanitize_key' ) ) {
+	/**
+	 * Minimal sanitize_key() fallback for standalone CLI tests.
+	 *
+	 * @param string $key Raw key.
+	 * @return string
+	 */
+	function sanitize_key( $key ) {
+		return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( sanitize_text_field( $key ) ) );
+	}
+}
+
+if ( ! function_exists( 'sanitize_title' ) ) {
+	/**
+	 * Minimal sanitize_title() fallback for standalone CLI tests.
+	 *
+	 * @param string $title Raw title.
+	 * @return string
+	 */
+	function sanitize_title( $title ) {
+		$title = strtolower( sanitize_text_field( $title ) );
+		$title = preg_replace( '/[^a-z0-9]+/', '-', $title );
+
+		return trim( (string) $title, '-' );
+	}
+}
+
+if ( ! function_exists( 'get_the_title' ) ) {
+	/**
+	 * Read a stubbed post title.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string
+	 */
+	function get_the_title( $post_id ) {
+		return isset( $GLOBALS['wpfa_relationship_test_titles'][ $post_id ] ) ? $GLOBALS['wpfa_relationship_test_titles'][ $post_id ] : '';
+	}
+}
+
+if ( ! function_exists( 'apply_filters' ) ) {
+	/**
+	 * Minimal apply_filters() fallback for standalone CLI tests.
+	 *
+	 * @return mixed
+	 */
+	function apply_filters() {
+		$args = func_get_args();
+
+		return isset( $args[1] ) ? $args[1] : null;
+	}
+}
+
+if ( ! function_exists( 'esc_attr' ) ) {
+	/**
+	 * Minimal esc_attr() fallback for standalone CLI tests.
+	 *
+	 * @param string $text Raw text.
+	 * @return string
+	 */
+	function esc_attr( $text ) {
+		return sanitize_text_field( $text );
+	}
+}
+
+if ( ! function_exists( 'esc_url' ) ) {
+	/**
+	 * Minimal esc_url() fallback for standalone CLI tests.
+	 *
+	 * @param string $url Raw URL.
+	 * @return string
+	 */
+	function esc_url( $url ) {
+		return sanitize_text_field( $url );
+	}
+}
+
+if ( ! function_exists( 'esc_html' ) ) {
+	/**
+	 * Minimal esc_html() fallback for standalone CLI tests.
+	 *
+	 * @param string $text Raw text.
+	 * @return string
+	 */
+	function esc_html( $text ) {
+		return sanitize_text_field( $text );
+	}
+}
+
+if ( ! function_exists( 'esc_attr_e' ) ) {
+	/**
+	 * Minimal esc_attr_e() fallback for standalone CLI tests.
+	 *
+	 * @param string $text Text.
+	 * @return void
+	 */
+	function esc_attr_e( $text ) {
+		echo sanitize_text_field( $text ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CLI test stub.
+	}
+}
+
+if ( ! function_exists( 'esc_html_e' ) ) {
+	/**
+	 * Minimal esc_html_e() fallback for standalone CLI tests.
+	 *
+	 * @param string $text Text.
+	 * @return void
+	 */
+	function esc_html_e( $text ) {
+		echo sanitize_text_field( $text ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CLI test stub.
+	}
+}
+
+if ( ! function_exists( 'get_permalink' ) ) {
+	/**
+	 * Minimal get_permalink() fallback for standalone CLI tests.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string
+	 */
+	function get_permalink( $post_id ) {
+		return 'https://example.test/speaker/' . absint( $post_id );
+	}
+}
+
+if ( ! function_exists( 'taxonomy_exists' ) ) {
+	/**
+	 * Minimal taxonomy_exists() fallback for standalone CLI tests.
+	 *
+	 * @return bool
+	 */
+	function taxonomy_exists() {
+		return false;
+	}
+}
+
+if ( ! function_exists( 'wp_get_post_terms' ) ) {
+	/**
+	 * Minimal wp_get_post_terms() fallback for standalone CLI tests.
+	 *
+	 * @return array
+	 */
+	function wp_get_post_terms() {
+		return array();
+	}
+}
+
+if ( ! function_exists( 'wp_kses_post' ) ) {
+	/**
+	 * Minimal wp_kses_post() fallback for standalone CLI tests.
+	 *
+	 * @param string $text Raw text.
+	 * @return string
+	 */
+	function wp_kses_post( $text ) {
+		return is_scalar( $text ) ? (string) $text : '';
+	}
+}
+
+if ( ! function_exists( 'wpautop' ) ) {
+	/**
+	 * Minimal wpautop() fallback for standalone CLI tests.
+	 *
+	 * @param string $text Raw text.
+	 * @return string
+	 */
+	function wpautop( $text ) {
+		return '<p>' . str_replace( "\n", "</p><p>", trim( (string) $text ) ) . '</p>';
 	}
 }
 
@@ -230,6 +413,14 @@ function wpfa_relationship_test_reset() {
 		200 => 'publish',
 		300 => 'draft',
 	);
+	$GLOBALS['wpfa_relationship_test_titles']     = array(
+		10  => 'Roneel Kumar',
+		11  => 'Peter Membrey',
+		12  => 'Mitch Altman',
+		100 => 'Event 100',
+		200 => 'Event 200',
+		300 => 'Event 300',
+	);
 	$GLOBALS['wpfa_relationship_test_can_edit']   = false;
 }
 
@@ -255,6 +446,10 @@ function wpfa_relationship_test_assert_same( $expected, $actual, $message ) {
 require_once dirname( __DIR__ ) . '/includes/class-wpfaevent-event-speaker-relation-manager.php';
 require_once dirname( __DIR__ ) . '/includes/meta/class-wpfaevent-meta-event.php';
 require_once dirname( __DIR__ ) . '/includes/meta/class-wpfaevent-meta-speaker.php';
+
+if ( ! defined( 'WPFAEVENT_PATH' ) ) {
+	define( 'WPFAEVENT_PATH', dirname( __DIR__ ) . '/' );
+}
 
 wpfa_relationship_test_reset();
 $GLOBALS['wpfa_relationship_test_meta'][10]['wpfa_speaker_events'] = array( 100 );
@@ -314,6 +509,76 @@ wpfa_relationship_test_assert_same(
 	array( 101, 102 ),
 	Wpfaevent_Meta_Speaker::sanitize_event_ids( '101, 102, invalid, 101' ),
 	'Speaker event meta sanitization should accept scalar ID lists consistently.'
+);
+
+wpfa_relationship_test_reset();
+$GLOBALS['wpfa_relationship_test_meta'][100]['wpfa_event_speakers']          = array( 10, 11, 12 );
+$GLOBALS['wpfa_relationship_test_meta'][100]['wpfa_event_featured_speakers'] = array( 11 );
+$GLOBALS['wpfa_relationship_test_meta'][10]['_wpfa_eventyay_speaker_id']     = 'lspk8633';
+$GLOBALS['wpfa_relationship_test_meta'][11]['_wpfa_eventyay_speaker_id']     = '9AEJD7';
+$GLOBALS['wpfa_relationship_test_meta'][12]['_wpfa_eventyay_speaker_id']     = 'lspk5150';
+
+$dashboard_featured = array(
+	array(
+		'eventyay_speaker_id' => 'lspk5150',
+		'featured'            => true,
+	),
+	array(
+		'name'     => 'Roneel Kumar',
+		'featured' => false,
+	),
+);
+
+wpfa_relationship_test_assert_same(
+	array( 11, 12 ),
+	Wpfaevent_Meta_Event::resolve_event_featured_speaker_ids( 100, array( 10, 11, 12 ), $dashboard_featured ),
+	'Featured speaker resolution should use explicit event meta and dashboard featured flags only.'
+);
+
+wpfa_relationship_test_assert_same(
+	array( 11, 12 ),
+	Wpfaevent_Event_Speaker_Relation_Manager::resolve_event_featured_speaker_ids( 100, array( 10, 11, 12 ), $dashboard_featured ),
+	'Featured speaker relation manager should mirror explicit featured speaker resolution.'
+);
+
+wpfa_relationship_test_reset();
+$GLOBALS['wpfa_relationship_test_meta'][100]['wpfa_event_speakers']      = array( 10, 11, 12 );
+$GLOBALS['wpfa_relationship_test_meta'][10]['_wpfa_eventyay_speaker_id'] = 'lspk8633';
+$GLOBALS['wpfa_relationship_test_meta'][11]['_wpfa_eventyay_speaker_id'] = '9AEJD7';
+$GLOBALS['wpfa_relationship_test_meta'][12]['_wpfa_eventyay_speaker_id'] = 'lspk5150';
+
+wpfa_relationship_test_assert_same(
+	array(),
+	Wpfaevent_Meta_Event::resolve_event_featured_speaker_ids( 100, array( 10, 11, 12 ), array() ),
+	'Featured speaker resolution should not auto-select a fallback speaker when no explicit featured data exists.'
+);
+
+wpfa_relationship_test_reset();
+$GLOBALS['wpfa_relationship_test_meta'][12]['wpfa_speaker_position']      = 'Chief Scientist';
+$GLOBALS['wpfa_relationship_test_meta'][12]['wpfa_speaker_organization']  = 'Cornfield Electronics';
+$GLOBALS['wpfa_relationship_test_meta'][12]['wpfa_speaker_bio']           = 'Compact bio';
+$GLOBALS['wpfa_relationship_test_meta'][12]['wpfa_speaker_talk_title']    = 'Open Hardware Keynote';
+$GLOBALS['wpfa_relationship_test_meta'][12]['wpfa_speaker_talk_date']     = '2026-03-09';
+$GLOBALS['wpfa_relationship_test_meta'][12]['wpfa_speaker_talk_time']     = '10:00';
+$GLOBALS['wpfa_relationship_test_meta'][12]['wpfa_speaker_talk_end_time'] = '10:45';
+$GLOBALS['wpfa_relationship_test_meta'][12]['wpfa_speaker_talk_abstract'] = 'This full abstract should be hidden for compact featured cards.';
+
+$sid                       = 12;
+$wpfa_speaker_card_variant = 'compact';
+ob_start();
+include dirname( __DIR__ ) . '/public/partials/speakers/speaker-card.php';
+$compact_card_markup = ob_get_clean();
+
+wpfa_relationship_test_assert_same(
+	false,
+	false !== strpos( $compact_card_markup, 'wpfa-talk-abstract' ),
+	'Compact featured speaker cards should omit the session abstract markup.'
+);
+
+wpfa_relationship_test_assert_same(
+	true,
+	false !== strpos( $compact_card_markup, 'Open Hardware Keynote' ),
+	'Compact featured speaker cards should still render concise session details.'
 );
 
 echo 'Speaker relationship tests passed.' . PHP_EOL; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CLI test output.

@@ -54,7 +54,7 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 	}
 
 	/**
-	 * Resolve featured speaker IDs from event meta, dashboard JSON, and speaker categories.
+	 * Resolve featured speaker IDs from explicit event meta and dashboard speaker flags.
 	 *
 	 * @since 1.0.0
 	 *
@@ -109,45 +109,8 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 			}
 		}
 
-		if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
-			foreach ( $speaker_ids as $speaker_id ) {
-				if ( in_array( $speaker_id, $featured, true ) ) {
-					continue;
-				}
-
-				$terms = get_the_terms( $speaker_id, 'wpfa_speaker_category' );
-
-				if ( empty( $terms ) || is_wp_error( $terms ) ) {
-					continue;
-				}
-
-				foreach ( $terms as $term ) {
-					if ( preg_match( '/\b(featured|keynote|plenary|highlight)\b/i', $term->name ) ) {
-						$featured[] = $speaker_id;
-						break;
-					}
-				}
-			}
-		}
-
 		$featured = self::sanitize_post_id_list( $featured );
 		$featured = array_values( array_intersect( $featured, $speaker_ids ) );
-
-		if ( empty( $featured ) && ! empty( $speaker_ids ) ) {
-			$auto_limit = absint(
-				apply_filters(
-					'wpfa_event_auto_featured_speaker_limit',
-					1,
-					$event_id,
-					$speaker_ids,
-					$dashboard_speakers
-				)
-			);
-
-			if ( $auto_limit > 0 ) {
-				$featured = array_slice( $speaker_ids, 0, min( $auto_limit, count( $speaker_ids ) ) );
-			}
-		}
 
 		return apply_filters( 'wpfa_event_featured_speaker_ids', $featured, $event_id, $speaker_ids, $dashboard_speakers );
 	}

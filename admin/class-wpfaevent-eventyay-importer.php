@@ -3889,11 +3889,7 @@ class Wpfaevent_Eventyay_Importer {
 			)
 		);
 
-		if ( $this->eventyay_truthy_value( $featured ) ) {
-			return true;
-		}
-
-		return is_string( $category ) && (bool) preg_match( '/\b(featured|keynote|plenary|highlight)\b/i', $category );
+		return $this->eventyay_truthy_value( $featured );
 	}
 
 	/**
