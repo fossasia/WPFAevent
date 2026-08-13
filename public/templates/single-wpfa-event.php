@@ -182,7 +182,6 @@ if ( $show_ticket_widget ) {
 							<img src="<?php echo esc_url( $event_logo_url ); ?>" alt="<?php echo esc_attr( $event_title ); ?>" loading="eager">
 						</div>
 					<?php endif; ?>
-					<p class="wpfa-event-kicker"><?php esc_html_e( 'Eventyay Event', 'wpfaevent' ); ?></p>
 					<h1 itemprop="name"><?php echo esc_html( $event_title ); ?></h1>
 						<div class="wpfa-event-meta-list">
 							<?php if ( $date_label ) : ?>
