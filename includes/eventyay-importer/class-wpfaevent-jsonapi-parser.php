@@ -771,8 +771,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array  $speaker_resource Normalized Eventyay speaker resource.
-	 * @param string $category         Speaker category or track label.
+	 * @param array $speaker_resource Normalized Eventyay speaker resource.
 	 * @return bool
 	 */
 	public function eventyay_speaker_is_featured( $speaker_resource ) {
