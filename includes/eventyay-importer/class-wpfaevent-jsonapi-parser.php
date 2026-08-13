@@ -759,7 +759,7 @@ class Wpfaevent_JSONAPI_Parser {
 				'github'   => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'github', 'github_url', 'github-url' ) ), $settings['base_url'] ),
 				'website'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'website', 'website_url', 'website-url', 'homepage', 'homepage_url', 'homepage-url', 'url' ) ), $settings['base_url'] ),
 			),
-			'featured'            => $this->eventyay_speaker_is_featured( $speaker_resource, $category ),
+			'featured'            => $this->eventyay_speaker_is_featured( $speaker_resource ),
 			'featured_order'      => $this->eventyay_speaker_featured_order( $speaker_resource ),
 			'sessions'            => array(),
 			'source'              => 'eventyay',
@@ -775,7 +775,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param string $category         Speaker category or track label.
 	 * @return bool
 	 */
-	public function eventyay_speaker_is_featured( $speaker_resource, $category = '' ) {
+	public function eventyay_speaker_is_featured( $speaker_resource ) {
 		$featured = $this->eventyay_first_present_raw(
 			$speaker_resource,
 			array(
@@ -1771,7 +1771,7 @@ class Wpfaevent_JSONAPI_Parser {
 				'github'   => esc_url_raw( $this->attribute_value( $attributes, array( 'github', 'github-url' ) ) ),
 				'website'  => esc_url_raw( $this->attribute_value( $attributes, array( 'website', 'website-url' ) ) ),
 			),
-			'featured'            => $this->eventyay_speaker_is_featured( $attributes, $category ),
+			'featured'            => $this->eventyay_speaker_is_featured( $attributes ),
 			'featured_order'      => $this->eventyay_speaker_featured_order( $attributes ),
 			'sessions'            => array(),
 			'source'              => 'eventyay',
