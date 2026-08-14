@@ -59,6 +59,9 @@ $read_filter_value = static function ( $key, $type = 'text' ) {
 $current_language     = $read_filter_value( 'language', 'slug' );
 $current_event_filter = $read_filter_value( 'event' );
 $current_view         = $read_filter_value( 'view', 'slug' );
+$current_day_filter   = $read_filter_value( 'day', 'slug' );
+$current_track_filter = $read_filter_value( 'track', 'slug' );
+$current_room_filter  = $read_filter_value( 'room', 'slug' );
 $query_page           = $read_filter_value( 'paged', 'int' );
 
 if ( $query_page ) {
@@ -121,7 +124,7 @@ $schedule_timezone_options = class_exists( 'Wpfaevent_Schedule_Helper' )
 	? Wpfaevent_Schedule_Helper::get_timezone_options( $primary_timezone_string )
 	: array( $primary_timezone_string, 'UTC' );
 
-$build_schedule_view_url = static function ( $view ) use ( $schedule_page_url, $selected_event_slug, $current_language, $selected_schedule_timezone_str, $primary_timezone_string ) {
+$build_schedule_view_url = static function ( $view ) use ( $schedule_page_url, $selected_event_slug, $current_language, $selected_schedule_timezone_str, $primary_timezone_string, $current_day_filter, $current_track_filter, $current_room_filter ) {
 	$args = array();
 
 	if ( $selected_event_slug ) {
@@ -130,6 +133,18 @@ $build_schedule_view_url = static function ( $view ) use ( $schedule_page_url, $
 
 	if ( $current_language ) {
 		$args['language'] = $current_language;
+	}
+
+	if ( $current_day_filter ) {
+		$args['day'] = $current_day_filter;
+	}
+
+	if ( $current_track_filter ) {
+		$args['track'] = $current_track_filter;
+	}
+
+	if ( $current_room_filter ) {
+		$args['room'] = $current_room_filter;
 	}
 
 	if ( $selected_schedule_timezone_str && $selected_schedule_timezone_str !== $primary_timezone_string ) {
@@ -209,8 +224,13 @@ $languages              = array();
 $filtered_event_ids     = array();
 $is_event_schedule      = (bool) $selected_event_id;
 $event_session_schedule = array(
-	'items'  => array(),
-	'groups' => array(),
+	'items'   => array(),
+	'groups'  => array(),
+	'filters' => array(
+		'days'   => array(),
+		'tracks' => array(),
+		'rooms'  => array(),
+	),
 );
 
 foreach ( $event_ids as $event_id ) {
@@ -252,6 +272,55 @@ asort( $languages );
 
 if ( $is_event_schedule && in_array( $selected_event_id, $filtered_event_ids, true ) && class_exists( 'Wpfaevent_Schedule_Helper' ) ) {
 	$event_session_schedule = Wpfaevent_Schedule_Helper::build_event_session_schedule( $selected_event_id, $selected_schedule_timezone );
+}
+
+$event_session_filter_options  = array(
+	'days'   => array(),
+	'tracks' => array(),
+	'rooms'  => array(),
+);
+$has_session_filters           = false;
+$visible_session_groups        = array();
+$schedule_item_matches_filters = static function ( $item ) use ( $current_day_filter, $current_track_filter, $current_room_filter ) {
+	if ( $current_day_filter && ( empty( $item['day_key'] ) || $current_day_filter !== $item['day_key'] ) ) {
+		return false;
+	}
+
+	if ( $current_track_filter && ( empty( $item['track_key'] ) || $current_track_filter !== $item['track_key'] ) ) {
+		return false;
+	}
+
+	if ( $current_room_filter && ( empty( $item['room_key'] ) || $current_room_filter !== $item['room_key'] ) ) {
+		return false;
+	}
+
+	return true;
+};
+
+if ( $is_event_schedule ) {
+	$event_session_filter_options = isset( $event_session_schedule['filters'] ) && is_array( $event_session_schedule['filters'] )
+		? $event_session_schedule['filters']
+		: $event_session_filter_options;
+	$has_session_filters          = ! empty( $event_session_filter_options['days'] ) || ! empty( $event_session_filter_options['tracks'] ) || ! empty( $event_session_filter_options['rooms'] );
+
+	if ( ! empty( $event_session_schedule['items'] ) ) {
+		$filtered_schedule_items = array_values(
+			array_filter(
+				$event_session_schedule['items'],
+				$schedule_item_matches_filters
+			)
+		);
+
+		foreach ( $filtered_schedule_items as $filtered_schedule_item ) {
+			$day_key = ! empty( $filtered_schedule_item['date_label'] ) ? $filtered_schedule_item['date_label'] : __( 'TBD', 'wpfaevent' );
+
+			if ( ! isset( $visible_session_groups[ $day_key ] ) ) {
+				$visible_session_groups[ $day_key ] = array();
+			}
+
+			$visible_session_groups[ $day_key ][] = $filtered_schedule_item;
+		}
+	}
 }
 
 usort(
@@ -330,6 +399,29 @@ $filter_form_classes = 'wpfa-schedule-filter-form';
 if ( ! empty( $languages ) ) {
 	$filter_form_classes .= ' has-language-filter';
 }
+if ( $has_session_filters ) {
+	$filter_form_classes .= ' has-session-filters';
+}
+
+$schedule_filter_reset_args = array();
+
+if ( $selected_event_slug ) {
+	$schedule_filter_reset_args['event'] = $selected_event_slug;
+}
+
+if ( $current_language ) {
+	$schedule_filter_reset_args['language'] = $current_language;
+}
+
+if ( $selected_schedule_timezone_str && $selected_schedule_timezone_str !== $primary_timezone_string ) {
+	$schedule_filter_reset_args['schedule_tz'] = $selected_schedule_timezone_str;
+}
+
+if ( 'calendar' === $current_view ) {
+	$schedule_filter_reset_args['view'] = 'calendar';
+}
+
+$schedule_filter_reset_url = add_query_arg( $schedule_filter_reset_args, $schedule_page_url );
 ?>
 <?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
@@ -379,6 +471,7 @@ if ( ! empty( $languages ) ) {
 					<div class="wpfa-schedule-controls">
 						<nav class="wpfa-schedule-view-switch" aria-label="<?php esc_attr_e( 'Schedule view', 'wpfaevent' ); ?>">
 							<a
+								data-view="list"
 								class="<?php echo esc_attr( 'list' === $current_view ? 'is-active' : '' ); ?>"
 								href="<?php echo esc_url( $build_schedule_view_url( 'list' ) ); ?>"
 								<?php if ( 'list' === $current_view ) : ?>
@@ -388,6 +481,7 @@ if ( ! empty( $languages ) ) {
 								<?php esc_html_e( 'List', 'wpfaevent' ); ?>
 							</a>
 							<a
+								data-view="calendar"
 								class="<?php echo esc_attr( 'calendar' === $current_view ? 'is-active' : '' ); ?>"
 								href="<?php echo esc_url( $build_schedule_view_url( 'calendar' ) ); ?>"
 								<?php if ( 'calendar' === $current_view ) : ?>
@@ -427,7 +521,51 @@ if ( ! empty( $languages ) ) {
 									<?php endforeach; ?>
 								</select>
 							</label>
+							<?php if ( $is_event_schedule && ! empty( $event_session_filter_options['days'] ) ) : ?>
+								<label for="wpfa-schedule-day">
+									<span><?php esc_html_e( 'Day', 'wpfaevent' ); ?></span>
+									<select id="wpfa-schedule-day" name="day">
+										<option value=""><?php esc_html_e( 'All days', 'wpfaevent' ); ?></option>
+										<?php foreach ( $event_session_filter_options['days'] as $day_key => $day_label ) : ?>
+											<option value="<?php echo esc_attr( $day_key ); ?>" <?php selected( $current_day_filter, $day_key ); ?>>
+												<?php echo esc_html( $day_label ); ?>
+											</option>
+										<?php endforeach; ?>
+									</select>
+								</label>
+							<?php endif; ?>
+							<?php if ( $is_event_schedule && ! empty( $event_session_filter_options['tracks'] ) ) : ?>
+								<label for="wpfa-schedule-track">
+									<span><?php esc_html_e( 'Track', 'wpfaevent' ); ?></span>
+									<select id="wpfa-schedule-track" name="track">
+										<option value=""><?php esc_html_e( 'All tracks', 'wpfaevent' ); ?></option>
+										<?php foreach ( $event_session_filter_options['tracks'] as $track_key => $track_label ) : ?>
+											<option value="<?php echo esc_attr( $track_key ); ?>" <?php selected( $current_track_filter, $track_key ); ?>>
+												<?php echo esc_html( $track_label ); ?>
+											</option>
+										<?php endforeach; ?>
+									</select>
+								</label>
+							<?php endif; ?>
+							<?php if ( $is_event_schedule && ! empty( $event_session_filter_options['rooms'] ) ) : ?>
+								<label for="wpfa-schedule-room">
+									<span><?php esc_html_e( 'Room', 'wpfaevent' ); ?></span>
+									<select id="wpfa-schedule-room" name="room">
+										<option value=""><?php esc_html_e( 'All rooms', 'wpfaevent' ); ?></option>
+										<?php foreach ( $event_session_filter_options['rooms'] as $room_key => $room_label ) : ?>
+											<option value="<?php echo esc_attr( $room_key ); ?>" <?php selected( $current_room_filter, $room_key ); ?>>
+												<?php echo esc_html( $room_label ); ?>
+											</option>
+										<?php endforeach; ?>
+									</select>
+								</label>
+							<?php endif; ?>
 							<button type="submit"><?php esc_html_e( 'Apply', 'wpfaevent' ); ?></button>
+							<?php if ( $is_event_schedule && $has_session_filters ) : ?>
+								<a class="wpfa-schedule-filter-reset" href="<?php echo esc_url( $schedule_filter_reset_url ); ?>">
+									<?php esc_html_e( 'Reset filters', 'wpfaevent' ); ?>
+								</a>
+							<?php endif; ?>
 						</form>
 					</div>
 				<?php endif; ?>
@@ -435,12 +573,46 @@ if ( ! empty( $languages ) ) {
 
 			<?php if ( $is_event_schedule ) : ?>
 				<?php if ( ! empty( $event_session_schedule['groups'] ) ) : ?>
-					<div class="wpfa-schedule-calendar" role="list" style="<?php echo 'calendar' === $current_view ? '' : 'display:none;'; ?>">
-						<?php foreach ( $event_session_schedule['groups'] as $day_label => $day_sessions ) : ?>
-							<section class="wpfa-schedule-calendar-day" role="listitem" aria-labelledby="<?php echo esc_attr( sanitize_title( $day_label ) ); ?>-calendar-heading">
+					<div class="wpfa-schedule-session-browser">
+						<?php if ( empty( $visible_session_groups ) ) : ?>
+							<p class="wpfa-schedule-empty-state"><?php esc_html_e( 'No sessions match the selected filters.', 'wpfaevent' ); ?></p>
+						<?php endif; ?>
+
+						<div class="wpfa-schedule-calendar" role="list" style="<?php echo 'calendar' === $current_view ? '' : 'display:none;'; ?>">
+							<?php foreach ( $visible_session_groups as $day_label => $day_sessions ) : ?>
+								<?php
+								$calendar_day_id    = sanitize_title( $day_label ) . '-calendar-heading';
+								$calendar_time_rows = array();
+
+								foreach ( $day_sessions as $day_session ) {
+									$slot_key = ! empty( $day_session['slot_key'] ) ? $day_session['slot_key'] : sanitize_title( $day_session['time_label'] );
+
+									if ( ! isset( $calendar_time_rows[ $slot_key ] ) ) {
+										$calendar_time_rows[ $slot_key ] = array(
+											'label'    => ! empty( $day_session['time_start'] ) ? $day_session['time_start'] : $day_session['time_label'],
+											'sort_key' => isset( $day_session['slot_sort_key'] ) ? (int) $day_session['slot_sort_key'] : PHP_INT_MAX,
+											'items'    => array(),
+										);
+									}
+
+									$calendar_time_rows[ $slot_key ]['items'][] = $day_session;
+								}
+
+								uasort(
+									$calendar_time_rows,
+									static function ( $slot_a, $slot_b ) {
+										if ( $slot_a['sort_key'] === $slot_b['sort_key'] ) {
+											return strcasecmp( $slot_a['label'], $slot_b['label'] );
+										}
+
+										return ( $slot_a['sort_key'] < $slot_b['sort_key'] ) ? -1 : 1;
+									}
+								);
+								?>
+								<section class="wpfa-schedule-calendar-day wpfa-schedule-day-group" role="listitem" aria-labelledby="<?php echo esc_attr( $calendar_day_id ); ?>">
 								<header class="wpfa-schedule-calendar-day-head">
-									<h2 id="<?php echo esc_attr( sanitize_title( $day_label ) ); ?>-calendar-heading"><?php echo esc_html( $day_label ); ?></h2>
-									<span>
+									<h2 id="<?php echo esc_attr( $calendar_day_id ); ?>"><?php echo esc_html( $day_label ); ?></h2>
+									<span class="wpfa-schedule-group-count">
 										<?php
 										printf(
 											/* translators: %d: number of sessions on this day. */
@@ -451,57 +623,79 @@ if ( ! empty( $languages ) ) {
 									</span>
 								</header>
 								<div class="wpfa-schedule-calendar-slots">
-									<?php foreach ( $day_sessions as $item ) : ?>
-										<article class="wpfa-schedule-calendar-slot">
-											<?php if ( ! empty( $item['time_label'] ) ) : ?>
-												<time datetime="<?php echo esc_attr( $item['start_datetime'] ); ?>" data-utc-start="<?php echo esc_attr( $item['start_datetime'] ); ?>" data-utc-end="<?php echo esc_attr( $item['end_datetime'] ); ?>"><?php echo esc_html( $item['time_label'] ); ?></time>
-											<?php endif; ?>
-											<h3><?php echo esc_html( $item['title'] ); ?></h3>
-											<?php if ( ! empty( $item['speakers'] ) || ! empty( $item['room'] ) || ! empty( $item['track'] ) ) : ?>
-												<ul class="wpfa-schedule-calendar-meta">
-													<?php if ( ! empty( $item['speakers'] ) ) : ?>
-														<li><?php echo esc_html( $item['speakers'] ); ?></li>
-													<?php endif; ?>
-													<?php if ( ! empty( $item['room'] ) ) : ?>
-														<li><?php echo esc_html( $item['room'] ); ?></li>
-													<?php endif; ?>
-													<?php if ( ! empty( $item['track'] ) ) : ?>
-														<li><?php echo esc_html( $item['track'] ); ?></li>
-													<?php endif; ?>
-												</ul>
-											<?php endif; ?>
-											<?php if ( ! empty( $item['calendar_url'] ) ) : ?>
-												<?php
-												$session_calendar_label = sprintf(
-													/* translators: %s: session title. */
-													__( 'Add %s to Google Calendar', 'wpfaevent' ),
-													$item['title']
-												);
-												?>
-												<a
-													class="wpfa-schedule-session-calendar"
-													href="<?php echo esc_url( $item['calendar_url'] ); ?>"
-													target="_blank"
-													rel="noopener"
-													aria-label="<?php echo esc_attr( $session_calendar_label ); ?>"
-												>
-													<?php esc_html_e( 'Add to calendar', 'wpfaevent' ); ?>
-												</a>
-											<?php endif; ?>
-										</article>
+									<?php foreach ( $calendar_time_rows as $calendar_time_row ) : ?>
+										<section class="wpfa-schedule-calendar-row">
+											<div class="wpfa-schedule-calendar-time">
+												<?php if ( ! empty( $calendar_time_row['label'] ) ) : ?>
+													<strong><?php echo esc_html( $calendar_time_row['label'] ); ?></strong>
+												<?php endif; ?>
+												<span class="wpfa-schedule-slot-count">
+													<?php
+													printf(
+														/* translators: %d: number of sessions in this time slot. */
+														esc_html( _n( '%d session', '%d sessions', count( $calendar_time_row['items'] ), 'wpfaevent' ) ),
+														absint( count( $calendar_time_row['items'] ) )
+													);
+													?>
+												</span>
+											</div>
+											<div class="wpfa-schedule-calendar-track">
+												<?php foreach ( $calendar_time_row['items'] as $item ) : ?>
+													<article class="wpfa-schedule-calendar-slot">
+														<div class="wpfa-schedule-calendar-slot-head">
+															<h3><?php echo esc_html( $item['title'] ); ?></h3>
+															<?php if ( ! empty( $item['time_label'] ) ) : ?>
+																<time datetime="<?php echo esc_attr( $item['start_datetime'] ); ?>" data-utc-start="<?php echo esc_attr( $item['start_datetime'] ); ?>" data-utc-end="<?php echo esc_attr( $item['end_datetime'] ); ?>"><?php echo esc_html( $item['time_label'] ); ?></time>
+															<?php endif; ?>
+														</div>
+														<?php if ( ! empty( $item['speakers'] ) || ! empty( $item['room'] ) || ! empty( $item['track'] ) ) : ?>
+															<ul class="wpfa-schedule-calendar-meta">
+																<?php if ( ! empty( $item['speakers'] ) ) : ?>
+																	<li><?php echo esc_html( $item['speakers'] ); ?></li>
+																<?php endif; ?>
+																<?php if ( ! empty( $item['room'] ) ) : ?>
+																	<li><?php echo esc_html( $item['room'] ); ?></li>
+																<?php endif; ?>
+																<?php if ( ! empty( $item['track'] ) ) : ?>
+																	<li><?php echo esc_html( $item['track'] ); ?></li>
+																<?php endif; ?>
+															</ul>
+														<?php endif; ?>
+														<?php if ( ! empty( $item['calendar_url'] ) ) : ?>
+															<?php
+															$session_calendar_label = sprintf(
+																/* translators: %s: session title. */
+																__( 'Add %s to Google Calendar', 'wpfaevent' ),
+																$item['title']
+															);
+															?>
+															<a
+																class="wpfa-schedule-session-calendar"
+																href="<?php echo esc_url( $item['calendar_url'] ); ?>"
+																target="_blank"
+																rel="noopener"
+																aria-label="<?php echo esc_attr( $session_calendar_label ); ?>"
+															>
+																<?php esc_html_e( 'Add to calendar', 'wpfaevent' ); ?>
+															</a>
+														<?php endif; ?>
+													</article>
+												<?php endforeach; ?>
+											</div>
+										</section>
 									<?php endforeach; ?>
 								</div>
 							</section>
 						<?php endforeach; ?>
-					</div>
+						</div>
 
-					<div class="wpfa-schedule-program" style="<?php echo 'list' === $current_view ? '' : 'display:none;'; ?>">
-						<?php foreach ( $event_session_schedule['groups'] as $day_label => $day_sessions ) : ?>
-							<section class="wpfa-schedule-day" aria-labelledby="<?php echo esc_attr( sanitize_title( $day_label ) ); ?>-heading">
+						<div class="wpfa-schedule-program" style="<?php echo 'list' === $current_view ? '' : 'display:none;'; ?>">
+							<?php foreach ( $visible_session_groups as $day_label => $day_sessions ) : ?>
+								<section class="wpfa-schedule-day wpfa-schedule-day-group" aria-labelledby="<?php echo esc_attr( sanitize_title( $day_label ) ); ?>-heading">
 								<header class="wpfa-schedule-day-head">
 									<div>
 										<h2 id="<?php echo esc_attr( sanitize_title( $day_label ) ); ?>-heading"><?php echo esc_html( $day_label ); ?></h2>
-										<p>
+										<p class="wpfa-schedule-group-count">
 											<?php
 											printf(
 												/* translators: %d: number of sessions on this day. */
@@ -529,6 +723,13 @@ if ( ! empty( $languages ) ) {
 
 												<div class="wpfa-schedule-session-main">
 													<h3 class="wpfa-schedule-session-title"><?php echo esc_html( $item['title'] ); ?></h3>
+													<?php if ( ! empty( $item['time_label'] ) ) : ?>
+														<p class="wpfa-schedule-session-summary-time">
+															<time datetime="<?php echo esc_attr( $item['start_datetime'] ); ?>" data-utc-start="<?php echo esc_attr( $item['start_datetime'] ); ?>" data-utc-end="<?php echo esc_attr( $item['end_datetime'] ); ?>">
+																<?php echo esc_html( $item['time_label'] ); ?>
+															</time>
+														</p>
+													<?php endif; ?>
 
 													<?php if ( ! empty( $item['speakers'] ) || ! empty( $item['room'] ) || ! empty( $item['track'] ) ) : ?>
 														<dl class="wpfa-schedule-session-details">
@@ -578,6 +779,7 @@ if ( ! empty( $languages ) ) {
 								</section>
 							<?php endforeach; ?>
 						</div>
+					</div>
 				<?php else : ?>
 					<p class="wpfa-empty-state"><?php esc_html_e( 'No schedule has been imported for this event yet.', 'wpfaevent' ); ?></p>
 				<?php endif; ?>

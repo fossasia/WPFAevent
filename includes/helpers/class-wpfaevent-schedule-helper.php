@@ -346,8 +346,13 @@ class Wpfaevent_Schedule_Helper {
 
 		if ( ! $event_id ) {
 			return array(
-				'items'  => array(),
-				'groups' => array(),
+				'items'   => array(),
+				'groups'  => array(),
+				'filters' => array(
+					'days'   => array(),
+					'tracks' => array(),
+					'rooms'  => array(),
+				),
 			);
 		}
 
@@ -362,6 +367,11 @@ class Wpfaevent_Schedule_Helper {
 		$schedule_body  = ! empty( $schedule_head ) ? array_slice( $schedule_rows, 1 ) : $schedule_rows;
 		$event_timezone = self::get_event_timezone_object( $event_id );
 		$items          = array();
+		$filters        = array(
+			'days'   => array(),
+			'tracks' => array(),
+			'rooms'  => array(),
+		);
 
 		foreach ( $schedule_body as $row_index => $row ) {
 			if ( ! is_array( $row ) ) {
@@ -392,9 +402,44 @@ class Wpfaevent_Schedule_Helper {
 			$time_parts         = preg_split( '/\s*-\s*/', $item['time_label'], 2 );
 			$item['time_start'] = isset( $time_parts[0] ) ? trim( $time_parts[0] ) : $item['time_label'];
 			$item['time_end']   = isset( $time_parts[1] ) ? trim( $time_parts[1] ) : '';
+			$item['day_key']    = self::build_schedule_filter_key( $item['date_label'] );
+			$item['track_key']  = self::build_schedule_filter_key( $item['track'] );
+			$item['room_key']   = self::build_schedule_filter_key( $item['room'] );
+
+			$sort_datetime = self::parse_schedule_datetime( $start_datetime );
+			if ( ! $sort_datetime ) {
+				$sort_datetime = self::build_schedule_fallback_datetime( $row_date, $row_time, $event_timezone );
+			}
+
+			$item['sort_key']      = $sort_datetime ? $sort_datetime->getTimestamp() : PHP_INT_MAX;
+			$item['slot_sort_key'] = $sort_datetime ? $sort_datetime->getTimestamp() : PHP_INT_MAX;
+			$item['slot_key']      = self::build_schedule_filter_key( $item['time_start'] ? $item['time_start'] : $item['time_label'] );
+
+			if ( ! empty( $item['day_key'] ) && ! isset( $filters['days'][ $item['day_key'] ] ) ) {
+				$filters['days'][ $item['day_key'] ] = $item['date_label'];
+			}
+
+			if ( ! empty( $item['track_key'] ) && ! isset( $filters['tracks'][ $item['track_key'] ] ) ) {
+				$filters['tracks'][ $item['track_key'] ] = $item['track'];
+			}
+
+			if ( ! empty( $item['room_key'] ) && ! isset( $filters['rooms'][ $item['room_key'] ] ) ) {
+				$filters['rooms'][ $item['room_key'] ] = $item['room'];
+			}
 
 			$items[] = $item;
 		}
+
+		usort(
+			$items,
+			static function ( $item_a, $item_b ) {
+				if ( $item_a['sort_key'] === $item_b['sort_key'] ) {
+					return strcasecmp( $item_a['title'], $item_b['title'] );
+				}
+
+				return ( $item_a['sort_key'] < $item_b['sort_key'] ) ? -1 : 1;
+			}
+		);
 
 		$groups = array();
 
@@ -409,9 +454,24 @@ class Wpfaevent_Schedule_Helper {
 		}
 
 		return array(
-			'items'  => $items,
-			'groups' => $groups,
+			'items'   => $items,
+			'groups'  => $groups,
+			'filters' => $filters,
 		);
+	}
+
+	/**
+	 * Build a normalized key for schedule filter controls.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $value Raw filter value.
+	 * @return string
+	 */
+	private static function build_schedule_filter_key( $value ) {
+		$value = sanitize_text_field( $value );
+
+		return '' !== trim( $value ) ? sanitize_title( $value ) : '';
 	}
 
 	/**
