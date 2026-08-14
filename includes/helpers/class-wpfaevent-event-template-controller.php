@@ -245,6 +245,28 @@ class Wpfaevent_Event_Template_Controller {
 			}
 		}
 
+		$current_day_filter   = '';
+		$current_track_filter = '';
+		$current_room_filter  = '';
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only schedule filters.
+		if ( isset( $_GET['day'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized immediately after reading.
+			$current_day_filter = sanitize_title( wp_unslash( $_GET['day'] ) );
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only schedule filters.
+		if ( isset( $_GET['track'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized immediately after reading.
+			$current_track_filter = sanitize_title( wp_unslash( $_GET['track'] ) );
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only schedule filters.
+		if ( isset( $_GET['room'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized immediately after reading.
+			$current_room_filter = sanitize_title( wp_unslash( $_GET['room'] ) );
+		}
+
 		$format_timezone_label = static function ( $timezone_string ) use ( $event_timezone_string, $site_timezone_string ) {
 			$label = str_replace( '_', ' ', $timezone_string );
 
@@ -493,15 +515,39 @@ class Wpfaevent_Event_Template_Controller {
 			$event_schedule_args['schedule_tz'] = $selected_schedule_timezone_string;
 		}
 
+		if ( $current_day_filter ) {
+			$event_schedule_args['day'] = $current_day_filter;
+		}
+
+		if ( $current_track_filter ) {
+			$event_schedule_args['track'] = $current_track_filter;
+		}
+
+		if ( $current_room_filter ) {
+			$event_schedule_args['room'] = $current_room_filter;
+		}
+
 		$event_schedule_url   = add_query_arg( $event_schedule_args, $schedule_page_url );
 		$additional_page_url  = class_exists( 'Wpfaevent_Additional_Information_Helper' ) ? Wpfaevent_Additional_Information_Helper::get_additional_information_page_url() : home_url( '/additional-information/' );
 		$event_additional_url = add_query_arg( 'event', $event_slug, $additional_page_url );
 
-		$build_event_schedule_view_url = static function ( $view ) use ( $event_id, $event_timezone_string, $selected_schedule_timezone_string ) {
+		$build_event_schedule_view_url = static function ( $view ) use ( $event_id, $event_timezone_string, $selected_schedule_timezone_string, $current_day_filter, $current_track_filter, $current_room_filter ) {
 			$args = array();
 
 			if ( $selected_schedule_timezone_string && $selected_schedule_timezone_string !== $event_timezone_string ) {
 				$args['schedule_tz'] = $selected_schedule_timezone_string;
+			}
+
+			if ( $current_day_filter ) {
+				$args['day'] = $current_day_filter;
+			}
+
+			if ( $current_track_filter ) {
+				$args['track'] = $current_track_filter;
+			}
+
+			if ( $current_room_filter ) {
+				$args['room'] = $current_room_filter;
 			}
 
 			if ( 'calendar' === $view ) {
@@ -781,12 +827,61 @@ class Wpfaevent_Event_Template_Controller {
 			$time_parts                  = preg_split( '/\s*-\s*/', $schedule_item['time_label'], 2 );
 			$schedule_item['time_start'] = isset( $time_parts[0] ) ? trim( $time_parts[0] ) : $schedule_item['time_label'];
 			$schedule_item['time_end']   = isset( $time_parts[1] ) ? trim( $time_parts[1] ) : '';
+			$schedule_item['day_key']    = sanitize_title( $schedule_item['date_label'] ? $schedule_item['date_label'] : __( 'TBD', 'wpfaevent' ) );
+			$schedule_item['track_key']  = sanitize_title( $schedule_item['track'] );
+			$schedule_item['room_key']   = sanitize_title( $schedule_item['room'] );
 
 			$schedule_items[] = $schedule_item;
 		}
 
+		$event_session_filter_options = array(
+			'days'   => array(),
+			'tracks' => array(),
+			'rooms'  => array(),
+		);
+
+		foreach ( $schedule_items as $schedule_item ) {
+			$day_label = $schedule_item['date_label'] ? $schedule_item['date_label'] : __( 'TBD', 'wpfaevent' );
+
+			if ( ! empty( $schedule_item['day_key'] ) ) {
+				$event_session_filter_options['days'][ $schedule_item['day_key'] ] = $day_label;
+			}
+
+			if ( ! empty( $schedule_item['track_key'] ) && ! empty( $schedule_item['track'] ) ) {
+				$event_session_filter_options['tracks'][ $schedule_item['track_key'] ] = $schedule_item['track'];
+			}
+
+			if ( ! empty( $schedule_item['room_key'] ) && ! empty( $schedule_item['room'] ) ) {
+				$event_session_filter_options['rooms'][ $schedule_item['room_key'] ] = $schedule_item['room'];
+			}
+		}
+
+		$has_schedule_filters          = ! empty( $event_session_filter_options['days'] ) || ! empty( $event_session_filter_options['tracks'] ) || ! empty( $event_session_filter_options['rooms'] );
+		$schedule_item_matches_filters = static function ( $item ) use ( $current_day_filter, $current_track_filter, $current_room_filter ) {
+			if ( $current_day_filter && ( empty( $item['day_key'] ) || $current_day_filter !== $item['day_key'] ) ) {
+				return false;
+			}
+
+			if ( $current_track_filter && ( empty( $item['track_key'] ) || $current_track_filter !== $item['track_key'] ) ) {
+				return false;
+			}
+
+			if ( $current_room_filter && ( empty( $item['room_key'] ) || $current_room_filter !== $item['room_key'] ) ) {
+				return false;
+			}
+
+			return true;
+		};
+
+		$filtered_schedule_items = array_values(
+			array_filter(
+				$schedule_items,
+				$schedule_item_matches_filters
+			)
+		);
+
 		$schedule_preview_limit      = absint( apply_filters( 'wpfa_event_schedule_preview_limit', 3, $event_id ) );
-		$schedule_preview_items      = $schedule_preview_limit ? array_slice( $schedule_items, 0, $schedule_preview_limit ) : $schedule_items;
+		$schedule_preview_items      = $schedule_preview_limit ? array_slice( $filtered_schedule_items, 0, $schedule_preview_limit ) : $filtered_schedule_items;
 		$schedule_preview_day_groups = array();
 
 		foreach ( $schedule_preview_items as $schedule_item ) {
@@ -799,9 +894,26 @@ class Wpfaevent_Event_Template_Controller {
 			$schedule_preview_day_groups[ $day_key ][] = $schedule_item;
 		}
 
-		$schedule_hidden_count = max( 0, count( $schedule_items ) - count( $schedule_preview_items ) );
+		$schedule_hidden_count = max( 0, count( $filtered_schedule_items ) - count( $schedule_preview_items ) );
 		$first_schedule        = ! empty( $schedule_items[0] ) ? $schedule_items[0] : array();
-		$custom_sections       = array();
+		$filter_form_classes   = 'wpfa-schedule-filter-form';
+
+		if ( $has_schedule_filters ) {
+			$filter_form_classes .= ' has-session-filters';
+		}
+
+		$schedule_filter_reset_args = array();
+
+		if ( $selected_schedule_timezone_string && $selected_schedule_timezone_string !== $event_timezone_string ) {
+			$schedule_filter_reset_args['schedule_tz'] = $selected_schedule_timezone_string;
+		}
+
+		if ( 'calendar' === $current_schedule_view ) {
+			$schedule_filter_reset_args['schedule_view'] = 'calendar';
+		}
+
+		$schedule_filter_reset_url = add_query_arg( $schedule_filter_reset_args, get_permalink( $event_id ) ) . '#wpfa-event-schedule-title';
+		$custom_sections           = array();
 
 		foreach ( $custom_tabs as $custom_tab ) {
 			if ( empty( $custom_tab['slug'] ) || empty( $custom_tab['title'] ) || empty( $custom_tab['content'] ) ) {
@@ -906,6 +1018,14 @@ class Wpfaevent_Event_Template_Controller {
 			'schedule_preview_items'                   => $schedule_preview_items,
 			'schedule_preview_day_groups'              => $schedule_preview_day_groups,
 			'schedule_hidden_count'                    => $schedule_hidden_count,
+			'filtered_schedule_items'                  => $filtered_schedule_items,
+			'event_session_filter_options'             => $event_session_filter_options,
+			'has_schedule_filters'                     => $has_schedule_filters,
+			'filter_form_classes'                      => $filter_form_classes,
+			'schedule_filter_reset_url'                => $schedule_filter_reset_url,
+			'current_day_filter'                       => $current_day_filter,
+			'current_track_filter'                     => $current_track_filter,
+			'current_room_filter'                      => $current_room_filter,
 			'event_schedule_url'                       => $event_schedule_url,
 			'visible_sponsor_groups'                   => $visible_sponsor_groups,
 			'current_schedule_view'                    => $current_schedule_view,
@@ -993,6 +1113,18 @@ class Wpfaevent_Event_Template_Controller {
 			'schedule_preview_items'                   => array(),
 			'schedule_preview_day_groups'              => array(),
 			'schedule_hidden_count'                    => 0,
+			'filtered_schedule_items'                  => array(),
+			'event_session_filter_options'             => array(
+				'days'   => array(),
+				'tracks' => array(),
+				'rooms'  => array(),
+			),
+			'has_schedule_filters'                     => false,
+			'filter_form_classes'                      => 'wpfa-schedule-filter-form',
+			'schedule_filter_reset_url'                => '',
+			'current_day_filter'                       => '',
+			'current_track_filter'                     => '',
+			'current_room_filter'                      => '',
 			'event_schedule_url'                       => '',
 			'visible_sponsor_groups'                   => array(),
 			'current_schedule_view'                    => 'list',

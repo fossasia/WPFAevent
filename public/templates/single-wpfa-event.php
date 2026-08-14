@@ -75,6 +75,14 @@ $dashboard_speakers                       = $event_data['dashboard_speakers'];
 $schedule_preview_items                   = $event_data['schedule_preview_items'];
 $schedule_preview_day_groups              = $event_data['schedule_preview_day_groups'];
 $schedule_hidden_count                    = $event_data['schedule_hidden_count'];
+$filtered_schedule_items                  = $event_data['filtered_schedule_items'];
+$event_session_filter_options             = $event_data['event_session_filter_options'];
+$has_schedule_filters                     = $event_data['has_schedule_filters'];
+$filter_form_classes                      = $event_data['filter_form_classes'];
+$schedule_filter_reset_url                = $event_data['schedule_filter_reset_url'];
+$current_day_filter                       = $event_data['current_day_filter'];
+$current_track_filter                     = $event_data['current_track_filter'];
+$current_room_filter                      = $event_data['current_room_filter'];
 $event_schedule_url                       = $event_data['event_schedule_url'];
 $visible_sponsor_groups                   = $event_data['visible_sponsor_groups'];
 $current_schedule_view                    = $event_data['current_schedule_view'];
@@ -534,7 +542,7 @@ if ( $show_ticket_widget ) {
 									</a>
 								</nav>
 								<a href="<?php echo esc_url( $event_schedule_url ); ?>"><?php esc_html_e( 'Full Schedule', 'wpfaevent' ); ?></a>
-								<form class="wpfa-event-timezone-form" action="<?php echo esc_url( get_permalink( $event_id ) . '#wpfa-event-schedule-title' ); ?>" method="get">
+								<form class="<?php echo esc_attr( $filter_form_classes ); ?>" action="<?php echo esc_url( get_permalink( $event_id ) . '#wpfa-event-schedule-title' ); ?>" method="get">
 									<?php if ( 'calendar' === $current_schedule_view ) : ?>
 										<input type="hidden" name="schedule_view" value="calendar">
 									<?php endif; ?>
@@ -548,7 +556,49 @@ if ( $show_ticket_widget ) {
 											<?php endforeach; ?>
 										</select>
 									</label>
-									<button type="submit"><?php esc_html_e( 'Convert', 'wpfaevent' ); ?></button>
+									<?php if ( ! empty( $event_session_filter_options['days'] ) ) : ?>
+										<label for="wpfa-event-schedule-day">
+											<span><?php esc_html_e( 'Day', 'wpfaevent' ); ?></span>
+											<select id="wpfa-event-schedule-day" class="wpfa-schedule-client-filter" name="day">
+												<option value=""><?php esc_html_e( 'All days', 'wpfaevent' ); ?></option>
+												<?php foreach ( $event_session_filter_options['days'] as $day_key => $day_label ) : ?>
+													<option value="<?php echo esc_attr( $day_key ); ?>" <?php selected( $current_day_filter, $day_key ); ?>>
+														<?php echo esc_html( $day_label ); ?>
+													</option>
+												<?php endforeach; ?>
+											</select>
+										</label>
+									<?php endif; ?>
+									<?php if ( ! empty( $event_session_filter_options['tracks'] ) ) : ?>
+										<label for="wpfa-event-schedule-track">
+											<span><?php esc_html_e( 'Track', 'wpfaevent' ); ?></span>
+											<select id="wpfa-event-schedule-track" class="wpfa-schedule-client-filter" name="track">
+												<option value=""><?php esc_html_e( 'All tracks', 'wpfaevent' ); ?></option>
+												<?php foreach ( $event_session_filter_options['tracks'] as $track_key => $track_label ) : ?>
+													<option value="<?php echo esc_attr( $track_key ); ?>" <?php selected( $current_track_filter, $track_key ); ?>>
+														<?php echo esc_html( $track_label ); ?>
+													</option>
+												<?php endforeach; ?>
+											</select>
+										</label>
+									<?php endif; ?>
+									<?php if ( ! empty( $event_session_filter_options['rooms'] ) ) : ?>
+										<label for="wpfa-event-schedule-room">
+											<span><?php esc_html_e( 'Room', 'wpfaevent' ); ?></span>
+											<select id="wpfa-event-schedule-room" class="wpfa-schedule-client-filter" name="room">
+												<option value=""><?php esc_html_e( 'All rooms', 'wpfaevent' ); ?></option>
+												<?php foreach ( $event_session_filter_options['rooms'] as $room_key => $room_label ) : ?>
+													<option value="<?php echo esc_attr( $room_key ); ?>" <?php selected( $current_room_filter, $room_key ); ?>>
+														<?php echo esc_html( $room_label ); ?>
+													</option>
+												<?php endforeach; ?>
+											</select>
+										</label>
+									<?php endif; ?>
+									<button type="submit"><?php esc_html_e( 'Apply', 'wpfaevent' ); ?></button>
+									<?php if ( $has_schedule_filters ) : ?>
+										<button type="reset" class="wpfa-schedule-filter-reset" data-reset-url="<?php echo esc_url( $schedule_filter_reset_url ); ?>"><?php esc_html_e( 'Reset filters', 'wpfaevent' ); ?></button>
+									<?php endif; ?>
 								</form>
 							</div>
 						<?php endif; ?>
@@ -709,6 +759,8 @@ if ( $show_ticket_widget ) {
 								?>
 							</p>
 						<?php endif; ?>
+					<?php elseif ( ! empty( $schedule_items ) && $has_schedule_filters && ( $current_day_filter || $current_track_filter || $current_room_filter ) && empty( $filtered_schedule_items ) ) : ?>
+						<p class="wpfa-empty-state"><?php esc_html_e( 'No sessions match the selected filters.', 'wpfaevent' ); ?></p>
 					<?php else : ?>
 						<p class="wpfa-empty-state"><?php esc_html_e( 'No schedule has been imported for this event yet.', 'wpfaevent' ); ?></p>
 					<?php endif; ?>
