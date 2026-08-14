@@ -397,8 +397,8 @@
 	border-radius: var(--event-radius);
 	box-shadow: 0 8px 20px rgba(36, 52, 71, 0.07);
 	display: grid;
-	gap: 8px 16px;
-	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 10px 16px;
+	grid-template-columns: auto minmax(0, 1fr) auto;
 	min-width: 0;
 	position: relative;
 	padding: 16px 18px;
@@ -418,12 +418,7 @@
 }
 
 .wpfaevent .wpfa-schedule-calendar-slot-head {
-	align-items: start;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 10px 14px;
-	justify-content: space-between;
-	min-width: 0;
+	display: contents;
 }
 
 .wpfaevent .wpfa-schedule-calendar-slot time {
@@ -437,12 +432,14 @@
 	font-size: 0.84rem;
 	font-weight: 900;
 	justify-content: center;
-	line-height: 1.2;
+	line-height: 1.25;
 	min-height: 36px;
-	padding: 6px 9px;
+	padding: 5px 8px;
 	text-align: center;
 	flex: 0 0 auto;
 	max-width: 100%;
+	grid-column: 1;
+	grid-row: 2;
 }
 
 .wpfaevent .wpfa-schedule-calendar-slot h3,
@@ -454,7 +451,8 @@
 	margin: 0;
 	min-width: 0;
 	overflow-wrap: anywhere;
-	flex: 1 1 220px;
+	grid-column: 1 / span 2;
+	grid-row: 1;
 }
 
 .wpfaevent .wpfa-schedule-calendar-slot h3 a,
@@ -471,12 +469,16 @@
 }
 
 .wpfaevent .wpfa-schedule-calendar-meta {
+	align-items: start;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px;
+	grid-column: 2;
+	grid-row: 2;
 	list-style: none;
 	margin: 0;
 	padding: 0;
+	min-width: 0;
 }
 
 .wpfaevent .wpfa-schedule-calendar-meta li {
@@ -515,7 +517,9 @@
 
 .wpfaevent .wpfa-schedule-calendar-slot .wpfa-schedule-session-calendar {
 	align-self: start;
-	margin-top: 2px;
+	grid-column: 3;
+	grid-row: 2;
+	margin-top: 0;
 	white-space: nowrap;
 }
 
