@@ -386,6 +386,8 @@
 .wpfaevent .wpfa-schedule-calendar-track {
 	display: grid;
 	gap: 12px;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+	min-width: 0;
 }
 
 .wpfaevent .wpfa-schedule-calendar-slot {
@@ -421,6 +423,7 @@
 	flex-wrap: wrap;
 	gap: 10px 14px;
 	justify-content: space-between;
+	min-width: 0;
 }
 
 .wpfaevent .wpfa-schedule-calendar-slot time {
@@ -438,6 +441,8 @@
 	min-height: 36px;
 	padding: 6px 9px;
 	text-align: center;
+	flex: 0 0 auto;
+	max-width: 100%;
 }
 
 .wpfaevent .wpfa-schedule-calendar-slot h3,
@@ -447,7 +452,9 @@
 	font-weight: 900;
 	line-height: 1.35;
 	margin: 0;
+	min-width: 0;
 	overflow-wrap: anywhere;
+	flex: 1 1 220px;
 }
 
 .wpfaevent .wpfa-schedule-calendar-slot h3 a,
@@ -481,6 +488,8 @@
 	font-weight: 700;
 	line-height: 1.25;
 	padding: 5px 8px;
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 
 .wpfaevent .wpfa-schedule-calendar-actions {
