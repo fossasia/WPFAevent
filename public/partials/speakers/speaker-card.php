@@ -64,8 +64,10 @@ $talk_date     = get_post_meta( $sid, 'wpfa_speaker_talk_date', true );
 $talk_time     = get_post_meta( $sid, 'wpfa_speaker_talk_time', true );
 $talk_end_time = get_post_meta( $sid, 'wpfa_speaker_talk_end_time', true );
 $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
+$card_variant  = isset( $wpfa_speaker_card_variant ) ? sanitize_key( $wpfa_speaker_card_variant ) : '';
+$is_compact    = 'compact' === $card_variant;
 ?>
-<article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>">
+<article class="wpfa-speaker-card<?php echo $is_compact ? ' wpfa-speaker-card--compact' : ''; ?>" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>">
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
 		<?php if ( $photo_url ) : ?>
 			<div class="wpfa-speaker-photo-container">
@@ -135,7 +137,7 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 						</p>
 					<?php endif; ?>
 
-					<?php if ( $talk_abstract ) : ?>
+					<?php if ( $talk_abstract && ! $is_compact ) : ?>
 						<div class="wpfa-talk-abstract">
 							<?php echo wp_kses_post( wpautop( $talk_abstract ) ); ?>
 						</div>
