@@ -1335,6 +1335,7 @@
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-meta {
 	padding: 18px 18px 14px;
+	cursor: pointer;
 }
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-name {
@@ -1348,7 +1349,15 @@
 
 .wpfaevent .wpfa-event-detail .wpfa-speaker-expand {
 	background: #fff;
-	max-height: none;
+	max-height: 0;
+	opacity: 0;
+	overflow: hidden;
+	padding: 0 18px;
+	transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+.wpfaevent .wpfa-event-detail .wpfa-speaker-card.expanded .wpfa-speaker-expand {
+	max-height: 9999px;
 	opacity: 1;
 	padding: 0 18px 18px;
 }
