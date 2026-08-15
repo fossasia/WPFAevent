@@ -1551,6 +1551,221 @@
 	text-decoration: underline;
 }
 
+.wpfaevent .wpfa-event-schedule .wpfa-event-section-head {
+	margin-bottom: 34px;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-event-section-head h2 {
+	font-size: clamp(2rem, 3vw, 2.6rem);
+	font-weight: 900;
+	letter-spacing: -0.03em;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-event-section-head p {
+	color: #6b7a90;
+	font-size: 0.98rem;
+	max-width: 42rem;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-event-section-actions {
+	gap: 16px;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-view-switch {
+	border-radius: 999px;
+	box-shadow: 0 8px 20px rgba(36, 52, 71, 0.08);
+	padding: 4px;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-view-switch a {
+	border-radius: 999px;
+	font-size: 0.82rem;
+	font-weight: 800;
+	min-height: 32px;
+	min-width: 78px;
+	padding: 7px 14px;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-view-switch a.is-active {
+	background: #17233a;
+	color: #fff;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-filter-form {
+	background: rgba(255, 255, 255, 0.72);
+	border: 1px solid rgba(214, 222, 233, 0.9);
+	border-radius: 24px;
+	box-shadow: 0 10px 26px rgba(36, 52, 71, 0.06);
+	padding: 16px;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-filter-form span {
+	font-size: 0.68rem;
+	letter-spacing: 0.08em;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-filter-form select,
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-filter-form button,
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-filter-reset {
+	border-radius: 999px;
+	height: 44px;
+	min-height: 44px;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-filter-form select {
+	padding: 8px 14px;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-filter-form button {
+	background: #17233a;
+	border-color: #17233a;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-filter-form button:hover,
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-filter-form button:focus {
+	background: #0f172a;
+	border-color: #0f172a;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-filter-reset {
+	background: #fff;
+	border-color: rgba(214, 222, 233, 0.9);
+	color: var(--event-primary-dark);
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-program {
+	gap: 0;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-day {
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-day + .wpfa-schedule-day {
+	margin-top: 40px;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-day-head {
+	align-items: end;
+	background: transparent;
+	border-bottom: 1px solid #d7dfeb;
+	border-top: 1px solid #d7dfeb;
+	padding: 14px 0 16px;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-day-head h2,
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-day-head h3 {
+	font-size: 1.02rem;
+	font-weight: 900;
+	letter-spacing: 0.11em;
+	text-transform: uppercase;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-day-head p {
+	display: none;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session {
+	align-items: start;
+	gap: 18px;
+	grid-template-columns: 108px minmax(0, 1fr);
+	padding: 18px 0;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session:hover {
+	background: transparent;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session + .wpfa-schedule-session {
+	border-top: 1px solid #d7dfeb;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-timecol {
+	padding: 14px 18px 0 0;
+	text-align: right;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-timecol::before,
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-timecol::after {
+	display: none;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-start {
+	font-size: 1.95rem;
+	font-weight: 900;
+	letter-spacing: -0.04em;
+	line-height: 1;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-end {
+	display: none;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-main {
+	background: linear-gradient(90deg, rgba(255, 251, 239, 0.94) 0%, rgba(255, 255, 255, 0.98) 100%);
+	border: 1px solid rgba(207, 216, 56, 0.78);
+	border-left: 5px solid var(--event-primary);
+	border-radius: 16px;
+	padding: 18px 20px 16px;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-title {
+	font-size: 1.04rem;
+	line-height: 1.35;
+	margin: 0;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-summary-time {
+	color: var(--event-muted);
+	font-size: 0.88rem;
+	font-weight: 700;
+	margin: 8px 0 0;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-location,
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-speakers {
+	color: #526277;
+	font-size: 0.92rem;
+	font-weight: 700;
+	line-height: 1.45;
+	margin: 8px 0 0;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-speakers {
+	color: #6b7a90;
+	font-size: 0.88rem;
+	font-weight: 600;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-meta {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px 12px;
+	margin-top: 14px;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-track {
+	background: rgba(255, 255, 255, 0.82);
+	border: 1px solid var(--event-primary);
+	border-radius: 999px;
+	color: #5d6f84;
+	display: inline-flex;
+	font-size: 0.76rem;
+	font-weight: 800;
+	line-height: 1.2;
+	padding: 5px 10px;
+}
+
+.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-calendar {
+	font-size: 0.82rem;
+	margin-left: auto;
+	margin-top: 0;
+}
+
 .wpfaevent .wpfa-event-session {
 	background: #fff;
 	border: 1px solid var(--event-line);
@@ -2938,6 +3153,48 @@
 	.wpfaevent .wpfa-schedule-calendar-slots::before,
 	.wpfaevent .wpfa-schedule-calendar-slot::before {
 		display: none;
+	}
+
+	.wpfaevent .wpfa-event-schedule .wpfa-schedule-session {
+		gap: 14px;
+		grid-template-columns: 1fr;
+		padding: 18px 0;
+	}
+
+	.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-timecol {
+		align-items: center;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		padding: 0;
+		text-align: left;
+	}
+
+	.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-start {
+		font-size: 1.35rem;
+	}
+
+	.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-end {
+		color: var(--event-muted);
+		display: inline-flex;
+		font-size: 0.88rem;
+		margin-top: 0;
+	}
+
+	.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-end::before {
+		content: '– ';
+	}
+
+	.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-summary-time {
+		display: none;
+	}
+
+	.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-main {
+		padding: 16px 16px 14px;
+	}
+
+	.wpfaevent .wpfa-event-schedule .wpfa-schedule-session-calendar {
+		margin-left: 0;
 	}
 
 	.wpfaevent .wpfa-schedule-calendar-slots {
