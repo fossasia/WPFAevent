@@ -2,17 +2,90 @@
  * WPFA Events JavaScript Module
  * Handles search, admin functionality for events page
  *
- * @package    Wpfaevent
- * @subpackage Wpfaevent/public/js
+ * @package
  */
 
-const WPFA_Events = (function() {
+const wpfaEvents = (function () {
 	// Private variables
 	let config = {};
 	let elements = {};
 
+	function showNotice(message, type = 'error') {
+		const container =
+			document.querySelector('.wpfaevent-notification-container') ||
+			document.querySelector('.wpfa-events-page') ||
+			document.body;
+		const notice = document.createElement('div');
+		const noticeMessage = document.createElement('p');
+
+		notice.className = `notice notice-${type} is-dismissible wpfaevent-events-notice`;
+		noticeMessage.textContent = message;
+		notice.appendChild(noticeMessage);
+
+		container
+			.querySelectorAll('.wpfaevent-events-notice')
+			.forEach((existingNotice) => existingNotice.remove());
+		container.insertBefore(notice, container.firstChild);
+		notice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+	}
+
+	function showDeleteConfirmation(message, onConfirm) {
+		const overlay = document.createElement('div');
+		const dialog = document.createElement('div');
+		const text = document.createElement('p');
+		const actions = document.createElement('div');
+		const cancelButton = document.createElement('button');
+		const confirmButton = document.createElement('button');
+
+		overlay.className = 'wpfaevent-confirm-overlay';
+		overlay.setAttribute(
+			'style',
+			'position:fixed;inset:0;background:rgba(15,23,42,0.45);display:flex;align-items:center;justify-content:center;padding:24px;z-index:10000;'
+		);
+		dialog.setAttribute(
+			'style',
+			'background:#fff;border-radius:12px;box-shadow:0 24px 48px rgba(15,23,42,0.2);max-width:420px;width:100%;padding:24px;'
+		);
+		text.textContent = message;
+		actions.setAttribute(
+			'style',
+			'display:flex;gap:12px;justify-content:flex-end;margin-top:20px;'
+		);
+		cancelButton.type = 'button';
+		cancelButton.className = 'button';
+		cancelButton.textContent = config.i18n.cancelDelete || 'Cancel';
+		confirmButton.type = 'button';
+		confirmButton.className = 'button button-primary';
+		confirmButton.textContent = config.i18n.confirmDeleteButton || 'Delete';
+
+		const closeDialog = function () {
+			overlay.remove();
+		};
+
+		cancelButton.addEventListener('click', closeDialog);
+		overlay.addEventListener('click', function (event) {
+			if (event.target === overlay) {
+				closeDialog();
+			}
+		});
+		confirmButton.addEventListener('click', function () {
+			closeDialog();
+			onConfirm();
+		});
+
+		actions.append(cancelButton, confirmButton);
+		dialog.append(text, actions);
+		overlay.appendChild(dialog);
+		document.body.appendChild(overlay);
+		confirmButton.focus();
+	}
+
 	/**
 	 * Helper to extract error message from AJAX response
+	 *
+	 * @param {Object|string|null} data     AJAX response payload.
+	 * @param {string}             fallback Fallback message to display.
+	 * @return {string} A user-facing error message.
 	 */
 	function getErrorMessage(data, fallback) {
 		if (data && typeof data.data === 'object' && data.data?.message) {
@@ -26,12 +99,14 @@ const WPFA_Events = (function() {
 
 	/**
 	 * Initialize the events module
+	 *
+	 * @param {Object} options Event page configuration.
 	 */
 	function init(options) {
 		config = options || {};
 
 		// Ensure i18n object exists even if PHP fails to provide it
-        config.i18n = config.i18n || {};
+		config.i18n = config.i18n || {};
 
 		// Cache DOM elements
 		cacheElements();
@@ -69,8 +144,12 @@ const WPFA_Events = (function() {
 			editEventModal: document.getElementById('editEventModal'),
 
 			// Modal close buttons
-			closeCreateEventModal: document.querySelector('#createEventModal .close-btn'),
-			closeEditEventModal: document.querySelector('#editEventModal .close-btn'),
+			closeCreateEventModal: document.querySelector(
+				'#createEventModal .close-btn'
+			),
+			closeEditEventModal: document.querySelector(
+				'#editEventModal .close-btn'
+			),
 
 			// Forms
 			createEventForm: document.getElementById('createEventForm'),
@@ -89,38 +168,57 @@ const WPFA_Events = (function() {
 	function setupEventListeners() {
 		// Create event button
 		if (elements.createEventBtn) {
-			elements.createEventBtn.addEventListener('click', openCreateEventModal);
+			elements.createEventBtn.addEventListener(
+				'click',
+				openCreateEventModal
+			);
 		}
 
 		// Modal close buttons
 		if (elements.closeCreateEventModal) {
-			elements.closeCreateEventModal.addEventListener('click', closeCreateEventModal);
+			elements.closeCreateEventModal.addEventListener(
+				'click',
+				closeCreateEventModal
+			);
 		}
 
 		if (elements.closeEditEventModal) {
-			elements.closeEditEventModal.addEventListener('click', closeEditEventModal);
+			elements.closeEditEventModal.addEventListener(
+				'click',
+				closeEditEventModal
+			);
 		}
 
 		// Close modals on background click
 		if (elements.createEventModal) {
-			elements.createEventModal.addEventListener('click', function(e) {
-				if (e.target === this) closeCreateEventModal();
+			elements.createEventModal.addEventListener('click', function (e) {
+				if (e.target === this) {
+					closeCreateEventModal();
+				}
 			});
 		}
 
 		if (elements.editEventModal) {
-			elements.editEventModal.addEventListener('click', function(e) {
-				if (e.target === this) closeEditEventModal();
+			elements.editEventModal.addEventListener('click', function (e) {
+				if (e.target === this) {
+					closeEditEventModal();
+				}
 			});
 		}
 
 		// Form submissions
 		if (elements.createEventForm) {
-			elements.createEventForm.addEventListener('submit', handleCreateEventFormSubmit);
+			elements.createEventForm.addEventListener(
+				'submit',
+				handleCreateEventFormSubmit
+			);
 		}
 
 		if (elements.editEventForm) {
-			elements.editEventForm.addEventListener('submit', handleEditEventFormSubmit);
+			elements.editEventForm.addEventListener(
+				'submit',
+				handleEditEventFormSubmit
+			);
 		}
 
 		setupTimeFormatControls(elements.createEventForm);
@@ -128,7 +226,10 @@ const WPFA_Events = (function() {
 
 		// Event card actions delegation (admin only)
 		if (elements.eventsContainer) {
-			elements.eventsContainer.addEventListener('click', handleCardActions);
+			elements.eventsContainer.addEventListener(
+				'click',
+				handleCardActions
+			);
 		}
 	}
 
@@ -136,7 +237,7 @@ const WPFA_Events = (function() {
 	 * Setup character counters
 	 */
 	function setupCharacterCounters() {
-		document.querySelectorAll('textarea[maxlength]').forEach(textarea => {
+		document.querySelectorAll('textarea[maxlength]').forEach((textarea) => {
 			const counter = textarea.nextElementSibling;
 
 			if (counter?.classList.contains('wpfaevent-char-counter')) {
@@ -161,7 +262,8 @@ const WPFA_Events = (function() {
 				// Call update immediately
 				update();
 
-				/** * If data is loaded dynamically (e.g. via AJAX or WP Modal),
+				/**
+				 * * If data is loaded dynamically (e.g. via AJAX or WP Modal),
 				 * we wait a tiny bit to catch the filled value.
 				 */
 				if (textarea.value.length === 0) {
@@ -173,6 +275,8 @@ const WPFA_Events = (function() {
 
 	/**
 	 * Setup all-day toggles for event time inputs
+	 *
+	 * @param {HTMLFormElement|null|undefined} form Event form element.
 	 */
 	function setupTimeFormatControls(form) {
 		const allDayField = form?.querySelector('[name="all_day"]');
@@ -191,15 +295,19 @@ const WPFA_Events = (function() {
 
 	/**
 	 * Disable time inputs while an event is marked all-day
+	 *
+	 * @param {HTMLFormElement|null|undefined} form Event form element.
 	 */
 	function syncTimeFields(form) {
 		const allDayField = form?.querySelector('[name="all_day"]');
 		const timeFields = form?.querySelector('.wpfaevent-time-fields');
-		const timeInputs = form?.querySelectorAll('[name="start_time"], [name="end_time"]') || [];
+		const timeInputs =
+			form?.querySelectorAll('[name="start_time"], [name="end_time"]') ||
+			[];
 		const isAllDay = Boolean(allDayField?.checked);
 
 		timeFields?.classList.toggle('is-disabled', isAllDay);
-		timeInputs.forEach(input => {
+		timeInputs.forEach((input) => {
 			input.disabled = isAllDay;
 
 			if (isAllDay) {
@@ -210,6 +318,9 @@ const WPFA_Events = (function() {
 
 	/**
 	 * Select a timezone value without losing the server-rendered default
+	 *
+	 * @param {HTMLSelectElement|null} select Timezone select element.
+	 * @param {string}                 value  Selected timezone value.
 	 */
 	function setSelectValue(select, value) {
 		if (!select || !value) {
@@ -226,6 +337,8 @@ const WPFA_Events = (function() {
 
 	/**
 	 * Preserve the legacy time payload expected by older handlers
+	 *
+	 * @param {FormData} formData Event form data.
 	 */
 	function appendLegacyTimeAlias(formData) {
 		const startTime = formData.get('start_time') || '';
@@ -260,9 +373,11 @@ const WPFA_Events = (function() {
 		}
 
 		// Date filter tabs
-		document.querySelectorAll('.date-filter-btn').forEach(btn => {
-			btn.addEventListener('click', function() {
-				document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active'));
+		document.querySelectorAll('.date-filter-btn').forEach((btn) => {
+			btn.addEventListener('click', function () {
+				document
+					.querySelectorAll('.date-filter-btn')
+					.forEach((b) => b.classList.remove('active'));
 				this.classList.add('active');
 				filterEvents();
 			});
@@ -273,10 +388,13 @@ const WPFA_Events = (function() {
 		const urlFilter = urlParams.get('filter');
 		const allowedFilters = ['all', 'upcoming', 'past', 'bookmarked'];
 		if (urlFilter && allowedFilters.includes(urlFilter)) {
-			const targetBtn = Array.from(document.querySelectorAll('.date-filter-btn'))
-				.find(btn => btn.dataset.filter === urlFilter);
+			const targetBtn = Array.from(
+				document.querySelectorAll('.date-filter-btn')
+			).find((btn) => btn.dataset.filter === urlFilter);
 			if (targetBtn) {
-				document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active'));
+				document
+					.querySelectorAll('.date-filter-btn')
+					.forEach((b) => b.classList.remove('active'));
 				targetBtn.classList.add('active');
 				filterEvents();
 			}
@@ -287,36 +405,59 @@ const WPFA_Events = (function() {
 	 * Filter events based on all active filter controls.
 	 */
 	function filterEvents() {
-		if (!elements.eventsContainer) return;
+		if (!elements.eventsContainer) {
+			return;
+		}
 
-		const searchTerm   = (elements.searchInput ? elements.searchInput.value : '').toLowerCase().trim();
-		const track        = elements.filterTrack ? elements.filterTrack.value : '';
-		const location     = elements.filterLocation ? elements.filterLocation.value.toLowerCase() : '';
+		const searchTerm = (
+			elements.searchInput ? elements.searchInput.value : ''
+		)
+			.toLowerCase()
+			.trim();
+		const track = elements.filterTrack ? elements.filterTrack.value : '';
+		const location = elements.filterLocation
+			? elements.filterLocation.value.toLowerCase()
+			: '';
 		const activeDateBtn = document.querySelector('.date-filter-btn.active');
-		const dateFilter   = activeDateBtn ? activeDateBtn.dataset.filter : 'all';
+		const dateFilter = activeDateBtn ? activeDateBtn.dataset.filter : 'all';
 
-		const allCards  = elements.eventsContainer.querySelectorAll('.event-card');
+		const allCards =
+			elements.eventsContainer.querySelectorAll('.event-card');
 		let visibleCount = 0;
 
-		allCards.forEach(card => {
-			const name        = (card.dataset.name        || '').toLowerCase();
-			const place       = (card.dataset.place       || '').toLowerCase();
+		allCards.forEach((card) => {
+			const name = (card.dataset.name || '').toLowerCase();
+			const place = (card.dataset.place || '').toLowerCase();
 			const description = (card.dataset.description || '').toLowerCase();
-			const cardTrack   = (card.dataset.track       || '').toLowerCase();
-			const isPast      = card.dataset.isPast === '1';
-			const isBookmarked  = card.classList.contains('is-bookmarked') || card.dataset.isBookmarked === '1';
+			const cardTrack = (card.dataset.track || '').toLowerCase();
+			const isPast = card.dataset.isPast === '1';
+			const isBookmarked =
+				card.classList.contains('is-bookmarked') ||
+				card.dataset.isBookmarked === '1';
 
-			const textMatch     = !searchTerm || name.includes(searchTerm) || place.includes(searchTerm) || description.includes(searchTerm);
-			const trackMatch    = !track     || cardTrack.split(',').some(s => s.trim() === track.toLowerCase());
-			const locationMatch = !location  || place === location;
-			const dateMatch     = dateFilter === 'all'
-				|| (dateFilter === 'past'     &&  isPast)
-				|| (dateFilter === 'upcoming' && !isPast)
-				|| (dateFilter === 'bookmarked' && isBookmarked);
+			const textMatch =
+				!searchTerm ||
+				name.includes(searchTerm) ||
+				place.includes(searchTerm) ||
+				description.includes(searchTerm);
+			const trackMatch =
+				!track ||
+				cardTrack
+					.split(',')
+					.some((s) => s.trim() === track.toLowerCase());
+			const locationMatch = !location || place === location;
+			const dateMatch =
+				dateFilter === 'all' ||
+				(dateFilter === 'past' && isPast) ||
+				(dateFilter === 'upcoming' && !isPast) ||
+				(dateFilter === 'bookmarked' && isBookmarked);
 
-			const isVisible = textMatch && trackMatch && locationMatch && dateMatch;
+			const isVisible =
+				textMatch && trackMatch && locationMatch && dateMatch;
 			card.style.display = isVisible ? '' : 'none';
-			if (isVisible) visibleCount++;
+			if (isVisible) {
+				visibleCount++;
+			}
 		});
 
 		if (elements.resultsCount) {
@@ -337,27 +478,39 @@ const WPFA_Events = (function() {
 
 	/**
 	 * Handle event card actions
+	 *
+	 * @param {Event} e Click event from the event card container.
 	 */
 	function handleCardActions(e) {
 		const target = e.target;
 
 		// Edit event button
-		if (target.matches('.btn-edit-event') || target.closest('.btn-edit-event')) {
+		if (
+			target.matches('.btn-edit-event') ||
+			target.closest('.btn-edit-event')
+		) {
 			e.preventDefault();
 			e.stopPropagation();
 
-			const button = target.matches('.btn-edit-event') ? target : target.closest('.btn-edit-event');
+			const button = target.matches('.btn-edit-event')
+				? target
+				: target.closest('.btn-edit-event');
 			const card = button.closest('.event-card');
 
 			openEditEventModal(card);
 		}
 
 		// Delete event button
-		else if (target.matches('.btn-delete-event') || target.closest('.btn-delete-event')) {
+		else if (
+			target.matches('.btn-delete-event') ||
+			target.closest('.btn-delete-event')
+		) {
 			e.preventDefault();
 			e.stopPropagation();
 
-			const button = target.matches('.btn-delete-event') ? target : target.closest('.btn-delete-event');
+			const button = target.matches('.btn-delete-event')
+				? target
+				: target.closest('.btn-delete-event');
 			const eventId = button.closest('.event-card').dataset.postId;
 			const eventName = button.closest('.event-card').dataset.name;
 
@@ -394,6 +547,8 @@ const WPFA_Events = (function() {
 
 	/**
 	 * Open modal for editing event
+	 *
+	 * @param {HTMLElement} card Event card element.
 	 */
 	function openEditEventModal(card) {
 		// Get data from card
@@ -401,14 +556,22 @@ const WPFA_Events = (function() {
 
 		// Fill form with data from card dataset
 		document.getElementById('editEventId').value = eventId;
-		document.getElementById('editEventName').value = card.dataset.name || '';
-		document.getElementById('editEventDate').value = card.dataset.date || '';
-		document.getElementById('editEventEndDate').value = card.dataset.endDate || '';
-		document.getElementById('editEventPlace').value = card.dataset.place || '';
-		document.getElementById('editEventDescription').value = card.dataset.description || '';
-		document.getElementById('editEventLeadText').value = card.dataset.leadText || '';
-		document.getElementById('editRegistrationLink').value = card.dataset.registrationLink || '';
-		document.getElementById('editCfsLink').value = card.dataset.cfsLink || '';
+		document.getElementById('editEventName').value =
+			card.dataset.name || '';
+		document.getElementById('editEventDate').value =
+			card.dataset.date || '';
+		document.getElementById('editEventEndDate').value =
+			card.dataset.endDate || '';
+		document.getElementById('editEventPlace').value =
+			card.dataset.place || '';
+		document.getElementById('editEventDescription').value =
+			card.dataset.description || '';
+		document.getElementById('editEventLeadText').value =
+			card.dataset.leadText || '';
+		document.getElementById('editRegistrationLink').value =
+			card.dataset.registrationLink || '';
+		document.getElementById('editCfsLink').value =
+			card.dataset.cfsLink || '';
 
 		const editStartTime = document.getElementById('editEventStartTime');
 		const editEndTime = document.getElementById('editEventEndTime');
@@ -416,7 +579,8 @@ const WPFA_Events = (function() {
 		const editTimezone = document.getElementById('editEventTimezone');
 
 		if (editStartTime) {
-			editStartTime.value = card.dataset.startTime || card.dataset.time || '';
+			editStartTime.value =
+				card.dataset.startTime || card.dataset.time || '';
 		}
 
 		if (editEndTime) {
@@ -424,7 +588,8 @@ const WPFA_Events = (function() {
 		}
 
 		if (editAllDay) {
-			editAllDay.checked = card.dataset.allDay === '1' || card.dataset.allDay === 'true';
+			editAllDay.checked =
+				card.dataset.allDay === '1' || card.dataset.allDay === 'true';
 		}
 
 		setSelectValue(editTimezone, card.dataset.timezone || '');
@@ -442,12 +607,17 @@ const WPFA_Events = (function() {
 
 	/**
 	 * Handle create event form submission
+	 *
+	 * @param {SubmitEvent} e Create form submit event.
 	 */
 	function handleCreateEventFormSubmit(e) {
 		e.preventDefault();
 
 		if (!config.canManageContent) {
-			alert(config.i18n.noPermission || 'You do not have permission to perform this action.');
+			showNotice(
+				config.i18n.noPermission ||
+					'You do not have permission to perform this action.'
+			);
 			return;
 		}
 
@@ -457,22 +627,32 @@ const WPFA_Events = (function() {
 		const submitBtn = form.querySelector('button[type="submit"]');
 
 		// Validate required fields - using ACTUAL form field names
-		const requiredFields = ['title', 'excerpt', 'start_date', 'location', 'registration_link'];
-		let missingFields = [];
+		const requiredFields = [
+			'title',
+			'excerpt',
+			'start_date',
+			'location',
+			'registration_link',
+		];
+		const missingFields = [];
 
-		requiredFields.forEach(field => {
+		requiredFields.forEach((field) => {
 			if (!formData.get(field) || formData.get(field).trim() === '') {
 				missingFields.push(field);
 			}
 		});
 
 		if (missingFields.length > 0) {
-			alert(config.i18n.missingFields || 'Missing required fields: ' + missingFields.join(', '));
+			showNotice(
+				config.i18n.missingFields ||
+					'Missing required fields: ' + missingFields.join(', ')
+			);
 
 			// Re-enable button
 			if (submitBtn) {
 				submitBtn.disabled = false;
-				submitBtn.textContent = config.i18n.addEventButton || 'Create Card';
+				submitBtn.textContent =
+					config.i18n.addEventButton || 'Create Card';
 			}
 			return;
 		}
@@ -490,43 +670,53 @@ const WPFA_Events = (function() {
 		// Send form data
 		fetch(config.ajaxUrl, {
 			method: 'POST',
-			body: formData
+			body: formData,
 		})
-		.then(response => response.json())
-		.then(data => {
-			if (data.success) {
-				alert(config.i18n.addSuccess || 'Event created successfully. The page will now reload.');
-				window.location.reload();
-			} else {
-				const baseMsg = config.i18n.addError || 'Error creating event';
-				alert(getErrorMessage(data, baseMsg));
+			.then((response) => response.json())
+			.then((data) => {
+				if (data.success) {
+					window.location.reload();
+				} else {
+					const baseMsg =
+						config.i18n.addError || 'Error creating event';
+					showNotice(getErrorMessage(data, baseMsg));
+
+					// Re-enable button
+					if (submitBtn) {
+						submitBtn.disabled = false;
+						submitBtn.textContent =
+							config.i18n.addEventButton || 'Create Card';
+					}
+				}
+			})
+			.catch(() => {
+				showNotice(
+					config.i18n.addErrorGeneric ||
+						'Error creating event. Please try again.'
+				);
 
 				// Re-enable button
 				if (submitBtn) {
 					submitBtn.disabled = false;
-					submitBtn.textContent = config.i18n.addEventButton || 'Create Card';
+					submitBtn.textContent =
+						config.i18n.addEventButton || 'Create Card';
 				}
-			}
-		})
-		.catch(error => {
-			alert(config.i18n.addErrorGeneric || 'Error creating event. Please try again.');
-
-			// Re-enable button
-			if (submitBtn) {
-				submitBtn.disabled = false;
-				submitBtn.textContent = config.i18n.addEventButton || 'Create Card';
-			}
-		});
+			});
 	}
 
 	/**
 	 * Handle edit event form submission
+	 *
+	 * @param {SubmitEvent} e Edit form submit event.
 	 */
 	function handleEditEventFormSubmit(e) {
 		e.preventDefault();
 
 		if (!config.canManageContent) {
-			alert(config.i18n.noPermission || 'You do not have permission to perform this action.');
+			showNotice(
+				config.i18n.noPermission ||
+					'You do not have permission to perform this action.'
+			);
 			return;
 		}
 
@@ -536,22 +726,32 @@ const WPFA_Events = (function() {
 		const submitBtn = form.querySelector('button[type="submit"]');
 
 		// Validate required fields - using ACTUAL form field names
-		const requiredFields = ['title', 'excerpt', 'start_date', 'location', 'registration_link'];
-		let missingFields = [];
+		const requiredFields = [
+			'title',
+			'excerpt',
+			'start_date',
+			'location',
+			'registration_link',
+		];
+		const missingFields = [];
 
-		requiredFields.forEach(field => {
+		requiredFields.forEach((field) => {
 			if (!formData.get(field) || formData.get(field).trim() === '') {
 				missingFields.push(field);
 			}
 		});
 
 		if (missingFields.length > 0) {
-			alert(config.i18n.missingFields || 'Missing required fields: ' + missingFields.join(', '));
+			showNotice(
+				config.i18n.missingFields ||
+					'Missing required fields: ' + missingFields.join(', ')
+			);
 
 			// Re-enable button
 			if (submitBtn) {
 				submitBtn.disabled = false;
-				submitBtn.textContent = config.i18n.editEventButton || 'Save Changes';
+				submitBtn.textContent =
+					config.i18n.editEventButton || 'Save Changes';
 			}
 			return;
 		}
@@ -569,70 +769,79 @@ const WPFA_Events = (function() {
 		// Send form data
 		fetch(config.ajaxUrl, {
 			method: 'POST',
-			body: formData
+			body: formData,
 		})
-		.then(response => response.json())
-		.then(data => {
-			if (data.success) {
-				alert(config.i18n.updateSuccess || 'Event updated successfully. The page will now reload.');
-				window.location.reload();
-			} else {
-				const baseMsg = config.i18n.updateError || 'Error updating event';
-				alert(getErrorMessage(data, baseMsg));
+			.then((response) => response.json())
+			.then((data) => {
+				if (data.success) {
+					window.location.reload();
+				} else {
+					const baseMsg =
+						config.i18n.updateError || 'Error updating event';
+					showNotice(getErrorMessage(data, baseMsg));
+
+					// Re-enable button
+					if (submitBtn) {
+						submitBtn.disabled = false;
+						submitBtn.textContent =
+							config.i18n.editEventButton || 'Save Changes';
+					}
+				}
+			})
+			.catch(() => {
+				showNotice(
+					config.i18n.updateErrorGeneric ||
+						'Error updating event. Please try again.'
+				);
 
 				// Re-enable button
 				if (submitBtn) {
 					submitBtn.disabled = false;
-					submitBtn.textContent = config.i18n.editEventButton || 'Save Changes';
+					submitBtn.textContent =
+						config.i18n.editEventButton || 'Save Changes';
 				}
-			}
-		})
-		.catch(error => {
-			alert(config.i18n.updateErrorGeneric || 'Error updating event. Please try again.');
-
-			// Re-enable button
-			if (submitBtn) {
-				submitBtn.disabled = false;
-				submitBtn.textContent = config.i18n.editEventButton || 'Save Changes';
-			}
-		});
+			});
 	}
 
 	/**
 	 * Delete event confirmation and AJAX call
+	 *
+	 * @param {string} eventId   Event post ID.
+	 * @param {string} eventName Event title.
 	 */
 	function deleteEvent(eventId, eventName) {
 		const confirmMsg = config.i18n.confirmDelete
 			? config.i18n.confirmDelete.replace('%s', eventName)
 			: `Are you sure you want to delete "${eventName}"? This action cannot be undone.`;
 
-		if (!confirm(confirmMsg)) {
-			return;
-		}
-
-		fetch(config.ajaxUrl, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			body: new URLSearchParams({
-				action: 'wpfa_delete_event',
-				nonce: config.adminNonce,
-				event_id: eventId
+		showDeleteConfirmation(confirmMsg, function () {
+			fetch(config.ajaxUrl, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+				body: new URLSearchParams({
+					action: 'wpfa_delete_event',
+					nonce: config.adminNonce,
+					event_id: eventId,
+				}),
 			})
-		})
-		.then(response => response.json())
-		.then(data => {
-			if (data.success) {
-				alert(config.i18n.deleteSuccess || 'Event deleted successfully. The page will now reload.');
-				window.location.reload();
-			} else {
-				const baseMsg = config.i18n.deleteError || 'Error deleting event';
-				alert(getErrorMessage(data, baseMsg));
-			}
-		})
-		.catch(error => {
-			alert(config.i18n.deleteErrorGeneric || 'Error deleting event. Please try again.');
+				.then((response) => response.json())
+				.then((data) => {
+					if (data.success) {
+						window.location.reload();
+					} else {
+						const baseMsg =
+							config.i18n.deleteError || 'Error deleting event';
+						showNotice(getErrorMessage(data, baseMsg));
+					}
+				})
+				.catch(() => {
+					showNotice(
+						config.i18n.deleteErrorGeneric ||
+							'Error deleting event. Please try again.'
+					);
+				});
 		});
 	}
 
@@ -656,26 +865,29 @@ const WPFA_Events = (function() {
 
 	// Public API
 	return {
-		init: init,
-		openCreateEventModal: openCreateEventModal,
-		openEditEventModal: openEditEventModal,
-		closeCreateEventModal: closeCreateEventModal,
-		closeEditEventModal: closeEditEventModal,
-		filterEvents: filterEvents
+		init,
+		openCreateEventModal,
+		openEditEventModal,
+		closeCreateEventModal,
+		closeEditEventModal,
+		filterEvents,
 	};
 })();
 
 // Export to global
 if (typeof window !== 'undefined') {
-	window.WPFA_Events = WPFA_Events;
+	Object.assign(window, {
+		WPFA_Events: wpfaEvents,
+		wpfaEvents,
+	});
 }
 
 // Initialize when page loads
 if (typeof document !== 'undefined') {
-	document.addEventListener('DOMContentLoaded', function() {
+	document.addEventListener('DOMContentLoaded', function () {
 		// Check if config exists (only on events page)
 		if (typeof wpfaeventEventsConfig !== 'undefined') {
-			WPFA_Events.init(wpfaeventEventsConfig);
+			wpfaEvents.init(wpfaeventEventsConfig);
 		}
 	});
 }
