@@ -457,13 +457,12 @@ class Wpfaevent_Event_Template_Controller {
 		};
 
 		$ticket_widget_assets   = $build_eventyay_widget_assets( $ticket_widget_url );
+		$show_ticket_section    = ! empty( $ticket_widget_assets['event_url'] );
 		$site_host              = (string) wp_parse_url( home_url(), PHP_URL_HOST );
 		$site_host              = strtolower( $site_host );
 		$is_ip_host             = '' !== $site_host && false !== filter_var( $site_host, FILTER_VALIDATE_IP );
-		$can_embed_widget       = ! empty( $ticket_widget_assets['event_url'] ) && is_ssl() && ! $is_ip_host;
-		$can_embed_widget       = (bool) apply_filters( 'wpfaevent_enable_embedded_ticket_widget', $can_embed_widget, $event_id, $ticket_widget_assets );
-		$show_ticket_widget     = ! empty( $ticket_widget_assets['event_url'] );
-		$show_ticket_section    = ! empty( $ticket_widget_assets['event_url'] );
+		$can_embed_widget       = $show_ticket_section && is_ssl() && ! $is_ip_host;
+		$show_ticket_widget     = (bool) apply_filters( 'wpfaevent_enable_embedded_ticket_widget', $show_ticket_section, $event_id, $ticket_widget_assets );
 		$ticket_widget_id       = 'wpfa-event-ticket-widget-' . absint( $event_id );
 		$ticket_widget_redirect = $show_ticket_widget && ! $can_embed_widget;
 		$ticket_widget_skip_ssl = ! is_ssl();
