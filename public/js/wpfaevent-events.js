@@ -2,17 +2,90 @@
  * WPFA Events JavaScript Module
  * Handles search, admin functionality for events page
  *
- * @package    Wpfaevent
- * @subpackage Wpfaevent/public/js
+ * @package
  */
 
-const WPFA_Events = (function () {
+const wpfaEvents = (function () {
 	// Private variables
 	let config = {};
 	let elements = {};
 
+	function showNotice(message, type = 'error') {
+		const container =
+			document.querySelector('.wpfaevent-notification-container') ||
+			document.querySelector('.wpfa-events-page') ||
+			document.body;
+		const notice = document.createElement('div');
+		const noticeMessage = document.createElement('p');
+
+		notice.className = `notice notice-${type} is-dismissible wpfaevent-events-notice`;
+		noticeMessage.textContent = message;
+		notice.appendChild(noticeMessage);
+
+		container
+			.querySelectorAll('.wpfaevent-events-notice')
+			.forEach((existingNotice) => existingNotice.remove());
+		container.insertBefore(notice, container.firstChild);
+		notice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+	}
+
+	function showDeleteConfirmation(message, onConfirm) {
+		const overlay = document.createElement('div');
+		const dialog = document.createElement('div');
+		const text = document.createElement('p');
+		const actions = document.createElement('div');
+		const cancelButton = document.createElement('button');
+		const confirmButton = document.createElement('button');
+
+		overlay.className = 'wpfaevent-confirm-overlay';
+		overlay.setAttribute(
+			'style',
+			'position:fixed;inset:0;background:rgba(15,23,42,0.45);display:flex;align-items:center;justify-content:center;padding:24px;z-index:10000;'
+		);
+		dialog.setAttribute(
+			'style',
+			'background:#fff;border-radius:12px;box-shadow:0 24px 48px rgba(15,23,42,0.2);max-width:420px;width:100%;padding:24px;'
+		);
+		text.textContent = message;
+		actions.setAttribute(
+			'style',
+			'display:flex;gap:12px;justify-content:flex-end;margin-top:20px;'
+		);
+		cancelButton.type = 'button';
+		cancelButton.className = 'button';
+		cancelButton.textContent = config.i18n.cancelDelete || 'Cancel';
+		confirmButton.type = 'button';
+		confirmButton.className = 'button button-primary';
+		confirmButton.textContent = config.i18n.confirmDeleteButton || 'Delete';
+
+		const closeDialog = function () {
+			overlay.remove();
+		};
+
+		cancelButton.addEventListener('click', closeDialog);
+		overlay.addEventListener('click', function (event) {
+			if (event.target === overlay) {
+				closeDialog();
+			}
+		});
+		confirmButton.addEventListener('click', function () {
+			closeDialog();
+			onConfirm();
+		});
+
+		actions.append(cancelButton, confirmButton);
+		dialog.append(text, actions);
+		overlay.appendChild(dialog);
+		document.body.appendChild(overlay);
+		confirmButton.focus();
+	}
+
 	/**
 	 * Helper to extract error message from AJAX response
+	 *
+	 * @param {Object|string|null} data     AJAX response payload.
+	 * @param {string}             fallback Fallback message to display.
+	 * @return {string} A user-facing error message.
 	 */
 	function getErrorMessage(data, fallback) {
 		if (data && typeof data.data === 'object' && data.data?.message) {
@@ -26,6 +99,8 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Initialize the events module
+	 *
+	 * @param {Object} options Event page configuration.
 	 */
 	function init(options) {
 		config = options || {};
@@ -117,13 +192,17 @@ const WPFA_Events = (function () {
 		// Close modals on background click
 		if (elements.createEventModal) {
 			elements.createEventModal.addEventListener('click', function (e) {
-				if (e.target === this) closeCreateEventModal();
+				if (e.target === this) {
+					closeCreateEventModal();
+				}
 			});
 		}
 
 		if (elements.editEventModal) {
 			elements.editEventModal.addEventListener('click', function (e) {
-				if (e.target === this) closeEditEventModal();
+				if (e.target === this) {
+					closeEditEventModal();
+				}
 			});
 		}
 
@@ -183,7 +262,8 @@ const WPFA_Events = (function () {
 				// Call update immediately
 				update();
 
-				/** * If data is loaded dynamically (e.g. via AJAX or WP Modal),
+				/**
+				 * * If data is loaded dynamically (e.g. via AJAX or WP Modal),
 				 * we wait a tiny bit to catch the filled value.
 				 */
 				if (textarea.value.length === 0) {
@@ -195,6 +275,8 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Setup all-day toggles for event time inputs
+	 *
+	 * @param {HTMLFormElement|null|undefined} form Event form element.
 	 */
 	function setupTimeFormatControls(form) {
 		const allDayField = form?.querySelector('[name="all_day"]');
@@ -213,6 +295,8 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Disable time inputs while an event is marked all-day
+	 *
+	 * @param {HTMLFormElement|null|undefined} form Event form element.
 	 */
 	function syncTimeFields(form) {
 		const allDayField = form?.querySelector('[name="all_day"]');
@@ -234,6 +318,9 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Select a timezone value without losing the server-rendered default
+	 *
+	 * @param {HTMLSelectElement|null} select Timezone select element.
+	 * @param {string}                 value  Selected timezone value.
 	 */
 	function setSelectValue(select, value) {
 		if (!select || !value) {
@@ -250,6 +337,8 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Preserve the legacy time payload expected by older handlers
+	 *
+	 * @param {FormData} formData Event form data.
 	 */
 	function appendLegacyTimeAlias(formData) {
 		const startTime = formData.get('start_time') || '';
@@ -304,11 +393,7 @@ const WPFA_Events = (function () {
 					} else {
 						url.searchParams.delete('filter');
 					}
-					window.history.pushState(
-						{ filter: filter },
-						'',
-						url.toString()
-					);
+					window.history.pushState({ filter }, '', url.toString());
 				}
 
 				filterEvents();
@@ -353,10 +438,14 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Update active classes in navigation header based on filter selection.
+	 *
+	 * @param {string} filter Active filter name.
 	 */
 	function updateNavigationHeader(filter) {
 		const navMain = document.querySelector('.nav-links-main');
-		if (!navMain) return;
+		if (!navMain) {
+			return;
+		}
 
 		const upcomingLink = navMain.querySelector(
 			'a[href*="/events"]:not([href*="filter=past"])'
@@ -378,7 +467,9 @@ const WPFA_Events = (function () {
 	 * Filter events based on all active filter controls.
 	 */
 	function filterEvents() {
-		if (!elements.eventsContainer) return;
+		if (!elements.eventsContainer) {
+			return;
+		}
 
 		const activeDateBtn = document.querySelector('.date-filter-btn.active');
 		const dateFilter = activeDateBtn ? activeDateBtn.dataset.filter : 'all';
@@ -395,7 +486,6 @@ const WPFA_Events = (function () {
 		const location = elements.filterLocation
 			? elements.filterLocation.value.toLowerCase()
 			: '';
-
 		const allCards =
 			elements.eventsContainer.querySelectorAll('.event-card');
 		let visibleCount = 0;
@@ -430,7 +520,9 @@ const WPFA_Events = (function () {
 			const isVisible =
 				textMatch && trackMatch && locationMatch && dateMatch;
 			card.style.display = isVisible ? '' : 'none';
-			if (isVisible) visibleCount++;
+			if (isVisible) {
+				visibleCount++;
+			}
 		});
 
 		if (elements.resultsCount) {
@@ -451,6 +543,8 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Handle event card actions
+	 *
+	 * @param {Event} e Click event from the event card container.
 	 */
 	function handleCardActions(e) {
 		const target = e.target;
@@ -518,6 +612,8 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Open modal for editing event
+	 *
+	 * @param {HTMLElement} card Event card element.
 	 */
 	function openEditEventModal(card) {
 		// Get data from card
@@ -576,12 +672,14 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Handle create event form submission
+	 *
+	 * @param {SubmitEvent} e Create form submit event.
 	 */
 	function handleCreateEventFormSubmit(e) {
 		e.preventDefault();
 
 		if (!config.canManageContent) {
-			alert(
+			showNotice(
 				config.i18n.noPermission ||
 					'You do not have permission to perform this action.'
 			);
@@ -601,7 +699,7 @@ const WPFA_Events = (function () {
 			'location',
 			'registration_link',
 		];
-		let missingFields = [];
+		const missingFields = [];
 
 		requiredFields.forEach((field) => {
 			if (!formData.get(field) || formData.get(field).trim() === '') {
@@ -610,7 +708,7 @@ const WPFA_Events = (function () {
 		});
 
 		if (missingFields.length > 0) {
-			alert(
+			showNotice(
 				config.i18n.missingFields ||
 					'Missing required fields: ' + missingFields.join(', ')
 			);
@@ -642,15 +740,11 @@ const WPFA_Events = (function () {
 			.then((response) => response.json())
 			.then((data) => {
 				if (data.success) {
-					alert(
-						config.i18n.addSuccess ||
-							'Event created successfully. The page will now reload.'
-					);
 					window.location.reload();
 				} else {
 					const baseMsg =
 						config.i18n.addError || 'Error creating event';
-					alert(getErrorMessage(data, baseMsg));
+					showNotice(getErrorMessage(data, baseMsg));
 
 					// Re-enable button
 					if (submitBtn) {
@@ -660,8 +754,8 @@ const WPFA_Events = (function () {
 					}
 				}
 			})
-			.catch((error) => {
-				alert(
+			.catch(() => {
+				showNotice(
 					config.i18n.addErrorGeneric ||
 						'Error creating event. Please try again.'
 				);
@@ -677,12 +771,14 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Handle edit event form submission
+	 *
+	 * @param {SubmitEvent} e Edit form submit event.
 	 */
 	function handleEditEventFormSubmit(e) {
 		e.preventDefault();
 
 		if (!config.canManageContent) {
-			alert(
+			showNotice(
 				config.i18n.noPermission ||
 					'You do not have permission to perform this action.'
 			);
@@ -702,7 +798,7 @@ const WPFA_Events = (function () {
 			'location',
 			'registration_link',
 		];
-		let missingFields = [];
+		const missingFields = [];
 
 		requiredFields.forEach((field) => {
 			if (!formData.get(field) || formData.get(field).trim() === '') {
@@ -711,7 +807,7 @@ const WPFA_Events = (function () {
 		});
 
 		if (missingFields.length > 0) {
-			alert(
+			showNotice(
 				config.i18n.missingFields ||
 					'Missing required fields: ' + missingFields.join(', ')
 			);
@@ -743,15 +839,11 @@ const WPFA_Events = (function () {
 			.then((response) => response.json())
 			.then((data) => {
 				if (data.success) {
-					alert(
-						config.i18n.updateSuccess ||
-							'Event updated successfully. The page will now reload.'
-					);
 					window.location.reload();
 				} else {
 					const baseMsg =
 						config.i18n.updateError || 'Error updating event';
-					alert(getErrorMessage(data, baseMsg));
+					showNotice(getErrorMessage(data, baseMsg));
 
 					// Re-enable button
 					if (submitBtn) {
@@ -761,8 +853,8 @@ const WPFA_Events = (function () {
 					}
 				}
 			})
-			.catch((error) => {
-				alert(
+			.catch(() => {
+				showNotice(
 					config.i18n.updateErrorGeneric ||
 						'Error updating event. Please try again.'
 				);
@@ -778,47 +870,44 @@ const WPFA_Events = (function () {
 
 	/**
 	 * Delete event confirmation and AJAX call
+	 *
+	 * @param {string} eventId   Event post ID.
+	 * @param {string} eventName Event title.
 	 */
 	function deleteEvent(eventId, eventName) {
 		const confirmMsg = config.i18n.confirmDelete
 			? config.i18n.confirmDelete.replace('%s', eventName)
 			: `Are you sure you want to delete "${eventName}"? This action cannot be undone.`;
 
-		if (!confirm(confirmMsg)) {
-			return;
-		}
-
-		fetch(config.ajaxUrl, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			body: new URLSearchParams({
-				action: 'wpfa_delete_event',
-				nonce: config.adminNonce,
-				event_id: eventId,
-			}),
-		})
-			.then((response) => response.json())
-			.then((data) => {
-				if (data.success) {
-					alert(
-						config.i18n.deleteSuccess ||
-							'Event deleted successfully. The page will now reload.'
-					);
-					window.location.reload();
-				} else {
-					const baseMsg =
-						config.i18n.deleteError || 'Error deleting event';
-					alert(getErrorMessage(data, baseMsg));
-				}
+		showDeleteConfirmation(confirmMsg, function () {
+			fetch(config.ajaxUrl, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+				body: new URLSearchParams({
+					action: 'wpfa_delete_event',
+					nonce: config.adminNonce,
+					event_id: eventId,
+				}),
 			})
-			.catch((error) => {
-				alert(
-					config.i18n.deleteErrorGeneric ||
-						'Error deleting event. Please try again.'
-				);
-			});
+				.then((response) => response.json())
+				.then((data) => {
+					if (data.success) {
+						window.location.reload();
+					} else {
+						const baseMsg =
+							config.i18n.deleteError || 'Error deleting event';
+						showNotice(getErrorMessage(data, baseMsg));
+					}
+				})
+				.catch(() => {
+					showNotice(
+						config.i18n.deleteErrorGeneric ||
+							'Error deleting event. Please try again.'
+					);
+				});
+		});
 	}
 
 	/**
@@ -841,18 +930,21 @@ const WPFA_Events = (function () {
 
 	// Public API
 	return {
-		init: init,
-		openCreateEventModal: openCreateEventModal,
-		openEditEventModal: openEditEventModal,
-		closeCreateEventModal: closeCreateEventModal,
-		closeEditEventModal: closeEditEventModal,
-		filterEvents: filterEvents,
+		init,
+		openCreateEventModal,
+		openEditEventModal,
+		closeCreateEventModal,
+		closeEditEventModal,
+		filterEvents,
 	};
 })();
 
 // Export to global
 if (typeof window !== 'undefined') {
-	window.WPFA_Events = WPFA_Events;
+	Object.assign(window, {
+		WPFA_Events: wpfaEvents,
+		wpfaEvents,
+	});
 }
 
 // Initialize when page loads
@@ -860,7 +952,7 @@ if (typeof document !== 'undefined') {
 	document.addEventListener('DOMContentLoaded', function () {
 		// Check if config exists (only on events page)
 		if (typeof wpfaeventEventsConfig !== 'undefined') {
-			WPFA_Events.init(wpfaeventEventsConfig);
+			wpfaEvents.init(wpfaeventEventsConfig);
 		}
 	});
 }

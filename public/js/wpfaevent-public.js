@@ -30,6 +30,20 @@
 	 */
 
 	$(function () {
+		const showPublicNotice = function (message) {
+			let $notice = $('#wpfa-public-notice');
+
+			if (!$notice.length) {
+				$notice = $('<div />', {
+					id: 'wpfa-public-notice',
+					class: 'notice notice-error is-dismissible',
+				}).prepend($('<p />'));
+				$('main, body').first().prepend($notice);
+			}
+
+			$notice.find('p').text(message);
+		};
+
 		// Client-side Schedule View Switch (List vs Calendar)
 		$(document).on('click', '.wpfa-schedule-view-switch a', function (e) {
 			e.preventDefault();
@@ -396,21 +410,19 @@
 
 						// Dynamically re-filter events hub if on Favorites tab
 						if (
-							window.WPFA_Events &&
-							typeof window.WPFA_Events.filterEvents ===
-								'function'
+							window.wpfaEvents &&
+							typeof window.wpfaEvents.filterEvents === 'function'
 						) {
 							const $activeTab = $('.date-filter-btn.active');
 							if (
 								$activeTab.length &&
 								$activeTab.data('filter') === 'bookmarked'
 							) {
-								window.WPFA_Events.filterEvents();
+								window.wpfaEvents.filterEvents();
 							}
 						}
 					} else {
-						// eslint-disable-next-line no-alert
-						window.alert(
+						showPublicNotice(
 							response.data?.message ||
 								settings.i18n?.error ||
 								'Something went wrong.'
@@ -419,8 +431,8 @@
 				},
 				error() {
 					$btn.prop('disabled', false);
-					// eslint-disable-next-line no-alert
-					window.alert(
+
+					showPublicNotice(
 						settings.i18n?.error || 'Something went wrong.'
 					);
 				},
