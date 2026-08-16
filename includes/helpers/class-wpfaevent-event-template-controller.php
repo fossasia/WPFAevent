@@ -457,9 +457,23 @@ class Wpfaevent_Event_Template_Controller {
 		};
 
 		$ticket_widget_assets   = $build_eventyay_widget_assets( $ticket_widget_url );
-		$show_ticket_widget     = ! empty( $ticket_widget_assets['event_url'] );
+		$show_ticket_section    = ! empty( $ticket_widget_assets['event_url'] );
+		$site_host              = (string) wp_parse_url( home_url(), PHP_URL_HOST );
+		$site_host              = strtolower( $site_host );
+		$is_ip_host             = '' !== $site_host && false !== filter_var( $site_host, FILTER_VALIDATE_IP );
+		$can_embed_widget       = $show_ticket_section && is_ssl() && ! $is_ip_host;
+		$show_ticket_widget     = (bool) apply_filters( 'wpfaevent_enable_embedded_ticket_widget', $show_ticket_section, $event_id, $ticket_widget_assets );
 		$ticket_widget_id       = 'wpfa-event-ticket-widget-' . absint( $event_id );
+		$ticket_widget_redirect = $show_ticket_widget && ! $can_embed_widget;
 		$ticket_widget_skip_ssl = ! is_ssl();
+		$ticket_widget_message  = '';
+
+		if ( $ticket_widget_redirect ) {
+			$ticket_widget_message = __(
+				'Ticket selection is shown here, but checkout will open on Eventyay because embedded checkout is unavailable on this site.',
+				'wpfaevent'
+			);
+		}
 
 		$about_content = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
 		$post_content  = trim( (string) get_post_field( 'post_content', $event_id ) );
@@ -514,7 +528,7 @@ class Wpfaevent_Event_Template_Controller {
 		$register_text = ! empty( $site_settings['reg_button_text'] ) ? sanitize_text_field( $site_settings['reg_button_text'] ) : __( 'Get Tickets', 'wpfaevent' );
 		$register_url  = ! empty( $site_settings['reg_button_link'] ) ? esc_url_raw( $site_settings['reg_button_link'] ) : $event_url;
 
-		if ( ! $register_url && $show_ticket_widget ) {
+		if ( ! $register_url && $show_ticket_section ) {
 			$register_url = $ticket_widget_assets['event_url'];
 		}
 
@@ -818,7 +832,7 @@ class Wpfaevent_Event_Template_Controller {
 			'show_sponsors'   => $show_sponsors,
 			'show_exhibitors' => $show_exhibitors,
 			'has_about'       => $show_about && '' !== trim( $about_content ),
-			'has_tickets'     => $show_ticket_widget,
+			'has_tickets'     => $show_ticket_section,
 			'has_speakers'    => $show_speakers && ( ! empty( $speaker_ids ) || ! empty( $dashboard_speakers ) ),
 			'has_schedule'    => $show_schedule && ! empty( $schedule_items ),
 			'has_sponsors'    => $show_sponsors && ! empty( $visible_sponsor_groups ),
@@ -859,8 +873,11 @@ class Wpfaevent_Event_Template_Controller {
 			'event_header_image_url'                   => $event_header_image_url,
 			'event_logo_url'                           => $event_logo_url,
 			'show_ticket_widget'                       => $show_ticket_widget,
+			'show_ticket_section'                      => $show_ticket_section,
+			'ticket_widget_redirect'                   => $ticket_widget_redirect,
 			'ticket_widget_assets'                     => $ticket_widget_assets,
 			'ticket_widget_id'                         => $ticket_widget_id,
+			'ticket_widget_message'                    => $ticket_widget_message,
 			'ticket_widget_skip_ssl'                   => $ticket_widget_skip_ssl,
 			'location'                                 => $location,
 			'event_language_label'                     => $event_language_label,
@@ -935,8 +952,11 @@ class Wpfaevent_Event_Template_Controller {
 			'event_header_image_url'                   => '',
 			'event_logo_url'                           => '',
 			'show_ticket_widget'                       => false,
+			'show_ticket_section'                      => false,
+			'ticket_widget_redirect'                   => false,
 			'ticket_widget_assets'                     => array(),
 			'ticket_widget_id'                         => '',
+			'ticket_widget_message'                    => '',
 			'ticket_widget_skip_ssl'                   => false,
 			'event_start_content'                      => '',
 			'event_end_content'                        => '',

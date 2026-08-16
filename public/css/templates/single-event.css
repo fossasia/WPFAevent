@@ -99,16 +99,6 @@
 	max-width: 820px;
 }
 
-.wpfaevent .wpfa-event-kicker {
-	color: rgba(255, 255, 255, 0.78);
-	font-size: 0.9rem;
-	font-weight: 800;
-	letter-spacing: 0;
-	line-height: 1.25;
-	margin: 0 0 12px;
-	text-transform: uppercase;
-}
-
 .wpfaevent .wpfa-event-hero h1 {
 	color: #fff;
 	font-size: clamp(2.4rem, 6vw, 5.4rem);

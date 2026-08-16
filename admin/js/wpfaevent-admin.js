@@ -1,21 +1,40 @@
-(function( $ ) {
+(function ($) {
 	'use strict';
 
-	$(function() {
+	$(function () {
 		const $importForm = $('#wpfaevent-import-events-form');
 		const $updateForm = $('#wpfaevent-update-events-form');
 
+		function showImportNotice(message) {
+			const $container = $('.wrap').first();
+			const $existingNotices = $container.find(
+				'.notice.wpfaevent-import-notice'
+			);
+			const $notice = $('<div/>', {
+				class: 'notice notice-error is-dismissible wpfaevent-import-notice',
+			}).append($('<p/>').text(message));
+
+			$existingNotices.remove();
+			$container.prepend($notice);
+		}
+
 		if ($importForm.length || $updateForm.length) {
 			const $form = $importForm.length ? $importForm : $updateForm;
-			const rawReturnPage = $form.find('input[name="wpfaevent_eventyay_return_page"]').val();
-			const returnPage = /^[a-zA-Z0-9_-]+$/.test(rawReturnPage || '') ? rawReturnPage : 'wpfaevent-import-events';
+			const rawReturnPage = $form
+				.find('input[name="wpfaevent_eventyay_return_page"]')
+				.val();
+			const returnPage = /^[a-zA-Z0-9_-]+$/.test(rawReturnPage || '')
+				? rawReturnPage
+				: 'wpfaevent-import-events';
 
-			$form.on('submit', function(e) {
+			$form.on('submit', function (e) {
 				e.preventDefault();
 
 				const nonce = $form.find('input[name="_wpnonce"]').val();
 				if (!nonce) {
-					alert('Security validation failed: Nonce missing.');
+					showImportNotice(
+						'Security validation failed: Nonce missing.'
+					);
 					return;
 				}
 
@@ -44,13 +63,14 @@
 					type: 'POST',
 					data: {
 						action: 'wpfaevent_import_get_events',
-						nonce: nonce
+						nonce,
 					},
-					success: function(response) {
+					success(response) {
 						if (!response.success) {
 							saveSummaryAndRedirect(
 								'error',
-								response.data.message || 'Failed to fetch events from the endpoint.',
+								response.data.message ||
+									'Failed to fetch events from the endpoint.',
 								returnPage,
 								nonce
 							);
@@ -69,24 +89,50 @@
 						}
 
 						fetched = events.length;
-						$status.text('Found ' + fetched + ' event(s). Starting sync...');
+						$status.text(
+							'Found ' + fetched + ' event(s). Starting sync...'
+						);
 						processNextEvent(events, 0);
 					},
-					error: function(xhr) {
-						let errorMsg = 'Failed to fetch events from Eventyay endpoint.';
-						if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+					error(xhr) {
+						let errorMsg =
+							'Failed to fetch events from Eventyay endpoint.';
+						if (
+							xhr.responseJSON &&
+							xhr.responseJSON.data &&
+							xhr.responseJSON.data.message
+						) {
 							errorMsg = xhr.responseJSON.data.message;
 						}
-						saveSummaryAndRedirect('error', errorMsg, returnPage, nonce);
-					}
+						saveSummaryAndRedirect(
+							'error',
+							errorMsg,
+							returnPage,
+							nonce
+						);
+					},
 				});
 
 				function processNextEvent(events, index) {
 					if (index >= events.length) {
 						$status.text('Finalizing sync...');
 						$bar.css('width', '100%');
-						const message = 'Fetched ' + fetched + ' Eventyay event(s). Created ' + created + ', updated ' + updated + ', skipped ' + skipped + '.';
-						saveSummaryAndRedirect('success', message, returnPage, nonce);
+						const message =
+							'Fetched ' +
+							fetched +
+							' Eventyay event(s). Created ' +
+							created +
+							', updated ' +
+							updated +
+							', skipped ' +
+							skipped +
+							'.';
+						saveSummaryAndRedirect(
+							'success',
+							message,
+							returnPage,
+							nonce
+						);
 						return;
 					}
 
@@ -95,18 +141,27 @@
 					$bar.css('width', percent + '%');
 
 					const eventTitle = getEventTitle(event);
-					$status.text('Importing ' + (index + 1) + ' of ' + events.length + ': ' + eventTitle);
-					$details.text('Saving event details, location, and dates...');
+					$status.text(
+						'Importing ' +
+							(index + 1) +
+							' of ' +
+							events.length +
+							': ' +
+							eventTitle
+					);
+					$details.text(
+						'Saving event details, location, and dates...'
+					);
 
 					$.ajax({
 						url: ajaxurl,
 						type: 'POST',
 						data: {
 							action: 'wpfaevent_import_single_event',
-							nonce: nonce,
-							event: JSON.stringify(event)
+							nonce,
+							event: JSON.stringify(event),
 						},
-						success: function(response) {
+						success(response) {
 							if (response.success) {
 								const res = response.data;
 								created += res.created || 0;
@@ -115,32 +170,39 @@
 							} else {
 								skipped++;
 							}
-							setTimeout(function() {
+							setTimeout(function () {
 								processNextEvent(events, index + 1);
 							}, 300);
 						},
-						error: function() {
+						error() {
 							skipped++;
-							setTimeout(function() {
+							setTimeout(function () {
 								processNextEvent(events, index + 1);
 							}, 300);
-						}
+						},
 					});
 				}
 
-				function saveSummaryAndRedirect(type, message, returnPage, nonce) {
+				function saveSummaryAndRedirect(
+					type,
+					message,
+					targetPage,
+					summaryNonce
+				) {
 					$.ajax({
 						url: ajaxurl,
 						type: 'POST',
 						data: {
 							action: 'wpfaevent_import_save_summary',
-							nonce: nonce,
-							type: type,
-							message: message
+							nonce: summaryNonce,
+							type,
+							message,
 						},
-						complete: function() {
-							window.location.href = 'edit.php?post_type=wpfa_event&page=' + encodeURIComponent(returnPage);
-						}
+						complete() {
+							window.location.href =
+								'edit.php?post_type=wpfa_event&page=' +
+								encodeURIComponent(targetPage);
+						},
 					});
 				}
 			});
@@ -158,16 +220,28 @@
 				return val.trim();
 			}
 			if (val && typeof val === 'object') {
-				const preferredKeys = ['en', 'default', 'value', 'name', 'title'];
+				const preferredKeys = [
+					'en',
+					'default',
+					'value',
+					'name',
+					'title',
+				];
 				for (let i = 0; i < preferredKeys.length; i++) {
 					const key = preferredKeys[i];
-					if (typeof val[key] === 'string' && val[key].trim() !== '') {
+					if (
+						typeof val[key] === 'string' &&
+						val[key].trim() !== ''
+					) {
 						return val[key].trim();
 					}
 				}
 				for (const key in val) {
 					if (Object.prototype.hasOwnProperty.call(val, key)) {
-						if (typeof val[key] === 'string' && val[key].trim() !== '') {
+						if (
+							typeof val[key] === 'string' &&
+							val[key].trim() !== ''
+						) {
 							return val[key].trim();
 						}
 					}
@@ -190,7 +264,10 @@
 			return event.slug.trim();
 		}
 
-		if (typeof event.identifier === 'string' && event.identifier.trim() !== '') {
+		if (
+			typeof event.identifier === 'string' &&
+			event.identifier.trim() !== ''
+		) {
 			return event.identifier.trim();
 		}
 
@@ -200,5 +277,4 @@
 
 		return 'Unnamed Event';
 	}
-
-})( jQuery );
+})(jQuery);
