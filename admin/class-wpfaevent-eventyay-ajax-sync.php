@@ -791,64 +791,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @return array<int>
 	 */
 	private function find_eventyay_matching_speaker_posts( $eventyay_speaker_id, $speaker_name = '' ) {
-		$eventyay_speaker_id = sanitize_text_field( $eventyay_speaker_id );
-		$speaker_name        = sanitize_text_field( $speaker_name );
-
-		if ( '' === $eventyay_speaker_id ) {
-			return array();
-		}
-
-		$id_parts = explode( ':', $eventyay_speaker_id );
-		$base_id  = sanitize_text_field( end( $id_parts ) );
-
-		$meta_query = array(
-			'relation' => 'OR',
-			array(
-				'key'   => '_wpfa_eventyay_speaker_id',
-				'value' => $eventyay_speaker_id,
-			),
-		);
-
-		if ( '' !== $base_id && $base_id !== $eventyay_speaker_id ) {
-			$meta_query[] = array(
-				'key'   => '_wpfa_eventyay_speaker_id',
-				'value' => $base_id,
-			);
-			$meta_query[] = array(
-				'key'     => '_wpfa_eventyay_speaker_id',
-				'value'   => ':' . $base_id,
-				'compare' => 'LIKE',
-			);
-		}
-
-		$speaker_ids = get_posts(
-			array(
-				'post_type'      => 'wpfa_speaker',
-				'post_status'    => 'any',
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Eventyay IDs are stored in speaker post meta for sync idempotency.
-				'meta_query'     => $meta_query,
-			)
-		);
-
-		$speaker_ids = $this->sanitize_eventyay_post_id_list( $speaker_ids );
-
-		if ( '' === $speaker_name ) {
-			return $speaker_ids;
-		}
-
-		$name_key = sanitize_title( $speaker_name );
-
-		return array_values(
-			array_filter(
-				$speaker_ids,
-				static function ( $speaker_id ) use ( $name_key ) {
-					return '' !== $name_key && sanitize_title( get_the_title( $speaker_id ) ) === $name_key;
-				}
-			)
-		);
+		return Wpfaevent_Event_Speaker_Relation_Manager::find_eventyay_speaker_post_ids( $eventyay_speaker_id, $speaker_name );
 	}
 
 	/**
