@@ -511,7 +511,9 @@ if ( $show_ticket_widget ) {
 									<?php foreach ( $dashboard_featured_speakers as $speaker ) : ?>
 										<?php
 										$wpfa_dashboard_speaker_is_featured = true;
+										$wpfa_speaker_card_variant          = 'compact';
 										include WPFAEVENT_PATH . 'public/partials/speakers/dashboard-speaker-card.php';
+										unset( $wpfa_speaker_card_variant );
 										unset( $wpfa_dashboard_speaker_is_featured );
 										?>
 									<?php endforeach; ?>

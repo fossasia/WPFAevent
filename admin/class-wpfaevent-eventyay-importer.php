@@ -2431,7 +2431,17 @@ class Wpfaevent_Eventyay_Importer {
 			return $fetched;
 		}
 
-		return $this->normalize_eventyay_speakers_payload( $fetched['speakers'], $settings, $event_slug );
+		$program = $this->normalize_eventyay_speakers_payload( $fetched['speakers'], $settings, $event_slug );
+		if ( is_wp_error( $program ) || empty( $program['speakers'] ) ) {
+			return $program;
+		}
+
+		$featured_map = $this->get_client()->fetch_eventyay_public_speaker_featured_map( $settings, $event_slug );
+		if ( ! is_wp_error( $featured_map ) && ! empty( $featured_map ) ) {
+			$program['speakers'] = ( new Wpfaevent_JSONAPI_Parser() )->apply_eventyay_public_speaker_featured_map( $program['speakers'], $featured_map );
+		}
+
+		return $program;
 	}
 
 	/**
@@ -5180,6 +5190,10 @@ class Wpfaevent_Eventyay_Importer {
 			$speakers[ $key ]['featured'] = true;
 		}
 
+		if ( ! empty( $speaker['featured_state_known'] ) ) {
+			$speakers[ $key ]['featured_state_known'] = true;
+		}
+
 		if ( ! empty( $speaker['featured_order'] ) ) {
 			$current_order = isset( $speakers[ $key ]['featured_order'] ) ? absint( $speakers[ $key ]['featured_order'] ) : 0;
 			$new_order     = absint( $speaker['featured_order'] );
@@ -5233,9 +5247,12 @@ class Wpfaevent_Eventyay_Importer {
 					continue;
 				}
 
-				$speaker['featured'] = ! empty( $speaker['featured'] ) || $state[ $key ]['featured'];
-				if ( null !== $state[ $key ]['featured_order'] ) {
-					$speaker['featured_order'] = $state[ $key ]['featured_order'];
+				$featured_state_known = ! empty( $speaker['featured_state_known'] );
+				if ( ! $featured_state_known ) {
+					$speaker['featured'] = ! empty( $speaker['featured'] ) || $state[ $key ]['featured'];
+					if ( null !== $state[ $key ]['featured_order'] ) {
+						$speaker['featured_order'] = $state[ $key ]['featured_order'];
+					}
 				}
 				if ( empty( $speaker['image'] ) && ! empty( $state[ $key ]['image'] ) ) {
 					$speaker['image'] = $state[ $key ]['image'];

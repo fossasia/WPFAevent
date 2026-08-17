@@ -64,6 +64,8 @@ $talk_date     = get_post_meta( $sid, 'wpfa_speaker_talk_date', true );
 $talk_time     = get_post_meta( $sid, 'wpfa_speaker_talk_time', true );
 $talk_end_time = get_post_meta( $sid, 'wpfa_speaker_talk_end_time', true );
 $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
+$bio           = get_post_meta( $sid, 'wpfa_speaker_bio', true );
+$bio_preview   = trim( wp_strip_all_tags( (string) $bio ) );
 $card_variant  = isset( $wpfa_speaker_card_variant ) ? sanitize_key( $wpfa_speaker_card_variant ) : '';
 $is_compact    = 'compact' === $card_variant;
 ?>
@@ -100,13 +102,27 @@ $is_compact    = 'compact' === $card_variant;
 		<?php endif; ?>
 
 		<h3 class="wpfa-speaker-name" itemprop="name"><a href="<?php echo esc_url( $speaker_link ); ?>"><?php echo esc_html( $name ); ?></a></h3>
-		<?php if ( $position || $org ) : ?>
+		<?php if ( ! $is_compact && ( $position || $org ) ) : ?>
 			<p class="wpfa-speaker-role"><?php echo esc_html( trim( $position . ( $position && $org ? ' · ' : '' ) . $org ) ); ?></p>
+		<?php endif; ?>
+		<?php if ( $is_compact ) : ?>
+			<?php
+			$preview_text = '';
+			if ( '' !== $bio_preview ) {
+				$preview_text = $bio_preview;
+			} elseif ( $talk_title ) {
+				$preview_text = $talk_title;
+			} elseif ( $position || $org ) {
+				$preview_text = trim( $position . ( $position && $org ? ' · ' : '' ) . $org );
+			}
+			if ( '' !== $preview_text ) :
+				?>
+				<p class="wpfa-speaker-preview"><?php echo esc_html( $preview_text ); ?></p>
+			<?php endif; ?>
 		<?php endif; ?>
 	</div>
 	<div class="wpfa-speaker-expand">
 		<?php
-		$bio = get_post_meta( $sid, 'wpfa_speaker_bio', true );
 		if ( $bio ) :
 			?>
 			<div class="wpfa-speaker-bio">
