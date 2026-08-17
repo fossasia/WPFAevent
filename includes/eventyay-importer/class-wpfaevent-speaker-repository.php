@@ -352,6 +352,7 @@ class Wpfaevent_Speaker_Repository {
 			wp_set_object_terms( $saved_id, sanitize_text_field( $speaker['category'] ), 'wpfa_speaker_category' );
 		}
 
+		$this->reconcile_duplicate_eventyay_speakers( $saved_id, $speaker['eventyay_speaker_id'], $speaker['name'] );
 		$this->store_eventyay_speaker_lookup( $speaker['eventyay_speaker_id'], $saved_id );
 
 		return array(
@@ -372,8 +373,12 @@ class Wpfaevent_Speaker_Repository {
 		$eventyay_speaker_id = sanitize_text_field( $eventyay_speaker_id );
 		$lookup_map          = $this->get_eventyay_speaker_lookup_map();
 
-		if ( ! empty( $lookup_map[ $eventyay_speaker_id ] ) ) {
-			$post_id = absint( $lookup_map[ $eventyay_speaker_id ] );
+		foreach ( $this->get_eventyay_speaker_lookup_keys( $eventyay_speaker_id ) as $lookup_key ) {
+			if ( empty( $lookup_map[ $lookup_key ] ) ) {
+				continue;
+			}
+
+			$post_id = absint( $lookup_map[ $lookup_key ] );
 			if ( $post_id && 'wpfa_speaker' === get_post_type( $post_id ) ) {
 				return $post_id;
 			}
@@ -382,7 +387,20 @@ class Wpfaevent_Speaker_Repository {
 		$this->prime_eventyay_speaker_lookup_map();
 		$lookup_map = $this->get_eventyay_speaker_lookup_map();
 
-		return ! empty( $lookup_map[ $eventyay_speaker_id ] ) ? absint( $lookup_map[ $eventyay_speaker_id ] ) : 0;
+		foreach ( $this->get_eventyay_speaker_lookup_keys( $eventyay_speaker_id ) as $lookup_key ) {
+			if ( empty( $lookup_map[ $lookup_key ] ) ) {
+				continue;
+			}
+
+			$post_id = absint( $lookup_map[ $lookup_key ] );
+			if ( $post_id && 'wpfa_speaker' === get_post_type( $post_id ) ) {
+				return $post_id;
+			}
+		}
+
+		$compatible_ids = $this->find_compatible_eventyay_speaker_posts( $eventyay_speaker_id );
+
+		return ! empty( $compatible_ids ) ? absint( $compatible_ids[0] ) : 0;
 	}
 
 	/**
@@ -415,8 +433,12 @@ class Wpfaevent_Speaker_Repository {
 			return;
 		}
 
-		$lookup_map                         = $this->get_eventyay_speaker_lookup_map();
-		$lookup_map[ $eventyay_speaker_id ] = $post_id;
+		$lookup_map = $this->get_eventyay_speaker_lookup_map();
+
+		foreach ( $this->get_eventyay_speaker_lookup_keys( $eventyay_speaker_id ) as $lookup_key ) {
+			$lookup_map[ $lookup_key ] = $post_id;
+		}
+
 		update_option( 'wpfaevent_eventyay_speaker_lookup', $lookup_map, false );
 	}
 
@@ -454,10 +476,225 @@ class Wpfaevent_Speaker_Repository {
 				continue;
 			}
 
-			$lookup_map[ $eventyay_speaker_id ] = $speaker_id;
+			foreach ( $this->get_eventyay_speaker_lookup_keys( $eventyay_speaker_id ) as $lookup_key ) {
+				$lookup_map[ $lookup_key ] = $speaker_id;
+			}
 		}
 
 		update_option( 'wpfaevent_eventyay_speaker_lookup', $lookup_map, false );
+	}
+
+	/**
+	 * Build exact and compatibility lookup keys for an Eventyay speaker ID.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $eventyay_speaker_id Eventyay speaker ID.
+	 * @return array<string>
+	 */
+	private function get_eventyay_speaker_lookup_keys( $eventyay_speaker_id ) {
+		$eventyay_speaker_id = sanitize_text_field( $eventyay_speaker_id );
+
+		if ( '' === $eventyay_speaker_id ) {
+			return array();
+		}
+
+		$lookup_keys = array( $eventyay_speaker_id );
+		$id_parts    = explode( ':', $eventyay_speaker_id );
+		$base_id     = sanitize_text_field( end( $id_parts ) );
+
+		if ( '' !== $base_id ) {
+			$lookup_keys[] = $base_id;
+		}
+
+		return array_values( array_unique( array_filter( $lookup_keys ) ) );
+	}
+
+	/**
+	 * Find speaker posts that share the same exact or legacy-compatible Eventyay ID.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $eventyay_speaker_id Eventyay speaker ID.
+	 * @param string $speaker_name        Optional speaker name for filtering.
+	 * @return array<int>
+	 */
+	private function find_compatible_eventyay_speaker_posts( $eventyay_speaker_id, $speaker_name = '' ) {
+		$eventyay_speaker_id = sanitize_text_field( $eventyay_speaker_id );
+		$speaker_name        = sanitize_text_field( $speaker_name );
+
+		if ( '' === $eventyay_speaker_id ) {
+			return array();
+		}
+
+		$lookup_keys = $this->get_eventyay_speaker_lookup_keys( $eventyay_speaker_id );
+		$base_id     = end( $lookup_keys );
+		$meta_query  = array( 'relation' => 'OR' );
+
+		foreach ( $lookup_keys as $lookup_key ) {
+			$meta_query[] = array(
+				'key'   => '_wpfa_eventyay_speaker_id',
+				'value' => $lookup_key,
+			);
+		}
+
+		if ( $base_id && $base_id !== $eventyay_speaker_id ) {
+			$meta_query[] = array(
+				'key'     => '_wpfa_eventyay_speaker_id',
+				'value'   => ':' . $base_id,
+				'compare' => 'LIKE',
+			);
+		}
+
+		$speaker_ids = get_posts(
+			array(
+				'post_type'              => 'wpfa_speaker',
+				'post_status'            => 'any',
+				'posts_per_page'         => -1,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Eventyay speaker IDs are stored in post meta for sync idempotency.
+				'meta_query'             => $meta_query,
+			)
+		);
+
+		$speaker_ids = $this->sanitize_eventyay_post_id_list( $speaker_ids );
+
+		if ( '' === $speaker_name ) {
+			return $speaker_ids;
+		}
+
+		$target_name = sanitize_title( $speaker_name );
+
+		return array_values(
+			array_filter(
+				$speaker_ids,
+				static function ( $speaker_id ) use ( $target_name ) {
+					return '' !== $target_name && sanitize_title( get_the_title( $speaker_id ) ) === $target_name;
+				}
+			)
+		);
+	}
+
+	/**
+	 * Reconcile duplicate Eventyay speaker posts created by legacy/current ID mismatches.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $primary_speaker_id  Speaker post ID to keep.
+	 * @param string $eventyay_speaker_id Eventyay speaker ID being synced.
+	 * @param string $speaker_name        Speaker name.
+	 * @return void
+	 */
+	private function reconcile_duplicate_eventyay_speakers( $primary_speaker_id, $eventyay_speaker_id, $speaker_name ) {
+		$primary_speaker_id = absint( $primary_speaker_id );
+
+		if ( ! $primary_speaker_id ) {
+			return;
+		}
+
+		$duplicate_ids = array_diff(
+			$this->find_compatible_eventyay_speaker_posts( $eventyay_speaker_id, $speaker_name ),
+			array( $primary_speaker_id )
+		);
+
+		if ( empty( $duplicate_ids ) ) {
+			return;
+		}
+
+		foreach ( $duplicate_ids as $duplicate_id ) {
+			$duplicate_id = absint( $duplicate_id );
+
+			if ( ! $duplicate_id || 'wpfa_speaker' !== get_post_type( $duplicate_id ) ) {
+				continue;
+			}
+
+			$this->merge_duplicate_speaker_event_links( $primary_speaker_id, $duplicate_id );
+			delete_post_meta( $duplicate_id, '_wpfa_eventyay_speaker_id' );
+		}
+	}
+
+	/**
+	 * Move event relationships from a duplicate speaker post to the primary post.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $primary_speaker_id   Speaker post ID to keep.
+	 * @param int $duplicate_speaker_id Speaker post ID to detach.
+	 * @return void
+	 */
+	private function merge_duplicate_speaker_event_links( $primary_speaker_id, $duplicate_speaker_id ) {
+		$primary_speaker_id   = absint( $primary_speaker_id );
+		$duplicate_speaker_id = absint( $duplicate_speaker_id );
+
+		if ( ! $primary_speaker_id || ! $duplicate_speaker_id || $primary_speaker_id === $duplicate_speaker_id ) {
+			return;
+		}
+
+		$primary_event_ids   = $this->get_eventyay_speaker_event_ids( $primary_speaker_id );
+		$duplicate_event_ids = $this->get_eventyay_speaker_event_ids( $duplicate_speaker_id );
+		$merged_event_ids    = $this->sanitize_eventyay_post_id_list( array_merge( $primary_event_ids, $duplicate_event_ids ) );
+
+		if ( empty( $merged_event_ids ) ) {
+			delete_post_meta( $primary_speaker_id, 'wpfa_speaker_events' );
+		} else {
+			update_post_meta( $primary_speaker_id, 'wpfa_speaker_events', $merged_event_ids );
+		}
+
+		foreach ( $duplicate_event_ids as $event_id ) {
+			$event_id = absint( $event_id );
+
+			if ( ! $event_id || 'wpfa_event' !== get_post_type( $event_id ) ) {
+				continue;
+			}
+
+			$speaker_ids  = $this->replace_event_speaker_reference( $this->get_eventyay_event_speaker_ids( $event_id ), $duplicate_speaker_id, $primary_speaker_id );
+			$featured_ids = $this->replace_event_speaker_reference( $this->get_eventyay_event_featured_speaker_ids( $event_id ), $duplicate_speaker_id, $primary_speaker_id );
+
+			if ( empty( $speaker_ids ) ) {
+				delete_post_meta( $event_id, 'wpfa_event_speakers' );
+			} else {
+				update_post_meta( $event_id, 'wpfa_event_speakers', $speaker_ids );
+			}
+
+			if ( empty( $featured_ids ) ) {
+				delete_post_meta( $event_id, 'wpfa_event_featured_speakers' );
+			} else {
+				update_post_meta( $event_id, 'wpfa_event_featured_speakers', $featured_ids );
+			}
+		}
+
+		delete_post_meta( $duplicate_speaker_id, 'wpfa_speaker_events' );
+	}
+
+	/**
+	 * Replace one speaker ID with another inside an event speaker list.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array<int> $speaker_ids          Event speaker IDs.
+	 * @param int        $duplicate_speaker_id Duplicate speaker post ID.
+	 * @param int        $primary_speaker_id   Speaker post ID to keep.
+	 * @return array<int>
+	 */
+	private function replace_event_speaker_reference( $speaker_ids, $duplicate_speaker_id, $primary_speaker_id ) {
+		$duplicate_speaker_id = absint( $duplicate_speaker_id );
+		$primary_speaker_id   = absint( $primary_speaker_id );
+
+		if ( empty( $speaker_ids ) ) {
+			return array();
+		}
+
+		$updated_ids = array_map(
+			static function ( $speaker_id ) use ( $duplicate_speaker_id, $primary_speaker_id ) {
+				return absint( $speaker_id ) === $duplicate_speaker_id ? $primary_speaker_id : absint( $speaker_id );
+			},
+			(array) $speaker_ids
+		);
+
+		return $this->sanitize_eventyay_post_id_list( $updated_ids );
 	}
 
 	/**
