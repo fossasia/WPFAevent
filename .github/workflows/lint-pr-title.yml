@@ -46,7 +46,6 @@ jobs:
       - name: Comment on PR if title is invalid
         if: steps.lint_pr_title.outcome == 'failure'
         uses: marocchino/sticky-pull-request-comment@v3
-        continue-on-error: true
         with:
           header: pr-title-lint-error
           message: |
@@ -69,7 +68,6 @@ jobs:
       - name: Delete warning comment if title is valid
         if: steps.lint_pr_title.outcome == 'success'
         uses: marocchino/sticky-pull-request-comment@v3
-        continue-on-error: true
         with:
           header: pr-title-lint-error
           delete: true
