@@ -49,15 +49,6 @@ $photo_url    = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
 $speaker_link = get_permalink( $sid );
 $is_admin     = current_user_can( 'manage_options' );
 
-// Get categories from the taxonomy.
-$speaker_categories = array();
-if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
-	$terms = wp_get_post_terms( $sid, 'wpfa_speaker_category' );
-	if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
-		$speaker_categories = wp_list_pluck( $terms, 'name' );
-	}
-}
-
 // Get session details.
 $talk_title    = get_post_meta( $sid, 'wpfa_speaker_talk_title', true );
 $talk_date     = get_post_meta( $sid, 'wpfa_speaker_talk_date', true );
@@ -93,12 +84,6 @@ $is_compact    = 'compact' === $card_variant;
 				<button class="btn-delete-speaker" data-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>" data-name="<?php echo esc_attr( $name ); ?>" title="<?php esc_attr_e( 'Delete Speaker', 'wpfaevent' ); ?>">
 				×
 			</button>
-		<?php endif; ?>
-
-		<?php if ( ! empty( $speaker_categories ) ) : ?>
-			<p class="pill">
-				<?php echo esc_html( $speaker_categories[0] ); ?>
-			</p>
 		<?php endif; ?>
 
 		<h3 class="wpfa-speaker-name" itemprop="name"><a href="<?php echo esc_url( $speaker_link ); ?>"><?php echo esc_html( $name ); ?></a></h3>

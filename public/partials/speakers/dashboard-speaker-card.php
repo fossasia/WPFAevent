@@ -43,10 +43,6 @@ $is_compact          = 'compact' === $card_variant;
 			<p class="wpfa-speaker-featured-badge"><?php esc_html_e( 'Featured Speaker', 'wpfaevent' ); ?></p>
 		<?php endif; ?>
 
-		<?php if ( ! empty( $speaker['category'] ) ) : ?>
-			<p class="pill"><?php echo esc_html( $speaker['category'] ); ?></p>
-		<?php endif; ?>
-
 		<h3 class="wpfa-speaker-name"><?php echo esc_html( $speaker_name ); ?></h3>
 		<?php if ( ! $is_compact && ( ! empty( $speaker['position'] ) || ! empty( $speaker['organization'] ) ) ) : ?>
 			<p class="wpfa-speaker-role">
