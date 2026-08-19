@@ -54,6 +54,116 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 	}
 
 	/**
+	 * Find speaker posts that match a current or legacy Eventyay speaker ID.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $eventyay_speaker_id Eventyay speaker ID.
+	 * @param string $speaker_name        Optional speaker name verification.
+	 * @return array<int>
+	 */
+	public static function find_eventyay_speaker_post_ids( $eventyay_speaker_id, $speaker_name = '' ) {
+		global $wpdb;
+
+		$eventyay_speaker_id = sanitize_text_field( $eventyay_speaker_id );
+		$speaker_name        = sanitize_text_field( $speaker_name );
+
+		if ( '' === $eventyay_speaker_id ) {
+			return array();
+		}
+
+		$cache_key = 'eventyay_speaker_lookup:' . md5( $eventyay_speaker_id . '|' . $speaker_name );
+		$cached    = wp_cache_get( $cache_key, 'wpfaevent' );
+
+		if ( false !== $cached && is_array( $cached ) ) {
+			return self::sanitize_post_id_list( $cached );
+		}
+
+		$base_id            = self::normalize_eventyay_speaker_lookup_id( $eventyay_speaker_id );
+		$candidate_meta_ids = array_values( array_unique( array_filter( array( $eventyay_speaker_id, $base_id ) ) ) );
+		$candidate_speakers = array();
+
+		if ( 1 === count( $candidate_meta_ids ) ) {
+			$meta_query_sql = $wpdb->prepare(
+				"SELECT p.ID, p.post_title, pm.meta_value
+				FROM {$wpdb->posts} p
+				INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+				WHERE pm.meta_key = %s
+					AND p.post_type = %s
+					AND pm.meta_value = %s",
+				'_wpfa_eventyay_speaker_id',
+				self::$speaker_post_type,
+				$candidate_meta_ids[0]
+			);
+		} else {
+			$meta_query_sql = $wpdb->prepare(
+				"SELECT p.ID, p.post_title, pm.meta_value
+				FROM {$wpdb->posts} p
+				INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+				WHERE pm.meta_key = %s
+					AND p.post_type = %s
+					AND pm.meta_value IN ( %s, %s )",
+				'_wpfa_eventyay_speaker_id',
+				self::$speaker_post_type,
+				$candidate_meta_ids[0],
+				$candidate_meta_ids[1]
+			);
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Exact-match speaker ID lookup avoids slow meta queries and broad wildcards.
+		$candidate_speakers = array_merge( $candidate_speakers, $wpdb->get_results( $meta_query_sql ) );
+
+		if ( '' !== $speaker_name ) {
+			$name_query_sql = $wpdb->prepare(
+				"SELECT p.ID, p.post_title, pm.meta_value
+				FROM {$wpdb->posts} p
+				INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+				WHERE pm.meta_key = %s
+					AND p.post_type = %s
+					AND p.post_title = %s",
+				'_wpfa_eventyay_speaker_id',
+				self::$speaker_post_type,
+				$speaker_name
+			);
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Exact-name speaker lookup narrows legacy ID reconciliation without wildcard meta queries.
+			$candidate_speakers = array_merge( $candidate_speakers, $wpdb->get_results( $name_query_sql ) );
+		}
+
+		$name_key    = '' !== $speaker_name ? sanitize_title( $speaker_name ) : '';
+		$speaker_ids = array();
+
+		foreach ( $candidate_speakers as $candidate_speaker ) {
+			$speaker_id = isset( $candidate_speaker->ID ) ? absint( $candidate_speaker->ID ) : 0;
+			$stored_id  = isset( $candidate_speaker->meta_value ) ? sanitize_text_field( $candidate_speaker->meta_value ) : '';
+
+			if ( ! $speaker_id || '' === $stored_id ) {
+				continue;
+			}
+
+			$stored_base_id = self::normalize_eventyay_speaker_lookup_id( $stored_id );
+
+			if ( $stored_id !== $eventyay_speaker_id && $stored_id !== $base_id && $stored_base_id !== $base_id ) {
+				continue;
+			}
+
+			if ( '' !== $name_key ) {
+				$candidate_name = isset( $candidate_speaker->post_title ) ? sanitize_title( $candidate_speaker->post_title ) : '';
+
+				if ( '' === $candidate_name || $candidate_name !== $name_key ) {
+					continue;
+				}
+			}
+
+			$speaker_ids[] = $speaker_id;
+		}
+
+		$speaker_ids = self::sanitize_post_id_list( $speaker_ids );
+		wp_cache_set( $cache_key, $speaker_ids, 'wpfaevent' );
+
+		return $speaker_ids;
+	}
+
+	/**
 	 * Resolve featured speaker IDs from event meta, dashboard JSON, and speaker categories.
 	 *
 	 * @since 1.0.0
@@ -498,6 +608,20 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 		);
 
 		return self::sanitize_post_id_list( $event_ids );
+	}
+
+	/**
+	 * Normalize an Eventyay speaker ID for current/legacy matching.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $eventyay_speaker_id Eventyay speaker ID.
+	 * @return string
+	 */
+	private static function normalize_eventyay_speaker_lookup_id( $eventyay_speaker_id ) {
+		$id_parts = explode( ':', sanitize_text_field( $eventyay_speaker_id ) );
+
+		return sanitize_text_field( end( $id_parts ) );
 	}
 
 	/**
