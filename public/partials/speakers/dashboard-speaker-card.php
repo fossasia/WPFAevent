@@ -24,6 +24,9 @@ $placeholder_url     = ! empty( $speaker_placeholder_url ) ? $speaker_placeholde
 $is_featured_speaker = ! empty( $wpfa_dashboard_speaker_is_featured ) || ! empty( $speaker['featured'] );
 $card_variant        = isset( $wpfa_speaker_card_variant ) ? sanitize_key( $wpfa_speaker_card_variant ) : '';
 $is_compact          = 'compact' === $card_variant;
+$position            = isset( $speaker['position'] ) ? sanitize_text_field( $speaker['position'] ) : '';
+$org                 = isset( $speaker['organization'] ) ? sanitize_text_field( $speaker['organization'] ) : '';
+$speaker_role        = trim( $position . ( $position && $org ? ', ' : '' ) . $org );
 ?>
 <article class="wpfa-speaker-card visible <?php echo esc_attr( $is_featured_speaker ? 'is-featured' : '' ); ?><?php echo $is_compact ? ' wpfa-speaker-card--compact' : ''; ?>">
 	<div class="wpfa-speaker-photo">
@@ -44,33 +47,8 @@ $is_compact          = 'compact' === $card_variant;
 		<?php endif; ?>
 
 		<h3 class="wpfa-speaker-name"><?php echo esc_html( $speaker_name ); ?></h3>
-		<?php if ( ! $is_compact && ( ! empty( $speaker['position'] ) || ! empty( $speaker['organization'] ) ) ) : ?>
-			<p class="wpfa-speaker-role">
-				<?php echo esc_html( trim( ( $speaker['position'] ?? '' ) . ( ! empty( $speaker['position'] ) && ! empty( $speaker['organization'] ) ? ' · ' : '' ) . ( $speaker['organization'] ?? '' ) ) ); ?>
-			</p>
-		<?php endif; ?>
-
-		<?php if ( $is_compact ) : ?>
-			<?php
-			$bio_preview  = isset( $speaker['bio'] ) ? trim( wp_strip_all_tags( (string) $speaker['bio'] ) ) : '';
-			$talk_title   = isset( $session['title'] ) ? trim( sanitize_text_field( $session['title'] ) ) : '';
-			$position     = isset( $speaker['position'] ) ? $speaker['position'] : '';
-			$org          = isset( $speaker['organization'] ) ? $speaker['organization'] : '';
-			$speaker_role = trim( $position . ( $position && $org ? ' · ' : '' ) . $org );
-
-			$preview_text = '';
-			if ( '' !== $bio_preview ) {
-				$preview_text = $bio_preview;
-			} elseif ( '' !== $talk_title ) {
-				$preview_text = $talk_title;
-			} elseif ( '' !== $speaker_role ) {
-				$preview_text = $speaker_role;
-			}
-
-			if ( '' !== $preview_text ) :
-				?>
-				<p class="wpfa-speaker-preview"><?php echo esc_html( $preview_text ); ?></p>
-			<?php endif; ?>
+		<?php if ( '' !== $speaker_role ) : ?>
+			<p class="wpfa-speaker-role"><?php echo esc_html( $speaker_role ); ?></p>
 		<?php endif; ?>
 	</div>
 	<div class="wpfa-speaker-expand">
