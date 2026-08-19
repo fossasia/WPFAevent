@@ -2,19 +2,19 @@
 /**
  * Speaker CPT meta box rendering and save handling.
  *
- * @link       https://fossasia.org
- * @since      1.0.0
- *
- * @package    Wpfaevent
- * @subpackage Wpfaevent/admin/partials/meta-boxes
- */
-
-/**
- * Registers, renders, and saves the meta box on the Speaker edit screen.
- *
  * @package    Wpfaevent
  * @subpackage Wpfaevent/admin/partials/meta-boxes
  * @author     FOSSASIA <contact@fossasia.org>
+ * @since      1.0.0
+ */
+
+/**
+ * Class Wpfaevent_Admin_Speaker_Metabox
+ *
+ * Registers, renders, and saves the meta box on the Speaker edit screen.
+ *
+ * @package    Wpfaevent
+ * @since      1.0.0
  */
 class Wpfaevent_Admin_Speaker_Metabox {
 
