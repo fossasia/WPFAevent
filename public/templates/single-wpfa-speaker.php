@@ -49,14 +49,6 @@ if ( empty( $photo_url ) && has_post_thumbnail( $speaker_id ) ) {
 	$photo_url = get_the_post_thumbnail_url( $speaker_id, 'large' );
 }
 
-$speaker_categories = array();
-if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
-	$terms = wp_get_post_terms( $speaker_id, 'wpfa_speaker_category' );
-
-	if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
-		$speaker_categories = wp_list_pluck( $terms, 'name' );
-	}
-}
 
 $session_meta = array();
 if ( $talk_date ) {
@@ -205,14 +197,6 @@ $header_vars = array(
 				</div>
 
 				<div class="wpfa-speaker-profile-summary">
-					<?php if ( ! empty( $speaker_categories ) ) : ?>
-						<div class="wpfa-speaker-profile-categories">
-							<?php foreach ( $speaker_categories as $speaker_category ) : ?>
-								<span class="pill"><?php echo esc_html( $speaker_category ); ?></span>
-							<?php endforeach; ?>
-						</div>
-					<?php endif; ?>
-
 					<h1 itemprop="name"><?php echo esc_html( $speaker_name ); ?></h1>
 
 					<?php if ( $position || $organization ) : ?>
