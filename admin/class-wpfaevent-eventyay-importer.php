@@ -1627,7 +1627,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @return array|WP_Error Import result.
 	 */
 	private function import_eventyay_event_partner_data( $event_id, $event, $settings, $event_slug ) {
-		$result   = array(
+		$result = array(
 			'sponsor_count'   => 0,
 			'exhibitor_count' => 0,
 			'skipped'         => 0,
