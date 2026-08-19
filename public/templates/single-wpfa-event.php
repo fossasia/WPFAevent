@@ -88,6 +88,7 @@ $ticket_widget_assets   = $event_data['ticket_widget_assets'];
 $ticket_widget_id       = $event_data['ticket_widget_id'];
 $ticket_widget_message  = $event_data['ticket_widget_message'];
 $ticket_widget_skip_ssl = $event_data['ticket_widget_skip_ssl'];
+$registration_status_label = $event_data['registration_status_label'];
 
 if ( $show_ticket_widget ) {
 	$eventyay_widget_handle = 'wpfaevent-eventyay-widget-' . absint( $event_id );
@@ -267,7 +268,7 @@ if ( $show_ticket_widget ) {
 				<aside class="wpfa-event-ticket-panel" aria-label="<?php esc_attr_e( 'Event details', 'wpfaevent' ); ?>">
 					<div class="wpfa-event-ticket-head">
 						<p><?php esc_html_e( 'Registration', 'wpfaevent' ); ?></p>
-						<strong><?php esc_html_e( 'Open', 'wpfaevent' ); ?></strong>
+						<strong><?php echo esc_html( $registration_status_label ); ?></strong>
 					</div>
 					<?php if ( $show_ticket_section ) : ?>
 						<a class="wpfa-event-register" href="#tickets">
