@@ -720,6 +720,8 @@ if ( ! empty( $languages ) ) {
 	</section>
 <?php else : ?>
 	</main>
+
+	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
 </div>
 
 	<?php wp_footer(); ?>

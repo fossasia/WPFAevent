@@ -92,6 +92,7 @@ if ( ! $wpfaevent_is_embed && have_posts() ) {
 	</main>
 	<?php endif; ?>
 <?php if ( ! $wpfaevent_is_embed ) : ?>
+	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
 </div>
 
 	<?php wp_footer(); ?>
