@@ -831,6 +831,15 @@ class Wpfaevent_Event_Template_Controller {
 			$schedule_item['track_key']  = sanitize_title( $schedule_item['track'] );
 			$schedule_item['room_key']   = sanitize_title( $schedule_item['room'] );
 
+			$slot_datetime = $parse_schedule_datetime( $start_datetime );
+
+			if ( ! $slot_datetime && ! empty( $row_date ) && ! empty( $schedule_item['time_start'] ) ) {
+				$slot_datetime = $build_schedule_fallback_datetime( $row_date, $schedule_item['time_start'], $event_timezone );
+			}
+
+			$schedule_item['slot_key']      = $slot_datetime ? $slot_datetime->format( 'YmdHi' ) : sanitize_title( $schedule_item['time_start'] );
+			$schedule_item['slot_sort_key'] = $slot_datetime ? (int) $slot_datetime->format( 'YmdHi' ) : PHP_INT_MAX;
+
 			$schedule_items[] = $schedule_item;
 		}
 
