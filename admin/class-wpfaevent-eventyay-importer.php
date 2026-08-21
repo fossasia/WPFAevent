@@ -5584,7 +5584,7 @@ class Wpfaevent_Eventyay_Importer {
 			$post_status = 'draft';
 		}
 
-		$speaker_id = $this->find_eventyay_speaker_post( $speaker['eventyay_speaker_id'] );
+		$speaker_id = $this->find_eventyay_speaker_post( $speaker['eventyay_speaker_id'], $speaker['name'] );
 		$post_data  = array(
 			'post_title'   => sanitize_text_field( $speaker['name'] ),
 			'post_type'    => 'wpfa_speaker',
@@ -5613,11 +5613,13 @@ class Wpfaevent_Eventyay_Importer {
 			);
 		}
 
-		$session = ! empty( $speaker['sessions'][0] ) && is_array( $speaker['sessions'][0] ) ? $speaker['sessions'][0] : array();
-		$social  = ! empty( $speaker['social'] ) && is_array( $speaker['social'] ) ? $speaker['social'] : array();
+		$session            = ! empty( $speaker['sessions'][0] ) && is_array( $speaker['sessions'][0] ) ? $speaker['sessions'][0] : array();
+		$social             = ! empty( $speaker['social'] ) && is_array( $speaker['social'] ) ? $speaker['social'] : array();
+		$effective_position = ! empty( $speaker['position'] ) ? $speaker['position'] : ( isset( $speaker['title'] ) ? $speaker['title'] : '' );
 
 		update_post_meta( $saved_id, '_wpfa_eventyay_speaker_id', sanitize_text_field( $speaker['eventyay_speaker_id'] ) );
-		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_position', $speaker['position'] );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_position', $effective_position );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_title', isset( $speaker['title'] ) ? $speaker['title'] : '' );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_organization', $speaker['organization'] );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_bio', $speaker['bio'] );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_headshot_url', $speaker['image'] );
@@ -5635,6 +5637,8 @@ class Wpfaevent_Eventyay_Importer {
 			wp_set_object_terms( $saved_id, sanitize_text_field( $speaker['category'] ), 'wpfa_speaker_category' );
 		}
 
+		$this->reconcile_eventyay_duplicate_speakers( $saved_id, $speaker['eventyay_speaker_id'], $speaker['name'] );
+
 		return array(
 			'id'      => $saved_id,
 			'created' => $created,
@@ -5647,24 +5651,89 @@ class Wpfaevent_Eventyay_Importer {
 	 * @since 1.0.0
 	 *
 	 * @param string $eventyay_speaker_id Eventyay speaker ID.
+	 * @param string $speaker_name        Speaker name.
 	 * @return int
 	 */
-	private function find_eventyay_speaker_post( $eventyay_speaker_id ) {
-		$speaker_ids = get_posts(
-			array(
-				'post_type'      => 'wpfa_speaker',
-				'post_status'    => 'any',
-				'posts_per_page' => 1,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Eventyay IDs are stored in speaker post meta for sync idempotency.
-				'meta_key'       => '_wpfa_eventyay_speaker_id',
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Eventyay IDs are stored in speaker post meta for sync idempotency.
-				'meta_value'     => sanitize_text_field( $eventyay_speaker_id ),
-			)
-		);
+	private function find_eventyay_speaker_post( $eventyay_speaker_id, $speaker_name = '' ) {
+		$speaker_ids = $this->find_eventyay_matching_speaker_posts( $eventyay_speaker_id, $speaker_name );
 
 		return ! empty( $speaker_ids[0] ) ? absint( $speaker_ids[0] ) : 0;
+	}
+
+	/**
+	 * Find speaker posts that match a current or legacy Eventyay speaker ID.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $eventyay_speaker_id Eventyay speaker ID.
+	 * @param string $speaker_name        Speaker name.
+	 * @return array<int>
+	 */
+	private function find_eventyay_matching_speaker_posts( $eventyay_speaker_id, $speaker_name = '' ) {
+		return Wpfaevent_Event_Speaker_Relation_Manager::find_eventyay_speaker_post_ids( $eventyay_speaker_id, $speaker_name );
+	}
+
+	/**
+	 * Remove duplicate Eventyay speaker-event links created by mixed ID formats.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $primary_speaker_id  Speaker post to keep.
+	 * @param string $eventyay_speaker_id Eventyay speaker ID.
+	 * @param string $speaker_name        Speaker name.
+	 * @return void
+	 */
+	private function reconcile_eventyay_duplicate_speakers( $primary_speaker_id, $eventyay_speaker_id, $speaker_name ) {
+		$primary_speaker_id = absint( $primary_speaker_id );
+
+		if ( ! $primary_speaker_id ) {
+			return;
+		}
+
+		$duplicate_ids = array_diff(
+			$this->find_eventyay_matching_speaker_posts( $eventyay_speaker_id, $speaker_name ),
+			array( $primary_speaker_id )
+		);
+
+		foreach ( $duplicate_ids as $duplicate_id ) {
+			$duplicate_id = absint( $duplicate_id );
+
+			if ( ! $duplicate_id || 'wpfa_speaker' !== get_post_type( $duplicate_id ) ) {
+				continue;
+			}
+
+			$duplicate_event_ids = $this->get_eventyay_speaker_event_ids( $duplicate_id );
+			$merged_event_ids    = $this->sanitize_eventyay_post_id_list(
+				array_merge(
+					$this->get_eventyay_speaker_event_ids( $primary_speaker_id ),
+					$duplicate_event_ids
+				)
+			);
+
+			update_post_meta( $primary_speaker_id, 'wpfa_speaker_events', $merged_event_ids );
+
+			foreach ( $duplicate_event_ids as $event_id ) {
+				$event_id     = absint( $event_id );
+				$speaker_ids  = array_map(
+					static function ( $speaker_id ) use ( $duplicate_id, $primary_speaker_id ) {
+						return absint( $speaker_id ) === $duplicate_id ? $primary_speaker_id : absint( $speaker_id );
+					},
+					$this->get_eventyay_event_speaker_ids( $event_id )
+				);
+				$featured_ids = array_map(
+					static function ( $speaker_id ) use ( $duplicate_id, $primary_speaker_id ) {
+						return absint( $speaker_id ) === $duplicate_id ? $primary_speaker_id : absint( $speaker_id );
+					},
+					$this->get_eventyay_event_featured_speaker_ids( $event_id )
+				);
+
+				update_post_meta( $event_id, 'wpfa_event_speakers', $this->sanitize_eventyay_post_id_list( $speaker_ids ) );
+				update_post_meta( $event_id, 'wpfa_event_featured_speakers', $this->sanitize_eventyay_post_id_list( $featured_ids ) );
+			}
+
+			delete_post_meta( $duplicate_id, 'wpfa_speaker_events' );
+			delete_post_meta( $duplicate_id, '_wpfa_eventyay_speaker_id' );
+		}
 	}
 
 	/**
