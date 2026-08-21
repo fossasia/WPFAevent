@@ -14,7 +14,7 @@ class EventyaySpeakerLookupTest extends WP_UnitTestCase {
 	 * Create a speaker post with an optional Eventyay speaker ID.
 	 *
 	 * @param string $title              Speaker title.
-	* @param string $eventyay_speaker_id Eventyay speaker ID.
+	 * @param string $eventyay_speaker_id Eventyay speaker ID.
 	 * @return int
 	 */
 	private function create_speaker( $title, $eventyay_speaker_id ) {
