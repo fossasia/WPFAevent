@@ -818,6 +818,14 @@ class Wpfaevent_Templates {
 		);
 
 		wp_register_style(
+			'wpfaevent-additional-information',
+			WPFAEVENT_URL . 'public/css/templates/additional-information.css',
+			array( 'wpfaevent', 'wpfaevent-event-base', 'wpfaevent-navigation' ),
+			WPFAEVENT_VERSION,
+			'all'
+		);
+
+		wp_register_style(
 			'wpfaevent-partners',
 			WPFAEVENT_URL . 'public/css/templates/partners.css',
 			array( 'wpfaevent', 'wpfaevent-event-base', 'wpfaevent-navigation', 'wpfaevent-pagination' ),
@@ -848,7 +856,7 @@ class Wpfaevent_Templates {
 			'schedule'               => 'wpfaevent-schedule',
 			'speakers'               => 'wpfaevent-speakers',
 			'past_events'            => 'wpfaevent-past-events',
-			'additional_information' => 'wpfaevent-event',
+			'additional_information' => 'wpfaevent-additional-information',
 			'code_of_conduct'        => 'wpfaevent-code-of-conduct',
 			'partner'                => 'wpfaevent-partners',
 		);
@@ -890,12 +898,11 @@ class Wpfaevent_Templates {
 			wp_enqueue_style( 'wpfaevent-events' );
 		}
 
-		if ( 'schedule' === $key ) {
-			wp_enqueue_style( 'wpfaevent-event' );
-			wp_enqueue_style( 'wpfaevent-schedule' );
+		if ( 'additional_information' === $key ) {
+			wp_enqueue_style( 'wpfaevent-additional-information' );
 		}
 
-		if ( 'additional_information' === $key ) {
+		if ( 'schedule' === $key ) {
 			wp_enqueue_style( 'wpfaevent-event' );
 			wp_enqueue_style( 'wpfaevent-schedule' );
 		}
