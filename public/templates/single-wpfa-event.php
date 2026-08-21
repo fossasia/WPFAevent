@@ -364,8 +364,6 @@ if ( $show_ticket_widget ) {
 							<h2 id="wpfa-event-tickets-title"><?php esc_html_e( 'Tickets', 'wpfaevent' ); ?></h2>
 							<?php if ( $ticket_widget_redirect ) : ?>
 								<p><?php echo esc_html( $ticket_widget_message ); ?></p>
-							<?php elseif ( $show_ticket_widget ) : ?>
-								<p><?php esc_html_e( 'Select ticket options and continue checkout through Eventyay.', 'wpfaevent' ); ?></p>
 							<?php endif; ?>
 						</div>
 						<a href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>" target="_blank" rel="noopener">
@@ -440,7 +438,6 @@ if ( $show_ticket_widget ) {
 					<div class="wpfa-event-section-head">
 						<div>
 							<h2 id="wpfa-event-speakers-title"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h2>
-							<p><?php esc_html_e( 'People linked to this event only.', 'wpfaevent' ); ?></p>
 						</div>
 						<a href="<?php echo esc_url( $speakers_url ); ?>"><?php esc_html_e( 'Open Event Speaker List', 'wpfaevent' ); ?></a>
 					</div>
@@ -570,7 +567,6 @@ if ( $show_ticket_widget ) {
 					<div class="wpfa-event-section-head">
 						<div>
 							<h2 id="wpfa-event-schedule-title"><?php esc_html_e( 'Schedule', 'wpfaevent' ); ?></h2>
-							<p><?php esc_html_e( 'Times and rooms imported from Eventyay.', 'wpfaevent' ); ?></p>
 						</div>
 						<?php if ( ! empty( $schedule_items ) ) : ?>
 							<div class="wpfa-event-section-actions">
@@ -822,7 +818,6 @@ if ( $show_ticket_widget ) {
 					<div class="wpfa-event-section-head">
 						<div>
 							<h2 id="wpfa-event-sponsors-title"><?php esc_html_e( 'Sponsors', 'wpfaevent' ); ?></h2>
-							<p><?php esc_html_e( 'Organizations supporting this event.', 'wpfaevent' ); ?></p>
 						</div>
 					</div>
 

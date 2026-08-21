@@ -56,7 +56,6 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 		$this->assertSame( '', $sponsor['type'] );
 		$this->assertSame( 2, $sponsor['level'] );
 	}
-
 	/**
 	 * Legacy organizer speakers should inherit featured flags from JSON:API data.
 	 */
