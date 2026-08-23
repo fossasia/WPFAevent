@@ -865,7 +865,6 @@ if ( $show_ticket_widget ) {
 					<div class="wpfa-event-section-head">
 						<div>
 							<h2 id="wpfa-event-exhibitors-title"><?php esc_html_e( 'Exhibitors', 'wpfaevent' ); ?></h2>
-							<p><?php esc_html_e( 'Exhibitor booths and resources for this event.', 'wpfaevent' ); ?></p>
 						</div>
 					</div>
 
