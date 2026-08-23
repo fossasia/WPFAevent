@@ -76,7 +76,7 @@ class Wpfaevent_Partner_Dashboard_Controller {
 		$is_new = false;
 		if ( ! $id ) {
 			$is_new = true;
-			$id     = 'manual-' . $type . '-' . wp_generate_password( 8, false );
+			$id     = $this->generate_manual_partner_id( $type );
 		}
 
 		$new_record = array(
@@ -159,6 +159,20 @@ class Wpfaevent_Partner_Dashboard_Controller {
 			)
 		);
 		exit;
+	}
+
+	/**
+	 * Generate a WordPress-safe identifier for manually created partners.
+	 *
+	 * The dashboard edit/delete flows read IDs back through sanitize_key(), so
+	 * locally generated IDs must already be normalized to preserve lookups and
+	 * nonce action strings across requests.
+	 *
+	 * @param string $type Partner type.
+	 * @return string
+	 */
+	private function generate_manual_partner_id( $type ) {
+		return sanitize_key( 'manual-' . $type . '-' . wp_generate_password( 8, false ) );
 	}
 
 	/**
