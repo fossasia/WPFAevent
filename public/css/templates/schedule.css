@@ -192,20 +192,6 @@
 	margin: 0 0 24px;
 }
 
-.wpfaevent .wpfa-schedule-tabs a {
-	background: #fff;
-	border: 1px solid var(--event-line);
-	border-radius: var(--event-radius);
-	color: var(--event-primary-dark);
-	font-weight: 800;
-	padding: 9px 14px;
-}
-
-.wpfaevent .wpfa-schedule-tabs a.is-active {
-	background: var(--event-primary);
-	border-color: var(--event-primary);
-	color: #fff;
-}
 
 .wpfaevent .wpfa-schedule-group + .wpfa-schedule-group {
 	margin-top: 28px;
