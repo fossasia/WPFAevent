@@ -682,12 +682,6 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 	const form = document.querySelector('[data-sync-form]');
-	if (!form) {
-		return;
-	}
-
-	const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
-	const feedback = form.querySelector('[data-sync-feedback]');
 	const getButtonText = function (btn) {
 		return btn.tagName === 'INPUT' ? btn.value : btn.textContent;
 	};
@@ -698,63 +692,67 @@ document.addEventListener('DOMContentLoaded', function () {
 			btn.textContent = text;
 		}
 	};
-	const defaultLabel = submitButton ? getButtonText(submitButton) : '';
-	const loadingLabel = <?php echo wp_json_encode( __( 'Synchronizing...', 'wpfaevent' ) ); ?>;
+	if (form) {
+		const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+		const feedback = form.querySelector('[data-sync-feedback]');
+		const defaultLabel = submitButton ? getButtonText(submitButton) : '';
+		const loadingLabel = <?php echo wp_json_encode( __( 'Synchronizing...', 'wpfaevent' ) ); ?>;
 
-	const setFeedback = function (type, message) {
-		if (!feedback) {
-			return;
-		}
-
-		feedback.className = 'wpfaevent-sync-feedback is-active is-' + type;
-		feedback.textContent = message;
-	};
-
-	form.addEventListener('submit', function (event) {
-		event.preventDefault();
-
-		if (!submitButton) {
-			form.submit();
-			return;
-		}
-
-		submitButton.disabled = true;
-		setButtonText(submitButton, loadingLabel);
-		form.setAttribute('aria-busy', 'true');
-		setFeedback('loading', loadingLabel);
-
-		const formData = new FormData(form);
-
-		window.fetch(form.dataset.ajaxUrl, {
-			method: 'POST',
-			credentials: 'same-origin',
-			body: formData
-		}).then(function (response) {
-			return response.json().catch(function () {
-				return { success: false, data: { message: <?php echo wp_json_encode( __( 'The server returned an unexpected response.', 'wpfaevent' ) ); ?> } };
-			});
-		}).then(function (payload) {
-			if (!payload || !payload.success) {
-				const message = payload && payload.data && payload.data.message ? payload.data.message : <?php echo wp_json_encode( __( 'Synchronization failed.', 'wpfaevent' ) ); ?>;
-				setFeedback('error', message);
+		const setFeedback = function (type, message) {
+			if (!feedback) {
 				return;
 			}
 
-			const message = payload.data && payload.data.message ? payload.data.message : <?php echo wp_json_encode( __( 'Synchronization completed.', 'wpfaevent' ) ); ?>;
-			setFeedback('success', message);
+			feedback.className = 'wpfaevent-sync-feedback is-active is-' + type;
+			feedback.textContent = message;
+		};
 
-			window.setTimeout(function () {
-				const nextUrl = payload.data && payload.data.dashboard_url ? payload.data.dashboard_url + '#wpfaevent-sync' : window.location.href.split('#')[0] + '#wpfaevent-sync';
-				window.location.href = nextUrl;
-			}, 900);
-		}).catch(function () {
-			setFeedback('error', <?php echo wp_json_encode( __( 'Synchronization failed. Please try again.', 'wpfaevent' ) ); ?>);
-		}).finally(function () {
-			submitButton.disabled = false;
-			setButtonText(submitButton, defaultLabel);
-			form.removeAttribute('aria-busy');
+		form.addEventListener('submit', function (event) {
+			event.preventDefault();
+
+			if (!submitButton) {
+				form.submit();
+				return;
+			}
+
+			submitButton.disabled = true;
+			setButtonText(submitButton, loadingLabel);
+			form.setAttribute('aria-busy', 'true');
+			setFeedback('loading', loadingLabel);
+
+			const formData = new FormData(form);
+
+			window.fetch(form.dataset.ajaxUrl, {
+				method: 'POST',
+				credentials: 'same-origin',
+				body: formData
+			}).then(function (response) {
+				return response.json().catch(function () {
+					return { success: false, data: { message: <?php echo wp_json_encode( __( 'The server returned an unexpected response.', 'wpfaevent' ) ); ?> } };
+				});
+			}).then(function (payload) {
+				if (!payload || !payload.success) {
+					const message = payload && payload.data && payload.data.message ? payload.data.message : <?php echo wp_json_encode( __( 'Synchronization failed.', 'wpfaevent' ) ); ?>;
+					setFeedback('error', message);
+					return;
+				}
+
+				const message = payload.data && payload.data.message ? payload.data.message : <?php echo wp_json_encode( __( 'Synchronization completed.', 'wpfaevent' ) ); ?>;
+				setFeedback('success', message);
+
+				window.setTimeout(function () {
+					const nextUrl = payload.data && payload.data.dashboard_url ? payload.data.dashboard_url + '#wpfaevent-sync' : window.location.href.split('#')[0] + '#wpfaevent-sync';
+					window.location.href = nextUrl;
+				}, 900);
+			}).catch(function () {
+				setFeedback('error', <?php echo wp_json_encode( __( 'Synchronization failed. Please try again.', 'wpfaevent' ) ); ?>);
+			}).finally(function () {
+				submitButton.disabled = false;
+				setButtonText(submitButton, defaultLabel);
+				form.removeAttribute('aria-busy');
+			});
 		});
-	});
+	}
 
 	// Inline Editor Logic
 	document.body.addEventListener('click', function (e) {
