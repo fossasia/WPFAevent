@@ -83,5 +83,6 @@
 
 .wpfaevent .wpfa-additional-information-body {
 	border-left: 4px solid var(--event-primary);
+	max-width: 900px;
 	padding-left: 20px;
 }

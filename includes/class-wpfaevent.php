@@ -161,6 +161,8 @@ class Wpfaevent {
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard-hooks.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-partner-dashboard.php';
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-wpfaevent-admin.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/meta-boxes/class-wpfaevent-admin-event-metabox.php';
+		require_once plugin_dir_path( __DIR__ ) . 'admin/partials/meta-boxes/class-wpfaevent-admin-speaker-metabox.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-public.php';
 		require_once plugin_dir_path( __DIR__ ) . 'public/class-wpfaevent-bookmark-controller.php';
 
@@ -270,11 +272,13 @@ class Wpfaevent {
 		$this->loader->add_filter( 'plugin_action_links_' . $plugin_basename, $this->plugin_admin, 'add_settings_link' );
 
 		// Add meta boxes to CPTs.
-		$this->loader->add_action( 'add_meta_boxes', $this->plugin_admin, 'add_meta_boxes' );
+		$event_metabox = new Wpfaevent_Admin_Event_Metabox();
+		$this->loader->add_action( 'add_meta_boxes', $event_metabox, 'register_meta_boxes' );
+		$this->loader->add_action( 'save_post_wpfa_event', $event_metabox, 'save_event_meta' );
 
-		// Save meta box data.
-		$this->loader->add_action( 'save_post_wpfa_event', $this->plugin_admin, 'save_event_meta' );
-		$this->loader->add_action( 'save_post_wpfa_speaker', $this->plugin_admin, 'save_speaker_meta' );
+		$speaker_metabox = new Wpfaevent_Admin_Speaker_Metabox();
+		$this->loader->add_action( 'add_meta_boxes', $speaker_metabox, 'register_meta_boxes' );
+		$this->loader->add_action( 'save_post_wpfa_speaker', $speaker_metabox, 'save_speaker_meta' );
 
 		// Keep event-owned speakers out of the global speaker admin list.
 		$this->loader->add_action( 'restrict_manage_posts', $this->plugin_admin, 'render_speaker_event_filter' );
