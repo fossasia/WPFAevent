@@ -123,25 +123,8 @@ class Wpfaevent_Partner_Dashboard_Controller {
 
 		// Save the updated list back to the JSON file.
 		if ( 'sponsor' === $type ) {
-			// Structure as sponsor groups.
-			$groups = array();
-			foreach ( $updated_records as $rec ) {
-				$group_name = isset( $rec['type'] ) && $rec['type'] ? $rec['type'] : __( 'Sponsors', 'wpfaevent' );
-				if ( ! isset( $groups[ $group_name ] ) ) {
-					$groups[ $group_name ] = array(
-						'group_name' => $group_name,
-						'logo_size'  => 160,
-						'sponsors'   => array(),
-					);
-					if ( isset( $rec['source'] ) && 'eventyay' === $rec['source'] ) {
-						$groups[ $group_name ]['source'] = 'eventyay';
-					}
-				}
-				$groups[ $group_name ]['sponsors'][] = $rec;
-			}
-
-			// Clean array keys for JSON serialization.
-			$write_data = array_values( $groups );
+			$existing_groups = $this->store->read_dashboard_json_file( 'sponsors-' . $event_id . '.json', array() );
+			$write_data      = $this->build_sponsor_groups_from_records( $updated_records, $existing_groups );
 			$this->store->write_dashboard_json_file( 'sponsors-' . $event_id . '.json', $write_data );
 		} else {
 			$this->store->write_dashboard_json_file( 'exhibitors-' . $event_id . '.json', $updated_records );
@@ -176,6 +159,54 @@ class Wpfaevent_Partner_Dashboard_Controller {
 	}
 
 	/**
+	 * Save sponsor group order for an event.
+	 *
+	 * @return void
+	 */
+	public function handle_reorder_sponsor_groups() {
+		if ( ! current_user_can( 'edit_events' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to modify this page.', 'wpfaevent' ) );
+		}
+
+		$event_id = isset( $_POST['event_id'] ) ? absint( wp_unslash( $_POST['event_id'] ) ) : 0;
+		check_admin_referer( 'wpfaevent_reorder_sponsor_groups_' . $event_id );
+
+		if ( ! $event_id ) {
+			wp_die( esc_html__( 'Invalid request parameters.', 'wpfaevent' ) );
+		}
+
+		$raw_group_keys = isset( $_POST['group_keys'] ) ? wp_unslash( $_POST['group_keys'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized below.
+		$group_keys     = array();
+
+		if ( is_array( $raw_group_keys ) ) {
+			foreach ( $raw_group_keys as $group_key ) {
+				$group_key = sanitize_key( $group_key );
+
+				if ( '' !== $group_key ) {
+					$group_keys[] = $group_key;
+				}
+			}
+		}
+
+		$existing_groups = $this->store->read_dashboard_json_file( 'sponsors-' . $event_id . '.json', array() );
+		$reordered       = $this->reorder_sponsor_groups( $existing_groups, $group_keys );
+
+		$this->store->write_dashboard_json_file( 'sponsors-' . $event_id . '.json', $reordered );
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'post_type' => 'wpfa_event',
+					'page'      => 'wpfaevent-sponsors',
+					'event_id'  => $event_id,
+				),
+				admin_url( 'edit.php' )
+			)
+		);
+		exit;
+	}
+
+	/**
 	 * GET Handler to Delete Sponsor/Exhibitor.
 	 */
 	public function handle_delete_partner() {
@@ -205,21 +236,8 @@ class Wpfaevent_Partner_Dashboard_Controller {
 
 		// Save the updated list back to the JSON file.
 		if ( 'sponsor' === $type ) {
-			// Structure as sponsor groups.
-			$groups = array();
-			foreach ( $updated_records as $rec ) {
-				$group_name = isset( $rec['type'] ) && $rec['type'] ? $rec['type'] : __( 'Sponsors', 'wpfaevent' );
-				if ( ! isset( $groups[ $group_name ] ) ) {
-					$groups[ $group_name ] = array(
-						'group_name' => $group_name,
-						'logo_size'  => 160,
-						'sponsors'   => array(),
-					);
-				}
-				$groups[ $group_name ]['sponsors'][] = $rec;
-			}
-
-			$write_data = array_values( $groups );
+			$existing_groups = $this->store->read_dashboard_json_file( 'sponsors-' . $event_id . '.json', array() );
+			$write_data      = $this->build_sponsor_groups_from_records( $updated_records, $existing_groups );
 			$this->store->write_dashboard_json_file( 'sponsors-' . $event_id . '.json', $write_data );
 		} else {
 			$this->store->write_dashboard_json_file( 'exhibitors-' . $event_id . '.json', $updated_records );
@@ -237,5 +255,150 @@ class Wpfaevent_Partner_Dashboard_Controller {
 			)
 		);
 		exit;
+	}
+
+	/**
+	 * Build grouped sponsor JSON data from flat sponsor records.
+	 *
+	 * @param array $records         Flat sponsor records.
+	 * @param array $existing_groups Existing sponsor groups.
+	 * @return array
+	 */
+	private function build_sponsor_groups_from_records( $records, $existing_groups ) {
+		$existing_groups = is_array( $existing_groups ) ? $existing_groups : array();
+		$groups          = array();
+		$order           = array();
+		$templates       = array();
+
+		foreach ( $existing_groups as $group ) {
+			if ( ! is_array( $group ) ) {
+				continue;
+			}
+
+			$group_key = $this->get_sponsor_group_key( $group );
+			if ( '' === $group_key ) {
+				continue;
+			}
+
+			$order[]                 = $group_key;
+			$templates[ $group_key ] = $group;
+		}
+
+		foreach ( $records as $record ) {
+			if ( ! is_array( $record ) ) {
+				continue;
+			}
+
+			$group_name = isset( $record['type'] ) && '' !== trim( (string) $record['type'] ) ? sanitize_text_field( $record['type'] ) : __( 'Sponsors', 'wpfaevent' );
+			$group_key  = sanitize_key( $group_name );
+
+			if ( '' === $group_key ) {
+				continue;
+			}
+
+			if ( ! isset( $groups[ $group_key ] ) ) {
+				$template = isset( $templates[ $group_key ] ) && is_array( $templates[ $group_key ] ) ? $templates[ $group_key ] : array();
+
+				$groups[ $group_key ] = array(
+					'group_name' => $group_name,
+					'logo_size'  => isset( $template['logo_size'] ) ? absint( $template['logo_size'] ) : 160,
+					'centered'   => ! empty( $template['centered'] ),
+					'sponsors'   => array(),
+				);
+
+				if ( ! empty( $template['source'] ) ) {
+					$groups[ $group_key ]['source'] = sanitize_key( $template['source'] );
+				} elseif ( isset( $record['source'] ) && 'eventyay' === $record['source'] ) {
+					$groups[ $group_key ]['source'] = 'eventyay';
+				}
+
+				if ( ! empty( $template['eventyay_group_key'] ) ) {
+					$groups[ $group_key ]['eventyay_group_key'] = sanitize_key( $template['eventyay_group_key'] );
+				}
+
+				if ( ! in_array( $group_key, $order, true ) ) {
+					$order[] = $group_key;
+				}
+			}
+
+			$groups[ $group_key ]['sponsors'][] = $record;
+		}
+
+		$ordered_groups = array();
+
+		foreach ( $order as $group_key ) {
+			if ( isset( $groups[ $group_key ] ) ) {
+				$ordered_groups[] = $groups[ $group_key ];
+				unset( $groups[ $group_key ] );
+			}
+		}
+
+		foreach ( $groups as $group ) {
+			$ordered_groups[] = $group;
+		}
+
+		return $ordered_groups;
+	}
+
+	/**
+	 * Reorder sponsor groups using submitted group keys.
+	 *
+	 * @param array $groups      Existing groups.
+	 * @param array $group_order Submitted order.
+	 * @return array
+	 */
+	private function reorder_sponsor_groups( $groups, $group_order ) {
+		$groups      = is_array( $groups ) ? $groups : array();
+		$group_order = is_array( $group_order ) ? $group_order : array();
+		$group_map   = array();
+		$ordered     = array();
+
+		foreach ( $groups as $group ) {
+			if ( ! is_array( $group ) ) {
+				continue;
+			}
+
+			$group_key = $this->get_sponsor_group_key( $group );
+			if ( '' === $group_key ) {
+				continue;
+			}
+
+			$group_map[ $group_key ] = $group;
+		}
+
+		foreach ( $group_order as $group_key ) {
+			if ( isset( $group_map[ $group_key ] ) ) {
+				$ordered[] = $group_map[ $group_key ];
+				unset( $group_map[ $group_key ] );
+			}
+		}
+
+		foreach ( $group_map as $group ) {
+			$ordered[] = $group;
+		}
+
+		return $ordered;
+	}
+
+	/**
+	 * Get the normalized key for a sponsor group.
+	 *
+	 * @param array $group Sponsor group.
+	 * @return string
+	 */
+	private function get_sponsor_group_key( $group ) {
+		if ( ! is_array( $group ) ) {
+			return '';
+		}
+
+		if ( ! empty( $group['eventyay_group_key'] ) ) {
+			return sanitize_key( $group['eventyay_group_key'] );
+		}
+
+		if ( ! empty( $group['group_name'] ) ) {
+			return sanitize_key( $group['group_name'] );
+		}
+
+		return '';
 	}
 }

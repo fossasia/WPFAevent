@@ -70,7 +70,8 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 		$type_label_plural = 'sponsor' === $type ? __( 'Sponsors', 'wpfaevent' ) : __( 'Exhibitors', 'wpfaevent' );
 
 		// Load records for the event.
-		$records = $this->stats->load_records( $type, $event_id );
+		$records        = $this->stats->load_records( $type, $event_id );
+		$sponsor_groups = 'sponsor' === $type ? $this->stats->load_sponsor_groups( $event_id ) : array();
 
 		// Handle CRUD Routing.
 		if ( 'new' === $action || ( 'edit' === $action && $target_id ) ) {
@@ -216,6 +217,113 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 						<div class="description"><?php esc_html_e( 'Hidden or legacy profiles.', 'wpfaevent' ); ?></div>
 					</div>
 				</div>
+
+				<?php if ( 'sponsor' === $type && ! empty( $sponsor_groups ) ) : ?>
+					<div class="wpfaevent-dashboard-card">
+						<div class="wpfaevent-list-toolbar" style="margin-bottom: 16px;">
+							<h3><?php esc_html_e( 'Sponsor Group Order', 'wpfaevent' ); ?></h3>
+							<div class="description"><?php esc_html_e( 'Move sponsor groups up or down, then save to keep that order across the dashboard and frontend.', 'wpfaevent' ); ?></div>
+						</div>
+						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+							<input type="hidden" name="action" value="wpfaevent_reorder_sponsor_groups">
+							<input type="hidden" name="event_id" value="<?php echo esc_attr( (string) $event_id ); ?>">
+							<?php wp_nonce_field( 'wpfaevent_reorder_sponsor_groups_' . $event_id ); ?>
+							<div id="wpfaevent-sponsor-group-order-list">
+								<?php foreach ( $sponsor_groups as $index => $group ) : ?>
+									<?php
+									if ( ! is_array( $group ) ) {
+										continue;
+									}
+
+									$group_name    = ! empty( $group['group_name'] ) ? sanitize_text_field( $group['group_name'] ) : __( 'Sponsors', 'wpfaevent' );
+									$group_key     = ! empty( $group['eventyay_group_key'] ) ? sanitize_key( $group['eventyay_group_key'] ) : sanitize_key( $group_name );
+									$group_count   = isset( $group['sponsors'] ) && is_array( $group['sponsors'] ) ? count( $group['sponsors'] ) : 0;
+									$is_eventyay   = ! empty( $group['source'] ) && 'eventyay' === $group['source'];
+									$is_first_item = 0 === $index;
+										$is_last_item  = count( $sponsor_groups ) - 1 === $index;
+									?>
+									<div class="wpfaevent-list-item wpfaevent-sponsor-group-order-item">
+										<input type="hidden" name="group_keys[]" value="<?php echo esc_attr( $group_key ); ?>">
+										<div class="wpfaevent-list-copy">
+											<strong><?php echo esc_html( $group_name ); ?></strong>
+											<div class="description">
+												<?php
+												printf(
+													/* translators: %d: sponsor count. */
+													esc_html( _n( '%d sponsor', '%d sponsors', $group_count, 'wpfaevent' ) ),
+													absint( $group_count )
+												);
+												?>
+											</div>
+										</div>
+										<div class="wpfaevent-row-actions">
+											<?php if ( $is_eventyay ) : ?>
+												<span class="wpfaevent-badge is-neutral is-small"><?php esc_html_e( 'Eventyay', 'wpfaevent' ); ?></span>
+											<?php endif; ?>
+											<button type="button" class="button button-small wpfaevent-move-group-up" <?php disabled( $is_first_item ); ?>><?php esc_html_e( 'Move Up', 'wpfaevent' ); ?></button>
+											<button type="button" class="button button-small wpfaevent-move-group-down" <?php disabled( $is_last_item ); ?>><?php esc_html_e( 'Move Down', 'wpfaevent' ); ?></button>
+										</div>
+									</div>
+								<?php endforeach; ?>
+							</div>
+							<p>
+								<button type="submit" class="button button-primary"><?php esc_html_e( 'Save Sponsor Group Order', 'wpfaevent' ); ?></button>
+							</p>
+						</form>
+						<script>
+							document.addEventListener('DOMContentLoaded', function() {
+								const list = document.getElementById('wpfaevent-sponsor-group-order-list');
+								if (!list) {
+									return;
+								}
+
+								const refreshButtons = function() {
+									const items = list.querySelectorAll('.wpfaevent-sponsor-group-order-item');
+									items.forEach(function(item, index) {
+										const upButton = item.querySelector('.wpfaevent-move-group-up');
+										const downButton = item.querySelector('.wpfaevent-move-group-down');
+										if (upButton) {
+											upButton.disabled = index === 0;
+										}
+										if (downButton) {
+											downButton.disabled = index === items.length - 1;
+										}
+									});
+								};
+
+								list.addEventListener('click', function(event) {
+									const button = event.target.closest('button');
+									if (!button) {
+										return;
+									}
+
+									const item = button.closest('.wpfaevent-sponsor-group-order-item');
+									if (!item) {
+										return;
+									}
+
+									if (button.classList.contains('wpfaevent-move-group-up')) {
+										const previousItem = item.previousElementSibling;
+										if (previousItem) {
+											list.insertBefore(item, previousItem);
+											refreshButtons();
+										}
+									}
+
+									if (button.classList.contains('wpfaevent-move-group-down')) {
+										const nextItem = item.nextElementSibling;
+										if (nextItem) {
+											list.insertBefore(nextItem, item);
+											refreshButtons();
+										}
+									}
+								});
+
+								refreshButtons();
+							});
+						</script>
+					</div>
+				<?php endif; ?>
 
 				<!-- CRUD Search & Filter Header -->
 				<div class="wpfaevent-list-toolbar">
