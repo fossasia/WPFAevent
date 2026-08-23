@@ -79,15 +79,16 @@ $event_schedule_url                       = $event_data['event_schedule_url'];
 $visible_sponsor_groups                   = $event_data['visible_sponsor_groups'];
 $current_schedule_view                    = $event_data['current_schedule_view'];
 
-$event_header_image_url = $event_data['event_header_image_url'];
-$event_logo_url         = $event_data['event_logo_url'];
-$show_ticket_widget     = $event_data['show_ticket_widget'];
-$show_ticket_section    = $event_data['show_ticket_section'];
-$ticket_widget_redirect = $event_data['ticket_widget_redirect'];
-$ticket_widget_assets   = $event_data['ticket_widget_assets'];
-$ticket_widget_id       = $event_data['ticket_widget_id'];
-$ticket_widget_message  = $event_data['ticket_widget_message'];
-$ticket_widget_skip_ssl = $event_data['ticket_widget_skip_ssl'];
+$event_header_image_url    = $event_data['event_header_image_url'];
+$event_logo_url            = $event_data['event_logo_url'];
+$show_ticket_widget        = $event_data['show_ticket_widget'];
+$show_ticket_section       = $event_data['show_ticket_section'];
+$ticket_widget_redirect    = $event_data['ticket_widget_redirect'];
+$ticket_widget_assets      = $event_data['ticket_widget_assets'];
+$ticket_widget_id          = $event_data['ticket_widget_id'];
+$ticket_widget_message     = $event_data['ticket_widget_message'];
+$ticket_widget_skip_ssl    = $event_data['ticket_widget_skip_ssl'];
+$registration_status_label = $event_data['registration_status_label'];
 
 if ( $show_ticket_widget ) {
 	$eventyay_widget_handle = 'wpfaevent-eventyay-widget-' . absint( $event_id );
@@ -264,7 +265,7 @@ if ( $show_ticket_widget ) {
 				<aside class="wpfa-event-ticket-panel" aria-label="<?php esc_attr_e( 'Event details', 'wpfaevent' ); ?>">
 					<div class="wpfa-event-ticket-head">
 						<p><?php esc_html_e( 'Registration', 'wpfaevent' ); ?></p>
-						<strong><?php esc_html_e( 'Open', 'wpfaevent' ); ?></strong>
+						<strong><?php echo esc_html( $registration_status_label ); ?></strong>
 					</div>
 					<?php if ( $show_ticket_section ) : ?>
 						<a class="wpfa-event-register" href="#tickets">
@@ -869,7 +870,6 @@ if ( $show_ticket_widget ) {
 					<div class="wpfa-event-section-head">
 						<div>
 							<h2 id="wpfa-event-exhibitors-title"><?php esc_html_e( 'Exhibitors', 'wpfaevent' ); ?></h2>
-							<p><?php esc_html_e( 'Exhibitor booths and resources for this event.', 'wpfaevent' ); ?></p>
 						</div>
 					</div>
 

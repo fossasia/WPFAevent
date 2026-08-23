@@ -1654,6 +1654,7 @@ class Wpfaevent_Eventyay_Importer {
 			++$result['skipped'];
 		} else {
 			$normalized_exhibitors = $this->normalize_eventyay_exhibitor_resources( $exhibitors['resources'], $settings );
+			$normalized_exhibitors = $this->filter_eventyay_exhibitors_to_public_listing( $normalized_exhibitors, $event, $settings, $event_slug );
 			$existing_exhibitors   = $this->read_dashboard_json_file( 'exhibitors-' . absint( $event_id ) . '.json', array() );
 			$merged_exhibitors     = $this->merge_eventyay_flat_records( $normalized_exhibitors, $existing_exhibitors );
 			$write_result          = $this->write_dashboard_json_file( 'exhibitors-' . absint( $event_id ) . '.json', $merged_exhibitors );
@@ -1666,6 +1667,118 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Filter API exhibitor rows to the exhibitor IDs shown on the public Eventyay page.
+	 *
+	 * Some Eventyay exhibitor endpoints can include records that are not actually shown
+	 * on the public exhibition page. When Eventyay publishes a public exhibitor listing,
+	 * treat those visible exhibitor IDs as the authoritative set.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $exhibitors Normalized exhibitor records.
+	 * @param array  $event      Eventyay event resource.
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array
+	 */
+	private function filter_eventyay_exhibitors_to_public_listing( $exhibitors, $event, $settings, $event_slug ) {
+		if ( empty( $exhibitors ) ) {
+			return is_array( $exhibitors ) ? $exhibitors : array();
+		}
+
+		$public_exhibitor_ids = $this->fetch_eventyay_public_exhibitor_ids( $event, $settings, $event_slug );
+		if ( is_wp_error( $public_exhibitor_ids ) || empty( $public_exhibitor_ids ) ) {
+			return $exhibitors;
+		}
+
+		$filtered = array();
+
+		foreach ( $exhibitors as $exhibitor ) {
+			if ( ! is_array( $exhibitor ) ) {
+				continue;
+			}
+
+			$eventyay_id = isset( $exhibitor['eventyay_id'] ) ? sanitize_text_field( (string) $exhibitor['eventyay_id'] ) : '';
+			if ( '' !== $eventyay_id && isset( $public_exhibitor_ids[ $eventyay_id ] ) ) {
+				$filtered[] = $exhibitor;
+			}
+		}
+
+		return ! empty( $filtered ) ? $filtered : $exhibitors;
+	}
+
+	/**
+	 * Fetch the exhibitor IDs published on the public Eventyay exhibition page.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $event      Eventyay event resource.
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array|WP_Error
+	 */
+	private function fetch_eventyay_public_exhibitor_ids( $event, $settings, $event_slug ) {
+		$event_url = trailingslashit( $this->eventyay_public_event_url( $event, $settings, $event_slug ) );
+		if ( ! $event_url ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_missing_public_exhibition_url',
+				esc_html__( 'The public Eventyay exhibition page URL could not be resolved.', 'wpfaevent' )
+			);
+		}
+
+		$exhibition_url = esc_url_raw( trailingslashit( $event_url ) . 'exhibition/' );
+		$response       = wp_remote_get(
+			$exhibition_url,
+			array(
+				'timeout'     => 20,
+				'redirection' => 3,
+				'headers'     => array(
+					'Accept' => 'text/html,application/xhtml+xml',
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_public_exhibition_request_failed',
+				esc_html__( 'The public Eventyay exhibition page could not be fetched.', 'wpfaevent' ),
+				array( 'details' => $response->get_error_message() )
+			);
+		}
+
+		$status = absint( wp_remote_retrieve_response_code( $response ) );
+		if ( $status < 200 || $status >= 300 ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_public_exhibition_http_error',
+				esc_html__( 'The public Eventyay exhibition page returned an unexpected response.', 'wpfaevent' ),
+				array( 'http_status' => $status )
+			);
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+		if ( '' === trim( (string) $body ) ) {
+			return array();
+		}
+
+		$matches = array();
+		preg_match_all( '#/exhibition/([0-9]+)/#', $body, $matches );
+
+		if ( empty( $matches[1] ) ) {
+			return array();
+		}
+
+		$ids = array();
+		foreach ( $matches[1] as $match_id ) {
+			$match_id = sanitize_text_field( (string) $match_id );
+			if ( '' !== $match_id ) {
+				$ids[ $match_id ] = true;
+			}
+		}
+
+		return $ids;
 	}
 
 	/**
