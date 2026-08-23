@@ -5632,11 +5632,13 @@ class Wpfaevent_Eventyay_Importer {
 			);
 		}
 
-		$session = ! empty( $speaker['sessions'][0] ) && is_array( $speaker['sessions'][0] ) ? $speaker['sessions'][0] : array();
-		$social  = ! empty( $speaker['social'] ) && is_array( $speaker['social'] ) ? $speaker['social'] : array();
+		$session            = ! empty( $speaker['sessions'][0] ) && is_array( $speaker['sessions'][0] ) ? $speaker['sessions'][0] : array();
+		$social             = ! empty( $speaker['social'] ) && is_array( $speaker['social'] ) ? $speaker['social'] : array();
+		$effective_position = ! empty( $speaker['position'] ) ? $speaker['position'] : ( isset( $speaker['title'] ) ? $speaker['title'] : '' );
 
 		update_post_meta( $saved_id, '_wpfa_eventyay_speaker_id', sanitize_text_field( $speaker['eventyay_speaker_id'] ) );
-		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_position', $speaker['position'] );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_position', $effective_position );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_title', isset( $speaker['title'] ) ? $speaker['title'] : '' );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_organization', $speaker['organization'] );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_bio', $speaker['bio'] );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_headshot_url', $speaker['image'] );

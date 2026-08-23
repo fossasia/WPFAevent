@@ -736,11 +736,13 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			);
 		}
 
-		$session = ! empty( $speaker['sessions'][0] ) && is_array( $speaker['sessions'][0] ) ? $speaker['sessions'][0] : array();
-		$social  = ! empty( $speaker['social'] ) && is_array( $speaker['social'] ) ? $speaker['social'] : array();
+		$session            = ! empty( $speaker['sessions'][0] ) && is_array( $speaker['sessions'][0] ) ? $speaker['sessions'][0] : array();
+		$social             = ! empty( $speaker['social'] ) && is_array( $speaker['social'] ) ? $speaker['social'] : array();
+		$effective_position = ! empty( $speaker['position'] ) ? $speaker['position'] : ( isset( $speaker['title'] ) ? $speaker['title'] : '' );
 
 		update_post_meta( $saved_id, '_wpfa_eventyay_speaker_id', sanitize_text_field( $speaker['eventyay_speaker_id'] ) );
-		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_position', $speaker['position'] );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_position', $effective_position );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_title', isset( $speaker['title'] ) ? $speaker['title'] : '' );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_organization', $speaker['organization'] );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_bio', $speaker['bio'] );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_speaker_headshot_url', $speaker['image'] );
@@ -1120,12 +1122,15 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 		$api_token = ! empty( $settings['api_token'] ) ? $settings['api_token'] : '';
 		$payload   = $this->fetch_eventyay_json( $api_url, $api_token );
 		$import    = null;
+		$client    = new Wpfaevent_Eventyay_API_Client();
 
 		if ( ! is_wp_error( $payload ) ) {
 			$import = $this->parser->normalize_eventyay_payload( $payload, $settings, $event_slug );
+			if ( ! is_wp_error( $import ) ) {
+				$import = $client->enrich_legacy_eventyay_speakers_with_featured_state( $import, $settings, $event_slug );
+			}
 		}
 
-		$client              = new Wpfaevent_Eventyay_API_Client();
 		$should_try_fallback = is_wp_error( $payload ) && $client->eventyay_error_has_http_status( $payload, 404 );
 		if ( ! $should_try_fallback && ! is_wp_error( $payload ) ) {
 			$should_try_fallback = is_wp_error( $import ) || empty( $import['speakers'] );
@@ -1159,7 +1164,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 				$transformed_payload = $this->parser->transform_slots_to_speakers_payload( $slots_payload['results'] );
 				$fallback_import     = $this->parser->normalize_eventyay_payload( $transformed_payload, $settings, $event_slug );
 				if ( ! is_wp_error( $fallback_import ) && ! empty( $fallback_import['speakers'] ) ) {
-					return $fallback_import;
+					return $client->enrich_legacy_eventyay_speakers_with_featured_state( $fallback_import, $settings, $event_slug );
 				}
 			}
 		}
