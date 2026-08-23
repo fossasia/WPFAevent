@@ -280,10 +280,21 @@ class Wpfaevent_Public {
 		);
 
 		wp_register_style(
+			$this->plugin_name . '-event-base',
+			WPFAEVENT_URL . 'public/css/templates/event-base.css',
+			array(
+				$this->plugin_name,
+			),
+			$this->version,
+			'all'
+		);
+
+		wp_register_style(
 			$this->plugin_name . '-event',
 			WPFAEVENT_URL . 'public/css/templates/event.css',
 			array(
 				$this->plugin_name,
+				$this->plugin_name . '-event-base',
 				$this->plugin_name . '-navigation',
 			),
 			$this->version,
@@ -325,17 +336,26 @@ class Wpfaevent_Public {
 		);
 
 		wp_register_style(
-			$this->plugin_name . '-single-event',
-			WPFAEVENT_URL . 'public/css/templates/single-event.css',
-			array( $this->plugin_name, $this->plugin_name . '-navigation' ),
+			$this->plugin_name . '-additional-information',
+			WPFAEVENT_URL . 'public/css/templates/additional-information.css',
+			array(
+				$this->plugin_name,
+				$this->plugin_name . '-event-base',
+				$this->plugin_name . '-navigation',
+			),
 			$this->version,
 			'all'
 		);
 
 		wp_register_style(
-			$this->plugin_name . '-additional-information',
-			WPFAEVENT_URL . 'public/css/templates/additional-information.css',
-			array( $this->plugin_name, $this->plugin_name . '-navigation' ),
+			$this->plugin_name . '-partners',
+			WPFAEVENT_URL . 'public/css/templates/partners.css',
+			array(
+				$this->plugin_name,
+				$this->plugin_name . '-event-base',
+				$this->plugin_name . '-navigation',
+				$this->plugin_name . '-pagination',
+			),
 			$this->version,
 			'all'
 		);
@@ -383,7 +403,7 @@ class Wpfaevent_Public {
 			$this->plugin_name . '-events',
 			WPFAEVENT_URL . 'public/js/wpfaevent-events.js',
 			array( 'jquery' ),
-			$this->version,
+			$this->version . '-v2',
 			true
 		);
 
@@ -479,8 +499,6 @@ class Wpfaevent_Public {
 			is_singular( 'wpfa_event' )
 			|| is_post_type_archive( 'wpfa_event' )
 			|| $this->is_wpfa_template_file_active( 'page-schedule.php' )
-			|| $this->is_wpfa_template_file_active( 'page-additional-information.php' )
-			|| $this->is_wpfa_template_file_active( 'public/partials/additional-information-page.php' )
 			|| $this->is_wpfa_template_file_active( 'page-partner.php' )
 		) {
 			wp_enqueue_style( $this->plugin_name . '-event' );
@@ -489,8 +507,6 @@ class Wpfaevent_Public {
 		if (
 			is_singular( 'wpfa_event' )
 			|| $this->is_wpfa_template_file_active( 'page-schedule.php' )
-			|| $this->is_wpfa_template_file_active( 'page-additional-information.php' )
-			|| $this->is_wpfa_template_file_active( 'public/partials/additional-information-page.php' )
 		) {
 			wp_enqueue_style( $this->plugin_name . '-schedule' );
 		}
@@ -517,7 +533,6 @@ class Wpfaevent_Public {
 		}
 
 		if ( is_singular( 'wpfa_event' ) || $this->is_wpfa_template_file_active( 'page-schedule.php' ) ) {
-			wp_enqueue_style( $this->plugin_name . '-single-event' );
 			wp_enqueue_style( $this->plugin_name . '-events' );
 		}
 
@@ -525,7 +540,10 @@ class Wpfaevent_Public {
 			wp_enqueue_style( $this->plugin_name . '-bookmark' );
 		}
 
-		if ( $this->is_wpfa_template_file_active( 'page-additional-information.php' ) ) {
+		if (
+			$this->is_wpfa_template_file_active( 'page-additional-information.php' )
+			|| $this->is_wpfa_template_file_active( 'public/partials/additional-information-page.php' )
+		) {
 			wp_enqueue_style( $this->plugin_name . '-additional-information' );
 		}
 
