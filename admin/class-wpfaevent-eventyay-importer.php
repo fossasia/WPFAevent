@@ -1638,6 +1638,7 @@ class Wpfaevent_Eventyay_Importer {
 			++$result['skipped'];
 		} else {
 			$normalized_sponsors = $this->normalize_eventyay_sponsor_resources( $sponsors['resources'], $settings );
+			$normalized_sponsors = $this->filter_eventyay_sponsors_to_public_listing( $normalized_sponsors, $event, $settings, $event_slug );
 			$existing_sponsors   = $this->read_dashboard_json_file( 'sponsors-' . absint( $event_id ) . '.json', array() );
 			$sponsor_groups      = $this->merge_eventyay_sponsor_groups( $normalized_sponsors, $existing_sponsors );
 			$write_result        = $this->write_dashboard_json_file( 'sponsors-' . absint( $event_id ) . '.json', $sponsor_groups );
@@ -1666,6 +1667,184 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Filter API sponsor rows to the sponsor names shown on the public Eventyay page.
+	 *
+	 * Some Eventyay sponsor endpoints can include records that are not actually shown
+	 * on the public event page. When Eventyay publishes a supported-by section,
+	 * treat those visible group/name combinations as the authoritative set.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $sponsors   Normalized sponsor records.
+	 * @param array  $event      Eventyay event resource.
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array
+	 */
+	private function filter_eventyay_sponsors_to_public_listing( $sponsors, $event, $settings, $event_slug ) {
+		if ( empty( $sponsors ) ) {
+			return is_array( $sponsors ) ? $sponsors : array();
+		}
+
+		$public_groups = $this->fetch_eventyay_public_sponsor_groups( $event, $settings, $event_slug );
+		if ( is_wp_error( $public_groups ) || empty( $public_groups ) ) {
+			return $sponsors;
+		}
+
+		$filtered = array();
+		$name_map = array();
+
+		foreach ( $public_groups as $public_group ) {
+			if ( empty( $public_group['group_name'] ) || empty( $public_group['sponsors'] ) || ! is_array( $public_group['sponsors'] ) ) {
+				continue;
+			}
+
+			foreach ( array_keys( $public_group['sponsors'] ) as $name_key ) {
+				if ( '' !== $name_key && empty( $name_map[ $name_key ] ) ) {
+					$name_map[ $name_key ] = $public_group['group_name'];
+				}
+			}
+		}
+
+		foreach ( $sponsors as $sponsor ) {
+			if ( ! is_array( $sponsor ) ) {
+				continue;
+			}
+
+			$name_key = ! empty( $sponsor['name'] ) ? sanitize_title( $sponsor['name'] ) : '';
+			if ( '' !== $name_key && empty( $sponsor['type'] ) && ! empty( $name_map[ $name_key ] ) ) {
+				$sponsor['type'] = sanitize_text_field( $name_map[ $name_key ] );
+			}
+
+			$group_key = ! empty( $sponsor['type'] ) ? sanitize_title( $sponsor['type'] ) : '';
+			$name_key  = ! empty( $sponsor['name'] ) ? sanitize_title( $sponsor['name'] ) : '';
+
+			if ( '' === $group_key || '' === $name_key ) {
+				continue;
+			}
+
+			if ( ! empty( $public_groups[ $group_key ]['sponsors'][ $name_key ] ) ) {
+				$filtered[] = $sponsor;
+			}
+		}
+
+		return ! empty( $filtered ) ? $filtered : $sponsors;
+	}
+
+	/**
+	 * Fetch sponsor groups published on the public Eventyay page.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $event      Eventyay event resource.
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array|WP_Error
+	 */
+	private function fetch_eventyay_public_sponsor_groups( $event, $settings, $event_slug ) {
+		$event_url = trailingslashit( $this->eventyay_public_event_url( $event, $settings, $event_slug ) );
+		if ( ! $event_url ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_missing_public_event_url',
+				esc_html__( 'The public Eventyay event page URL could not be resolved.', 'wpfaevent' )
+			);
+		}
+
+		$response = wp_remote_get(
+			$event_url,
+			array(
+				'timeout'     => 20,
+				'redirection' => 3,
+				'headers'     => array(
+					'Accept'     => 'text/html,application/xhtml+xml',
+					'User-Agent' => 'Mozilla/5.0 (compatible; WPFAevent importer)',
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_public_event_request_failed',
+				esc_html__( 'The public Eventyay event page could not be fetched.', 'wpfaevent' ),
+				array( 'details' => $response->get_error_message() )
+			);
+		}
+
+		$status = absint( wp_remote_retrieve_response_code( $response ) );
+		if ( $status < 200 || $status >= 300 ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_public_event_http_error',
+				esc_html__( 'The public Eventyay event page returned an unexpected response.', 'wpfaevent' ),
+				array( 'http_status' => $status )
+			);
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+		if ( '' === trim( (string) $body ) ) {
+			return array();
+		}
+
+		if ( ! class_exists( 'DOMDocument' ) || ! class_exists( 'DOMXPath' ) ) {
+			return array();
+		}
+
+		$internal_errors = libxml_use_internal_errors( true );
+		$document        = new DOMDocument();
+		$loaded          = $document->loadHTML( '<?xml encoding="utf-8" ?>' . $body );
+		libxml_clear_errors();
+		libxml_use_internal_errors( $internal_errors );
+
+		if ( ! $loaded ) {
+			return array();
+		}
+
+		$xpath  = new DOMXPath( $document );
+		$groups = array();
+		$nodes  = $xpath->query( '//div[contains(concat(" ", normalize-space(@class), " "), " exhibition-supported-by-group ")]' );
+
+		if ( ! $nodes ) {
+			return array();
+		}
+
+		foreach ( $nodes as $group_node ) {
+			$title_nodes = $xpath->query( './/h4[1]', $group_node );
+			if ( ! $title_nodes || 0 === $title_nodes->length ) {
+				continue;
+			}
+
+			$group_name = trim( wp_strip_all_tags( $title_nodes->item(0)->textContent ) );
+			$group_key  = sanitize_title( $group_name );
+
+			if ( '' === $group_key ) {
+				continue;
+			}
+
+			$image_nodes = $xpath->query( './/img[@alt]', $group_node );
+			if ( ! $image_nodes || 0 === $image_nodes->length ) {
+				continue;
+			}
+
+			if ( ! isset( $groups[ $group_key ] ) ) {
+				$groups[ $group_key ] = array(
+					'group_name' => $group_name,
+					'sponsors'   => array(),
+				);
+			}
+
+			foreach ( $image_nodes as $image_node ) {
+				$name = trim( (string) $image_node->getAttribute( 'alt' ) );
+				$key  = sanitize_title( $name );
+
+				if ( '' !== $key ) {
+					$groups[ $group_key ]['sponsors'][ $key ] = true;
+				}
+			}
+		}
+
+		return $groups;
 	}
 
 	/**
@@ -1865,7 +2044,7 @@ class Wpfaevent_Eventyay_Importer {
 		$sponsor_resource = $this->normalize_eventyay_api_resource( $sponsor_resource );
 		$source_id        = $this->eventyay_resource_identifier( $sponsor_resource );
 		$name             = $this->eventyay_first_present_text( $sponsor_resource, array( 'name', 'title', 'label' ) );
-		$type             = $this->eventyay_first_present_text( $sponsor_resource, array( 'type', 'level_name', 'level-name', 'tier', 'category' ) );
+		$type             = $this->eventyay_first_present_text( $sponsor_resource, array( 'level_name', 'level-name', 'tier', 'category', 'type' ) );
 		$level            = $this->eventyay_first_present_raw( $sponsor_resource, array( 'level', 'position', 'order', 'sort_order', 'sort-order' ) );
 
 		$desc  = $this->eventyay_first_present_rich_text( $sponsor_resource, array( 'description', 'subtitle', 'summary' ) );
@@ -1904,20 +2083,68 @@ class Wpfaevent_Eventyay_Importer {
 	private function merge_eventyay_sponsor_groups( $imported, $existing ) {
 		$existing = is_array( $existing ) ? $existing : array();
 		$groups   = array();
+		$order    = array();
 
 		foreach ( $existing as $group ) {
-			if ( ! is_array( $group ) || $this->is_eventyay_sponsor_group( $group ) ) {
+			if ( ! is_array( $group ) ) {
+				continue;
+			}
+
+			$group_key = $this->eventyay_sponsor_group_key( $group );
+			if ( '' !== $group_key ) {
+				$order[] = $group_key;
+			}
+
+			if ( $this->is_eventyay_sponsor_group( $group ) ) {
 				continue;
 			}
 
 			$groups[] = $group;
 		}
 
-		foreach ( $this->group_eventyay_sponsors( $imported ) as $group ) {
-			$groups[] = $group;
+		$imported_groups = $this->group_eventyay_sponsors( $imported );
+		$group_map       = array();
+
+		foreach ( $groups as $group ) {
+			$group_key = $this->eventyay_sponsor_group_key( $group );
+			if ( '' !== $group_key ) {
+				$group_map[ $group_key ] = $group;
+			}
 		}
 
-		return $groups;
+		foreach ( $imported_groups as $group ) {
+			$group_key = $this->eventyay_sponsor_group_key( $group );
+			if ( '' !== $group_key ) {
+				$group_map[ $group_key ] = $group;
+
+				if ( ! in_array( $group_key, $order, true ) ) {
+					$order[] = $group_key;
+				}
+			} else {
+				$groups[] = $group;
+			}
+		}
+
+		$merged_groups = array();
+
+		foreach ( $order as $group_key ) {
+			if ( isset( $group_map[ $group_key ] ) ) {
+				$merged_groups[] = $group_map[ $group_key ];
+				unset( $group_map[ $group_key ] );
+			}
+		}
+
+		foreach ( $group_map as $group ) {
+			$merged_groups[] = $group;
+		}
+
+		foreach ( $groups as $group ) {
+			if ( ! is_array( $group ) ) {
+				$merged_groups[] = $group;
+			}
+		}
+
+		return $merged_groups;
 	}
 
 	/**
@@ -1987,6 +2214,28 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Get a stable key for a sponsor group.
+	 *
+	 * @param array $group Sponsor group.
+	 * @return string
+	 */
+	private function eventyay_sponsor_group_key( $group ) {
+		if ( ! is_array( $group ) ) {
+			return '';
+		}
+
+		if ( ! empty( $group['eventyay_group_key'] ) ) {
+			return sanitize_key( $group['eventyay_group_key'] );
+		}
+
+		if ( ! empty( $group['group_name'] ) ) {
+			return sanitize_key( $group['group_name'] );
+		}
+
+		return '';
 	}
 
 	/**

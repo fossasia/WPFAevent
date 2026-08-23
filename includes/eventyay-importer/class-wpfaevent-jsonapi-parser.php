@@ -220,7 +220,7 @@ class Wpfaevent_JSONAPI_Parser {
 		$sponsor_resource = $this->normalize_eventyay_api_resource( $sponsor_resource );
 		$source_id        = $this->eventyay_resource_identifier( $sponsor_resource );
 		$name             = $this->eventyay_first_present_text( $sponsor_resource, array( 'name', 'title', 'label' ) );
-		$type             = $this->eventyay_first_present_text( $sponsor_resource, array( 'type', 'level_name', 'level-name', 'tier', 'category' ) );
+		$type             = $this->eventyay_first_present_text( $sponsor_resource, array( 'level_name', 'level-name', 'tier', 'category', 'type' ) );
 		$level            = $this->eventyay_first_present_raw( $sponsor_resource, array( 'level', 'position', 'order', 'sort_order', 'sort-order' ) );
 
 		return array(
@@ -934,6 +934,20 @@ class Wpfaevent_JSONAPI_Parser {
 		foreach ( $eventyay_resource as $key => $value ) {
 			if ( in_array( $key, array( 'attributes', 'relationships' ), true ) ) {
 				continue;
+			}
+
+			if (
+				'type' === $key
+				&& isset( $normalized['type'] )
+				&& is_string( $normalized['type'] )
+				&& is_scalar( $value )
+			) {
+				$attribute_type = trim( $normalized['type'] );
+				$resource_type  = trim( (string) $value );
+
+				if ( '' !== $attribute_type && '' !== $resource_type && sanitize_key( $attribute_type ) !== sanitize_key( $resource_type ) ) {
+					continue;
+				}
 			}
 
 			$normalized[ $key ] = $value;
@@ -2461,20 +2475,90 @@ class Wpfaevent_JSONAPI_Parser {
 	public function merge_eventyay_sponsor_groups( $imported, $existing ) {
 		$existing = is_array( $existing ) ? $existing : array();
 		$groups   = array();
+		$order    = array();
 
 		foreach ( $existing as $group ) {
-			if ( ! is_array( $group ) || $this->is_eventyay_sponsor_group( $group ) ) {
+			if ( ! is_array( $group ) ) {
+				continue;
+			}
+
+			$group_key = $this->eventyay_sponsor_group_key( $group );
+			if ( '' !== $group_key ) {
+				$order[] = $group_key;
+			}
+
+			if ( $this->is_eventyay_sponsor_group( $group ) ) {
 				continue;
 			}
 
 			$groups[] = $group;
 		}
 
-		foreach ( $this->group_eventyay_sponsors( $imported ) as $group ) {
-			$groups[] = $group;
+		$imported_groups = $this->group_eventyay_sponsors( $imported );
+		$group_map       = array();
+
+		foreach ( $groups as $group ) {
+			$group_key = $this->eventyay_sponsor_group_key( $group );
+			if ( '' !== $group_key ) {
+				$group_map[ $group_key ] = $group;
+			}
 		}
 
-		return $groups;
+		foreach ( $imported_groups as $group ) {
+			$group_key = $this->eventyay_sponsor_group_key( $group );
+			if ( '' !== $group_key ) {
+				$group_map[ $group_key ] = $group;
+
+				if ( ! in_array( $group_key, $order, true ) ) {
+					$order[] = $group_key;
+				}
+			} else {
+				$groups[] = $group;
+			}
+		}
+
+		$merged_groups = array();
+
+		foreach ( $order as $group_key ) {
+			if ( isset( $group_map[ $group_key ] ) ) {
+				$merged_groups[] = $group_map[ $group_key ];
+				unset( $group_map[ $group_key ] );
+			}
+		}
+
+		foreach ( $group_map as $group ) {
+			$merged_groups[] = $group;
+		}
+
+		foreach ( $groups as $group ) {
+			if ( ! is_array( $group ) ) {
+				$merged_groups[] = $group;
+			}
+		}
+
+		return $merged_groups;
+	}
+
+	/**
+	 * Get a stable key for a sponsor group.
+	 *
+	 * @param array $group Sponsor group.
+	 * @return string
+	 */
+	private function eventyay_sponsor_group_key( $group ) {
+		if ( ! is_array( $group ) ) {
+			return '';
+		}
+
+		if ( ! empty( $group['eventyay_group_key'] ) ) {
+			return sanitize_key( $group['eventyay_group_key'] );
+		}
+
+		if ( ! empty( $group['group_name'] ) ) {
+			return sanitize_key( $group['group_name'] );
+		}
+
+		return '';
 	}
 
 	/**
