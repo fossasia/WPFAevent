@@ -907,7 +907,60 @@ class Wpfaevent_Eventyay_API_Client {
 			return $import;
 		}
 
-		return $this->enrich_legacy_eventyay_speakers_with_featured_state( $import, $settings, $event_slug );
+		$import = $this->enrich_legacy_eventyay_speakers_with_featured_state( $import, $settings, $event_slug );
+		if ( empty( $import['speakers'] ) ) {
+			return $import;
+		}
+
+		$featured_map = $this->fetch_eventyay_public_speaker_featured_map( $settings, $event_slug );
+		if ( ! is_wp_error( $featured_map ) && ! empty( $featured_map ) ) {
+			$import['speakers'] = $this->parser->apply_eventyay_public_speaker_featured_map( $import['speakers'], $featured_map );
+		}
+
+		return $import;
+	}
+
+	/**
+	 * Fetch featured speaker metadata from Eventyay's public speakers page.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array|WP_Error
+	 */
+	public function fetch_eventyay_public_speaker_featured_map( $settings, $event_slug ) {
+		$page_url = $this->build_eventyay_public_speakers_page_url( $settings, $event_slug );
+		if ( is_wp_error( $page_url ) ) {
+			return $page_url;
+		}
+
+		$response = wp_remote_get(
+			$page_url,
+			array(
+				'timeout'    => 20,
+				'user-agent' => 'WPFAevent/' . ( defined( 'WPFAEVENT_VERSION' ) ? WPFAEVENT_VERSION : 'dev' ) . '; ' . home_url( '/' ),
+				'headers'    => array(
+					'Accept' => 'text/html,application/xhtml+xml',
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return $this->fetch_eventyay_public_event_featured_map_fallback( $settings, $event_slug );
+		}
+
+		$status_code = wp_remote_retrieve_response_code( $response );
+		if ( $status_code < 200 || $status_code >= 300 ) {
+			return $this->fetch_eventyay_public_event_featured_map_fallback( $settings, $event_slug );
+		}
+
+		$map = $this->parser->extract_eventyay_public_speaker_featured_map( wp_remote_retrieve_body( $response ) );
+		if ( empty( $map ) ) {
+			return $this->fetch_eventyay_public_event_featured_map_fallback( $settings, $event_slug );
+		}
+
+		return $map;
 	}
 
 	/**
@@ -962,6 +1015,51 @@ class Wpfaevent_Eventyay_API_Client {
 	}
 
 	/**
+	 * Fallback to fetch featured speaker metadata from the main Eventyay public event landing page.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array|WP_Error
+	 */
+	public function fetch_eventyay_public_event_featured_map_fallback( $settings, $event_slug ) {
+		$page_url = $this->build_eventyay_public_event_url( $settings, $event_slug );
+		if ( is_wp_error( $page_url ) ) {
+			return $page_url;
+		}
+
+		$response = wp_remote_get(
+			$page_url,
+			array(
+				'timeout'    => 20,
+				'user-agent' => 'WPFAevent/' . ( defined( 'WPFAEVENT_VERSION' ) ? WPFAEVENT_VERSION : 'dev' ) . '; ' . home_url( '/' ),
+				'headers'    => array(
+					'Accept' => 'text/html,application/xhtml+xml',
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$status_code = wp_remote_retrieve_response_code( $response );
+		if ( $status_code < 200 || $status_code >= 300 ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_public_speakers_http_error',
+				esc_html__( 'Eventyay public speakers page and main page could not be retrieved.', 'wpfaevent' ),
+				array(
+					'http_status' => $status_code,
+					'url'         => $page_url,
+				)
+			);
+		}
+
+		return $this->parser->extract_eventyay_public_speaker_featured_map( wp_remote_retrieve_body( $response ) );
+	}
+
+	/**
 	 * Build JSON:API speaker endpoints that expose the `is-featured` field.
 	 *
 	 * @since 1.0.0
@@ -997,6 +1095,62 @@ class Wpfaevent_Eventyay_API_Client {
 		}
 
 		return array_values( array_unique( array_filter( $endpoints ) ) );
+	}
+
+	/**
+	 * Build the main public landing page URL for an Eventyay event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return string|WP_Error
+	 */
+	public function build_eventyay_public_event_url( $settings, $event_slug ) {
+		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
+		$base_url   = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
+		$event_slug = $this->sanitize_eventyay_path_segment( $event_slug );
+
+		if ( empty( $base_url ) || ! wp_http_validate_url( $base_url ) || empty( $settings['organizer_slug'] ) || empty( $event_slug ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_public_event_invalid_url',
+				esc_html__( 'The Eventyay public event URL could not be built.', 'wpfaevent' )
+			);
+		}
+
+		return esc_url_raw(
+			trailingslashit( $base_url ) .
+			rawurlencode( $settings['organizer_slug'] ) . '/' .
+			rawurlencode( $event_slug ) . '/'
+		);
+	}
+
+	/**
+	 * Build the public speakers page URL for an Eventyay event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return string|WP_Error
+	 */
+	public function build_eventyay_public_speakers_page_url( $settings, $event_slug ) {
+		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
+		$base_url   = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
+		$event_slug = $this->sanitize_eventyay_path_segment( $event_slug );
+
+		if ( empty( $base_url ) || ! wp_http_validate_url( $base_url ) || empty( $settings['organizer_slug'] ) || empty( $event_slug ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_public_speakers_invalid_url',
+				esc_html__( 'The Eventyay public speakers page URL could not be built.', 'wpfaevent' )
+			);
+		}
+
+		return esc_url_raw(
+			trailingslashit( $base_url ) .
+			rawurlencode( $settings['organizer_slug'] ) . '/' .
+			rawurlencode( $event_slug ) . '/speakers/'
+		);
 	}
 
 	/**

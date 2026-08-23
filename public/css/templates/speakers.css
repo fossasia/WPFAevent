@@ -270,31 +270,6 @@
 	flex-grow: 1;
 }
 
-/* Category Pills */
-.wpfaevent .pill {
-	display: inline-block;
-	background-color: var(--brand, #D51007);
-	color: #fff;
-	border-radius: 12px;
-	font-size: 12px;
-	font-weight: 600;
-	padding: 4px 10px;
-	margin-bottom: 8px;
-	line-height: 1;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
-}
-
-.wpfaevent .wpfa-speaker-card:has(.pill) .wpfa-speaker-name {
-	margin-top: 0.25rem; /* Reduce margin when pill is present */
-}
-
-/* Optional: Different colors for different categories (can be extended) */
-.wpfaevent .pill.ai { background-color: #4CAF50; }
-.wpfaevent .pill.web { background-color: #2196F3; }
-.wpfaevent .pill.cloud { background-color: #9C27B0; }
-.wpfaevent .pill.opensource { background-color: #FF9800; }
-
 /* ==========================================================================
    EXPANDABLE CONTENT (Bio, Session, Social)
    ========================================================================== */

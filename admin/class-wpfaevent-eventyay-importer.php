@@ -2551,7 +2551,17 @@ class Wpfaevent_Eventyay_Importer {
 			return $fetched;
 		}
 
-		return $this->normalize_eventyay_speakers_payload( $fetched['speakers'], $settings, $event_slug );
+		$program = $this->normalize_eventyay_speakers_payload( $fetched['speakers'], $settings, $event_slug );
+		if ( is_wp_error( $program ) || empty( $program['speakers'] ) ) {
+			return $program;
+		}
+
+		$featured_map = $this->get_client()->fetch_eventyay_public_speaker_featured_map( $settings, $event_slug );
+		if ( ! is_wp_error( $featured_map ) && ! empty( $featured_map ) ) {
+			$program['speakers'] = ( new Wpfaevent_JSONAPI_Parser() )->apply_eventyay_public_speaker_featured_map( $program['speakers'], $featured_map );
+		}
+
+		return $program;
 	}
 
 	/**
@@ -3973,7 +3983,7 @@ class Wpfaevent_Eventyay_Importer {
 				'github'   => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'github', 'github_url', 'github-url' ) ), $settings['base_url'] ),
 				'website'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'website', 'website_url', 'website-url', 'homepage', 'homepage_url', 'homepage-url', 'url' ) ), $settings['base_url'] ),
 			),
-			'featured'            => $this->eventyay_speaker_is_featured( $speaker_resource, $category ),
+			'featured'            => $this->eventyay_speaker_is_featured( $speaker_resource ),
 			'featured_order'      => $this->eventyay_speaker_featured_order( $speaker_resource ),
 			'sessions'            => array(),
 			'source'              => 'eventyay',
@@ -3985,11 +3995,10 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array  $speaker_resource Normalized Eventyay speaker resource.
-	 * @param string $category         Speaker category or track label.
+	 * @param array $speaker_resource Normalized Eventyay speaker resource.
 	 * @return bool
 	 */
-	private function eventyay_speaker_is_featured( $speaker_resource, $category = '' ) {
+	private function eventyay_speaker_is_featured( $speaker_resource ) {
 		$featured = $this->eventyay_first_present_raw(
 			$speaker_resource,
 			array(
@@ -4009,11 +4018,7 @@ class Wpfaevent_Eventyay_Importer {
 			)
 		);
 
-		if ( $this->eventyay_truthy_value( $featured ) ) {
-			return true;
-		}
-
-		return is_string( $category ) && (bool) preg_match( '/\b(featured|keynote|plenary|highlight)\b/i', $category );
+		return $this->eventyay_truthy_value( $featured );
 	}
 
 	/**
@@ -5265,7 +5270,7 @@ class Wpfaevent_Eventyay_Importer {
 				'github'   => esc_url_raw( $this->attribute_value( $attributes, array( 'github', 'github-url' ) ) ),
 				'website'  => esc_url_raw( $this->attribute_value( $attributes, array( 'website', 'website-url' ) ) ),
 			),
-			'featured'            => $this->eventyay_speaker_is_featured( $attributes, $category ),
+			'featured'            => $this->eventyay_speaker_is_featured( $attributes ),
 			'featured_order'      => $this->eventyay_speaker_featured_order( $attributes ),
 			'sessions'            => array(),
 			'source'              => 'eventyay',
@@ -5303,6 +5308,10 @@ class Wpfaevent_Eventyay_Importer {
 
 		if ( ! empty( $speaker['featured'] ) ) {
 			$speakers[ $key ]['featured'] = true;
+		}
+
+		if ( ! empty( $speaker['featured_state_known'] ) ) {
+			$speakers[ $key ]['featured_state_known'] = true;
 		}
 
 		if ( ! empty( $speaker['featured_order'] ) ) {
@@ -5358,9 +5367,12 @@ class Wpfaevent_Eventyay_Importer {
 					continue;
 				}
 
-				$speaker['featured'] = ! empty( $speaker['featured'] ) || $state[ $key ]['featured'];
-				if ( null !== $state[ $key ]['featured_order'] ) {
-					$speaker['featured_order'] = $state[ $key ]['featured_order'];
+				$featured_state_known = ! empty( $speaker['featured_state_known'] );
+				if ( ! $featured_state_known ) {
+					$speaker['featured'] = ! empty( $speaker['featured'] ) || $state[ $key ]['featured'];
+					if ( null !== $state[ $key ]['featured_order'] ) {
+						$speaker['featured_order'] = $state[ $key ]['featured_order'];
+					}
 				}
 				if ( empty( $speaker['image'] ) && ! empty( $state[ $key ]['image'] ) ) {
 					$speaker['image'] = $state[ $key ]['image'];

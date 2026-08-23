@@ -449,6 +449,7 @@ if ( $show_ticket_widget ) {
 									$wpfa_hide_speaker_card_admin_actions = true;
 									$wpfa_schedule_display_timezone       = $selected_schedule_timezone;
 									$wpfa_featured_speaker_ids            = $featured_speaker_ids;
+									$wpfa_speaker_card_variant            = 'compact';
 									foreach ( $featured_speaker_ids as $sid ) :
 										if ( 'wpfa_speaker' !== get_post_type( $sid ) || 'publish' !== get_post_status( $sid ) ) {
 											continue;
@@ -459,6 +460,7 @@ if ( $show_ticket_widget ) {
 									unset( $wpfa_hide_speaker_card_admin_actions );
 									unset( $wpfa_schedule_display_timezone );
 									unset( $wpfa_featured_speaker_ids );
+									unset( $wpfa_speaker_card_variant );
 									?>
 								</div>
 							</div>
@@ -504,7 +506,9 @@ if ( $show_ticket_widget ) {
 									<?php foreach ( $dashboard_featured_speakers as $speaker ) : ?>
 										<?php
 										$wpfa_dashboard_speaker_is_featured = true;
+										$wpfa_speaker_card_variant          = 'compact';
 										include WPFAEVENT_PATH . 'public/partials/speakers/dashboard-speaker-card.php';
+										unset( $wpfa_speaker_card_variant );
 										unset( $wpfa_dashboard_speaker_is_featured );
 										?>
 									<?php endforeach; ?>
