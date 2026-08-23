@@ -220,8 +220,15 @@ class Wpfaevent_JSONAPI_Parser {
 		$sponsor_resource = $this->normalize_eventyay_api_resource( $sponsor_resource );
 		$source_id        = $this->eventyay_resource_identifier( $sponsor_resource );
 		$name             = $this->eventyay_first_present_text( $sponsor_resource, array( 'name', 'title', 'label' ) );
-		$type             = $this->eventyay_first_present_text( $sponsor_resource, array( 'type', 'level_name', 'level-name', 'tier', 'category' ) );
+		$type             = $this->eventyay_first_present_text( $sponsor_resource, array( 'level_name', 'level-name', 'tier', 'category', 'sponsor_type', 'sponsor-type', 'sponsorship_type', 'sponsorship-type', 'package', 'package_name', 'package-name' ) );
 		$level            = $this->eventyay_first_present_raw( $sponsor_resource, array( 'level', 'position', 'order', 'sort_order', 'sort-order' ) );
+
+		if ( '' === $type ) {
+			$fallback_type = $this->eventyay_first_present_text( $sponsor_resource, array( 'type' ) );
+			if ( ! in_array( strtolower( $fallback_type ), array( 'sponsor', 'sponsors' ), true ) ) {
+				$type = $fallback_type;
+			}
+		}
 
 		return array(
 			'id'          => $source_id ? 'eventyay-sponsor-' . sanitize_key( $source_id ) : 'eventyay-sponsor-' . sanitize_title( $name ),
@@ -2561,6 +2568,204 @@ class Wpfaevent_JSONAPI_Parser {
 		}
 
 		return array_values( $imported );
+	}
+
+	/**
+	 * Merge supplemental Eventyay speakers into an imported speaker list.
+	 *
+	 * Older organizer-scoped Eventyay speaker endpoints can omit both
+	 * `is-featured` and some speaker records entirely, so we reconcile them from
+	 * the JSON:API speaker list using stable speaker display data where possible.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $speakers              Imported speaker records to enrich.
+	 * @param array $supplemental_speakers Supplemental normalized speaker records.
+	 * @return array
+	 */
+	public function merge_supplemental_speakers( $speakers, $supplemental_speakers ) {
+		if ( ! is_array( $speakers ) || empty( $speakers ) || ! is_array( $supplemental_speakers ) || empty( $supplemental_speakers ) ) {
+			return is_array( $speakers ) ? $speakers : array();
+		}
+
+		$supplemental_lookup = array();
+		foreach ( $supplemental_speakers as $speaker ) {
+			if ( ! is_array( $speaker ) || empty( $speaker['name'] ) ) {
+				continue;
+			}
+
+			$name_key = sanitize_title( $speaker['name'] );
+			if ( '' === $name_key ) {
+				continue;
+			}
+
+			if ( ! isset( $supplemental_lookup[ $name_key ] ) ) {
+				$supplemental_lookup[ $name_key ] = array();
+			}
+
+			$supplemental_lookup[ $name_key ][] = $speaker;
+		}
+
+		if ( empty( $supplemental_lookup ) ) {
+			return $speakers;
+		}
+
+		$matched_supplemental_keys = array();
+
+		foreach ( $speakers as &$speaker ) {
+			if ( ! is_array( $speaker ) || empty( $speaker['name'] ) ) {
+				continue;
+			}
+
+			$name_key = sanitize_title( $speaker['name'] );
+			if ( '' === $name_key || empty( $supplemental_lookup[ $name_key ] ) ) {
+				continue;
+			}
+
+			$matched_supplemental_index = $this->match_supplemental_speaker_candidate_index( $speaker, $supplemental_lookup[ $name_key ] );
+			if ( null === $matched_supplemental_index ) {
+				continue;
+			}
+
+			$matched_supplemental        = $supplemental_lookup[ $name_key ][ $matched_supplemental_index ];
+			$matched_supplemental_keys[] = $name_key . ':' . $matched_supplemental_index;
+			$speaker                     = $this->merge_eventyay_supplemental_speaker_record( $speaker, $matched_supplemental );
+		}
+		unset( $speaker );
+
+		foreach ( $supplemental_lookup as $name_key => $candidates ) {
+			foreach ( $candidates as $candidate_index => $candidate ) {
+				if ( in_array( $name_key . ':' . $candidate_index, $matched_supplemental_keys, true ) ) {
+					continue;
+				}
+
+				$speakers[] = $candidate;
+			}
+		}
+
+		return array_values( $speakers );
+	}
+
+	/**
+	 * Find the best supplemental-speaker match index for one imported speaker.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $speaker    Imported speaker record.
+	 * @param array $candidates Supplemental speaker candidates with the same name key.
+	 * @return int|null
+	 */
+	private function match_supplemental_speaker_candidate_index( $speaker, $candidates ) {
+		if ( 1 === count( $candidates ) ) {
+			return 0;
+		}
+
+		$image = isset( $speaker['image'] ) ? esc_url_raw( $speaker['image'] ) : '';
+		if ( $image ) {
+			$image_match_index = $this->find_unique_candidate_index(
+				$candidates,
+				static function ( $candidate ) use ( $image ) {
+					return ! empty( $candidate['image'] ) && esc_url_raw( $candidate['image'] ) === $image;
+				}
+			);
+			if ( null !== $image_match_index ) {
+				return $image_match_index;
+			}
+		}
+
+		$title = isset( $speaker['title'] ) ? sanitize_text_field( $speaker['title'] ) : '';
+		if ( $title ) {
+			$title_match_index = $this->find_unique_candidate_index(
+				$candidates,
+				static function ( $candidate ) use ( $title ) {
+					return ! empty( $candidate['title'] ) && sanitize_text_field( $candidate['title'] ) === $title;
+				}
+			);
+			if ( null !== $title_match_index ) {
+				return $title_match_index;
+			}
+		}
+
+		$organization = isset( $speaker['organization'] ) ? sanitize_text_field( $speaker['organization'] ) : '';
+		if ( $organization ) {
+			$organization_match_index = $this->find_unique_candidate_index(
+				$candidates,
+				static function ( $candidate ) use ( $organization ) {
+					return ! empty( $candidate['organization'] ) && sanitize_text_field( $candidate['organization'] ) === $organization;
+				}
+			);
+			if ( null !== $organization_match_index ) {
+				return $organization_match_index;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Find a unique matching candidate index.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array    $candidates Candidate speaker records.
+	 * @param callable $matcher    Match callback.
+	 * @return int|null
+	 */
+	private function find_unique_candidate_index( $candidates, $matcher ) {
+		$matched_index = null;
+
+		foreach ( $candidates as $candidate_index => $candidate ) {
+			if ( ! $matcher( $candidate ) ) {
+				continue;
+			}
+
+			if ( null !== $matched_index ) {
+				return null;
+			}
+
+			$matched_index = $candidate_index;
+		}
+
+		return $matched_index;
+	}
+
+	/**
+	 * Merge one supplemental speaker record into an imported speaker.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $speaker      Imported speaker record.
+	 * @param array $supplemental Supplemental speaker record.
+	 * @return array
+	 */
+	private function merge_eventyay_supplemental_speaker_record( $speaker, $supplemental ) {
+		foreach ( array( 'title', 'position', 'organization', 'category', 'image', 'bio' ) as $field ) {
+			if ( empty( $speaker[ $field ] ) && ! empty( $supplemental[ $field ] ) ) {
+				$speaker[ $field ] = $supplemental[ $field ];
+			}
+		}
+
+		if ( empty( $speaker['social'] ) || ! is_array( $speaker['social'] ) ) {
+			$speaker['social'] = array();
+		}
+
+		if ( ! empty( $supplemental['social'] ) && is_array( $supplemental['social'] ) ) {
+			foreach ( $supplemental['social'] as $field => $value ) {
+				if ( empty( $speaker['social'][ $field ] ) && ! empty( $value ) ) {
+					$speaker['social'][ $field ] = $value;
+				}
+			}
+		}
+
+		if ( ! empty( $supplemental['featured'] ) ) {
+			$speaker['featured'] = true;
+		}
+
+		if ( empty( $speaker['featured_order'] ) && ! empty( $supplemental['featured_order'] ) ) {
+			$speaker['featured_order'] = absint( $supplemental['featured_order'] );
+		}
+
+		return $speaker;
 	}
 
 	/**

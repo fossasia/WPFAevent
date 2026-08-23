@@ -902,7 +902,157 @@ class Wpfaevent_Eventyay_API_Client {
 			return $fetched;
 		}
 
-		return $this->parser->normalize_eventyay_speakers_payload( $fetched['speakers'], $settings, $event_slug );
+		$import = $this->parser->normalize_eventyay_speakers_payload( $fetched['speakers'], $settings, $event_slug );
+		if ( is_wp_error( $import ) ) {
+			return $import;
+		}
+
+		return $this->enrich_legacy_eventyay_speakers_with_featured_state( $import, $settings, $event_slug );
+	}
+
+	/**
+	 * Enrich organizer-scoped Eventyay speaker imports with supplemental data.
+	 *
+	 * The legacy organizer speakers endpoint can omit `is-featured` and some
+	 * speaker rows entirely, so we merge in the JSON:API event speakers data
+	 * when available.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $import     Normalized speaker import payload.
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array
+	 */
+	public function enrich_legacy_eventyay_speakers_with_featured_state( $import, $settings, $event_slug ) {
+		if ( ! is_array( $import ) || empty( $import['speakers'] ) || empty( $settings['organizer_slug'] ) ) {
+			return $import;
+		}
+
+		$supplemental_speakers = $this->fetch_eventyay_featured_speakers( $settings, $event_slug );
+		if ( empty( $supplemental_speakers ) ) {
+			return $import;
+		}
+
+		$import['speakers'] = $this->parser->merge_supplemental_speakers( $import['speakers'], $supplemental_speakers );
+
+		return $import;
+	}
+
+	/**
+	 * Fetch normalized speakers from JSON:API endpoints that expose featured flags.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array
+	 */
+	private function fetch_eventyay_featured_speakers( $settings, $event_slug ) {
+		$endpoints = $this->build_eventyay_featured_speaker_endpoint_candidates( $settings, $event_slug );
+
+		foreach ( $endpoints as $endpoint ) {
+			$normalized = $this->fetch_eventyay_featured_speakers_from_endpoint( $endpoint, $settings, $event_slug );
+			if ( ! empty( $normalized ) ) {
+				return $normalized;
+			}
+		}
+
+		return array();
+	}
+
+	/**
+	 * Build JSON:API speaker endpoints that expose the `is-featured` field.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array
+	 */
+	private function build_eventyay_featured_speaker_endpoint_candidates( $settings, $event_slug ) {
+		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
+		$event_slug = $this->sanitize_eventyay_path_segment( $event_slug );
+		$base_url   = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
+
+		if ( '' === $event_slug ) {
+			return array();
+		}
+
+		$api_bases = array();
+		if ( $base_url && wp_http_validate_url( $base_url ) ) {
+			$api_bases[] = $this->trim_eventyay_legacy_api_version_path( $base_url );
+		}
+		$api_bases[] = 'https://api.eventyay.com';
+
+		$endpoints = array();
+		foreach ( array_unique( array_filter( $api_bases ) ) as $api_base ) {
+			$endpoints[] = esc_url_raw(
+				add_query_arg(
+					'page[size]',
+					200,
+					trailingslashit( untrailingslashit( $api_base ) ) . 'v1/events/' . rawurlencode( $event_slug ) . '/speakers'
+				)
+			);
+		}
+
+		return array_values( array_unique( array_filter( $endpoints ) ) );
+	}
+
+	/**
+	 * Fetch and normalize speakers from one JSON:API endpoint.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $endpoint   JSON:API speaker endpoint.
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array
+	 */
+	private function fetch_eventyay_featured_speakers_from_endpoint( $endpoint, $settings, $event_slug ) {
+		if ( empty( $endpoint ) || ! wp_http_validate_url( $endpoint ) ) {
+			return array();
+		}
+
+		$speakers  = array();
+		$next_url  = $endpoint;
+		$seen_urls = array();
+		$page      = 0;
+		$max_pages = absint( apply_filters( 'wpfaevent_eventyay_speaker_import_max_pages', 20 ) );
+
+		if ( ! $max_pages ) {
+			$max_pages = 20;
+		}
+
+		while ( $next_url ) {
+			if ( isset( $seen_urls[ $next_url ] ) || $page >= $max_pages ) {
+				break;
+			}
+
+			$seen_urls[ $next_url ] = true;
+			++$page;
+
+			$current_url = $next_url;
+			$payload     = $this->fetch_eventyay_rest_json( $current_url, $settings['api_token'] );
+			if ( is_wp_error( $payload ) ) {
+				return array();
+			}
+
+			$normalized = $this->parser->normalize_eventyay_payload( $payload, $settings, $event_slug );
+			if ( ! is_wp_error( $normalized ) && ! empty( $normalized['speakers'] ) ) {
+				$speakers = array_merge( $speakers, $normalized['speakers'] );
+			}
+
+			$next_url = '';
+			if ( ! empty( $payload['links']['next'] ) && is_string( $payload['links']['next'] ) ) {
+				$next_url = $this->normalize_eventyay_next_url( $payload['links']['next'], $current_url );
+				if ( is_wp_error( $next_url ) ) {
+					$next_url = '';
+				}
+			}
+		}
+
+		return array_values( $speakers );
 	}
 
 	/**
