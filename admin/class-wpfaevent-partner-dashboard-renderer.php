@@ -235,11 +235,11 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 										continue;
 									}
 
-									$group_name    = ! empty( $group['group_name'] ) ? sanitize_text_field( $group['group_name'] ) : __( 'Sponsors', 'wpfaevent' );
-									$group_key     = ! empty( $group['eventyay_group_key'] ) ? sanitize_key( $group['eventyay_group_key'] ) : sanitize_key( $group_name );
-									$group_count   = isset( $group['sponsors'] ) && is_array( $group['sponsors'] ) ? count( $group['sponsors'] ) : 0;
-									$is_eventyay   = ! empty( $group['source'] ) && 'eventyay' === $group['source'];
-									$is_first_item = 0 === $index;
+										$group_name = ! empty( $group['group_name'] ) ? sanitize_text_field( $group['group_name'] ) : __( 'Sponsors', 'wpfaevent' );
+										$group_key  = ! empty( $group['eventyay_group_key'] ) ? sanitize_key( $group['eventyay_group_key'] ) : sanitize_key( $group_name );
+										$group_count = isset( $group['sponsors'] ) && is_array( $group['sponsors'] ) ? count( $group['sponsors'] ) : 0;
+										$is_eventyay = ! empty( $group['source'] ) && 'eventyay' === $group['source'];
+										$is_first_item = 0 === $index;
 										$is_last_item  = count( $sponsor_groups ) - 1 === $index;
 									?>
 									<div class="wpfaevent-list-item wpfaevent-sponsor-group-order-item">
