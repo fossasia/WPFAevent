@@ -308,7 +308,7 @@ class Wpfaevent_Public {
 				$this->plugin_name,
 				$this->plugin_name . '-event',
 			),
-			$this->version,
+			file_exists( WPFAEVENT_PATH . 'public/css/templates/schedule.css' ) ? (string) filemtime( WPFAEVENT_PATH . 'public/css/templates/schedule.css' ) : $this->version,
 			'all'
 		);
 

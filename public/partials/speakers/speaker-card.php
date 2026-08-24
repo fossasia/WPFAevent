@@ -9,7 +9,7 @@
  * Displays:
  * - Speaker headshot (with fallback placeholder)
  * - Speaker name (linked to speaker page)
- * - Speaker position and organization
+ * - Speaker role and organization
  *
  * Includes Schema.org Person microdata for SEO enhancement.
  *
@@ -21,6 +21,7 @@
  * - wpfa_speaker_headshot_url: Speaker photo URL
  * - wpfa_speaker_organization: Organization/company name
  * - wpfa_speaker_position: Job title/position
+ * - wpfa_speaker_title: Fallback title when position is unavailable
  *
  * @package    Wpfaevent
  * @subpackage Wpfaevent/public/partials/speakers
@@ -42,23 +43,25 @@ $sid = (int) $sid;
 
 $name = get_the_title( $sid );
 /* translators: %s: Speaker name. */
-$photo_alt    = sprintf( __( 'Photo of %s', 'wpfaevent' ), $name );
-$org          = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
-$position     = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
-$photo_url    = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
-$speaker_link = get_permalink( $sid );
-$is_admin     = current_user_can( 'manage_options' );
+$photo_alt          = sprintf( __( 'Photo of %s', 'wpfaevent' ), $name );
+$org                = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_organization', true ) );
+$position           = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_position', true ) );
+$speaker_title_meta = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_title', true ) );
+$photo_url          = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
+$speaker_link       = get_permalink( $sid );
+$is_admin           = current_user_can( 'manage_options' );
 
 // Get session details.
-$talk_title    = get_post_meta( $sid, 'wpfa_speaker_talk_title', true );
-$talk_date     = get_post_meta( $sid, 'wpfa_speaker_talk_date', true );
-$talk_time     = get_post_meta( $sid, 'wpfa_speaker_talk_time', true );
-$talk_end_time = get_post_meta( $sid, 'wpfa_speaker_talk_end_time', true );
-$talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
-$bio           = get_post_meta( $sid, 'wpfa_speaker_bio', true );
-$card_variant  = isset( $wpfa_speaker_card_variant ) ? sanitize_key( $wpfa_speaker_card_variant ) : '';
-$is_compact    = 'compact' === $card_variant;
-$speaker_role  = trim( $position . ( $position && $org ? ', ' : '' ) . $org );
+$talk_title            = get_post_meta( $sid, 'wpfa_speaker_talk_title', true );
+$talk_date             = get_post_meta( $sid, 'wpfa_speaker_talk_date', true );
+$talk_time             = get_post_meta( $sid, 'wpfa_speaker_talk_time', true );
+$talk_end_time         = get_post_meta( $sid, 'wpfa_speaker_talk_end_time', true );
+$talk_abstract         = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
+$bio                   = get_post_meta( $sid, 'wpfa_speaker_bio', true );
+$card_variant          = isset( $wpfa_speaker_card_variant ) ? sanitize_key( $wpfa_speaker_card_variant ) : '';
+$is_compact            = 'compact' === $card_variant;
+$speaker_role_position = $position ? $position : $speaker_title_meta;
+$speaker_role          = trim( $speaker_role_position . ( $speaker_role_position && $org ? ', ' : '' ) . $org );
 ?>
 <article class="wpfa-speaker-card<?php echo $is_compact ? ' wpfa-speaker-card--compact' : ''; ?>" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>">
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
@@ -92,9 +95,7 @@ $speaker_role  = trim( $position . ( $position && $org ? ', ' : '' ) . $org );
 		<?php endif; ?>
 	</div>
 	<div class="wpfa-speaker-expand">
-		<?php
-		if ( $bio ) :
-			?>
+		<?php if ( $bio ) : ?>
 			<div class="wpfa-speaker-bio">
 				<?php echo wp_kses_post( wpautop( $bio ) ); ?>
 			</div>
