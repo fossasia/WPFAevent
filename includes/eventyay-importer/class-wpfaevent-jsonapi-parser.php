@@ -790,7 +790,7 @@ class Wpfaevent_JSONAPI_Parser {
 				'github'   => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'github', 'github_url', 'github-url' ) ), $settings['base_url'] ),
 				'website'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'website', 'website_url', 'website-url', 'homepage', 'homepage_url', 'homepage-url', 'url' ) ), $settings['base_url'] ),
 			),
-			'featured'            => $this->eventyay_speaker_is_featured( $speaker_resource, $category ),
+			'featured'            => $this->eventyay_speaker_is_featured( $speaker_resource ),
 			'featured_order'      => $this->eventyay_speaker_featured_order( $speaker_resource ),
 			'sessions'            => array(),
 			'source'              => 'eventyay',
@@ -802,11 +802,10 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array  $speaker_resource Normalized Eventyay speaker resource.
-	 * @param string $category         Speaker category or track label.
+	 * @param array $speaker_resource Normalized Eventyay speaker resource.
 	 * @return bool
 	 */
-	public function eventyay_speaker_is_featured( $speaker_resource, $category = '' ) {
+	public function eventyay_speaker_is_featured( $speaker_resource ) {
 		$featured = $this->eventyay_first_present_raw(
 			$speaker_resource,
 			array(
@@ -826,11 +825,7 @@ class Wpfaevent_JSONAPI_Parser {
 			)
 		);
 
-		if ( $this->eventyay_truthy_value( $featured ) ) {
-			return true;
-		}
-
-		return is_string( $category ) && (bool) preg_match( '/\b(featured|keynote|plenary|highlight)\b/i', $category );
+		return $this->eventyay_truthy_value( $featured );
 	}
 
 	/**
@@ -859,6 +854,58 @@ class Wpfaevent_JSONAPI_Parser {
 		);
 
 		return is_numeric( $order ) ? absint( $order ) : 0;
+	}
+
+	/**
+	 * Check whether a speaker resource explicitly specifies its featured state.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $speaker_resource Normalized Eventyay speaker resource.
+	 * @return bool
+	 */
+	public function eventyay_speaker_featured_state_known( $speaker_resource ) {
+		return $this->eventyay_has_present_key(
+			$speaker_resource,
+			array(
+				'featured',
+				'is_featured',
+				'is-featured',
+				'featured_speaker',
+				'featured-speaker',
+				'highlighted',
+				'is_highlighted',
+				'is-highlighted',
+				'keynote',
+				'is_keynote',
+				'is-keynote',
+				'show_on_frontpage',
+				'show-on-frontpage',
+			)
+		);
+	}
+
+	/**
+	 * Check whether a normalized Eventyay resource explicitly contains one of the given keys.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $speaker_resource Eventyay resource array.
+	 * @param array $keys             Candidate keys.
+	 * @return bool
+	 */
+	public function eventyay_has_present_key( $speaker_resource, $keys ) {
+		if ( ! is_array( $speaker_resource ) ) {
+			return false;
+		}
+
+		foreach ( $keys as $key ) {
+			if ( array_key_exists( $key, $speaker_resource ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -1642,6 +1689,7 @@ class Wpfaevent_JSONAPI_Parser {
 
 		return array(
 			'speakers'      => array_values( $speakers ),
+			'sessions'      => array_values( $sessions ),
 			'session_count' => count( $sessions ),
 		);
 	}
@@ -1793,14 +1841,14 @@ class Wpfaevent_JSONAPI_Parser {
 		$category     = $this->attribute_value( $attributes, array( 'category', 'track' ) );
 
 		return array(
-			'id'                  => $source_id ? 'eventyay-' . sanitize_key( $source_id ) : 'eventyay-' . sanitize_title( $name ),
-			'eventyay_speaker_id' => $source_id,
-			'name'                => sanitize_text_field( $name ),
-			'title'               => sanitize_text_field( $position ? $position : $organization ),
-			'position'            => sanitize_text_field( $position ),
-			'organization'        => sanitize_text_field( $organization ),
-			'category'            => sanitize_text_field( $category ),
-			'image'               => esc_url_raw(
+			'id'                   => $source_id ? 'eventyay-' . sanitize_key( $source_id ) : 'eventyay-' . sanitize_title( $name ),
+			'eventyay_speaker_id'  => $source_id,
+			'name'                 => sanitize_text_field( $name ),
+			'title'                => sanitize_text_field( $position ? $position : $organization ),
+			'position'             => sanitize_text_field( $position ),
+			'organization'         => sanitize_text_field( $organization ),
+			'category'             => sanitize_text_field( $category ),
+			'image'                => esc_url_raw(
 				$this->attribute_value(
 					$attributes,
 					array(
@@ -1813,17 +1861,18 @@ class Wpfaevent_JSONAPI_Parser {
 					)
 				)
 			),
-			'bio'                 => wp_kses_post( $this->attribute_value( $attributes, array( 'long-biography', 'short-biography', 'biography', 'speaking-experience' ) ) ),
-			'social'              => array(
+			'bio'                  => wp_kses_post( $this->attribute_value( $attributes, array( 'long-biography', 'short-biography', 'biography', 'speaking-experience' ) ) ),
+			'social'               => array(
 				'linkedin' => esc_url_raw( $this->attribute_value( $attributes, array( 'linkedin', 'linkedin-url' ) ) ),
 				'twitter'  => esc_url_raw( $this->attribute_value( $attributes, array( 'twitter', 'twitter-url' ) ) ),
 				'github'   => esc_url_raw( $this->attribute_value( $attributes, array( 'github', 'github-url' ) ) ),
 				'website'  => esc_url_raw( $this->attribute_value( $attributes, array( 'website', 'website-url' ) ) ),
 			),
-			'featured'            => $this->eventyay_speaker_is_featured( $attributes, $category ),
-			'featured_order'      => $this->eventyay_speaker_featured_order( $attributes ),
-			'sessions'            => array(),
-			'source'              => 'eventyay',
+			'featured'             => $this->eventyay_speaker_is_featured( $attributes ),
+			'featured_order'       => $this->eventyay_speaker_featured_order( $attributes ),
+			'featured_state_known' => $this->eventyay_speaker_featured_state_known( $attributes ),
+			'sessions'             => array(),
+			'source'               => 'eventyay',
 		);
 	}
 
@@ -2655,9 +2704,12 @@ class Wpfaevent_JSONAPI_Parser {
 					continue;
 				}
 
-				$speaker['featured'] = ! empty( $speaker['featured'] ) || $state[ $key ]['featured'];
-				if ( null !== $state[ $key ]['featured_order'] ) {
-					$speaker['featured_order'] = $state[ $key ]['featured_order'];
+				$featured_state_known = ! empty( $speaker['featured_state_known'] );
+				if ( ! $featured_state_known ) {
+					$speaker['featured'] = ! empty( $speaker['featured'] ) || $state[ $key ]['featured'];
+					if ( null !== $state[ $key ]['featured_order'] ) {
+						$speaker['featured_order'] = $state[ $key ]['featured_order'];
+					}
 				}
 				if ( empty( $speaker['image'] ) && ! empty( $state[ $key ]['image'] ) ) {
 					$speaker['image'] = $state[ $key ]['image'];
@@ -2877,6 +2929,101 @@ class Wpfaevent_JSONAPI_Parser {
 	}
 
 	/**
+	 * Parse public Eventyay speakers page HTML into a featured-speaker map.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $html Public speakers page HTML.
+	 * @return array<string, array>
+	 */
+	public function extract_eventyay_public_speaker_featured_map( $html ) {
+		if ( ! is_string( $html ) || '' === trim( $html ) ) {
+			return array();
+		}
+
+		if ( ! preg_match( '/<script\s+[^>]*id=["\']pretalx-schedule-data["\'][^>]*>(.*?)<\/script>/s', $html, $matches ) ) {
+			return array();
+		}
+
+		$payload = json_decode( html_entity_decode( $matches[1], ENT_QUOTES, 'UTF-8' ), true );
+		if ( JSON_ERROR_NONE !== json_last_error() || empty( $payload['speakers'] ) || ! is_array( $payload['speakers'] ) ) {
+			return array();
+		}
+
+		$featured_map = array();
+
+		foreach ( $payload['speakers'] as $speaker ) {
+			if ( ! is_array( $speaker ) ) {
+				continue;
+			}
+
+			$code = isset( $speaker['code'] ) ? sanitize_text_field( $speaker['code'] ) : '';
+			if ( '' === $code ) {
+				continue;
+			}
+
+			$featured_map[ $code ] = array(
+				'featured'             => ! empty( $speaker['is_featured'] ) || ! empty( $speaker['featured'] ),
+				'featured_order'       => isset( $speaker['featured_position'] ) ? absint( $speaker['featured_position'] ) : ( isset( $speaker['featured_order'] ) ? absint( $speaker['featured_order'] ) : 0 ),
+				'featured_state_known' => true,
+			);
+
+			$name_key = sanitize_title( isset( $speaker['name'] ) ? $speaker['name'] : '' );
+			if ( '' !== $name_key ) {
+				$featured_map[ $name_key ] = $featured_map[ $code ];
+			}
+		}
+
+		return $featured_map;
+	}
+
+	/**
+	 * Apply public Eventyay featured speaker state to normalized speakers.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array<int, array>    $speakers     Normalized speakers.
+	 * @param array<string, array> $featured_map Public featured speaker map keyed by Eventyay speaker code.
+	 * @return array<int, array>
+	 */
+	public function apply_eventyay_public_speaker_featured_map( $speakers, $featured_map ) {
+		if ( ! is_array( $speakers ) || empty( $featured_map ) ) {
+			return $speakers;
+		}
+
+		foreach ( $speakers as &$speaker ) {
+			if ( ! is_array( $speaker ) ) {
+				continue;
+			}
+
+			$eventyay_speaker_id = isset( $speaker['eventyay_speaker_id'] ) ? sanitize_text_field( $speaker['eventyay_speaker_id'] ) : '';
+			$id_parts            = '' !== $eventyay_speaker_id ? explode( ':', $eventyay_speaker_id ) : array();
+			$base_id             = ! empty( $id_parts ) ? sanitize_text_field( end( $id_parts ) ) : '';
+
+			$matched_state = null;
+			if ( '' !== $base_id && isset( $featured_map[ $base_id ] ) ) {
+				$matched_state = $featured_map[ $base_id ];
+			} else {
+				$name_key = sanitize_title( isset( $speaker['name'] ) ? $speaker['name'] : '' );
+				if ( '' !== $name_key && isset( $featured_map[ $name_key ] ) ) {
+					$matched_state = $featured_map[ $name_key ];
+				}
+			}
+
+			if ( null === $matched_state ) {
+				continue;
+			}
+
+			$speaker['featured']             = ! empty( $matched_state['featured'] );
+			$speaker['featured_order']       = isset( $matched_state['featured_order'] ) ? absint( $matched_state['featured_order'] ) : 0;
+			$speaker['featured_state_known'] = true;
+		}
+		unset( $speaker );
+
+		return $speakers;
+	}
+
+	/**
 	 * Get matching keys used to preserve dashboard speaker state.
 	 *
 	 * @since 1.0.0
@@ -2949,6 +3096,10 @@ class Wpfaevent_JSONAPI_Parser {
 
 		if ( ! empty( $speaker['featured'] ) ) {
 			$speakers[ $key ]['featured'] = true;
+		}
+
+		if ( ! empty( $speaker['featured_state_known'] ) ) {
+			$speakers[ $key ]['featured_state_known'] = true;
 		}
 
 		if ( ! empty( $speaker['featured_order'] ) ) {

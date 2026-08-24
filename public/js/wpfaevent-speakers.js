@@ -137,12 +137,6 @@ const wpfaSpeakers = (function () {
 			const link = card.querySelector('.wpfa-speaker-name a')?.href || '';
 			const speakerId = card.dataset.speakerId || '';
 
-			// Get category from pill element
-			let category = '';
-			const pillElement = card.querySelector('.pill');
-			if (pillElement) {
-				category = pillElement.textContent.trim();
-			}
 
 			return {
 				id: speakerId,
@@ -151,7 +145,7 @@ const wpfaSpeakers = (function () {
 				bio,
 				image: photo,
 				link,
-				category,
+				category: '',
 				// Extract organization from position string (e.g., "Developer · Company")
 				organization: role.includes('·')
 					? role.split('·')[1]?.trim()

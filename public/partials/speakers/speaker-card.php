@@ -49,23 +49,18 @@ $photo_url    = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
 $speaker_link = get_permalink( $sid );
 $is_admin     = current_user_can( 'manage_options' );
 
-// Get categories from the taxonomy.
-$speaker_categories = array();
-if ( taxonomy_exists( 'wpfa_speaker_category' ) ) {
-	$terms = wp_get_post_terms( $sid, 'wpfa_speaker_category' );
-	if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
-		$speaker_categories = wp_list_pluck( $terms, 'name' );
-	}
-}
-
 // Get session details.
 $talk_title    = get_post_meta( $sid, 'wpfa_speaker_talk_title', true );
 $talk_date     = get_post_meta( $sid, 'wpfa_speaker_talk_date', true );
 $talk_time     = get_post_meta( $sid, 'wpfa_speaker_talk_time', true );
 $talk_end_time = get_post_meta( $sid, 'wpfa_speaker_talk_end_time', true );
 $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
+$bio           = get_post_meta( $sid, 'wpfa_speaker_bio', true );
+$card_variant  = isset( $wpfa_speaker_card_variant ) ? sanitize_key( $wpfa_speaker_card_variant ) : '';
+$is_compact    = 'compact' === $card_variant;
+$speaker_role  = trim( $position . ( $position && $org ? ', ' : '' ) . $org );
 ?>
-<article class="wpfa-speaker-card" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>">
+<article class="wpfa-speaker-card<?php echo $is_compact ? ' wpfa-speaker-card--compact' : ''; ?>" itemscope itemtype="https://schema.org/Person" data-speaker-id="<?php echo esc_attr( sprintf( '%d', absint( $sid ) ) ); ?>">
 	<a class="wpfa-speaker-photo" href="<?php echo esc_url( $speaker_link ); ?>">
 		<?php if ( $photo_url ) : ?>
 			<div class="wpfa-speaker-photo-container">
@@ -91,20 +86,13 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 			</button>
 		<?php endif; ?>
 
-		<?php if ( ! empty( $speaker_categories ) ) : ?>
-			<p class="pill">
-				<?php echo esc_html( $speaker_categories[0] ); ?>
-			</p>
-		<?php endif; ?>
-
 		<h3 class="wpfa-speaker-name" itemprop="name"><a href="<?php echo esc_url( $speaker_link ); ?>"><?php echo esc_html( $name ); ?></a></h3>
-		<?php if ( $position || $org ) : ?>
-			<p class="wpfa-speaker-role"><?php echo esc_html( trim( $position . ( $position && $org ? ' · ' : '' ) . $org ) ); ?></p>
+		<?php if ( '' !== $speaker_role ) : ?>
+			<p class="wpfa-speaker-role"><?php echo esc_html( $speaker_role ); ?></p>
 		<?php endif; ?>
 	</div>
 	<div class="wpfa-speaker-expand">
 		<?php
-		$bio = get_post_meta( $sid, 'wpfa_speaker_bio', true );
 		if ( $bio ) :
 			?>
 			<div class="wpfa-speaker-bio">
@@ -135,7 +123,7 @@ $talk_abstract = get_post_meta( $sid, 'wpfa_speaker_talk_abstract', true );
 						</p>
 					<?php endif; ?>
 
-					<?php if ( $talk_abstract ) : ?>
+					<?php if ( $talk_abstract && ! $is_compact ) : ?>
 						<div class="wpfa-talk-abstract">
 							<?php echo wp_kses_post( wpautop( $talk_abstract ) ); ?>
 						</div>
