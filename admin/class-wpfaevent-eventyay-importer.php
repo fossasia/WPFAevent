@@ -2048,15 +2048,8 @@ class Wpfaevent_Eventyay_Importer {
 		$sponsor_resource = $this->normalize_eventyay_api_resource( $sponsor_resource );
 		$source_id        = $this->eventyay_resource_identifier( $sponsor_resource );
 		$name             = $this->eventyay_first_present_text( $sponsor_resource, array( 'name', 'title', 'label' ) );
-		$type             = $this->eventyay_first_present_text( $sponsor_resource, array( 'level_name', 'level-name', 'tier', 'category', 'sponsor_type', 'sponsor-type', 'sponsorship_type', 'sponsorship-type', 'package', 'package_name', 'package-name' ) );
+		$type             = $this->eventyay_sponsor_group_name( $sponsor_resource );
 		$level            = $this->eventyay_first_present_raw( $sponsor_resource, array( 'level', 'position', 'order', 'sort_order', 'sort-order' ) );
-
-		if ( '' === $type ) {
-			$fallback_type = $this->eventyay_first_present_text( $sponsor_resource, array( 'type' ) );
-			if ( ! in_array( strtolower( $fallback_type ), array( 'sponsor', 'sponsors' ), true ) ) {
-				$type = $fallback_type;
-			}
-		}
 
 		$desc  = $this->eventyay_first_present_rich_text( $sponsor_resource, array( 'description', 'subtitle', 'summary' ) );
 		$image = $this->eventyay_url_value( $this->eventyay_first_present_raw( $sponsor_resource, array( 'logo-url', 'logo_url', 'logo', 'image', 'image-url', 'image_url' ) ), $settings['base_url'] );
@@ -2080,6 +2073,37 @@ class Wpfaevent_Eventyay_Importer {
 			'type'        => sanitize_text_field( $type ),
 			'level'       => is_numeric( $level ) ? absint( $level ) : 0,
 		);
+	}
+
+	/**
+	 * Resolve an Eventyay sponsor group name without falling back to generic resource types.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $sponsor_resource Eventyay sponsor resource.
+	 * @return string
+	 */
+	private function eventyay_sponsor_group_name( $sponsor_resource ) {
+		$type = $this->eventyay_first_present_text(
+			$sponsor_resource,
+			array( 'level_name', 'level-name', 'tier', 'category', 'sponsor_type', 'sponsor-type', 'sponsorship_type', 'sponsorship-type', 'package', 'package_name', 'package-name' )
+		);
+
+		if ( '' !== $type ) {
+			return $type;
+		}
+
+		$type = $this->eventyay_first_present_text( $sponsor_resource, array( 'type' ) );
+		if ( '' === $type ) {
+			return '';
+		}
+
+		$type_key = sanitize_key( $type );
+		if ( in_array( $type_key, array( 'sponsor', 'sponsors' ), true ) ) {
+			return '';
+		}
+
+		return $type;
 	}
 
 	/**

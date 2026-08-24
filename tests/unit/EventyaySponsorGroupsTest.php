@@ -35,6 +35,29 @@ class EventyaySponsorGroupsTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Verify generic JSON:API resource type values are ignored when no tier field exists.
+	 */
+	public function test_normalize_eventyay_sponsor_resource_ignores_generic_sponsor_resource_type() {
+		$parser  = new Wpfaevent_JSONAPI_Parser();
+		$sponsor = $parser->normalize_eventyay_sponsor_resource(
+			array(
+				'type'       => 'sponsor',
+				'id'         => '1329',
+				'attributes' => array(
+					'name'  => 'Navicat',
+					'level' => 2,
+				),
+			),
+			array(
+				'base_url' => 'https://eventyay.com',
+			)
+		);
+
+		$this->assertSame( '', $sponsor['type'] );
+		$this->assertSame( 2, $sponsor['level'] );
+	}
+
+	/**
 	 * Verify existing sponsor group order survives Eventyay reimports.
 	 */
 	public function test_merge_eventyay_sponsor_groups_preserves_existing_group_order() {
