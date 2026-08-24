@@ -837,7 +837,7 @@ class Wpfaevent_Templates {
 			'wpfaevent-schedule',
 			WPFAEVENT_URL . 'public/css/templates/schedule.css',
 			array( 'wpfaevent', 'wpfaevent-event' ),
-			WPFAEVENT_VERSION,
+			file_exists( WPFAEVENT_PATH . 'public/css/templates/schedule.css' ) ? (string) filemtime( WPFAEVENT_PATH . 'public/css/templates/schedule.css' ) : WPFAEVENT_VERSION,
 			'all'
 		);
 	}
