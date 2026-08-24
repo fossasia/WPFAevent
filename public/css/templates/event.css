@@ -567,9 +567,61 @@
 	margin: 14px 0 0;
 }
 
+.wpfaevent .wpfa-event-detail .wpfa-speaker-photo {
+	background: #eaf1f8;
+	aspect-ratio: 1 / 1;
+}
+
+.wpfaevent .wpfa-event-detail .wpfa-speaker-meta {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: 8px;
+	padding: 18px 18px 14px;
+	cursor: pointer;
+}
+
+.wpfaevent .wpfa-event-detail .wpfa-speaker-name {
+	margin: 0;
+	font-size: 1.22rem;
+	letter-spacing: 0;
+}
+
+.wpfaevent .wpfa-event-detail .wpfa-speaker-name a {
+	color: var(--event-ink);
+}
+
+.wpfaevent .wpfa-event-detail .wpfa-speaker-role {
+	margin: 0;
+}
+
+.wpfaevent .wpfa-event-detail .wpfa-speaker-preview {
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	color: #3f4d5e;
+	display: -webkit-box;
+	font-size: 0.95rem;
+	line-height: 1.45;
+	margin: 0;
+	min-height: calc(1.45em * 2);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.wpfaevent .wpfa-event-detail .wpfa-speaker-card--compact .wpfa-speaker-bio {
+	display: none;
+}
 .wpfaevent .wpfa-event-detail .wpfa-speaker-expand {
 	background: #fff;
-	max-height: none;
+	max-height: 0;
+	opacity: 0;
+	overflow: hidden;
+	padding: 0 18px;
+	transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+.wpfaevent .wpfa-event-detail .wpfa-speaker-card.expanded .wpfa-speaker-expand {
+	max-height: 9999px;
 	opacity: 1;
 	padding: 0 18px 18px;
 }

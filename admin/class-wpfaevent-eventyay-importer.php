@@ -1654,6 +1654,7 @@ class Wpfaevent_Eventyay_Importer {
 			++$result['skipped'];
 		} else {
 			$normalized_exhibitors = $this->normalize_eventyay_exhibitor_resources( $exhibitors['resources'], $settings );
+			$normalized_exhibitors = $this->filter_eventyay_exhibitors_to_public_listing( $normalized_exhibitors, $event, $settings, $event_slug );
 			$existing_exhibitors   = $this->read_dashboard_json_file( 'exhibitors-' . absint( $event_id ) . '.json', array() );
 			$merged_exhibitors     = $this->merge_eventyay_flat_records( $normalized_exhibitors, $existing_exhibitors );
 			$write_result          = $this->write_dashboard_json_file( 'exhibitors-' . absint( $event_id ) . '.json', $merged_exhibitors );
@@ -1666,6 +1667,118 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Filter API exhibitor rows to the exhibitor IDs shown on the public Eventyay page.
+	 *
+	 * Some Eventyay exhibitor endpoints can include records that are not actually shown
+	 * on the public exhibition page. When Eventyay publishes a public exhibitor listing,
+	 * treat those visible exhibitor IDs as the authoritative set.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $exhibitors Normalized exhibitor records.
+	 * @param array  $event      Eventyay event resource.
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array
+	 */
+	private function filter_eventyay_exhibitors_to_public_listing( $exhibitors, $event, $settings, $event_slug ) {
+		if ( empty( $exhibitors ) ) {
+			return is_array( $exhibitors ) ? $exhibitors : array();
+		}
+
+		$public_exhibitor_ids = $this->fetch_eventyay_public_exhibitor_ids( $event, $settings, $event_slug );
+		if ( is_wp_error( $public_exhibitor_ids ) || empty( $public_exhibitor_ids ) ) {
+			return $exhibitors;
+		}
+
+		$filtered = array();
+
+		foreach ( $exhibitors as $exhibitor ) {
+			if ( ! is_array( $exhibitor ) ) {
+				continue;
+			}
+
+			$eventyay_id = isset( $exhibitor['eventyay_id'] ) ? sanitize_text_field( (string) $exhibitor['eventyay_id'] ) : '';
+			if ( '' !== $eventyay_id && isset( $public_exhibitor_ids[ $eventyay_id ] ) ) {
+				$filtered[] = $exhibitor;
+			}
+		}
+
+		return ! empty( $filtered ) ? $filtered : $exhibitors;
+	}
+
+	/**
+	 * Fetch the exhibitor IDs published on the public Eventyay exhibition page.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $event      Eventyay event resource.
+	 * @param array  $settings   Import settings.
+	 * @param string $event_slug Eventyay event slug.
+	 * @return array|WP_Error
+	 */
+	private function fetch_eventyay_public_exhibitor_ids( $event, $settings, $event_slug ) {
+		$event_url = trailingslashit( $this->eventyay_public_event_url( $event, $settings, $event_slug ) );
+		if ( ! $event_url ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_missing_public_exhibition_url',
+				esc_html__( 'The public Eventyay exhibition page URL could not be resolved.', 'wpfaevent' )
+			);
+		}
+
+		$exhibition_url = esc_url_raw( trailingslashit( $event_url ) . 'exhibition/' );
+		$response       = wp_remote_get(
+			$exhibition_url,
+			array(
+				'timeout'     => 20,
+				'redirection' => 3,
+				'headers'     => array(
+					'Accept' => 'text/html,application/xhtml+xml',
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_public_exhibition_request_failed',
+				esc_html__( 'The public Eventyay exhibition page could not be fetched.', 'wpfaevent' ),
+				array( 'details' => $response->get_error_message() )
+			);
+		}
+
+		$status = absint( wp_remote_retrieve_response_code( $response ) );
+		if ( $status < 200 || $status >= 300 ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_public_exhibition_http_error',
+				esc_html__( 'The public Eventyay exhibition page returned an unexpected response.', 'wpfaevent' ),
+				array( 'http_status' => $status )
+			);
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+		if ( '' === trim( (string) $body ) ) {
+			return array();
+		}
+
+		$matches = array();
+		preg_match_all( '#/exhibition/([0-9]+)/#', $body, $matches );
+
+		if ( empty( $matches[1] ) ) {
+			return array();
+		}
+
+		$ids = array();
+		foreach ( $matches[1] as $match_id ) {
+			$match_id = sanitize_text_field( (string) $match_id );
+			if ( '' !== $match_id ) {
+				$ids[ $match_id ] = true;
+			}
+		}
+
+		return $ids;
 	}
 
 	/**
@@ -2438,7 +2551,17 @@ class Wpfaevent_Eventyay_Importer {
 			return $fetched;
 		}
 
-		return $this->normalize_eventyay_speakers_payload( $fetched['speakers'], $settings, $event_slug );
+		$program = $this->normalize_eventyay_speakers_payload( $fetched['speakers'], $settings, $event_slug );
+		if ( is_wp_error( $program ) || empty( $program['speakers'] ) ) {
+			return $program;
+		}
+
+		$featured_map = $this->get_client()->fetch_eventyay_public_speaker_featured_map( $settings, $event_slug );
+		if ( ! is_wp_error( $featured_map ) && ! empty( $featured_map ) ) {
+			$program['speakers'] = ( new Wpfaevent_JSONAPI_Parser() )->apply_eventyay_public_speaker_featured_map( $program['speakers'], $featured_map );
+		}
+
+		return $program;
 	}
 
 	/**
@@ -3860,7 +3983,7 @@ class Wpfaevent_Eventyay_Importer {
 				'github'   => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'github', 'github_url', 'github-url' ) ), $settings['base_url'] ),
 				'website'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'website', 'website_url', 'website-url', 'homepage', 'homepage_url', 'homepage-url', 'url' ) ), $settings['base_url'] ),
 			),
-			'featured'            => $this->eventyay_speaker_is_featured( $speaker_resource, $category ),
+			'featured'            => $this->eventyay_speaker_is_featured( $speaker_resource ),
 			'featured_order'      => $this->eventyay_speaker_featured_order( $speaker_resource ),
 			'sessions'            => array(),
 			'source'              => 'eventyay',
@@ -3872,11 +3995,10 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array  $speaker_resource Normalized Eventyay speaker resource.
-	 * @param string $category         Speaker category or track label.
+	 * @param array $speaker_resource Normalized Eventyay speaker resource.
 	 * @return bool
 	 */
-	private function eventyay_speaker_is_featured( $speaker_resource, $category = '' ) {
+	private function eventyay_speaker_is_featured( $speaker_resource ) {
 		$featured = $this->eventyay_first_present_raw(
 			$speaker_resource,
 			array(
@@ -3896,11 +4018,7 @@ class Wpfaevent_Eventyay_Importer {
 			)
 		);
 
-		if ( $this->eventyay_truthy_value( $featured ) ) {
-			return true;
-		}
-
-		return is_string( $category ) && (bool) preg_match( '/\b(featured|keynote|plenary|highlight)\b/i', $category );
+		return $this->eventyay_truthy_value( $featured );
 	}
 
 	/**
@@ -5152,7 +5270,7 @@ class Wpfaevent_Eventyay_Importer {
 				'github'   => esc_url_raw( $this->attribute_value( $attributes, array( 'github', 'github-url' ) ) ),
 				'website'  => esc_url_raw( $this->attribute_value( $attributes, array( 'website', 'website-url' ) ) ),
 			),
-			'featured'            => $this->eventyay_speaker_is_featured( $attributes, $category ),
+			'featured'            => $this->eventyay_speaker_is_featured( $attributes ),
 			'featured_order'      => $this->eventyay_speaker_featured_order( $attributes ),
 			'sessions'            => array(),
 			'source'              => 'eventyay',
@@ -5190,6 +5308,10 @@ class Wpfaevent_Eventyay_Importer {
 
 		if ( ! empty( $speaker['featured'] ) ) {
 			$speakers[ $key ]['featured'] = true;
+		}
+
+		if ( ! empty( $speaker['featured_state_known'] ) ) {
+			$speakers[ $key ]['featured_state_known'] = true;
 		}
 
 		if ( ! empty( $speaker['featured_order'] ) ) {
@@ -5245,9 +5367,12 @@ class Wpfaevent_Eventyay_Importer {
 					continue;
 				}
 
-				$speaker['featured'] = ! empty( $speaker['featured'] ) || $state[ $key ]['featured'];
-				if ( null !== $state[ $key ]['featured_order'] ) {
-					$speaker['featured_order'] = $state[ $key ]['featured_order'];
+				$featured_state_known = ! empty( $speaker['featured_state_known'] );
+				if ( ! $featured_state_known ) {
+					$speaker['featured'] = ! empty( $speaker['featured'] ) || $state[ $key ]['featured'];
+					if ( null !== $state[ $key ]['featured_order'] ) {
+						$speaker['featured_order'] = $state[ $key ]['featured_order'];
+					}
 				}
 				if ( empty( $speaker['image'] ) && ! empty( $state[ $key ]['image'] ) ) {
 					$speaker['image'] = $state[ $key ]['image'];

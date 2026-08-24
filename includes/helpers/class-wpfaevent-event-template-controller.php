@@ -478,6 +478,10 @@ class Wpfaevent_Event_Template_Controller {
 			);
 		};
 
+		if ( ! $event_header_image_url && ! empty( $site_settings['hero_image_url'] ) ) {
+			$event_header_image_url = esc_url_raw( $site_settings['hero_image_url'] );
+		}
+
 		$ticket_widget_assets   = $build_eventyay_widget_assets( $ticket_widget_url );
 		$show_ticket_section    = ! empty( $ticket_widget_assets['event_url'] );
 		$site_host              = (string) wp_parse_url( home_url(), PHP_URL_HOST );
@@ -576,6 +580,30 @@ class Wpfaevent_Event_Template_Controller {
 
 		if ( ! $register_url && $show_ticket_section ) {
 			$register_url = $ticket_widget_assets['event_url'];
+		}
+
+		$registration_status_label = __( 'Open', 'wpfaevent' );
+		$event_end_datetime_value  = get_post_meta( $event_id, 'wpfa_event_ends_at', true );
+
+		if ( ! $event_end_datetime_value && $end_date ) {
+			$event_end_datetime_value = $end_date . ' 23:59:59';
+		}
+
+		if ( $event_end_datetime_value ) {
+			try {
+				$event_end_datetime = new DateTimeImmutable( (string) $event_end_datetime_value, $event_timezone );
+				$current_datetime   = new DateTimeImmutable( 'now', $event_timezone );
+
+				if ( $event_end_datetime < $current_datetime ) {
+					$registration_status_label = __( 'Closed', 'wpfaevent' );
+					$show_ticket_widget        = false;
+					$show_ticket_section       = false;
+					$ticket_widget_redirect    = false;
+					$register_url              = '';
+				}
+			} catch ( Exception $exception ) {
+				unset( $exception );
+			}
 		}
 
 		$event_calendar_data = class_exists( 'Wpfaevent_Calendar' ) ? Wpfaevent_Calendar::get_event_calendar_data( $event_id ) : array();
@@ -1000,6 +1028,7 @@ class Wpfaevent_Event_Template_Controller {
 			'ticket_widget_id'                         => $ticket_widget_id,
 			'ticket_widget_message'                    => $ticket_widget_message,
 			'ticket_widget_skip_ssl'                   => $ticket_widget_skip_ssl,
+			'registration_status_label'                => $registration_status_label,
 			'location'                                 => $location,
 			'event_language_label'                     => $event_language_label,
 			'schedule_items'                           => $schedule_items,
@@ -1087,6 +1116,7 @@ class Wpfaevent_Event_Template_Controller {
 			'ticket_widget_id'                         => '',
 			'ticket_widget_message'                    => '',
 			'ticket_widget_skip_ssl'                   => false,
+			'registration_status_label'                => __( 'Open', 'wpfaevent' ),
 			'event_start_content'                      => '',
 			'event_end_content'                        => '',
 			'event_time_label'                         => '',
