@@ -2611,7 +2611,7 @@ class Wpfaevent_JSONAPI_Parser {
 		}
 
 		foreach ( $groups as $group ) {
-			if ( ! is_array( $group ) ) {
+			if ( '' === $this->eventyay_sponsor_group_key( $group ) ) {
 				$merged_groups[] = $group;
 			}
 		}
