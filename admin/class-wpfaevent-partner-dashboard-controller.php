@@ -36,6 +36,9 @@ class Wpfaevent_Partner_Dashboard_Controller {
 
 	/**
 	 * Constructor.
+	 *
+	 * @param Wpfaevent_Eventyay_Dashboard_Store|null   $store Optional dashboard store.
+	 * @param Wpfaevent_Partner_Dashboard_Statistics|null $stats Optional statistics provider.
 	 */
 	public function __construct( $store = null, $stats = null ) {
 		$this->store = $store instanceof Wpfaevent_Eventyay_Dashboard_Store ? $store : new Wpfaevent_Eventyay_Dashboard_Store();

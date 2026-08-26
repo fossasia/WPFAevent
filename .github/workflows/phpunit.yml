@@ -66,7 +66,7 @@ jobs:
           WP_DB_PASS: test_password
           WP_DB_HOST: 127.0.0.1:3306
           WP_INSTALL_TESTS_SKIP_UPDATE_CHECK: true
-        run: composer setup-tests
+        run: bash bin/install-wp-tests.sh wordpress_test "$WP_DB_USER" "$WP_DB_PASS" "$WP_DB_HOST" latest true
 
       - name: Run PHPUnit
         run: composer test
