@@ -334,42 +334,111 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 	</div>
 
 	<div class="wpfaevent-dashboard-split">
-		<div id="wpfaevent-speakers" class="wpfaevent-dashboard-card wpfaevent-dashboard-section">
+		<div id="wpfaevent-speakers" class="wpfaevent-dashboard-card wpfaevent-dashboard-section" data-speakers-nonce="<?php echo esc_attr( wp_create_nonce( 'wpfaevent_save_featured_speakers_' . $event['id'] ) ); ?>">
 			<h2><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h2>
 			<?php if ( ! empty( $speakers ) ) : ?>
 				<?php $total_speakers_count = count( $speakers ); ?>
-				<div class="wpfaevent-list">
-					<?php foreach ( array_slice( $speakers, 0, 5 ) as $speaker ) : ?>
-						<div class="wpfaevent-list-item">
-							<?php if ( ! empty( $speaker['image'] ) ) : ?>
-								<img src="<?php echo esc_url( $speaker['image'] ); ?>" alt="<?php echo esc_attr( $speaker['name'] ); ?>">
-							<?php endif; ?>
-							<div class="wpfaevent-list-copy">
-								<strong><?php echo esc_html( $speaker['name'] ); ?></strong>
-								<div class="description"><?php echo esc_html( trim( $speaker['title'] . ( $speaker['organization'] ? ' - ' . $speaker['organization'] : '' ) ) ); ?></div>
-							</div>
-							<?php if ( ! empty( $speaker['featured'] ) ) : ?>
-								<span class="wpfaevent-badge"><?php esc_html_e( 'Featured', 'wpfaevent' ); ?></span>
-							<?php endif; ?>
-						</div>
-					<?php endforeach; ?>
+
+				<!-- Section for Featured Speakers Ordering -->
+				<div class="wpfaevent-featured-speakers-ordering-container" style="margin-bottom: 20px; border-bottom: 1px solid var(--wpfa-border); padding-bottom: 20px;">
+					<h3><?php esc_html_e( 'Featured Speakers Order (Drag to Reorder)', 'wpfaevent' ); ?></h3>
+					<p class="description"><?php esc_html_e( 'Drag and drop featured speakers to set their exact order on the public page.', 'wpfaevent' ); ?></p>
+					
+					<ul id="wpfaevent-featured-speakers-sortable" class="wpfaevent-sortable-list" style="margin: 15px 0 0; padding: 0; list-style: none;">
+						<?php
+						$saved_featured_ids = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_event_featured_speaker_ids( $event['id'] ) : array();
+
+						$featured_by_id = array();
+						foreach ( $speakers as $speaker ) {
+							if ( ! empty( $speaker['id'] ) ) {
+								$featured_by_id[ $speaker['id'] ] = $speaker;
+							}
+						}
+
+						$ordered_featured = array();
+						foreach ( $saved_featured_ids as $fid ) {
+							if ( isset( $featured_by_id[ $fid ] ) ) {
+								$ordered_featured[] = $featured_by_id[ $fid ];
+								unset( $featured_by_id[ $fid ] );
+							}
+						}
+						foreach ( $speakers as $speaker ) {
+							if ( ! empty( $speaker['featured'] ) && ! empty( $speaker['id'] ) && isset( $featured_by_id[ $speaker['id'] ] ) ) {
+								$ordered_featured[] = $speaker;
+							}
+						}
+
+						if ( ! empty( $ordered_featured ) ) :
+							foreach ( $ordered_featured as $fs ) :
+								$fs_id    = isset( $fs['id'] ) ? $fs['id'] : '';
+								$fs_image = ! empty( $fs['image'] ) ? $fs['image'] : ( defined( 'WPFAEVENT_URL' ) ? WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg' : '' );
+								?>
+								<li class="wpfaevent-sortable-item" data-speaker-id="<?php echo esc_attr( (string) $fs_id ); ?>" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid #e4ebf3; border-radius: 8px; margin-bottom: 8px; background: #fff; cursor: move;">
+									<div style="display: flex; align-items: center; gap: 10px;">
+										<span class="dashicons dashicons-menu" style="color: #a0aec0; cursor: move;"></span>
+										<?php if ( $fs_image ) : ?>
+											<img src="<?php echo esc_url( $fs_image ); ?>" alt="<?php echo esc_attr( $fs['name'] ); ?>" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+										<?php endif; ?>
+										<div>
+											<strong style="font-size: 13px;"><?php echo esc_html( $fs['name'] ); ?></strong>
+											<div class="description" style="font-size: 11px;"><?php echo esc_html( trim( $fs['title'] ) ); ?></div>
+										</div>
+									</div>
+									<button type="button" class="button button-small wpfaevent-unfeature-btn" data-speaker-id="<?php echo esc_attr( (string) $fs_id ); ?>"><?php esc_html_e( 'Remove Featured', 'wpfaevent' ); ?></button>
+								</li>
+							<?php endforeach; ?>
+						<?php else : ?>
+							<li class="wpfaevent-sortable-placeholder-item" style="padding: 15px; text-align: center; border: 1px dashed #cbd5e0; border-radius: 8px; color: #718096; background: #f8fafc;">
+								<?php esc_html_e( 'No featured speakers. Toggle featured status on speakers below to add them.', 'wpfaevent' ); ?>
+							</li>
+						<?php endif; ?>
+					</ul>
 				</div>
+
+				<!-- Section for All Speakers -->
+				<div class="wpfaevent-all-speakers-container">
+					<h3><?php esc_html_e( 'All Event Speakers', 'wpfaevent' ); ?></h3>
+					<p class="description"><?php esc_html_e( 'Mark speakers as featured to show them in the featured speakers list.', 'wpfaevent' ); ?></p>
+					
+					<div class="wpfaevent-list" style="margin-top: 15px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
+						<?php
+						foreach ( $speakers as $speaker ) :
+							$sp_id          = isset( $speaker['id'] ) ? $speaker['id'] : '';
+							$sp_image       = ! empty( $speaker['image'] ) ? $speaker['image'] : ( defined( 'WPFAEVENT_URL' ) ? WPFAEVENT_URL . 'assets/images/speaker-placeholder.svg' : '' );
+							$is_sp_featured = ! empty( $speaker['featured'] );
+							?>
+							<div class="wpfaevent-list-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border: 1px solid #e4ebf3; border-radius: 8px; margin-bottom: 8px; background: <?php echo $is_sp_featured ? '#f0fdf4' : '#fff'; ?>;">
+								<div style="display: flex; align-items: center; gap: 10px;">
+									<?php if ( $sp_image ) : ?>
+										<img src="<?php echo esc_url( $sp_image ); ?>" alt="<?php echo esc_attr( $speaker['name'] ); ?>" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;">
+									<?php endif; ?>
+									<div>
+										<strong style="font-size: 13px;"><?php echo esc_html( $speaker['name'] ); ?></strong>
+										<div class="description" style="font-size: 11px;"><?php echo esc_html( trim( $speaker['title'] . ( $speaker['organization'] ? ' - ' . $speaker['organization'] : '' ) ) ); ?></div>
+									</div>
+								</div>
+								<div>
+									<?php if ( ! empty( $sp_id ) ) : ?>
+										<?php if ( $is_sp_featured ) : ?>
+											<button type="button" class="button button-small wpfaevent-toggle-feature-btn is-featured" data-speaker-id="<?php echo esc_attr( (string) $sp_id ); ?>" style="border-color: #bbf7d0; background: #e8f5e9; color: #1b5e20;"><?php esc_html_e( 'Featured', 'wpfaevent' ); ?></button>
+										<?php else : ?>
+											<button type="button" class="button button-small wpfaevent-toggle-feature-btn" data-speaker-id="<?php echo esc_attr( (string) $sp_id ); ?>" style="border-color: #d1d5db; background: #fff; color: #374151;"><?php esc_html_e( 'Feature', 'wpfaevent' ); ?></button>
+										<?php endif; ?>
+									<?php endif; ?>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+
 				<div style="margin-top: 15px; border-top: 1px solid var(--wpfa-border); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
 					<span class="description">
 						<?php
-						if ( $total_speakers_count <= 5 ) {
-							printf(
-								/* translators: %d: count of speakers */
-								esc_html( _n( 'Showing %d speaker', 'Showing %d speakers', $total_speakers_count, 'wpfaevent' ) ),
-								absint( $total_speakers_count )
-							);
-						} else {
-							printf(
-								/* translators: %d: count of speakers */
-								esc_html__( 'Showing 5 of %d speakers', 'wpfaevent' ),
-								absint( $total_speakers_count )
-							);
-						}
+						printf(
+							/* translators: %d: count of speakers */
+							esc_html( _n( 'Total: %d speaker', 'Total: %d speakers', $total_speakers_count, 'wpfaevent' ) ),
+							absint( $total_speakers_count )
+						);
 						?>
 					</span>
 					<a class="wpfaevent-module-link" href="<?php echo esc_url( $module_urls['speakers'] ); ?>">

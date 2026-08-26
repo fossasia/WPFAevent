@@ -416,3 +416,39 @@
 .wpfaevent-meta-card-field.span-2 {
 	grid-column: span 2;
 }
+
+/**
+ * Featured Speakers Dashboard Sorting (Issue #249)
+ */
+.wpfaevent-sortable-list {
+	margin: 15px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.wpfaevent-sortable-item {
+	transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.wpfaevent-sortable-item.ui-sortable-helper {
+	box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+	background: #f8fafc !important;
+	border-color: #cbd5e1 !important;
+}
+
+.wpfaevent-sortable-placeholder {
+	height: 54px;
+	border: 2px dashed #cbd5e0;
+	border-radius: 8px;
+	margin-bottom: 8px;
+	background: #f8fafc;
+}
+
+.wpfaevent-toggle-feature-btn {
+	transition: all 0.2s ease;
+}
+
+.wpfaevent-toggle-feature-btn:hover {
+	transform: scale(1.02);
+}
+

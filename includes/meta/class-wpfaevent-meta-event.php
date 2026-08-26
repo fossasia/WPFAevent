@@ -738,7 +738,16 @@ class Wpfaevent_Meta_Event {
 	public static function resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers = array() ) {
 		$event_id    = absint( $event_id );
 		$speaker_ids = self::sanitize_post_id_list( $speaker_ids );
-		$featured    = array_values( array_intersect( self::get_event_featured_speaker_ids( $event_id ), $speaker_ids ) );
+
+		$is_manual = 'yes' === get_post_meta( $event_id, 'wpfa_event_featured_speakers_manual', true );
+
+		if ( $is_manual ) {
+			$featured = self::get_event_featured_speaker_ids( $event_id );
+			$featured = array_values( array_intersect( $featured, $speaker_ids ) );
+			return apply_filters( 'wpfa_event_featured_speaker_ids', $featured, $event_id, $speaker_ids, $dashboard_speakers );
+		}
+
+		$featured = array_values( array_intersect( self::get_event_featured_speaker_ids( $event_id ), $speaker_ids ) );
 
 		if ( is_array( $dashboard_speakers ) && ! empty( $dashboard_speakers ) ) {
 			$eventyay_map = array();

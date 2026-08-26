@@ -207,6 +207,167 @@
 				}
 			});
 		}
+
+		// Featured Speakers Manual Ordering (Issue #249)
+		const $speakersSection = $('#wpfaevent-speakers');
+		if ($speakersSection.length) {
+			const $sortableList = $('#wpfaevent-featured-speakers-sortable');
+			const $allSpeakersList = $('.wpfaevent-all-speakers-container');
+			const eventId = $('.wpfaevent-dashboard-shell').data('event-id');
+			const speakersNonce = $speakersSection.data('speakers-nonce');
+
+			if ($sortableList.length && $.fn.sortable) {
+				$sortableList.sortable({
+					handle: '.dashicons-menu',
+					placeholder: 'wpfaevent-sortable-placeholder',
+					update: function() {
+						saveFeaturedSpeakersOrder();
+					}
+				});
+			}
+
+			// Handle Toggle Feature Button Click
+			$allSpeakersList.on('click', '.wpfaevent-toggle-feature-btn', function(e) {
+				e.preventDefault();
+				const $btn = $(this);
+				const speakerId = $btn.data('speaker-id');
+				const isFeatured = $btn.hasClass('is-featured');
+
+				if (isFeatured) {
+					unfeatureSpeaker(speakerId);
+				} else {
+					featureSpeaker(speakerId);
+				}
+			});
+
+			// Handle Remove Featured Button Click
+			$speakersSection.on('click', '.wpfaevent-unfeature-btn', function(e) {
+				e.preventDefault();
+				const speakerId = $(this).data('speaker-id');
+				unfeatureSpeaker(speakerId);
+			});
+
+			function featureSpeaker(speakerId) {
+				const $allCard = $(`.wpfaevent-toggle-feature-btn[data-speaker-id="${speakerId}"]`).closest('.wpfaevent-list-item');
+				if (!$allCard.length) {
+					return;
+				}
+
+				const $toggleBtn = $allCard.find('.wpfaevent-toggle-feature-btn');
+				$toggleBtn.addClass('is-featured')
+					.text('Featured')
+					.css({
+						'border-color': '#bbf7d0',
+						'background': '#e8f5e9',
+						'color': '#1b5e20'
+					});
+				$allCard.css('background', '#f0fdf4');
+
+				// Remove placeholder if it exists
+				$sortableList.find('.wpfaevent-sortable-placeholder-item').remove();
+
+				if (!$sortableList.find(`li[data-speaker-id="${speakerId}"]`).length) {
+					const name = $allCard.find('strong').text();
+					const title = $allCard.find('.description').text();
+					const imgUrl = $allCard.find('img').attr('src');
+
+					const newLi = `
+						<li class="wpfaevent-sortable-item" data-speaker-id="${speakerId}" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid #e4ebf3; border-radius: 8px; margin-bottom: 8px; background: #fff; cursor: move;">
+							<div style="display: flex; align-items: center; gap: 10px;">
+								<span class="dashicons dashicons-menu" style="color: #a0aec0; cursor: move;"></span>
+								${imgUrl ? `<img src="${imgUrl}" alt="${name}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">` : ''}
+								<div>
+									<strong style="font-size: 13px;">${name}</strong>
+									<div class="description" style="font-size: 11px;">${title}</div>
+								</div>
+							</div>
+							<button type="button" class="button button-small wpfaevent-unfeature-btn" data-speaker-id="${speakerId}">Remove Featured</button>
+						</li>
+					`;
+					$sortableList.append(newLi);
+				}
+
+				saveFeaturedSpeakersOrder();
+			}
+
+			function unfeatureSpeaker(speakerId) {
+				const $allCard = $(`.wpfaevent-toggle-feature-btn[data-speaker-id="${speakerId}"]`).closest('.wpfaevent-list-item');
+				if ($allCard.length) {
+					const $toggleBtn = $allCard.find('.wpfaevent-toggle-feature-btn');
+					$toggleBtn.removeClass('is-featured')
+						.text('Feature')
+						.css({
+							'border-color': '#d1d5db',
+							'background': '#fff',
+							'color': '#374151'
+						});
+					$allCard.css('background', '#fff');
+				}
+
+				$sortableList.find(`li[data-speaker-id="${speakerId}"]`).remove();
+
+				if ($sortableList.find('.wpfaevent-sortable-item').length === 0) {
+					const placeholder = `
+						<li class="wpfaevent-sortable-placeholder-item" style="padding: 15px; text-align: center; border: 1px dashed #cbd5e0; border-radius: 8px; color: #718096; background: #f8fafc;">
+							No featured speakers. Toggle featured status on speakers below to add them.
+						</li>
+					`;
+					$sortableList.html(placeholder);
+				}
+
+				saveFeaturedSpeakersOrder();
+			}
+
+			function saveFeaturedSpeakersOrder() {
+				const speakerIds = [];
+				$sortableList.find('.wpfaevent-sortable-item').each(function() {
+					const id = $(this).data('speaker-id');
+					if (id) {
+						speakerIds.push(id);
+					}
+				});
+
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'wpfaevent_save_featured_speakers',
+						event_id: eventId,
+						speaker_ids: speakerIds,
+						nonce: speakersNonce
+					},
+					success: function(response) {
+						if (response.success) {
+							drawDashboardNotice('success', response.data.message);
+						} else {
+							drawDashboardNotice('error', response.data.message || 'Failed to save featured speakers.');
+						}
+					},
+					error: function() {
+						drawDashboardNotice('error', 'An error occurred while saving.');
+					}
+				});
+			}
+
+			function drawDashboardNotice(type, message) {
+				const container = document.querySelector('.wpfaevent-notification-container') || document.querySelector('.wpfaevent-dashboard-shell');
+				if (!container) return;
+
+				const notice = document.createElement('div');
+				notice.className = 'notice notice-' + type + ' is-dismissible';
+				notice.style.margin = '0 0 20px';
+				const p = document.createElement('p');
+				p.textContent = message;
+				notice.appendChild(p);
+
+				const existing = container.querySelectorAll('.notice.wpfaevent-edit-notice');
+				existing.forEach(el => el.remove());
+
+				notice.classList.add('wpfaevent-edit-notice');
+				container.insertBefore(notice, container.firstChild);
+				notice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+			}
+		}
 	});
 
 	function getEventTitle(event) {
