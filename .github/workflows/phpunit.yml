@@ -1,0 +1,72 @@
+name: PHPUnit
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  file-filter:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      php: ${{ steps.filter.outputs.php }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            php:
+              - '**/*.php'
+              - '.github/workflows/phpunit.yml'
+
+  phpunit:
+    needs: file-filter
+    if: |
+      always() &&
+      (github.event_name == 'push' || needs.file-filter.outputs.php == 'true')
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: wordpress_test
+          MYSQL_USER: wp_test
+          MYSQL_PASSWORD: test_password
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Setup WordPress test database
+        env:
+          WP_DB_USER: wp_test
+          WP_DB_PASS: test_password
+          WP_DB_HOST: 127.0.0.1:3306
+          WP_INSTALL_TESTS_SKIP_UPDATE_CHECK: true
+        run: composer setup-tests
+
+      - name: Run PHPUnit
+        run: composer test

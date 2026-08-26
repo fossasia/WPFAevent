@@ -4,11 +4,27 @@
 	$(function () {
 		const $importForm = $('#wpfaevent-import-events-form');
 		const $updateForm = $('#wpfaevent-update-events-form');
+		const sponsorGroupOrderForm = document.getElementById(
+			'wpfaevent-sponsor-group-order-form'
+		);
 		const sponsorGroupList = document.getElementById(
 			'wpfaevent-sponsor-group-order-list'
 		);
+		const sponsorGroupUnsavedIndicator = document.getElementById(
+			'wpfaevent-sponsor-group-order-unsaved'
+		);
 
 		if (sponsorGroupList) {
+			let sponsorGroupOrderDirty = false;
+			let sponsorGroupOrderSubmitting = false;
+
+			const markSponsorGroupOrderDirty = function () {
+				sponsorGroupOrderDirty = true;
+				if (sponsorGroupUnsavedIndicator) {
+					sponsorGroupUnsavedIndicator.hidden = false;
+				}
+			};
+
 			const refreshSponsorGroupButtons = function () {
 				const items = sponsorGroupList.querySelectorAll(
 					'.wpfaevent-sponsor-group-order-item'
@@ -49,6 +65,7 @@
 					const previousItem = item.previousElementSibling;
 					if (previousItem) {
 						sponsorGroupList.insertBefore(item, previousItem);
+						markSponsorGroupOrderDirty();
 						refreshSponsorGroupButtons();
 					}
 				}
@@ -57,9 +74,36 @@
 					const nextItem = item.nextElementSibling;
 					if (nextItem) {
 						sponsorGroupList.insertBefore(nextItem, item);
+						markSponsorGroupOrderDirty();
 						refreshSponsorGroupButtons();
 					}
 				}
+			});
+
+			if (sponsorGroupOrderForm) {
+				sponsorGroupOrderForm.addEventListener('submit', function () {
+					sponsorGroupOrderSubmitting = true;
+					sponsorGroupOrderDirty = false;
+					if (sponsorGroupUnsavedIndicator) {
+						sponsorGroupUnsavedIndicator.hidden = true;
+					}
+				});
+			}
+
+			window.addEventListener('beforeunload', function (event) {
+				if (!sponsorGroupOrderDirty || sponsorGroupOrderSubmitting) {
+					return undefined;
+				}
+
+				const warningMessage = sponsorGroupOrderForm
+					? sponsorGroupOrderForm.getAttribute(
+							'data-unsaved-warning'
+						) || 'You have unsaved changes.'
+					: 'You have unsaved changes.';
+
+				event.preventDefault();
+				event.returnValue = warningMessage;
+				return warningMessage;
 			});
 
 			refreshSponsorGroupButtons();

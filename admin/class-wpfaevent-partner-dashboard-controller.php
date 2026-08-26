@@ -16,6 +16,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Wpfaevent_Partner_Dashboard_Controller {
 
 	/**
+	 * Query arg used to display reorder notices after redirects.
+	 */
+	const REORDER_NOTICE_QUERY_ARG = 'wpfaevent_reorder_status';
+
+	/**
 	 * Storage helper.
 	 *
 	 * @var Wpfaevent_Eventyay_Dashboard_Store
@@ -32,9 +37,9 @@ class Wpfaevent_Partner_Dashboard_Controller {
 	/**
 	 * Constructor.
 	 */
-	public function __construct() {
-		$this->store = new Wpfaevent_Eventyay_Dashboard_Store();
-		$this->stats = new Wpfaevent_Partner_Dashboard_Statistics();
+	public function __construct( $store = null, $stats = null ) {
+		$this->store = $store instanceof Wpfaevent_Eventyay_Dashboard_Store ? $store : new Wpfaevent_Eventyay_Dashboard_Store();
+		$this->stats = $stats instanceof Wpfaevent_Partner_Dashboard_Statistics ? $stats : new Wpfaevent_Partner_Dashboard_Statistics();
 	}
 
 	/**
@@ -188,21 +193,9 @@ class Wpfaevent_Partner_Dashboard_Controller {
 			}
 		}
 
-		$existing_groups = $this->store->read_dashboard_json_file( 'sponsors-' . $event_id . '.json', array() );
-		$reordered       = $this->reorder_sponsor_groups( $existing_groups, $group_keys );
+		$result = $this->process_reorder_sponsor_groups( $event_id, $group_keys );
 
-		$this->store->write_dashboard_json_file( 'sponsors-' . $event_id . '.json', $reordered );
-
-		wp_safe_redirect(
-			add_query_arg(
-				array(
-					'post_type' => 'wpfa_event',
-					'page'      => 'wpfaevent-sponsors',
-					'event_id'  => $event_id,
-				),
-				admin_url( 'edit.php' )
-			)
-		);
+		wp_safe_redirect( $result['redirect_url'] );
 		exit;
 	}
 
@@ -275,7 +268,7 @@ class Wpfaevent_Partner_Dashboard_Controller {
 				continue;
 			}
 
-			$group_key = $this->get_sponsor_group_key( $group );
+			$group_key = Wpfaevent_Partner_Helper::get_sponsor_group_key( $group );
 			if ( '' === $group_key ) {
 				continue;
 			}
@@ -290,7 +283,7 @@ class Wpfaevent_Partner_Dashboard_Controller {
 			}
 
 			$group_name = isset( $record['type'] ) && '' !== trim( (string) $record['type'] ) ? sanitize_text_field( $record['type'] ) : __( 'Sponsors', 'wpfaevent' );
-			$group_key  = sanitize_key( $group_name );
+			$group_key  = Wpfaevent_Partner_Helper::normalize_sponsor_group_key( $group_name );
 
 			if ( '' === $group_key ) {
 				continue;
@@ -313,7 +306,7 @@ class Wpfaevent_Partner_Dashboard_Controller {
 				}
 
 				if ( ! empty( $template['eventyay_group_key'] ) ) {
-					$groups[ $group_key ]['eventyay_group_key'] = sanitize_key( $template['eventyay_group_key'] );
+					$groups[ $group_key ]['eventyay_group_key'] = Wpfaevent_Partner_Helper::normalize_sponsor_group_key( $template['eventyay_group_key'] );
 				}
 
 				if ( ! in_array( $group_key, $order, true ) ) {
@@ -358,7 +351,7 @@ class Wpfaevent_Partner_Dashboard_Controller {
 				continue;
 			}
 
-			$group_key = $this->get_sponsor_group_key( $group );
+			$group_key = Wpfaevent_Partner_Helper::get_sponsor_group_key( $group );
 			if ( '' === $group_key ) {
 				continue;
 			}
@@ -381,24 +374,30 @@ class Wpfaevent_Partner_Dashboard_Controller {
 	}
 
 	/**
-	 * Get the normalized key for a sponsor group.
+	 * Persist reordered sponsor groups and build the post-redirect destination.
 	 *
-	 * @param array $group Sponsor group.
-	 * @return string
+	 * @param int   $event_id   Event ID.
+	 * @param array $group_keys Submitted group keys.
+	 * @return array<string, mixed>
 	 */
-	private function get_sponsor_group_key( $group ) {
-		if ( ! is_array( $group ) ) {
-			return '';
-		}
+	private function process_reorder_sponsor_groups( $event_id, $group_keys ) {
+		$existing_groups = $this->store->read_dashboard_json_file( 'sponsors-' . $event_id . '.json', array() );
+		$reordered       = $this->reorder_sponsor_groups( $existing_groups, $group_keys );
+		$write_result    = $this->store->write_dashboard_json_file( 'sponsors-' . $event_id . '.json', $reordered );
+		$notice_status   = is_wp_error( $write_result ) ? 'error' : 'success';
 
-		if ( ! empty( $group['eventyay_group_key'] ) ) {
-			return sanitize_key( $group['eventyay_group_key'] );
-		}
-
-		if ( ! empty( $group['group_name'] ) ) {
-			return sanitize_key( $group['group_name'] );
-		}
-
-		return '';
+		return array(
+			'redirect_url' => add_query_arg(
+				array(
+					'post_type'                    => 'wpfa_event',
+					'page'                         => 'wpfaevent-sponsors',
+					'event_id'                     => $event_id,
+					self::REORDER_NOTICE_QUERY_ARG => $notice_status,
+				),
+				admin_url( 'edit.php' )
+			),
+			'reordered'    => $reordered,
+			'write_result' => $write_result,
+		);
 	}
 }

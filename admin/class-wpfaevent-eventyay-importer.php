@@ -1591,7 +1591,6 @@ class Wpfaevent_Eventyay_Importer {
 			++$result['skipped'];
 		} else {
 			$normalized_sponsors = $this->normalize_eventyay_sponsor_resources( $sponsors['resources'], $settings );
-			$normalized_sponsors = $this->filter_eventyay_sponsors_to_public_listing( $normalized_sponsors, $event, $settings, $event_slug );
 			$existing_sponsors   = $this->read_dashboard_json_file( 'sponsors-' . absint( $event_id ) . '.json', array() );
 			$sponsor_groups      = $this->merge_eventyay_sponsor_groups( $normalized_sponsors, $existing_sponsors );
 			$write_result        = $this->write_dashboard_json_file( 'sponsors-' . absint( $event_id ) . '.json', $sponsor_groups );
@@ -1608,7 +1607,6 @@ class Wpfaevent_Eventyay_Importer {
 			++$result['skipped'];
 		} else {
 			$normalized_exhibitors = $this->normalize_eventyay_exhibitor_resources( $exhibitors['resources'], $settings );
-			$normalized_exhibitors = $this->filter_eventyay_exhibitors_to_public_listing( $normalized_exhibitors, $event, $settings, $event_slug );
 			$existing_exhibitors   = $this->read_dashboard_json_file( 'exhibitors-' . absint( $event_id ) . '.json', array() );
 			$merged_exhibitors     = $this->merge_eventyay_flat_records( $normalized_exhibitors, $existing_exhibitors );
 			$write_result          = $this->write_dashboard_json_file( 'exhibitors-' . absint( $event_id ) . '.json', $merged_exhibitors );
@@ -1621,300 +1619,6 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		return $result;
-	}
-
-	/**
-	 * Filter API sponsor rows to the sponsor names shown on the public Eventyay page.
-	 *
-	 * Some Eventyay sponsor endpoints can include records that are not actually shown
-	 * on the public event page. When Eventyay publishes a supported-by section,
-	 * treat those visible group/name combinations as the authoritative set.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array  $sponsors   Normalized sponsor records.
-	 * @param array  $event      Eventyay event resource.
-	 * @param array  $settings   Import settings.
-	 * @param string $event_slug Eventyay event slug.
-	 * @return array
-	 */
-	private function filter_eventyay_sponsors_to_public_listing( $sponsors, $event, $settings, $event_slug ) {
-		if ( empty( $sponsors ) ) {
-			return is_array( $sponsors ) ? $sponsors : array();
-		}
-
-		$public_groups = $this->fetch_eventyay_public_sponsor_groups( $event, $settings, $event_slug );
-		if ( is_wp_error( $public_groups ) || empty( $public_groups ) ) {
-			return $sponsors;
-		}
-
-		$filtered = array();
-		$name_map = array();
-
-		foreach ( $public_groups as $public_group ) {
-			if ( empty( $public_group['group_name'] ) || empty( $public_group['sponsors'] ) || ! is_array( $public_group['sponsors'] ) ) {
-				continue;
-			}
-
-			foreach ( array_keys( $public_group['sponsors'] ) as $name_key ) {
-				if ( '' !== $name_key && empty( $name_map[ $name_key ] ) ) {
-					$name_map[ $name_key ] = $public_group['group_name'];
-				}
-			}
-		}
-
-		foreach ( $sponsors as $sponsor ) {
-			if ( ! is_array( $sponsor ) ) {
-				continue;
-			}
-
-			$name_key = ! empty( $sponsor['name'] ) ? sanitize_title( $sponsor['name'] ) : '';
-			if ( '' !== $name_key && empty( $sponsor['type'] ) && ! empty( $name_map[ $name_key ] ) ) {
-				$sponsor['type'] = sanitize_text_field( $name_map[ $name_key ] );
-			}
-
-			$group_key = ! empty( $sponsor['type'] ) ? sanitize_title( $sponsor['type'] ) : '';
-			$name_key  = ! empty( $sponsor['name'] ) ? sanitize_title( $sponsor['name'] ) : '';
-
-			if ( '' === $group_key || '' === $name_key ) {
-				continue;
-			}
-
-			if ( ! empty( $public_groups[ $group_key ]['sponsors'][ $name_key ] ) ) {
-				$filtered[] = $sponsor;
-			}
-		}
-
-		return ! empty( $filtered ) ? $filtered : $sponsors;
-	}
-
-	/**
-	 * Fetch sponsor groups published on the public Eventyay page.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array  $event      Eventyay event resource.
-	 * @param array  $settings   Import settings.
-	 * @param string $event_slug Eventyay event slug.
-	 * @return array|WP_Error
-	 */
-	private function fetch_eventyay_public_sponsor_groups( $event, $settings, $event_slug ) {
-		$event_url = trailingslashit( $this->eventyay_public_event_url( $event, $settings, $event_slug ) );
-		if ( ! $event_url ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_missing_public_event_url',
-				esc_html__( 'The public Eventyay event page URL could not be resolved.', 'wpfaevent' )
-			);
-		}
-
-		$response = wp_remote_get(
-			$event_url,
-			array(
-				'timeout'     => 20,
-				'redirection' => 3,
-				'headers'     => array(
-					'Accept'     => 'text/html,application/xhtml+xml',
-					'User-Agent' => 'Mozilla/5.0 (compatible; WPFAevent importer)',
-				),
-			)
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_public_event_request_failed',
-				esc_html__( 'The public Eventyay event page could not be fetched.', 'wpfaevent' ),
-				array( 'details' => $response->get_error_message() )
-			);
-		}
-
-		$status = absint( wp_remote_retrieve_response_code( $response ) );
-		if ( $status < 200 || $status >= 300 ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_public_event_http_error',
-				esc_html__( 'The public Eventyay event page returned an unexpected response.', 'wpfaevent' ),
-				array( 'http_status' => $status )
-			);
-		}
-
-		$body = wp_remote_retrieve_body( $response );
-		if ( '' === trim( (string) $body ) ) {
-			return array();
-		}
-
-		if ( ! class_exists( 'DOMDocument' ) || ! class_exists( 'DOMXPath' ) ) {
-			return array();
-		}
-
-		$internal_errors = libxml_use_internal_errors( true );
-		$document        = new DOMDocument();
-		$loaded          = $document->loadHTML( '<?xml encoding="utf-8" ?>' . $body );
-		libxml_clear_errors();
-		libxml_use_internal_errors( $internal_errors );
-
-		if ( ! $loaded ) {
-			return array();
-		}
-
-		$xpath  = new DOMXPath( $document );
-		$groups = array();
-		$nodes  = $xpath->query( '//div[contains(concat(" ", normalize-space(@class), " "), " exhibition-supported-by-group ")]' );
-
-		if ( ! $nodes ) {
-			return array();
-		}
-
-		foreach ( $nodes as $group_node ) {
-			$title_nodes = $xpath->query( './/h4[1]', $group_node );
-			if ( ! $title_nodes || 0 === $title_nodes->length ) {
-				continue;
-			}
-
-			$group_name = trim( wp_strip_all_tags( $title_nodes->item( 0 )->textContent ) );
-			$group_key  = sanitize_title( $group_name );
-
-			if ( '' === $group_key ) {
-				continue;
-			}
-
-			$image_nodes = $xpath->query( './/img[@alt]', $group_node );
-			if ( ! $image_nodes || 0 === $image_nodes->length ) {
-				continue;
-			}
-
-			if ( ! isset( $groups[ $group_key ] ) ) {
-				$groups[ $group_key ] = array(
-					'group_name' => $group_name,
-					'sponsors'   => array(),
-				);
-			}
-
-			foreach ( $image_nodes as $image_node ) {
-				if ( ! $image_node instanceof DOMElement ) {
-					continue;
-				}
-
-				$name = trim( (string) $image_node->getAttribute( 'alt' ) );
-				$key  = sanitize_title( $name );
-
-				if ( '' !== $key ) {
-					$groups[ $group_key ]['sponsors'][ $key ] = true;
-				}
-			}
-		}
-
-		return $groups;
-	}
-
-	/**
-	 * Filter API exhibitor rows to the exhibitor IDs shown on the public Eventyay page.
-	 *
-	 * Some Eventyay exhibitor endpoints can include records that are not actually shown
-	 * on the public exhibition page. When Eventyay publishes a public exhibitor listing,
-	 * treat those visible exhibitor IDs as the authoritative set.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array  $exhibitors Normalized exhibitor records.
-	 * @param array  $event      Eventyay event resource.
-	 * @param array  $settings   Import settings.
-	 * @param string $event_slug Eventyay event slug.
-	 * @return array
-	 */
-	private function filter_eventyay_exhibitors_to_public_listing( $exhibitors, $event, $settings, $event_slug ) {
-		if ( empty( $exhibitors ) ) {
-			return is_array( $exhibitors ) ? $exhibitors : array();
-		}
-
-		$public_exhibitor_ids = $this->fetch_eventyay_public_exhibitor_ids( $event, $settings, $event_slug );
-		if ( is_wp_error( $public_exhibitor_ids ) || empty( $public_exhibitor_ids ) ) {
-			return $exhibitors;
-		}
-
-		$filtered = array();
-
-		foreach ( $exhibitors as $exhibitor ) {
-			if ( ! is_array( $exhibitor ) ) {
-				continue;
-			}
-
-			$eventyay_id = isset( $exhibitor['eventyay_id'] ) ? sanitize_text_field( (string) $exhibitor['eventyay_id'] ) : '';
-			if ( '' !== $eventyay_id && isset( $public_exhibitor_ids[ $eventyay_id ] ) ) {
-				$filtered[] = $exhibitor;
-			}
-		}
-
-		return ! empty( $filtered ) ? $filtered : $exhibitors;
-	}
-
-	/**
-	 * Fetch the exhibitor IDs published on the public Eventyay exhibition page.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array  $event      Eventyay event resource.
-	 * @param array  $settings   Import settings.
-	 * @param string $event_slug Eventyay event slug.
-	 * @return array|WP_Error
-	 */
-	private function fetch_eventyay_public_exhibitor_ids( $event, $settings, $event_slug ) {
-		$event_url = trailingslashit( $this->eventyay_public_event_url( $event, $settings, $event_slug ) );
-		if ( ! $event_url ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_missing_public_exhibition_url',
-				esc_html__( 'The public Eventyay exhibition page URL could not be resolved.', 'wpfaevent' )
-			);
-		}
-
-		$exhibition_url = esc_url_raw( trailingslashit( $event_url ) . 'exhibition/' );
-		$response       = wp_remote_get(
-			$exhibition_url,
-			array(
-				'timeout'     => 20,
-				'redirection' => 3,
-				'headers'     => array(
-					'Accept' => 'text/html,application/xhtml+xml',
-				),
-			)
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_public_exhibition_request_failed',
-				esc_html__( 'The public Eventyay exhibition page could not be fetched.', 'wpfaevent' ),
-				array( 'details' => $response->get_error_message() )
-			);
-		}
-
-		$status = absint( wp_remote_retrieve_response_code( $response ) );
-		if ( $status < 200 || $status >= 300 ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_public_exhibition_http_error',
-				esc_html__( 'The public Eventyay exhibition page returned an unexpected response.', 'wpfaevent' ),
-				array( 'http_status' => $status )
-			);
-		}
-
-		$body = wp_remote_retrieve_body( $response );
-		if ( '' === trim( (string) $body ) ) {
-			return array();
-		}
-
-		$matches = array();
-		preg_match_all( '#/exhibition/([0-9]+)/#', $body, $matches );
-
-		if ( empty( $matches[1] ) ) {
-			return array();
-		}
-
-		$ids = array();
-		foreach ( $matches[1] as $match_id ) {
-			$match_id = sanitize_text_field( (string) $match_id );
-			if ( '' !== $match_id ) {
-				$ids[ $match_id ] = true;
-			}
-		}
-
-		return $ids;
 	}
 
 	/**
@@ -2204,7 +1908,7 @@ class Wpfaevent_Eventyay_Importer {
 				continue;
 			}
 
-			$group_key = $this->eventyay_sponsor_group_key( $group );
+			$group_key = Wpfaevent_Partner_Helper::get_sponsor_group_key( $group );
 
 			if ( $this->is_eventyay_sponsor_group( $group ) ) {
 				if ( '' !== $group_key && ! in_array( $group_key, $ordered_keys, true ) ) {
@@ -2233,7 +1937,7 @@ class Wpfaevent_Eventyay_Importer {
 		$imported_groups = $this->group_eventyay_sponsors( $imported );
 
 		foreach ( $imported_groups as $group ) {
-			$group_key = $this->eventyay_sponsor_group_key( $group );
+			$group_key = Wpfaevent_Partner_Helper::get_sponsor_group_key( $group );
 			if ( '' === $group_key ) {
 				$ordered_entries[] = array(
 					'__raw_group' => $group,
@@ -2295,7 +1999,7 @@ class Wpfaevent_Eventyay_Importer {
 				$group_name = __( 'Sponsors', 'wpfaevent' );
 			}
 
-			$key = sanitize_key( $group_name );
+			$key = Wpfaevent_Partner_Helper::normalize_sponsor_group_key( $group_name );
 			if ( empty( $groups[ $key ] ) ) {
 				$groups[ $key ] = array(
 					'group_name'         => sanitize_text_field( $group_name ),
@@ -2345,22 +2049,6 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $group Sponsor group.
 	 * @return string
 	 */
-	private function eventyay_sponsor_group_key( $group ) {
-		if ( ! is_array( $group ) ) {
-			return '';
-		}
-
-		if ( ! empty( $group['eventyay_group_key'] ) ) {
-			return sanitize_key( $group['eventyay_group_key'] );
-		}
-
-		if ( ! empty( $group['group_name'] ) ) {
-			return sanitize_key( $group['group_name'] );
-		}
-
-		return '';
-	}
-
 	/**
 	 * Normalize Eventyay exhibitor resources.
 	 *

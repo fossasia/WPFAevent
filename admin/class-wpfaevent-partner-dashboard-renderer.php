@@ -30,6 +30,32 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 	}
 
 	/**
+	 * Resolve the current reorder notice payload from the query string.
+	 *
+	 * @return array<string, string>|array{}
+	 */
+	private function get_reorder_notice() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only status indicator.
+		$status = isset( $_GET[ Wpfaevent_Partner_Dashboard_Controller::REORDER_NOTICE_QUERY_ARG ] ) ? sanitize_key( wp_unslash( $_GET[ Wpfaevent_Partner_Dashboard_Controller::REORDER_NOTICE_QUERY_ARG ] ) ) : '';
+
+		if ( 'success' === $status ) {
+			return array(
+				'type'    => 'success',
+				'message' => __( 'Sponsor group order saved.', 'wpfaevent' ),
+			);
+		}
+
+		if ( 'error' === $status ) {
+			return array(
+				'type'    => 'error',
+				'message' => __( 'Sponsor group order could not be saved. Please try again.', 'wpfaevent' ),
+			);
+		}
+
+		return array();
+	}
+
+	/**
 	 * Render Sponsors Management Page callback.
 	 */
 	public function render_sponsors_page() {
@@ -68,6 +94,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 
 		$type_label        = 'sponsor' === $type ? __( 'Sponsor', 'wpfaevent' ) : __( 'Exhibitor', 'wpfaevent' );
 		$type_label_plural = 'sponsor' === $type ? __( 'Sponsors', 'wpfaevent' ) : __( 'Exhibitors', 'wpfaevent' );
+		$reorder_notice    = 'sponsor' === $type ? $this->get_reorder_notice() : array();
 
 		// Load records for the event.
 		$records        = $this->stats->load_records( $type, $event_id );
@@ -142,6 +169,11 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 		$current_page_slug = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 		?>
 		<div class="wrap">
+			<?php if ( ! empty( $reorder_notice['message'] ) ) : ?>
+				<div class="notice notice-<?php echo esc_attr( $reorder_notice['type'] ); ?> is-dismissible">
+					<p><?php echo esc_html( $reorder_notice['message'] ); ?></p>
+				</div>
+			<?php endif; ?>
 			<div class="wpfaevent-dashboard-shell">
 				<!-- Hero Section -->
 				<div class="wpfaevent-dashboard-hero">
@@ -224,10 +256,11 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 							<h3><?php esc_html_e( 'Sponsor Group Order', 'wpfaevent' ); ?></h3>
 							<div class="description"><?php esc_html_e( 'Move sponsor groups up or down, then save to keep that order across the dashboard and frontend.', 'wpfaevent' ); ?></div>
 						</div>
-						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+						<form method="post" id="wpfaevent-sponsor-group-order-form" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" data-unsaved-warning="<?php echo esc_attr__( 'You have unsaved sponsor group order changes.', 'wpfaevent' ); ?>">
 							<input type="hidden" name="action" value="wpfaevent_reorder_sponsor_groups">
 							<input type="hidden" name="event_id" value="<?php echo esc_attr( (string) $event_id ); ?>">
 							<?php wp_nonce_field( 'wpfaevent_reorder_sponsor_groups_' . $event_id ); ?>
+							<p id="wpfaevent-sponsor-group-order-unsaved" class="description" aria-live="polite" hidden><?php esc_html_e( 'Unsaved changes.', 'wpfaevent' ); ?></p>
 							<div id="wpfaevent-sponsor-group-order-list">
 								<?php foreach ( $sponsor_groups as $index => $group ) : ?>
 									<?php
@@ -236,7 +269,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 									}
 
 									$group_name    = ! empty( $group['group_name'] ) ? sanitize_text_field( $group['group_name'] ) : __( 'Sponsors', 'wpfaevent' );
-									$group_key     = ! empty( $group['eventyay_group_key'] ) ? sanitize_key( $group['eventyay_group_key'] ) : sanitize_key( $group_name );
+									$group_key     = Wpfaevent_Partner_Helper::get_sponsor_group_key( $group );
 									$group_count   = isset( $group['sponsors'] ) && is_array( $group['sponsors'] ) ? count( $group['sponsors'] ) : 0;
 									$is_eventyay   = ! empty( $group['source'] ) && 'eventyay' === $group['source'];
 									$is_first_item = 0 === $index;
