@@ -268,7 +268,7 @@ class EventyaySponsorGroupsTest extends WP_UnitTestCase {
 	 * Verify sponsor imports keep all normalized sponsors without public-page filtering.
 	 */
 	public function test_import_eventyay_event_partner_data_does_not_remove_sponsors_using_public_html() {
-		$event_id                = $this->factory->post->create(
+		$event_id                  = $this->factory->post->create(
 			array(
 				'post_type'   => 'wpfa_event',
 				'post_status' => 'publish',
