@@ -235,12 +235,12 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 										continue;
 									}
 
-										$group_name = ! empty( $group['group_name'] ) ? sanitize_text_field( $group['group_name'] ) : __( 'Sponsors', 'wpfaevent' );
-										$group_key  = ! empty( $group['eventyay_group_key'] ) ? sanitize_key( $group['eventyay_group_key'] ) : sanitize_key( $group_name );
-										$group_count = isset( $group['sponsors'] ) && is_array( $group['sponsors'] ) ? count( $group['sponsors'] ) : 0;
-										$is_eventyay = ! empty( $group['source'] ) && 'eventyay' === $group['source'];
-										$is_first_item = 0 === $index;
-										$is_last_item  = count( $sponsor_groups ) - 1 === $index;
+									$group_name    = ! empty( $group['group_name'] ) ? sanitize_text_field( $group['group_name'] ) : __( 'Sponsors', 'wpfaevent' );
+									$group_key     = ! empty( $group['eventyay_group_key'] ) ? sanitize_key( $group['eventyay_group_key'] ) : sanitize_key( $group_name );
+									$group_count   = isset( $group['sponsors'] ) && is_array( $group['sponsors'] ) ? count( $group['sponsors'] ) : 0;
+									$is_eventyay   = ! empty( $group['source'] ) && 'eventyay' === $group['source'];
+									$is_first_item = 0 === $index;
+									$is_last_item  = count( $sponsor_groups ) - 1 === $index;
 									?>
 									<div class="wpfaevent-list-item wpfaevent-sponsor-group-order-item">
 										<input type="hidden" name="group_keys[]" value="<?php echo esc_attr( $group_key ); ?>">
@@ -270,58 +270,6 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 								<button type="submit" class="button button-primary"><?php esc_html_e( 'Save Sponsor Group Order', 'wpfaevent' ); ?></button>
 							</p>
 						</form>
-						<script>
-							document.addEventListener('DOMContentLoaded', function() {
-								const list = document.getElementById('wpfaevent-sponsor-group-order-list');
-								if (!list) {
-									return;
-								}
-
-								const refreshButtons = function() {
-									const items = list.querySelectorAll('.wpfaevent-sponsor-group-order-item');
-									items.forEach(function(item, index) {
-										const upButton = item.querySelector('.wpfaevent-move-group-up');
-										const downButton = item.querySelector('.wpfaevent-move-group-down');
-										if (upButton) {
-											upButton.disabled = index === 0;
-										}
-										if (downButton) {
-											downButton.disabled = index === items.length - 1;
-										}
-									});
-								};
-
-								list.addEventListener('click', function(event) {
-									const button = event.target.closest('button');
-									if (!button) {
-										return;
-									}
-
-									const item = button.closest('.wpfaevent-sponsor-group-order-item');
-									if (!item) {
-										return;
-									}
-
-									if (button.classList.contains('wpfaevent-move-group-up')) {
-										const previousItem = item.previousElementSibling;
-										if (previousItem) {
-											list.insertBefore(item, previousItem);
-											refreshButtons();
-										}
-									}
-
-									if (button.classList.contains('wpfaevent-move-group-down')) {
-										const nextItem = item.nextElementSibling;
-										if (nextItem) {
-											list.insertBefore(nextItem, item);
-											refreshButtons();
-										}
-									}
-								});
-
-								refreshButtons();
-							});
-						</script>
 					</div>
 				<?php endif; ?>
 

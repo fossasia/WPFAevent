@@ -4,6 +4,66 @@
 	$(function () {
 		const $importForm = $('#wpfaevent-import-events-form');
 		const $updateForm = $('#wpfaevent-update-events-form');
+		const sponsorGroupList = document.getElementById(
+			'wpfaevent-sponsor-group-order-list'
+		);
+
+		if (sponsorGroupList) {
+			const refreshSponsorGroupButtons = function () {
+				const items = sponsorGroupList.querySelectorAll(
+					'.wpfaevent-sponsor-group-order-item'
+				);
+
+				items.forEach(function (item, index) {
+					const upButton = item.querySelector(
+						'.wpfaevent-move-group-up'
+					);
+					const downButton = item.querySelector(
+						'.wpfaevent-move-group-down'
+					);
+
+					if (upButton) {
+						upButton.disabled = index === 0;
+					}
+
+					if (downButton) {
+						downButton.disabled = index === items.length - 1;
+					}
+				});
+			};
+
+			sponsorGroupList.addEventListener('click', function (event) {
+				const button = event.target.closest('button');
+				if (!button) {
+					return;
+				}
+
+				const item = button.closest(
+					'.wpfaevent-sponsor-group-order-item'
+				);
+				if (!item) {
+					return;
+				}
+
+				if (button.classList.contains('wpfaevent-move-group-up')) {
+					const previousItem = item.previousElementSibling;
+					if (previousItem) {
+						sponsorGroupList.insertBefore(item, previousItem);
+						refreshSponsorGroupButtons();
+					}
+				}
+
+				if (button.classList.contains('wpfaevent-move-group-down')) {
+					const nextItem = item.nextElementSibling;
+					if (nextItem) {
+						sponsorGroupList.insertBefore(nextItem, item);
+						refreshSponsorGroupButtons();
+					}
+				}
+			});
+
+			refreshSponsorGroupButtons();
+		}
 
 		function showImportNotice(message) {
 			const $container = $('.wrap').first();

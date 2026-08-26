@@ -2553,9 +2553,10 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return array
 	 */
 	public function merge_eventyay_sponsor_groups( $imported, $existing ) {
-		$existing = is_array( $existing ) ? $existing : array();
-		$groups   = array();
-		$order    = array();
+		$existing        = is_array( $existing ) ? $existing : array();
+		$group_map       = array();
+		$ordered_entries = array();
+		$ordered_keys    = array();
 
 		foreach ( $existing as $group ) {
 			if ( ! is_array( $group ) ) {
@@ -2563,57 +2564,66 @@ class Wpfaevent_JSONAPI_Parser {
 			}
 
 			$group_key = $this->eventyay_sponsor_group_key( $group );
-			if ( '' !== $group_key ) {
-				$order[] = $group_key;
-			}
 
 			if ( $this->is_eventyay_sponsor_group( $group ) ) {
+				if ( '' !== $group_key && ! in_array( $group_key, $ordered_keys, true ) ) {
+					$ordered_entries[] = $group_key;
+					$ordered_keys[]    = $group_key;
+				}
+
 				continue;
 			}
 
-			$groups[] = $group;
+			if ( '' !== $group_key ) {
+				if ( ! in_array( $group_key, $ordered_keys, true ) ) {
+					$ordered_entries[] = $group_key;
+					$ordered_keys[]    = $group_key;
+				}
+
+				$group_map[ $group_key ] = $group;
+				continue;
+			}
+
+			$ordered_entries[] = array(
+				'__raw_group' => $group,
+			);
 		}
 
 		$imported_groups = $this->group_eventyay_sponsors( $imported );
-		$group_map       = array();
-
-		foreach ( $groups as $group ) {
-			$group_key = $this->eventyay_sponsor_group_key( $group );
-			if ( '' !== $group_key ) {
-				$group_map[ $group_key ] = $group;
-			}
-		}
 
 		foreach ( $imported_groups as $group ) {
 			$group_key = $this->eventyay_sponsor_group_key( $group );
-			if ( '' !== $group_key ) {
-				$group_map[ $group_key ] = $group;
+			if ( '' === $group_key ) {
+				$ordered_entries[] = array(
+					'__raw_group' => $group,
+				);
+				continue;
+			}
 
-				if ( ! in_array( $group_key, $order, true ) ) {
-					$order[] = $group_key;
-				}
-			} else {
-				$groups[] = $group;
+			$group_map[ $group_key ] = $group;
+
+			if ( ! in_array( $group_key, $ordered_keys, true ) ) {
+				$ordered_entries[] = $group_key;
+				$ordered_keys[]    = $group_key;
 			}
 		}
 
 		$merged_groups = array();
 
-		foreach ( $order as $group_key ) {
-			if ( isset( $group_map[ $group_key ] ) ) {
-				$merged_groups[] = $group_map[ $group_key ];
-				unset( $group_map[ $group_key ] );
+		foreach ( $ordered_entries as $entry ) {
+			if ( is_array( $entry ) && isset( $entry['__raw_group'] ) ) {
+				$merged_groups[] = $entry['__raw_group'];
+				continue;
+			}
+
+			if ( isset( $group_map[ $entry ] ) ) {
+				$merged_groups[] = $group_map[ $entry ];
+				unset( $group_map[ $entry ] );
 			}
 		}
 
 		foreach ( $group_map as $group ) {
 			$merged_groups[] = $group;
-		}
-
-		foreach ( $groups as $group ) {
-			if ( '' === $this->eventyay_sponsor_group_key( $group ) ) {
-				$merged_groups[] = $group;
-			}
 		}
 
 		return $merged_groups;
