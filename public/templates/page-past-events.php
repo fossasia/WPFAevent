@@ -291,13 +291,13 @@ $header_vars = array(
 									<h3 class="wpfa-past-event-card-title">
 										<?php echo esc_html( $event_title ); ?>
 									</h3>
-									
+
 									<?php if ( ! empty( $excerpt ) ) : ?>
 										<p class="wpfa-past-event-card-description">
 											<?php echo esc_html( $excerpt ); ?>
 										</p>
 									<?php endif; ?>
-									
+
 									<div class="wpfa-past-event-card-meta">
 										<?php if ( $display_date ) : ?>
 											<div class="wpfa-past-event-card-meta-item">

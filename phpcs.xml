@@ -20,6 +20,10 @@
     </properties>
   </rule>
 
+  <!-- Squiz.WhiteSpace.SuperfluousWhitespace never registers T_INLINE_HTML,
+       so trailing whitespace inside template markup needs its own sniff. -->
+  <rule ref="./phpcs/WPFAEvent/Sniffs/WhiteSpace/InlineHtmlTrailingWhitespaceSniff.php"/>
+
   <!-- WordPress-specific config -->
   <config name="minimum_supported_wp_version" value="5.0"/>
 
@@ -37,4 +41,6 @@
   <exclude-pattern>*/node_modules/*</exclude-pattern>
   <exclude-pattern>*/tmp/*</exclude-pattern>
   <exclude-pattern>*/bin/*</exclude-pattern>
+  <!-- Custom sniffs follow PHP_CodeSniffer's own file and class conventions. -->
+  <exclude-pattern>/phpcs/*</exclude-pattern>
 </ruleset>

@@ -48,3 +48,6 @@ jobs:
 
       - name: Run PHPCS
         run: composer phpcs
+
+      - name: Verify trailing whitespace sniff
+        run: php tests/phpcs-whitespace-test.php
