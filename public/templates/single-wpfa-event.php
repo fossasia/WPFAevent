@@ -1048,19 +1048,7 @@ if ( $show_ticket_widget ) {
 		<?php endif; ?>
 	</main>
 
-	<footer class="wpfa-footer">
-		<div class="container">
-			<small>
-				<?php
-				printf(
-					/* translators: %s: Current year. */
-					esc_html__( 'FOSSASIA %s - Open Source Community Events', 'wpfaevent' ),
-					esc_html( date_i18n( 'Y' ) )
-				);
-				?>
-			</small>
-		</div>
-	</footer>
+	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
 </div>
 
 <?php wp_footer(); ?>

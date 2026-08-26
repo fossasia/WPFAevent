@@ -494,20 +494,7 @@ $header_vars         = array(
 <?php else : ?>
 	</main>
 
-	<footer class="wpfa-footer">
-		<div class="container">
-			<small>
-				<?php
-				echo esc_html(
-					apply_filters(
-						'wpfa_footer_text',
-						'© FOSSASIA • FOSSASIA Summit — Mar 13–15, 2025 • True Digital Park West, Bangkok'
-					)
-				);
-				?>
-			</small>
-		</div>
-	</footer>
+	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
 </div><!-- #page -->
 <?php endif; ?>
 

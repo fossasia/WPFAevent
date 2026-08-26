@@ -22,6 +22,9 @@ if ( empty( $footer_text ) ) {
 	$footer_text = apply_filters( 'wpfa_default_footer_text', $default_footer );
 }
 
+// Preserve the legacy wpfa_footer_text filter used by older templates.
+$footer_text = apply_filters( 'wpfa_footer_text', $footer_text );
+
 // Check if user is admin.
 $is_admin = current_user_can( 'manage_options' );
 ?>

@@ -386,25 +386,7 @@ $header_vars = array(
 	<?php endif; ?>
 
 <?php if ( ! $wpfaevent_is_embed ) : ?>
-	<footer class="wpfa-footer">
-		<div class="container">
-			<!-- Footer copyright notice -->
-			<small>
-				<?php
-				echo esc_html(
-					apply_filters(
-						'wpfa_footer_text',
-						sprintf(
-							/* translators: %s: Current year */
-							__( '© FOSSASIA %s • Open Source Community Events', 'wpfaevent' ),
-							date_i18n( 'Y' )
-						)
-					)
-				);
-				?>
-			</small>
-		</div>
-	</footer>
+	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
 </div><!-- #page -->
 
 	<?php wp_footer(); ?>

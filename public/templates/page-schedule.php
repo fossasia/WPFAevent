@@ -943,6 +943,8 @@ $schedule_filter_reset_url = add_query_arg( $schedule_filter_reset_args, $schedu
 	</section>
 <?php else : ?>
 	</main>
+
+	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
 </div>
 
 	<?php wp_footer(); ?>
