@@ -56,7 +56,7 @@ class EventyaySponsorGroupsTest extends WP_UnitTestCase {
 					array(
 						'attributes' => array(
 							$field => $expected,
-							'type'  => 'sponsor',
+							'type' => 'sponsor',
 						),
 					)
 				)
