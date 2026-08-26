@@ -56,7 +56,7 @@ composer test
 vendor/bin/phpunit
 ```
 
-The test suite boots the WordPress testing framework, loads the `wpfaevent.php` plugin, and runs the sample test located in `tests/unit/SampleTest.php`.
+The test suite boots the WordPress testing framework, loads the `wpfaevent.php` plugin, and runs every test under `tests/unit/` and `tests/integration/`.
 
 ## Adding New Tests
 

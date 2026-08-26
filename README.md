@@ -175,12 +175,6 @@ Event timezone behavior is deterministic:
 * All-day events export date-only `DTSTART` and exclusive date-only `DTEND` values.
 * Timed events are interpreted in the event timezone and exported as UTC `DTSTART`/`DTEND` values.
 
-Run the calendar export checks with:
-
-```bash
-php tests/calendar-test.php
-```
-
 ## Development Notes
 
 * Core logic resides in `includes/`, presentation templates in `public/partials/`.
