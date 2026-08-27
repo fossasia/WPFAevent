@@ -246,7 +246,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 */
 	public function eventyay_sponsor_group_name( $sponsor_resource ) {
 		$sponsor_resource = $this->normalize_eventyay_api_resource( $sponsor_resource );
-		$type = $this->eventyay_first_present_text(
+		$type             = $this->eventyay_first_present_text(
 			$sponsor_resource,
 			array( 'level_name', 'level-name', 'tier', 'category', 'sponsor_type', 'sponsor-type', 'sponsorship_type', 'sponsorship-type', 'package', 'package_name', 'package-name' )
 		);
