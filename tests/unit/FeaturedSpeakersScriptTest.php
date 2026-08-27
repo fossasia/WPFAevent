@@ -16,9 +16,9 @@ class FeaturedSpeakersScriptTest extends WP_UnitTestCase {
 	public function test_speaker_markup_and_attribute_breaking_values_use_safe_dom_sinks() {
 		$source = $this->get_featured_speakers_script();
 
-		$this->assertStringContainsString( ".text(name)", $source );
-		$this->assertStringContainsString( ".text(title)", $source );
-		$this->assertStringContainsString( ".attr({ src: imgUrl, alt: name })", $source );
+		$this->assertStringContainsString( '.text(name)', $source );
+		$this->assertStringContainsString( '.text(title)', $source );
+		$this->assertStringContainsString( '.attr({ src: imgUrl, alt: name })', $source );
 		$this->assertStringContainsString( "['http:', 'https:'].includes(parsedUrl.protocol)", $source );
 		$this->assertStringNotContainsString( '${name}', $source );
 		$this->assertStringNotContainsString( '${title}', $source );

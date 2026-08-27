@@ -343,7 +343,7 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 				<div class="wpfaevent-featured-speakers-ordering-container" style="margin-bottom: 20px; border-bottom: 1px solid var(--wpfa-border); padding-bottom: 20px;">
 					<h3><?php esc_html_e( 'Featured Speakers Order (Drag to Reorder)', 'wpfaevent' ); ?></h3>
 					<p class="description"><?php esc_html_e( 'Drag and drop featured speakers to set their exact order on the public page.', 'wpfaevent' ); ?></p>
-					
+
 					<ul id="wpfaevent-featured-speakers-sortable" class="wpfaevent-sortable-list" style="margin: 15px 0 0; padding: 0; list-style: none;">
 						<?php
 						$saved_featured_ids = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_event_featured_speaker_ids( $event['id'] ) : array();
@@ -399,7 +399,7 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 				<div class="wpfaevent-all-speakers-container">
 					<h3><?php esc_html_e( 'All Event Speakers', 'wpfaevent' ); ?></h3>
 					<p class="description"><?php esc_html_e( 'Mark speakers as featured to show them in the featured speakers list.', 'wpfaevent' ); ?></p>
-					
+
 					<div class="wpfaevent-list" style="margin-top: 15px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
 						<?php
 						foreach ( $speakers as $speaker ) :

@@ -772,7 +772,7 @@ class Wpfaevent_Meta_Event {
 			$eventyay_id = isset( $dashboard_speaker['eventyay_speaker_id'] ) && is_scalar( $dashboard_speaker['eventyay_speaker_id'] )
 				? sanitize_text_field( (string) $dashboard_speaker['eventyay_speaker_id'] )
 				: '';
-			$name_key     = isset( $dashboard_speaker['name'] ) && is_scalar( $dashboard_speaker['name'] )
+			$name_key    = isset( $dashboard_speaker['name'] ) && is_scalar( $dashboard_speaker['name'] )
 				? sanitize_title( (string) $dashboard_speaker['name'] )
 				: '';
 
