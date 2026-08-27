@@ -1,0 +1,52 @@
+name: ESLint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  file-filter:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      js: ${{ steps.filter.outputs.js }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            js:
+              - '**/*.js'
+              - '**/*.mjs'
+              - '**/*.cjs'
+              - 'eslint.config.mjs'
+              - 'package.json'
+              - 'package-lock.json'
+
+  eslint:
+    needs: file-filter
+    if: | 
+      always() &&
+      (github.event_name == 'push' || needs.file-filter.outputs.js == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+    
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+    
+      - name: Install dependencies
+        run: npm ci
+    
+      - name: Run ESLint
+        run: npm run lint
