@@ -702,9 +702,28 @@ class Wpfaevent_Event_Template_Controller {
 
 		$dashboard_featured_speakers = array();
 		$dashboard_regular_speakers  = array();
+		$is_manual_featured_speakers = 'yes' === get_post_meta( $event_id, 'wpfa_event_featured_speakers_manual', true );
+		$dashboard_speaker_post_ids  = $is_manual_featured_speakers && class_exists( 'Wpfaevent_Meta_Event' )
+			? Wpfaevent_Meta_Event::map_dashboard_speakers_to_post_ids( $speaker_ids, $dashboard_speakers )
+			: array();
+		$manual_featured_by_id       = array();
 
-		foreach ( $dashboard_speakers as $dashboard_speaker ) {
+		foreach ( array_values( $dashboard_speakers ) as $dashboard_index => $dashboard_speaker ) {
 			if ( ! is_array( $dashboard_speaker ) || empty( $dashboard_speaker['name'] ) ) {
+				continue;
+			}
+
+			if ( $is_manual_featured_speakers ) {
+				$speaker_post_id = isset( $dashboard_speaker_post_ids[ $dashboard_index ] ) ? $dashboard_speaker_post_ids[ $dashboard_index ] : 0;
+
+				if ( $speaker_post_id && in_array( $speaker_post_id, $featured_speaker_ids, true ) ) {
+					if ( ! isset( $manual_featured_by_id[ $speaker_post_id ] ) ) {
+						$manual_featured_by_id[ $speaker_post_id ] = $dashboard_speaker;
+					}
+					continue;
+				}
+
+				$dashboard_regular_speakers[] = $dashboard_speaker;
 				continue;
 			}
 
@@ -716,12 +735,20 @@ class Wpfaevent_Event_Template_Controller {
 			$dashboard_regular_speakers[] = $dashboard_speaker;
 		}
 
+		if ( $is_manual_featured_speakers ) {
+			foreach ( $featured_speaker_ids as $featured_speaker_id ) {
+				if ( isset( $manual_featured_by_id[ $featured_speaker_id ] ) ) {
+					$dashboard_featured_speakers[] = $manual_featured_by_id[ $featured_speaker_id ];
+				}
+			}
+		}
+
 		$main_dashboard_speakers                  = array_slice( $dashboard_speakers, 0, $main_speaker_limit );
 		$main_dashboard_regular_speakers          = array_slice( $dashboard_regular_speakers, 0, $main_speaker_limit );
 		$dashboard_speaker_overflow_count         = max( 0, count( $dashboard_speakers ) - count( $main_dashboard_speakers ) );
 		$dashboard_regular_speaker_overflow_count = max( 0, count( $dashboard_regular_speakers ) - count( $main_dashboard_regular_speakers ) );
 
-		if ( ! empty( $dashboard_featured_speakers ) ) {
+		if ( ! $is_manual_featured_speakers && ! empty( $dashboard_featured_speakers ) ) {
 			usort(
 				$dashboard_featured_speakers,
 				static function ( $speaker_a, $speaker_b ) {

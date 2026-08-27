@@ -59,6 +59,21 @@ class FeaturedSpeakersTest extends WP_Ajax_UnitTestCase {
 	}
 
 	/**
+	 * Remove dashboard fixture data created by a test.
+	 */
+	public function tearDown(): void {
+		$store = new Wpfaevent_Eventyay_Dashboard_Store();
+		$path  = $store->get_dashboard_json_path( 'speakers-' . $this->event_id . '.json' );
+
+		if ( $path && file_exists( $path ) ) {
+			wp_delete_file( $path );
+		}
+
+		$_POST = array();
+		parent::tearDown();
+	}
+
+	/**
 	 * Test marking and unmarking speakers as featured.
 	 */
 	public function test_resolve_featured_speakers_with_manual_mode() {
@@ -97,6 +112,72 @@ class FeaturedSpeakersTest extends WP_Ajax_UnitTestCase {
 
 		$resolved = Wpfaevent_Meta_Event::resolve_event_featured_speaker_ids( $this->event_id, $this->speaker_ids );
 		$this->assertSame( $expected_order, $resolved );
+	}
+
+	/**
+	 * Public event data should use only the manually selected dashboard rows in saved order.
+	 */
+	public function test_public_event_data_applies_manual_featured_speaker_order() {
+		$dashboard_speakers = array(
+			array(
+				'name'           => 'Speaker 1',
+				'featured'       => false,
+				'featured_order' => 3,
+			),
+			array(
+				'name'           => 'Speaker 2',
+				'featured'       => true,
+				'featured_order' => 1,
+			),
+			array(
+				'name'           => 'Speaker 3',
+				'featured'       => false,
+				'featured_order' => 2,
+			),
+		);
+
+		$this->write_dashboard_speakers( $dashboard_speakers );
+		update_post_meta( $this->event_id, 'wpfa_event_featured_speakers_manual', 'yes' );
+		update_post_meta( $this->event_id, 'wpfa_event_featured_speakers', array( $this->speaker_ids[2], $this->speaker_ids[0] ) );
+
+		$event_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $this->event_id );
+
+		$this->assertSame( array( $this->speaker_ids[2], $this->speaker_ids[0] ), $event_data['featured_speaker_ids'] );
+		$this->assertSame( array( 'Speaker 3', 'Speaker 1' ), wp_list_pluck( $event_data['dashboard_featured_speakers'], 'name' ) );
+		$this->assertSame( array( 'Speaker 2' ), wp_list_pluck( $event_data['dashboard_regular_speakers'], 'name' ) );
+	}
+
+	/**
+	 * Public event data should retain imported flags and order outside manual mode.
+	 */
+	public function test_public_event_data_preserves_automatic_featured_speakers() {
+		$dashboard_speakers = array(
+			array(
+				'name'           => 'Speaker 1',
+				'featured'       => true,
+				'featured_order' => 2,
+			),
+			array(
+				'name'           => 'Speaker 2',
+				'featured'       => false,
+				'featured_order' => 0,
+			),
+			array(
+				'name'           => 'Speaker 3',
+				'featured'       => true,
+				'featured_order' => 1,
+			),
+		);
+
+		$this->write_dashboard_speakers( $dashboard_speakers );
+		delete_post_meta( $this->event_id, 'wpfa_event_featured_speakers_manual' );
+		delete_post_meta( $this->event_id, 'wpfa_event_featured_speakers' );
+
+		$event_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $this->event_id );
+
+		$this->assertSame( array( $this->speaker_ids[0], $this->speaker_ids[2] ), $event_data['featured_speaker_ids'] );
+		$this->assertSame( array( 'Speaker 3', 'Speaker 1' ), wp_list_pluck( $event_data['dashboard_featured_speakers'], 'name' ) );
+		$this->assertSame( array( 'Speaker 2' ), wp_list_pluck( $event_data['dashboard_regular_speakers'], 'name' ) );
 	}
 
 	/**
@@ -145,8 +226,65 @@ class FeaturedSpeakersTest extends WP_Ajax_UnitTestCase {
 
 		// Verify write in database.
 		$saved_ids = get_post_meta( $this->event_id, 'wpfa_event_featured_speakers', true );
-		$this->assertEqualsCanonicalizing( array( $this->speaker_ids[0] ), $saved_ids );
+		$this->assertSame( array( $this->speaker_ids[0] ), $saved_ids );
 		$this->assertSame( 'yes', get_post_meta( $this->event_id, 'wpfa_event_featured_speakers_manual', true ) );
+	}
+
+	/**
+	 * AJAX saves should discard unrelated and stale posts without changing submitted order.
+	 */
+	public function test_ajax_handler_filters_speaker_ids_against_event_relationships() {
+		$unrelated_speaker_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Unrelated Speaker',
+				'post_type'   => 'wpfa_speaker',
+				'post_status' => 'publish',
+			)
+		);
+		$unrelated_post_id    = $this->factory->post->create(
+			array(
+				'post_title'  => 'Not a Speaker',
+				'post_type'   => 'post',
+				'post_status' => 'publish',
+			)
+		);
+
+		update_post_meta( $this->event_id, 'wpfa_event_speakers', array( $this->speaker_ids[0], $this->speaker_ids[1] ) );
+		delete_post_meta( $this->speaker_ids[2], 'wpfa_speaker_events' );
+
+		$admin_id = $this->factory->user->create( array( 'role' => 'administrator' ) );
+		wp_set_current_user( $admin_id );
+		$_POST['event_id']    = $this->event_id;
+		$_POST['nonce']       = wp_create_nonce( 'wpfaevent_save_featured_speakers_' . $this->event_id );
+		$_POST['speaker_ids'] = array(
+			(string) $this->speaker_ids[1],
+			(string) $unrelated_speaker_id,
+			(string) $this->speaker_ids[0],
+			(string) $this->speaker_ids[1],
+			(string) $this->speaker_ids[2],
+			(string) $unrelated_post_id,
+			'not-an-id',
+		);
+
+		$response = $this->execute_ajax( new Wpfaevent_Event_Dashboard_Page() );
+
+		$this->assertTrue( $response['success'] );
+		$this->assertSame(
+			array( $this->speaker_ids[1], $this->speaker_ids[0] ),
+			get_post_meta( $this->event_id, 'wpfa_event_featured_speakers', true )
+		);
+	}
+
+	/**
+	 * Store dashboard speaker rows for public event data tests.
+	 *
+	 * @param array<int, array<string, mixed>> $speakers Dashboard speaker rows.
+	 */
+	private function write_dashboard_speakers( $speakers ) {
+		$store  = new Wpfaevent_Eventyay_Dashboard_Store();
+		$result = $store->write_dashboard_json_file( 'speakers-' . $this->event_id . '.json', $speakers );
+
+		$this->assertTrue( $result );
 	}
 
 	/**

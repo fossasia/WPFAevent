@@ -635,17 +635,39 @@ class Wpfaevent_Event_Dashboard_Page {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid request or session expired.', 'wpfaevent' ) ), 403 );
 		}
 
-		if ( 'wpfa_event' !== get_post_type( $event_id ) || ! current_user_can( 'edit_post', $event_id ) ) {
+		if ( 'wpfa_event' !== get_post_type( $event_id ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'The requested event is invalid.', 'wpfaevent' ) ), 400 );
+		}
+
+		if ( ! current_user_can( 'edit_post', $event_id ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to edit this event.', 'wpfaevent' ) ), 403 );
 		}
 
-		// Handle speaker IDs array input.
-		$speaker_ids = isset( $_POST['speaker_ids'] ) && is_array( $_POST['speaker_ids'] ) ? array_map( 'absint', wp_unslash( $_POST['speaker_ids'] ) ) : array();
-		$speaker_ids = array_filter( $speaker_ids );
-		$speaker_ids = array_values( array_unique( $speaker_ids ) );
+		$submitted_speaker_ids = isset( $_POST['speaker_ids'] ) && is_array( $_POST['speaker_ids'] ) ? array_map( 'absint', wp_unslash( $_POST['speaker_ids'] ) ) : array();
+		$linked_speaker_ids    = array();
+
+		if ( class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ) {
+			$linked_speaker_ids = array_merge(
+				Wpfaevent_Event_Speaker_Relation_Manager::get_event_speaker_ids( $event_id ),
+				Wpfaevent_Event_Speaker_Relation_Manager::get_speakers_linked_to_event( $event_id ),
+				Wpfaevent_Event_Speaker_Relation_Manager::get_eventyay_speakers_linked_to_event( $event_id )
+			);
+			$linked_speaker_ids = Wpfaevent_Event_Speaker_Relation_Manager::sanitize_post_id_list( $linked_speaker_ids );
+		}
+
+		$valid_speaker_ids = array();
+		foreach ( $submitted_speaker_ids as $speaker_id ) {
+			if ( ! $speaker_id || in_array( $speaker_id, $valid_speaker_ids, true ) ) {
+				continue;
+			}
+
+			if ( in_array( $speaker_id, $linked_speaker_ids, true ) && 'wpfa_speaker' === get_post_type( $speaker_id ) ) {
+				$valid_speaker_ids[] = $speaker_id;
+			}
+		}
 
 		// Update post meta.
-		update_post_meta( $event_id, 'wpfa_event_featured_speakers', $speaker_ids );
+		update_post_meta( $event_id, 'wpfa_event_featured_speakers', $valid_speaker_ids );
 		update_post_meta( $event_id, 'wpfa_event_featured_speakers_manual', 'yes' );
 
 		wp_send_json_success(

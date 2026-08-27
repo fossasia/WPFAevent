@@ -215,104 +215,203 @@
 			const $allSpeakersList = $('.wpfaevent-all-speakers-container');
 			const eventId = $('.wpfaevent-dashboard-shell').data('event-id');
 			const speakersNonce = $speakersSection.data('speakers-nonce');
+			let saveInProgress = false;
+			let queuedSpeakerIds = null;
+			let latestSaveRevision = 0;
 
 			if ($sortableList.length && $.fn.sortable) {
 				$sortableList.sortable({
 					handle: '.dashicons-menu',
 					placeholder: 'wpfaevent-sortable-placeholder',
-					update: function() {
+					update() {
 						saveFeaturedSpeakersOrder();
-					}
+					},
 				});
 			}
 
 			// Handle Toggle Feature Button Click
-			$allSpeakersList.on('click', '.wpfaevent-toggle-feature-btn', function(e) {
-				e.preventDefault();
-				const $btn = $(this);
-				const speakerId = $btn.data('speaker-id');
-				const isFeatured = $btn.hasClass('is-featured');
+			$allSpeakersList.on(
+				'click',
+				'.wpfaevent-toggle-feature-btn',
+				function (e) {
+					e.preventDefault();
+					const $btn = $(this);
+					const speakerId = $btn.data('speaker-id');
+					const isFeatured = $btn.hasClass('is-featured');
 
-				if (isFeatured) {
-					unfeatureSpeaker(speakerId);
-				} else {
-					featureSpeaker(speakerId);
+					if (isFeatured) {
+						unfeatureSpeaker(speakerId);
+					} else {
+						featureSpeaker(speakerId);
+					}
 				}
-			});
+			);
 
 			// Handle Remove Featured Button Click
-			$speakersSection.on('click', '.wpfaevent-unfeature-btn', function(e) {
-				e.preventDefault();
-				const speakerId = $(this).data('speaker-id');
-				unfeatureSpeaker(speakerId);
-			});
+			$speakersSection.on(
+				'click',
+				'.wpfaevent-unfeature-btn',
+				function (e) {
+					e.preventDefault();
+					const speakerId = $(this).data('speaker-id');
+					unfeatureSpeaker(speakerId);
+				}
+			);
 
 			function featureSpeaker(speakerId) {
-				const $allCard = $(`.wpfaevent-toggle-feature-btn[data-speaker-id="${speakerId}"]`).closest('.wpfaevent-list-item');
+				speakerId = normalizeSpeakerId(speakerId);
+				if (!speakerId) {
+					return;
+				}
+
+				const $allCard = findSpeakerElement(
+					$allSpeakersList.find('.wpfaevent-toggle-feature-btn'),
+					speakerId
+				).closest('.wpfaevent-list-item');
 				if (!$allCard.length) {
 					return;
 				}
 
-				const $toggleBtn = $allCard.find('.wpfaevent-toggle-feature-btn');
-				$toggleBtn.addClass('is-featured')
-					.text('Featured')
-					.css({
-						'border-color': '#bbf7d0',
-						'background': '#e8f5e9',
-						'color': '#1b5e20'
-					});
+				const $toggleBtn = $allCard.find(
+					'.wpfaevent-toggle-feature-btn'
+				);
+				$toggleBtn.addClass('is-featured').text('Featured').css({
+					'border-color': '#bbf7d0',
+					background: '#e8f5e9',
+					color: '#1b5e20',
+				});
 				$allCard.css('background', '#f0fdf4');
 
 				// Remove placeholder if it exists
-				$sortableList.find('.wpfaevent-sortable-placeholder-item').remove();
+				$sortableList
+					.find('.wpfaevent-sortable-placeholder-item')
+					.remove();
 
-				if (!$sortableList.find(`li[data-speaker-id="${speakerId}"]`).length) {
+				if (
+					!findSpeakerElement(
+						$sortableList.find('.wpfaevent-sortable-item'),
+						speakerId
+					).length
+				) {
 					const name = $allCard.find('strong').text();
 					const title = $allCard.find('.description').text();
-					const imgUrl = $allCard.find('img').attr('src');
+					const imgUrl = getSafeImageUrl(
+						$allCard.find('img').attr('src')
+					);
+					const $newLi = $('<li>')
+						.addClass('wpfaevent-sortable-item')
+						.attr('data-speaker-id', speakerId)
+						.css({
+							display: 'flex',
+							'align-items': 'center',
+							'justify-content': 'space-between',
+							padding: '10px 12px',
+							border: '1px solid #e4ebf3',
+							'border-radius': '8px',
+							'margin-bottom': '8px',
+							background: '#fff',
+							cursor: 'move',
+						});
+					const $speakerSummary = $('<div>').css({
+						display: 'flex',
+						'align-items': 'center',
+						gap: '10px',
+					});
 
-					const newLi = `
-						<li class="wpfaevent-sortable-item" data-speaker-id="${speakerId}" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid #e4ebf3; border-radius: 8px; margin-bottom: 8px; background: #fff; cursor: move;">
-							<div style="display: flex; align-items: center; gap: 10px;">
-								<span class="dashicons dashicons-menu" style="color: #a0aec0; cursor: move;"></span>
-								${imgUrl ? `<img src="${imgUrl}" alt="${name}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">` : ''}
-								<div>
-									<strong style="font-size: 13px;">${name}</strong>
-									<div class="description" style="font-size: 11px;">${title}</div>
-								</div>
-							</div>
-							<button type="button" class="button button-small wpfaevent-unfeature-btn" data-speaker-id="${speakerId}">Remove Featured</button>
-						</li>
-					`;
-					$sortableList.append(newLi);
+					$speakerSummary.append(
+						$('<span>')
+							.addClass('dashicons dashicons-menu')
+							.css({ color: '#a0aec0', cursor: 'move' })
+					);
+
+					if (imgUrl) {
+						$speakerSummary.append(
+							$('<img>').attr({ src: imgUrl, alt: name }).css({
+								width: '32px',
+								height: '32px',
+								'border-radius': '50%',
+								'object-fit': 'cover',
+							})
+						);
+					}
+
+					$speakerSummary.append(
+						$('<div>')
+							.append(
+								$('<strong>')
+									.css('font-size', '13px')
+									.text(name)
+							)
+							.append(
+								$('<div>')
+									.addClass('description')
+									.css('font-size', '11px')
+									.text(title)
+							)
+					);
+
+					$newLi.append($speakerSummary).append(
+						$('<button>')
+							.attr({
+								type: 'button',
+								'data-speaker-id': speakerId,
+							})
+							.addClass(
+								'button button-small wpfaevent-unfeature-btn'
+							)
+							.text('Remove Featured')
+					);
+					$sortableList.append($newLi);
 				}
 
 				saveFeaturedSpeakersOrder();
 			}
 
 			function unfeatureSpeaker(speakerId) {
-				const $allCard = $(`.wpfaevent-toggle-feature-btn[data-speaker-id="${speakerId}"]`).closest('.wpfaevent-list-item');
+				speakerId = normalizeSpeakerId(speakerId);
+				if (!speakerId) {
+					return;
+				}
+
+				const $allCard = findSpeakerElement(
+					$allSpeakersList.find('.wpfaevent-toggle-feature-btn'),
+					speakerId
+				).closest('.wpfaevent-list-item');
 				if ($allCard.length) {
-					const $toggleBtn = $allCard.find('.wpfaevent-toggle-feature-btn');
-					$toggleBtn.removeClass('is-featured')
-						.text('Feature')
-						.css({
-							'border-color': '#d1d5db',
-							'background': '#fff',
-							'color': '#374151'
-						});
+					const $toggleBtn = $allCard.find(
+						'.wpfaevent-toggle-feature-btn'
+					);
+					$toggleBtn.removeClass('is-featured').text('Feature').css({
+						'border-color': '#d1d5db',
+						background: '#fff',
+						color: '#374151',
+					});
 					$allCard.css('background', '#fff');
 				}
 
-				$sortableList.find(`li[data-speaker-id="${speakerId}"]`).remove();
+				findSpeakerElement(
+					$sortableList.find('.wpfaevent-sortable-item'),
+					speakerId
+				).remove();
 
-				if ($sortableList.find('.wpfaevent-sortable-item').length === 0) {
-					const placeholder = `
-						<li class="wpfaevent-sortable-placeholder-item" style="padding: 15px; text-align: center; border: 1px dashed #cbd5e0; border-radius: 8px; color: #718096; background: #f8fafc;">
-							No featured speakers. Toggle featured status on speakers below to add them.
-						</li>
-					`;
-					$sortableList.html(placeholder);
+				if (
+					$sortableList.find('.wpfaevent-sortable-item').length === 0
+				) {
+					$sortableList.empty().append(
+						$('<li>')
+							.addClass('wpfaevent-sortable-placeholder-item')
+							.css({
+								padding: '15px',
+								'text-align': 'center',
+								border: '1px dashed #cbd5e0',
+								'border-radius': '8px',
+								color: '#718096',
+								background: '#f8fafc',
+							})
+							.text(
+								'No featured speakers. Toggle featured status on speakers below to add them.'
+							)
+					);
 				}
 
 				saveFeaturedSpeakersOrder();
@@ -320,12 +419,31 @@
 
 			function saveFeaturedSpeakersOrder() {
 				const speakerIds = [];
-				$sortableList.find('.wpfaevent-sortable-item').each(function() {
-					const id = $(this).data('speaker-id');
-					if (id) {
-						speakerIds.push(id);
-					}
-				});
+				$sortableList
+					.find('.wpfaevent-sortable-item')
+					.each(function () {
+						const id = normalizeSpeakerId(
+							$(this).attr('data-speaker-id')
+						);
+						if (id) {
+							speakerIds.push(id);
+						}
+					});
+				queuedSpeakerIds = speakerIds;
+				latestSaveRevision++;
+				processFeaturedSpeakersSave();
+			}
+
+			function processFeaturedSpeakersSave() {
+				if (saveInProgress || queuedSpeakerIds === null) {
+					return;
+				}
+
+				const speakerIds = queuedSpeakerIds;
+				const saveRevision = latestSaveRevision;
+				let saveResult = null;
+				queuedSpeakerIds = null;
+				saveInProgress = true;
 
 				$.ajax({
 					url: ajaxurl,
@@ -334,24 +452,86 @@
 						action: 'wpfaevent_save_featured_speakers',
 						event_id: eventId,
 						speaker_ids: speakerIds,
-						nonce: speakersNonce
+						nonce: speakersNonce,
 					},
-					success: function(response) {
+					success(response) {
 						if (response.success) {
-							drawDashboardNotice('success', response.data.message);
+							saveResult = {
+								type: 'success',
+								message: response.data.message,
+							};
 						} else {
-							drawDashboardNotice('error', response.data.message || 'Failed to save featured speakers.');
+							saveResult = {
+								type: 'error',
+								message:
+									response.data.message ||
+									'Failed to save featured speakers.',
+							};
 						}
 					},
-					error: function() {
-						drawDashboardNotice('error', 'An error occurred while saving.');
-					}
+					error() {
+						saveResult = {
+							type: 'error',
+							message: 'An error occurred while saving.',
+						};
+					},
+					complete() {
+						saveInProgress = false;
+
+						if (queuedSpeakerIds !== null) {
+							processFeaturedSpeakersSave();
+							return;
+						}
+
+						if (saveRevision === latestSaveRevision && saveResult) {
+							drawDashboardNotice(
+								saveResult.type,
+								saveResult.message
+							);
+						}
+					},
 				});
 			}
 
+			function normalizeSpeakerId(speakerId) {
+				const normalized = Number(speakerId);
+				return Number.isSafeInteger(normalized) && normalized > 0
+					? normalized
+					: 0;
+			}
+
+			function findSpeakerElement($elements, speakerId) {
+				return $elements.filter(function () {
+					return (
+						normalizeSpeakerId($(this).attr('data-speaker-id')) ===
+						speakerId
+					);
+				});
+			}
+
+			function getSafeImageUrl(imageUrl) {
+				if (!imageUrl) {
+					return '';
+				}
+
+				try {
+					const parsedUrl = new URL(imageUrl, document.baseURI);
+					return ['http:', 'https:'].includes(parsedUrl.protocol)
+						? parsedUrl.href
+						: '';
+				} catch {
+					return '';
+				}
+			}
+
 			function drawDashboardNotice(type, message) {
-				const container = document.querySelector('.wpfaevent-notification-container') || document.querySelector('.wpfaevent-dashboard-shell');
-				if (!container) return;
+				const container =
+					document.querySelector(
+						'.wpfaevent-notification-container'
+					) || document.querySelector('.wpfaevent-dashboard-shell');
+				if (!container) {
+					return;
+				}
 
 				const notice = document.createElement('div');
 				notice.className = 'notice notice-' + type + ' is-dismissible';
@@ -360,8 +540,10 @@
 				p.textContent = message;
 				notice.appendChild(p);
 
-				const existing = container.querySelectorAll('.notice.wpfaevent-edit-notice');
-				existing.forEach(el => el.remove());
+				const existing = container.querySelectorAll(
+					'.notice.wpfaevent-edit-notice'
+				);
+				existing.forEach((el) => el.remove());
 
 				notice.classList.add('wpfaevent-edit-notice');
 				container.insertBefore(notice, container.firstChild);
