@@ -1,0 +1,68 @@
+name: Deploy Plugin to EC2
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-ec2-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    environment: production
+    if: vars.EC2_DEPLOY_ENABLED == 'true'
+    steps:
+      - name: Deploy plugin over SSH
+        uses: appleboy/ssh-action@2ead5e36573f08b82fbfce1504f1a4b05a647c6f # v1.2.2
+        with:
+          host: ${{ vars.EC2_HOST }}
+          username: ${{ vars.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ vars.EC2_PORT || 22 }}
+          fingerprint: ${{ vars.EC2_HOST_FINGERPRINT }}
+          command_timeout: 10m
+          script: |
+            set -eu
+
+            PLUGIN_PATH="${{ vars.EC2_PLUGIN_PATH }}"
+            DEPLOY_BRANCH="${{ vars.EC2_DEPLOY_BRANCH || 'main' }}"
+
+            if [ -z "$PLUGIN_PATH" ]; then
+              echo "EC2_PLUGIN_PATH GitHub variable is not set."
+              exit 1
+            fi
+
+            if [ ! -d "$PLUGIN_PATH/.git" ]; then
+              echo "Expected a git checkout at $PLUGIN_PATH but .git was not found."
+              exit 1
+            fi
+
+            cd "$PLUGIN_PATH"
+
+            if [ -n "$(git status --porcelain)" ]; then
+              echo "Deployment aborted because the plugin checkout has uncommitted changes."
+              git status --short
+              exit 1
+            fi
+
+            git fetch origin "$DEPLOY_BRANCH"
+            git checkout "$DEPLOY_BRANCH"
+            git pull --ff-only origin "$DEPLOY_BRANCH"
+
+            if ! command -v composer >/dev/null 2>&1; then
+              echo "Composer is required on the EC2 instance."
+              exit 1
+            fi
+
+            composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+
+            if command -v wp >/dev/null 2>&1; then
+              wp cache flush || true
+            fi
