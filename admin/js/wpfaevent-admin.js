@@ -208,7 +208,7 @@
 			});
 		}
 
-		// Featured Speakers Manual Ordering (Issue #249)
+		// Featured Speakers Manual Ordering
 		const $speakersSection = $('#wpfaevent-speakers');
 		if ($speakersSection.length) {
 			const $sortableList = $('#wpfaevent-featured-speakers-sortable');
@@ -275,12 +275,8 @@
 				const $toggleBtn = $allCard.find(
 					'.wpfaevent-toggle-feature-btn'
 				);
-				$toggleBtn.addClass('is-featured').text('Featured').css({
-					'border-color': '#bbf7d0',
-					background: '#e8f5e9',
-					color: '#1b5e20',
-				});
-				$allCard.css('background', '#f0fdf4');
+				$toggleBtn.addClass('is-featured').text('Featured');
+				$allCard.addClass('is-featured');
 
 				// Remove placeholder if it exists
 				$sortableList
@@ -300,52 +296,40 @@
 					);
 					const $newLi = $('<li>')
 						.addClass('wpfaevent-sortable-item')
-						.attr('data-speaker-id', speakerId)
-						.css({
-							display: 'flex',
-							'align-items': 'center',
-							'justify-content': 'space-between',
-							padding: '10px 12px',
-							border: '1px solid #e4ebf3',
-							'border-radius': '8px',
-							'margin-bottom': '8px',
-							background: '#fff',
-							cursor: 'move',
-						});
-					const $speakerSummary = $('<div>').css({
-						display: 'flex',
-						'align-items': 'center',
-						gap: '10px',
-					});
+						.attr('data-speaker-id', speakerId);
+					const $speakerSummary = $('<div>').addClass(
+						'wpfaevent-featured-speaker-details'
+					);
 
 					$speakerSummary.append(
-						$('<span>')
-							.addClass('dashicons dashicons-menu')
-							.css({ color: '#a0aec0', cursor: 'move' })
+						$('<span>').addClass(
+							'dashicons dashicons-menu wpfaevent-featured-speaker-drag-handle'
+						)
 					);
 
 					if (imgUrl) {
 						$speakerSummary.append(
-							$('<img>').attr({ src: imgUrl, alt: name }).css({
-								width: '32px',
-								height: '32px',
-								'border-radius': '50%',
-								'object-fit': 'cover',
-							})
+							$('<img>')
+								.attr({ src: imgUrl, alt: name })
+								.addClass(
+									'wpfaevent-featured-speaker-thumbnail wpfaevent-featured-speaker-thumbnail--sortable'
+								)
 						);
 					}
 
 					$speakerSummary.append(
 						$('<div>')
+							.addClass('wpfaevent-featured-speaker-copy')
 							.append(
 								$('<strong>')
-									.css('font-size', '13px')
+									.addClass('wpfaevent-featured-speaker-name')
 									.text(name)
 							)
 							.append(
 								$('<div>')
-									.addClass('description')
-									.css('font-size', '11px')
+									.addClass(
+										'description wpfaevent-featured-speaker-title'
+									)
 									.text(title)
 							)
 					);
@@ -381,12 +365,8 @@
 					const $toggleBtn = $allCard.find(
 						'.wpfaevent-toggle-feature-btn'
 					);
-					$toggleBtn.removeClass('is-featured').text('Feature').css({
-						'border-color': '#d1d5db',
-						background: '#fff',
-						color: '#374151',
-					});
-					$allCard.css('background', '#fff');
+					$toggleBtn.removeClass('is-featured').text('Feature');
+					$allCard.removeClass('is-featured');
 				}
 
 				findSpeakerElement(
@@ -397,21 +377,15 @@
 				if (
 					$sortableList.find('.wpfaevent-sortable-item').length === 0
 				) {
-					$sortableList.empty().append(
-						$('<li>')
-							.addClass('wpfaevent-sortable-placeholder-item')
-							.css({
-								padding: '15px',
-								'text-align': 'center',
-								border: '1px dashed #cbd5e0',
-								'border-radius': '8px',
-								color: '#718096',
-								background: '#f8fafc',
-							})
-							.text(
-								'No featured speakers. Toggle featured status on speakers below to add them.'
-							)
-					);
+					$sortableList
+						.empty()
+						.append(
+							$('<li>')
+								.addClass('wpfaevent-sortable-placeholder-item')
+								.text(
+									'No featured speakers. Toggle featured status on speakers below to add them.'
+								)
+						);
 				}
 
 				saveFeaturedSpeakersOrder();
@@ -535,7 +509,6 @@
 
 				const notice = document.createElement('div');
 				notice.className = 'notice notice-' + type + ' is-dismissible';
-				notice.style.margin = '0 0 20px';
 				const p = document.createElement('p');
 				p.textContent = message;
 				notice.appendChild(p);
