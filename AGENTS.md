@@ -31,7 +31,7 @@ JavaScript tooling is optional. Run npm commands only when `package.json` is pre
 - includes/ — core logic: class-wpfaevent.php (main class), class-wpfaevent-loader.php (hooks), class-wpfaevent-templates.php (page templates), cpt/, taxonomies/, meta/, helpers/, cache/, cli/, eventyay-importer/ (API client, repositories, JSON:API parsing)
 - admin/ — admin settings pages, dashboard, Eventyay sync/importer UI, partner dashboard
 - public/ — public-facing rendering: class-wpfaevent-public.php, partials/, templates/, css/, js/
-- tests/ — PHPUnit; tests/unit/ (*Test.php) plus tests/*.php in tests/ (e.g., calendar-test.php); phpunit.xml.dist references tests/integration/ for the Integration suite (currently not present in the repo).
+- tests/ — PHPUnit; tests/unit/ (*Test.php); tests/integration/ (*IntegrationTest.php); suites are defined in phpunit.xml.dist.
 - languages/ — i18n .pot file (Text Domain: wpfaevent)
 - bin/install-wp-tests.sh — bootstraps the local WP test database
 
