@@ -57,4 +57,11 @@ class Wpfaevent_Partner_Dashboard {
 	public function handle_delete_partner() {
 		$this->controller->handle_delete_partner();
 	}
+
+	/**
+	 * POST Handler to save sponsor group order.
+	 */
+	public function handle_reorder_sponsor_groups() {
+		$this->controller->handle_reorder_sponsor_groups();
+	}
 }

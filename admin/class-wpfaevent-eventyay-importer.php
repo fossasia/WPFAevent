@@ -1379,52 +1379,6 @@ class Wpfaevent_Eventyay_Importer {
 		);
 	}
 
-		/**
-		 * Build the newer Eventyay speakers endpoint for an imported event.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param array  $settings   Import settings.
-		 * @param string $event_slug Eventyay event slug.
-		 * @return string|WP_Error Endpoint URL.
-		 */
-	private function build_eventyay_speakers_endpoint( $settings, $event_slug ) {
-		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
-		$base_url   = untrailingslashit( esc_url_raw( $settings['base_url'] ) );
-		$event_slug = $this->sanitize_eventyay_path_segment( $event_slug );
-
-		if ( empty( $base_url ) || ! wp_http_validate_url( $base_url ) ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_invalid_base_url',
-				esc_html__( 'The Eventyay API base URL is invalid.', 'wpfaevent' )
-			);
-		}
-
-		if ( empty( $settings['organizer_slug'] ) || empty( $event_slug ) ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_missing_speakers_path',
-				esc_html__( 'The Eventyay organizer or event slug is missing for speaker import.', 'wpfaevent' )
-			);
-		}
-
-		$url = trailingslashit( $base_url ) . sprintf(
-			'api/v1/organizers/%s/events/%s/speakers/',
-			rawurlencode( $settings['organizer_slug'] ),
-			rawurlencode( $event_slug )
-		);
-
-		return esc_url_raw(
-			add_query_arg(
-				array(
-					'expand'    => 'submissions,submissions.track,submissions.submission_type,submissions.slots.room',
-					'lang'      => 'en',
-					'page_size' => absint( apply_filters( 'wpfaevent_eventyay_speaker_import_page_size', 50 ) ),
-				),
-				$url
-			)
-		);
-	}
-
 	/**
 	 * Build the newer Eventyay schedule slots endpoint for an imported event.
 	 *
@@ -1627,12 +1581,11 @@ class Wpfaevent_Eventyay_Importer {
 	 * @return array|WP_Error Import result.
 	 */
 	private function import_eventyay_event_partner_data( $event_id, $event, $settings, $event_slug ) {
-		$result = array(
+		$result   = array(
 			'sponsor_count'   => 0,
 			'exhibitor_count' => 0,
 			'skipped'         => 0,
 		);
-
 		$sponsors = $this->fetch_eventyay_partner_collection( $settings, $event, $event_slug, 'sponsors' );
 		if ( is_wp_error( $sponsors ) ) {
 			++$result['skipped'];
@@ -1654,7 +1607,6 @@ class Wpfaevent_Eventyay_Importer {
 			++$result['skipped'];
 		} else {
 			$normalized_exhibitors = $this->normalize_eventyay_exhibitor_resources( $exhibitors['resources'], $settings );
-			$normalized_exhibitors = $this->filter_eventyay_exhibitors_to_public_listing( $normalized_exhibitors, $event, $settings, $event_slug );
 			$existing_exhibitors   = $this->read_dashboard_json_file( 'exhibitors-' . absint( $event_id ) . '.json', array() );
 			$merged_exhibitors     = $this->merge_eventyay_flat_records( $normalized_exhibitors, $existing_exhibitors );
 			$write_result          = $this->write_dashboard_json_file( 'exhibitors-' . absint( $event_id ) . '.json', $merged_exhibitors );
@@ -1667,118 +1619,6 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		return $result;
-	}
-
-	/**
-	 * Filter API exhibitor rows to the exhibitor IDs shown on the public Eventyay page.
-	 *
-	 * Some Eventyay exhibitor endpoints can include records that are not actually shown
-	 * on the public exhibition page. When Eventyay publishes a public exhibitor listing,
-	 * treat those visible exhibitor IDs as the authoritative set.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array  $exhibitors Normalized exhibitor records.
-	 * @param array  $event      Eventyay event resource.
-	 * @param array  $settings   Import settings.
-	 * @param string $event_slug Eventyay event slug.
-	 * @return array
-	 */
-	private function filter_eventyay_exhibitors_to_public_listing( $exhibitors, $event, $settings, $event_slug ) {
-		if ( empty( $exhibitors ) ) {
-			return is_array( $exhibitors ) ? $exhibitors : array();
-		}
-
-		$public_exhibitor_ids = $this->fetch_eventyay_public_exhibitor_ids( $event, $settings, $event_slug );
-		if ( is_wp_error( $public_exhibitor_ids ) || empty( $public_exhibitor_ids ) ) {
-			return $exhibitors;
-		}
-
-		$filtered = array();
-
-		foreach ( $exhibitors as $exhibitor ) {
-			if ( ! is_array( $exhibitor ) ) {
-				continue;
-			}
-
-			$eventyay_id = isset( $exhibitor['eventyay_id'] ) ? sanitize_text_field( (string) $exhibitor['eventyay_id'] ) : '';
-			if ( '' !== $eventyay_id && isset( $public_exhibitor_ids[ $eventyay_id ] ) ) {
-				$filtered[] = $exhibitor;
-			}
-		}
-
-		return ! empty( $filtered ) ? $filtered : $exhibitors;
-	}
-
-	/**
-	 * Fetch the exhibitor IDs published on the public Eventyay exhibition page.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array  $event      Eventyay event resource.
-	 * @param array  $settings   Import settings.
-	 * @param string $event_slug Eventyay event slug.
-	 * @return array|WP_Error
-	 */
-	private function fetch_eventyay_public_exhibitor_ids( $event, $settings, $event_slug ) {
-		$event_url = trailingslashit( $this->eventyay_public_event_url( $event, $settings, $event_slug ) );
-		if ( ! $event_url ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_missing_public_exhibition_url',
-				esc_html__( 'The public Eventyay exhibition page URL could not be resolved.', 'wpfaevent' )
-			);
-		}
-
-		$exhibition_url = esc_url_raw( trailingslashit( $event_url ) . 'exhibition/' );
-		$response       = wp_remote_get(
-			$exhibition_url,
-			array(
-				'timeout'     => 20,
-				'redirection' => 3,
-				'headers'     => array(
-					'Accept' => 'text/html,application/xhtml+xml',
-				),
-			)
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_public_exhibition_request_failed',
-				esc_html__( 'The public Eventyay exhibition page could not be fetched.', 'wpfaevent' ),
-				array( 'details' => $response->get_error_message() )
-			);
-		}
-
-		$status = absint( wp_remote_retrieve_response_code( $response ) );
-		if ( $status < 200 || $status >= 300 ) {
-			return new WP_Error(
-				'wpfaevent_eventyay_public_exhibition_http_error',
-				esc_html__( 'The public Eventyay exhibition page returned an unexpected response.', 'wpfaevent' ),
-				array( 'http_status' => $status )
-			);
-		}
-
-		$body = wp_remote_retrieve_body( $response );
-		if ( '' === trim( (string) $body ) ) {
-			return array();
-		}
-
-		$matches = array();
-		preg_match_all( '#/exhibition/([0-9]+)/#', $body, $matches );
-
-		if ( empty( $matches[1] ) ) {
-			return array();
-		}
-
-		$ids = array();
-		foreach ( $matches[1] as $match_id ) {
-			$match_id = sanitize_text_field( (string) $match_id );
-			if ( '' !== $match_id ) {
-				$ids[ $match_id ] = true;
-			}
-		}
-
-		return $ids;
 	}
 
 	/**
@@ -1978,15 +1818,8 @@ class Wpfaevent_Eventyay_Importer {
 		$sponsor_resource = $this->normalize_eventyay_api_resource( $sponsor_resource );
 		$source_id        = $this->eventyay_resource_identifier( $sponsor_resource );
 		$name             = $this->eventyay_first_present_text( $sponsor_resource, array( 'name', 'title', 'label' ) );
-		$type             = $this->eventyay_first_present_text( $sponsor_resource, array( 'level_name', 'level-name', 'tier', 'category', 'sponsor_type', 'sponsor-type', 'sponsorship_type', 'sponsorship-type', 'package', 'package_name', 'package-name' ) );
+		$type             = $this->eventyay_sponsor_group_name( $sponsor_resource );
 		$level            = $this->eventyay_first_present_raw( $sponsor_resource, array( 'level', 'position', 'order', 'sort_order', 'sort-order' ) );
-
-		if ( '' === $type ) {
-			$fallback_type = $this->eventyay_first_present_text( $sponsor_resource, array( 'type' ) );
-			if ( ! in_array( strtolower( $fallback_type ), array( 'sponsor', 'sponsors' ), true ) ) {
-				$type = $fallback_type;
-			}
-		}
 
 		$desc  = $this->eventyay_first_present_rich_text( $sponsor_resource, array( 'description', 'subtitle', 'summary' ) );
 		$image = $this->eventyay_url_value( $this->eventyay_first_present_raw( $sponsor_resource, array( 'logo-url', 'logo_url', 'logo', 'image', 'image-url', 'image_url' ) ), $settings['base_url'] );
@@ -2013,6 +1846,49 @@ class Wpfaevent_Eventyay_Importer {
 	}
 
 	/**
+	 * Resolve an Eventyay sponsor group name without falling back to generic resource types.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $sponsor_resource Eventyay sponsor resource.
+	 * @return string
+	 */
+	private function eventyay_sponsor_group_name( $sponsor_resource ) {
+		$type = $this->eventyay_first_present_text(
+			$sponsor_resource,
+			array(
+				'level_name',
+				'level-name',
+				'sponsor_type',
+				'sponsor-type',
+				'sponsorship_type',
+				'sponsorship-type',
+				'package',
+				'package_name',
+				'package-name',
+				'tier',
+				'category',
+			)
+		);
+
+		if ( '' !== $type ) {
+			return $type;
+		}
+
+		$type = $this->eventyay_first_present_text( $sponsor_resource, array( 'type' ) );
+		if ( '' === $type ) {
+			return '';
+		}
+
+		$type_key = sanitize_key( $type );
+		if ( in_array( $type_key, array( 'sponsor', 'sponsors' ), true ) ) {
+			return '';
+		}
+
+		return $type;
+	}
+
+	/**
 	 * Merge imported Eventyay sponsors with manually maintained dashboard groups.
 	 *
 	 * @since 1.0.0
@@ -2022,22 +1898,80 @@ class Wpfaevent_Eventyay_Importer {
 	 * @return array
 	 */
 	private function merge_eventyay_sponsor_groups( $imported, $existing ) {
-		$existing = is_array( $existing ) ? $existing : array();
-		$groups   = array();
+		$existing        = is_array( $existing ) ? $existing : array();
+		$group_map       = array();
+		$ordered_entries = array();
+		$ordered_keys    = array();
 
 		foreach ( $existing as $group ) {
-			if ( ! is_array( $group ) || $this->is_eventyay_sponsor_group( $group ) ) {
+			if ( ! is_array( $group ) ) {
 				continue;
 			}
 
-			$groups[] = $group;
+			$group_key = Wpfaevent_Partner_Helper::get_sponsor_group_key( $group );
+
+			if ( $this->is_eventyay_sponsor_group( $group ) ) {
+				if ( '' !== $group_key && ! in_array( $group_key, $ordered_keys, true ) ) {
+					$ordered_entries[] = $group_key;
+					$ordered_keys[]    = $group_key;
+				}
+
+				continue;
+			}
+
+			if ( '' !== $group_key ) {
+				if ( ! in_array( $group_key, $ordered_keys, true ) ) {
+					$ordered_entries[] = $group_key;
+					$ordered_keys[]    = $group_key;
+				}
+
+				$group_map[ $group_key ] = $group;
+				continue;
+			}
+
+			$ordered_entries[] = array(
+				'__raw_group' => $group,
+			);
 		}
 
-		foreach ( $this->group_eventyay_sponsors( $imported ) as $group ) {
-			$groups[] = $group;
+		$imported_groups = $this->group_eventyay_sponsors( $imported );
+
+		foreach ( $imported_groups as $group ) {
+			$group_key = Wpfaevent_Partner_Helper::get_sponsor_group_key( $group );
+			if ( '' === $group_key ) {
+				$ordered_entries[] = array(
+					'__raw_group' => $group,
+				);
+				continue;
+			}
+
+			$group_map[ $group_key ] = $group;
+
+			if ( ! in_array( $group_key, $ordered_keys, true ) ) {
+				$ordered_entries[] = $group_key;
+				$ordered_keys[]    = $group_key;
+			}
 		}
 
-		return $groups;
+		$merged_groups = array();
+
+		foreach ( $ordered_entries as $entry ) {
+			if ( is_array( $entry ) && isset( $entry['__raw_group'] ) ) {
+				$merged_groups[] = $entry['__raw_group'];
+				continue;
+			}
+
+			if ( isset( $group_map[ $entry ] ) ) {
+				$merged_groups[] = $group_map[ $entry ];
+				unset( $group_map[ $entry ] );
+			}
+		}
+
+		foreach ( $group_map as $group ) {
+			$merged_groups[] = $group;
+		}
+
+		return $merged_groups;
 	}
 
 	/**
@@ -2065,7 +1999,7 @@ class Wpfaevent_Eventyay_Importer {
 				$group_name = __( 'Sponsors', 'wpfaevent' );
 			}
 
-			$key = sanitize_key( $group_name );
+			$key = Wpfaevent_Partner_Helper::normalize_sponsor_group_key( $group_name );
 			if ( empty( $groups[ $key ] ) ) {
 				$groups[ $key ] = array(
 					'group_name'         => sanitize_text_field( $group_name ),
@@ -2541,109 +2475,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @return array|WP_Error Normalized speaker program payload.
 	 */
 	private function fetch_eventyay_event_speaker_program( $settings, $event_slug ) {
-		$endpoint = $this->build_eventyay_speakers_endpoint( $settings, $event_slug );
-		if ( is_wp_error( $endpoint ) ) {
-			return $endpoint;
-		}
-
-		$fetched = $this->fetch_eventyay_speaker_resources( $endpoint, $settings );
-		if ( is_wp_error( $fetched ) ) {
-			return $fetched;
-		}
-
-		$program = $this->normalize_eventyay_speakers_payload( $fetched['speakers'], $settings, $event_slug );
-		if ( is_wp_error( $program ) || empty( $program['speakers'] ) ) {
-			return $program;
-		}
-
-		$featured_map = $this->get_client()->fetch_eventyay_public_speaker_featured_map( $settings, $event_slug );
-		if ( ! is_wp_error( $featured_map ) && ! empty( $featured_map ) ) {
-			$program['speakers'] = ( new Wpfaevent_JSONAPI_Parser() )->apply_eventyay_public_speaker_featured_map( $program['speakers'], $featured_map );
-		}
-
-		return $program;
-	}
-
-	/**
-	 * Fetch Eventyay speaker resources, following paginated list responses.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $endpoint Speaker endpoint.
-	 * @param array  $settings Import settings.
-	 * @return array|WP_Error Speaker resources and metadata.
-	 */
-	private function fetch_eventyay_speaker_resources( $endpoint, $settings ) {
-		$speakers  = array();
-		$next_url  = $endpoint;
-		$page      = 0;
-		$seen_urls = array();
-		$max_pages = absint( apply_filters( 'wpfaevent_eventyay_speaker_import_max_pages', 20 ) );
-
-		if ( ! $max_pages ) {
-			$max_pages = 20;
-		}
-
-		while ( $next_url ) {
-			if ( isset( $seen_urls[ $next_url ] ) ) {
-				return new WP_Error(
-					'wpfaevent_eventyay_speaker_pagination_loop',
-					esc_html__( 'Eventyay speaker pagination returned a repeated next URL.', 'wpfaevent' )
-				);
-			}
-
-			if ( $page >= $max_pages ) {
-				return new WP_Error(
-					'wpfaevent_eventyay_speaker_page_limit',
-					esc_html__( 'Eventyay speaker import stopped before completion because the pagination page limit was reached.', 'wpfaevent' )
-				);
-			}
-
-			$seen_urls[ $next_url ] = true;
-			++$page;
-
-			$current_url = $next_url;
-			$payload     = $this->fetch_eventyay_rest_json( $current_url, $settings['api_token'] );
-			if ( is_wp_error( $payload ) ) {
-				return $payload;
-			}
-
-			if ( isset( $payload['results'] ) && is_array( $payload['results'] ) ) {
-				foreach ( $payload['results'] as $speaker ) {
-					if ( is_array( $speaker ) ) {
-						$speakers[] = $speaker;
-					}
-				}
-
-				$next_url = ! empty( $payload['next'] ) ? $this->normalize_eventyay_next_url( $payload['next'], $current_url ) : '';
-				if ( is_wp_error( $next_url ) ) {
-					return $next_url;
-				}
-				continue;
-			}
-
-			if ( isset( $payload['data'] ) && is_array( $payload['data'] ) ) {
-				foreach ( $this->eventyay_list_value( $payload['data'] ) as $speaker ) {
-					if ( is_array( $speaker ) ) {
-						$speakers[] = $speaker;
-					}
-				}
-
-				$next_url = ! empty( $payload['links']['next'] ) ? $this->normalize_eventyay_next_url( $payload['links']['next'], $current_url ) : '';
-				if ( is_wp_error( $next_url ) ) {
-					return $next_url;
-				}
-				continue;
-			}
-
-			$speakers[] = $payload;
-			$next_url   = '';
-		}
-
-		return array(
-			'speakers' => $speakers,
-			'pages'    => $page,
-		);
+		return $this->get_client()->fetch_eventyay_event_speaker_program( $settings, $event_slug );
 	}
 
 	/**
@@ -3603,65 +3435,6 @@ class Wpfaevent_Eventyay_Importer {
 	}
 
 	/**
-	 * Normalize Eventyay speaker profile resources into dashboard speaker data.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array  $speaker_resources Eventyay speaker resources.
-	 * @param array  $settings          Import settings.
-	 * @param string $event_slug        Eventyay event slug.
-	 * @return array
-	 */
-	private function normalize_eventyay_speakers_payload( $speaker_resources, $settings, $event_slug ) {
-		$speakers = array();
-		$sessions = array();
-
-		if ( ! is_array( $speaker_resources ) ) {
-			return array(
-				'speakers'      => array(),
-				'sessions'      => array(),
-				'session_count' => 0,
-			);
-		}
-
-		foreach ( $speaker_resources as $speaker_resource ) {
-			if ( ! is_array( $speaker_resource ) ) {
-				continue;
-			}
-
-			$speaker_resource = $this->normalize_eventyay_api_resource( $speaker_resource );
-			$speaker          = $this->normalize_eventyay_submission_speaker( $speaker_resource, $settings, $event_slug );
-			if ( empty( $speaker['name'] ) ) {
-				continue;
-			}
-
-			$speaker_sessions = $this->eventyay_list_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'submissions', 'sessions', 'talks' ) ) );
-			if ( empty( $speaker_sessions ) ) {
-				$this->merge_eventyay_speaker( $speakers, $speaker, array() );
-				continue;
-			}
-
-			foreach ( $speaker_sessions as $session_resource ) {
-				if ( ! is_array( $session_resource ) ) {
-					continue;
-				}
-
-				$session             = $this->normalize_eventyay_submission_session( $this->normalize_eventyay_api_resource( $session_resource ) );
-				$session['speakers'] = array_values( array_unique( array( $speaker['name'] ) ) );
-				$speaker['category'] = empty( $speaker['category'] ) && ! empty( $session['track'] ) ? $session['track'] : $speaker['category'];
-				$sessions            = $this->merge_eventyay_session_payload( $sessions, $session );
-				$this->merge_eventyay_speaker( $speakers, $speaker, $session );
-			}
-		}
-
-		return array(
-			'speakers'      => array_values( $speakers ),
-			'sessions'      => array_values( $sessions ),
-			'session_count' => count( $sessions ),
-		);
-	}
-
-	/**
 	 * Normalize Eventyay schedule slot resources into dashboard speaker and session data.
 	 *
 	 * @since 1.0.0
@@ -4155,6 +3928,20 @@ class Wpfaevent_Eventyay_Importer {
 				continue;
 			}
 
+			if (
+				'type' === $key
+				&& isset( $normalized['type'] )
+				&& is_string( $normalized['type'] )
+				&& is_scalar( $value )
+			) {
+				$attribute_type = trim( $normalized['type'] );
+				$resource_type  = trim( (string) $value );
+
+				if ( '' !== $attribute_type && '' !== $resource_type && sanitize_key( $attribute_type ) !== sanitize_key( $resource_type ) ) {
+					continue;
+				}
+			}
+
 			$normalized[ $key ] = $value;
 		}
 
@@ -4534,22 +4321,28 @@ class Wpfaevent_Eventyay_Importer {
 	 */
 	private function eventyay_rich_text_value( $value ) {
 		if ( is_scalar( $value ) ) {
-			return wp_kses_post( (string) $value );
+			return wp_kses_post( trim( (string) $value ) );
 		}
 
 		if ( ! is_array( $value ) ) {
 			return '';
 		}
 
-		foreach ( array( 'en', 'default', 'description', 'text' ) as $preferred_key ) {
-			if ( isset( $value[ $preferred_key ] ) && is_scalar( $value[ $preferred_key ] ) && '' !== trim( (string) $value[ $preferred_key ] ) ) {
-				return wp_kses_post( (string) $value[ $preferred_key ] );
+		foreach ( array( 'html', 'body', 'content', 'rendered', 'raw', 'value', 'text', 'description', 'default', 'en' ) as $preferred_key ) {
+			if ( ! isset( $value[ $preferred_key ] ) ) {
+				continue;
+			}
+
+			$resolved = $this->eventyay_rich_text_value( $value[ $preferred_key ] );
+			if ( '' !== trim( $resolved ) ) {
+				return $resolved;
 			}
 		}
 
 		foreach ( $value as $candidate ) {
-			if ( is_scalar( $candidate ) && '' !== trim( (string) $candidate ) ) {
-				return wp_kses_post( (string) $candidate );
+			$resolved = $this->eventyay_rich_text_value( $candidate );
+			if ( '' !== trim( $resolved ) ) {
+				return $resolved;
 			}
 		}
 
@@ -4607,13 +4400,30 @@ class Wpfaevent_Eventyay_Importer {
 			$event,
 			array(
 				'description',
+				'description_html',
+				'description-html',
 				'frontpage_text',
 				'frontpage-text',
+				'frontpage_content',
+				'frontpage-content',
+				'frontpage_html',
+				'frontpage-html',
+				'frontpage',
 				'event_info_text',
 				'event-info-text',
+				'event_info',
+				'event-info',
+				'event_info_content',
+				'event-info-content',
 				'about',
 				'about_text',
 				'about-text',
+				'about_html',
+				'about-html',
+				'content',
+				'body',
+				'html',
+				'rendered',
 				'text',
 				'intro',
 				'short_description',
@@ -5238,7 +5048,7 @@ class Wpfaevent_Eventyay_Importer {
 			);
 		}
 
-		$position     = $this->attribute_value( $attributes, array( 'position', 'job-title', 'designation' ) );
+		$position     = $this->attribute_value( $attributes, array( 'position', 'job-title', 'job_title', 'designation', 'title' ) );
 		$organization = $this->attribute_value( $attributes, array( 'organisation', 'organization', 'company' ) );
 		$category     = $this->attribute_value( $attributes, array( 'category', 'track' ) );
 

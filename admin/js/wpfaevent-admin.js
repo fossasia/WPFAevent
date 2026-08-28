@@ -4,6 +4,110 @@
 	$(function () {
 		const $importForm = $('#wpfaevent-import-events-form');
 		const $updateForm = $('#wpfaevent-update-events-form');
+		const sponsorGroupOrderForm = document.getElementById(
+			'wpfaevent-sponsor-group-order-form'
+		);
+		const sponsorGroupList = document.getElementById(
+			'wpfaevent-sponsor-group-order-list'
+		);
+		const sponsorGroupUnsavedIndicator = document.getElementById(
+			'wpfaevent-sponsor-group-order-unsaved'
+		);
+
+		if (sponsorGroupList) {
+			let sponsorGroupOrderDirty = false;
+			let sponsorGroupOrderSubmitting = false;
+
+			const markSponsorGroupOrderDirty = function () {
+				sponsorGroupOrderDirty = true;
+				if (sponsorGroupUnsavedIndicator) {
+					sponsorGroupUnsavedIndicator.hidden = false;
+				}
+			};
+
+			const refreshSponsorGroupButtons = function () {
+				const items = sponsorGroupList.querySelectorAll(
+					'.wpfaevent-sponsor-group-order-item'
+				);
+
+				items.forEach(function (item, index) {
+					const upButton = item.querySelector(
+						'.wpfaevent-move-group-up'
+					);
+					const downButton = item.querySelector(
+						'.wpfaevent-move-group-down'
+					);
+
+					if (upButton) {
+						upButton.disabled = index === 0;
+					}
+
+					if (downButton) {
+						downButton.disabled = index === items.length - 1;
+					}
+				});
+			};
+
+			sponsorGroupList.addEventListener('click', function (event) {
+				const button = event.target.closest('button');
+				if (!button) {
+					return;
+				}
+
+				const item = button.closest(
+					'.wpfaevent-sponsor-group-order-item'
+				);
+				if (!item) {
+					return;
+				}
+
+				if (button.classList.contains('wpfaevent-move-group-up')) {
+					const previousItem = item.previousElementSibling;
+					if (previousItem) {
+						sponsorGroupList.insertBefore(item, previousItem);
+						markSponsorGroupOrderDirty();
+						refreshSponsorGroupButtons();
+					}
+				}
+
+				if (button.classList.contains('wpfaevent-move-group-down')) {
+					const nextItem = item.nextElementSibling;
+					if (nextItem) {
+						sponsorGroupList.insertBefore(nextItem, item);
+						markSponsorGroupOrderDirty();
+						refreshSponsorGroupButtons();
+					}
+				}
+			});
+
+			if (sponsorGroupOrderForm) {
+				sponsorGroupOrderForm.addEventListener('submit', function () {
+					sponsorGroupOrderSubmitting = true;
+					sponsorGroupOrderDirty = false;
+					if (sponsorGroupUnsavedIndicator) {
+						sponsorGroupUnsavedIndicator.hidden = true;
+					}
+				});
+			}
+
+			window.addEventListener('beforeunload', function (event) {
+				if (!sponsorGroupOrderDirty || sponsorGroupOrderSubmitting) {
+					return undefined;
+				}
+
+				const warningMessage = sponsorGroupOrderForm
+					? sponsorGroupOrderForm.getAttribute(
+							'data-unsaved-warning'
+						) || 'You have unsaved changes.'
+					: 'You have unsaved changes.';
+
+				event.preventDefault();
+				event.returnValue = warningMessage;
+				return warningMessage;
+			});
+
+			refreshSponsorGroupButtons();
+		}
 
 		function showImportNotice(message) {
 			const $container = $('.wrap').first();
