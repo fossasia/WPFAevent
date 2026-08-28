@@ -2044,12 +2044,6 @@ class Wpfaevent_Eventyay_Importer {
 	}
 
 	/**
-	 * Get a stable key for a sponsor group.
-	 *
-	 * @param array $group Sponsor group.
-	 * @return string
-	 */
-	/**
 	 * Normalize Eventyay exhibitor resources.
 	 *
 	 * @since 1.0.0

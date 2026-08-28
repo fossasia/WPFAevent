@@ -2631,12 +2631,6 @@ class Wpfaevent_JSONAPI_Parser {
 	}
 
 	/**
-	 * Get a stable key for a sponsor group.
-	 *
-	 * @param array $group Sponsor group.
-	 * @return string
-	 */
-	/**
 	 * Merge imported Eventyay flat records with manually maintained records.
 	 *
 	 * @since 1.0.0
