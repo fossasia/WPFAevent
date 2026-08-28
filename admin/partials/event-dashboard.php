@@ -804,7 +804,10 @@ document.addEventListener('DOMContentLoaded', function () {
 				}
 			});
 
+			let selected = false;
+
 			frame.on('select', function () {
+				selected = true;
 				const attachment = frame.state().get('selection').first().toJSON();
 				const newUrl = attachment.url;
 
@@ -834,10 +837,11 @@ document.addEventListener('DOMContentLoaded', function () {
 			});
 
 			frame.on('close', function() {
-				if (!parent.querySelector('.wpfaevent-save-field-btn')) {
-					// User closed modal without selecting
-					delete activeEditors[field];
-				}
+				setTimeout(function() {
+					if (!selected) {
+						delete activeEditors[field];
+					}
+				}, 0);
 			});
 
 			frame.open();
