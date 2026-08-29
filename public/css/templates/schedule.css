@@ -122,7 +122,8 @@
 }
 
 .wpfaevent .wpfa-schedule-filter-form.has-language-filter.has-session-filters {
-	grid-template-columns: repeat(4, minmax(150px, 220px)) minmax(220px, 320px) auto auto;
+	grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.5fr) auto auto;
+	width: 100%;
 }
 
 .wpfaevent .wpfa-schedule-filter-form label {
