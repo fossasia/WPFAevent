@@ -16,6 +16,7 @@ class FeaturedSpeakersGridTest extends WP_UnitTestCase {
 	public function test_event_template_renders_featured_speaker_view_all_controls() {
 		$source = $this->read_project_file( 'public/templates/single-wpfa-event.php' );
 
+		$this->assertSame( 2, substr_count( $source, 'class="wpfa-event-featured-speakers wpfa-event-featured-speakers--collapsed"' ) );
 		$this->assertSame( 2, substr_count( $source, 'class="wpfa-event-featured-speakers-toggle"' ) );
 		$this->assertSame( 2, substr_count( $source, 'aria-controls="wpfa-event-featured-speakers-grid"' ) );
 		$this->assertStringContainsString( "esc_html_e( 'View All', 'wpfaevent' )", $source );

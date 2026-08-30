@@ -450,7 +450,7 @@ if ( $show_ticket_widget ) {
 
 					<?php if ( ! empty( $speaker_ids ) ) : ?>
 						<?php if ( $featured_speaker_count ) : ?>
-							<div class="wpfa-event-featured-speakers">
+							<div class="wpfa-event-featured-speakers wpfa-event-featured-speakers--collapsed">
 								<h3><?php esc_html_e( 'Featured Speakers', 'wpfaevent' ); ?></h3>
 								<div id="wpfa-event-featured-speakers-grid" class="wpfa-speakers-grid wpfa-featured-speakers-grid">
 									<?php
@@ -513,7 +513,7 @@ if ( $show_ticket_widget ) {
 						<?php endif; ?>
 					<?php elseif ( ! empty( $dashboard_speakers ) ) : ?>
 						<?php if ( ! empty( $dashboard_featured_speakers ) ) : ?>
-							<div class="wpfa-event-featured-speakers">
+							<div class="wpfa-event-featured-speakers wpfa-event-featured-speakers--collapsed">
 								<h3><?php esc_html_e( 'Featured Speakers', 'wpfaevent' ); ?></h3>
 								<div id="wpfa-event-featured-speakers-grid" class="wpfa-speakers-grid wpfa-featured-speakers-grid">
 									<?php foreach ( $dashboard_featured_speakers as $speaker ) : ?>
