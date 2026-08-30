@@ -137,7 +137,6 @@ const wpfaSpeakers = (function () {
 			const link = card.querySelector('.wpfa-speaker-name a')?.href || '';
 			const speakerId = card.dataset.speakerId || '';
 
-
 			return {
 				id: speakerId,
 				name,
