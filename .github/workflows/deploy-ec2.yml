@@ -70,7 +70,7 @@ jobs:
 
             git fetch origin "$DEPLOY_BRANCH"
             git checkout "$DEPLOY_BRANCH"
-            git pull --ff-only origin "$DEPLOY_BRANCH"
+            git reset --hard "origin/$DEPLOY_BRANCH"
 
             if ! command -v composer >/dev/null 2>&1; then
               echo "Composer is required on the EC2 instance."
