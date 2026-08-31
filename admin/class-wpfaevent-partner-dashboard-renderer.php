@@ -517,13 +517,13 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 														add_query_arg(
 															array(
 																'action'   => 'wpfaevent_delete_partner',
-														'id'       => $delete_id,
+																'id'       => $delete_id,
 																'type'     => $type,
 																'event_id' => $event_id,
 															),
 															admin_url( 'admin-post.php' )
 														),
-												'wpfaevent_delete_partner_' . $delete_id
+													'wpfaevent_delete_partner_' . $delete_id
 													);
 													?>
 													<a class="button button-small button-link-delete" href="<?php echo esc_url( $delete_url ); ?>" onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to delete this profile?', 'wpfaevent' ); ?>');"><?php esc_html_e( 'Delete', 'wpfaevent' ); ?></a>
