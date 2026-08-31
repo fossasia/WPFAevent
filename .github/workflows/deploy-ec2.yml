@@ -80,5 +80,5 @@ jobs:
             composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 
             if command -v wp >/dev/null 2>&1; then
-              wp cache flush || true
+              wp cache flush
             fi
