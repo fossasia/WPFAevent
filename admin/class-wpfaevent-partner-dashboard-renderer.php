@@ -511,7 +511,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 												);
 												?>
 																						"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></a>
-											<?php if ( $is_manual && $delete_id ) : ?>
+											<?php if ( $delete_id ) : ?>
 													<?php
 													$delete_url = wp_nonce_url(
 														add_query_arg(
