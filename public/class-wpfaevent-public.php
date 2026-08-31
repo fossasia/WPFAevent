@@ -224,6 +224,11 @@ class Wpfaevent_Public {
 	 * @since    1.0.0
 	 */
 	private function register_assets() {
+		$event_base_path         = WPFAEVENT_PATH . 'public/css/templates/event-base.css';
+		$event_base_version      = file_exists( $event_base_path ) ? (string) filemtime( $event_base_path ) : $this->version;
+		$speakers_script_path    = WPFAEVENT_PATH . 'public/js/wpfaevent-speakers.js';
+		$speakers_script_version = file_exists( $speakers_script_path ) ? (string) filemtime( $speakers_script_path ) : $this->version;
+
 		wp_register_style(
 			$this->plugin_name,
 			WPFAEVENT_URL . 'public/css/wpfaevent-public.css',
@@ -285,7 +290,7 @@ class Wpfaevent_Public {
 			array(
 				$this->plugin_name,
 			),
-			$this->version,
+			$event_base_version,
 			'all'
 		);
 
@@ -364,7 +369,7 @@ class Wpfaevent_Public {
 			$this->plugin_name . '-speakers',
 			WPFAEVENT_URL . 'public/js/wpfaevent-speakers.js',
 			array( 'jquery' ),
-			$this->version,
+			$speakers_script_version,
 			true
 		);
 

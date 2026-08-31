@@ -39,6 +39,8 @@ class FeaturedSpeakersGridTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '.wpfa-speaker-card:nth-child(n + 17)', $source );
 		$this->assertStringContainsString( '.wpfa-speaker-card:nth-child(n + 25)', $source );
 		$this->assertStringContainsString( '.wpfa-speaker-card:nth-child(n + 33)', $source );
+		$this->assertSame( 4, substr_count( $source, 'display: none !important;' ) );
+		$this->assertSame( 3, substr_count( $source, 'display: flex !important;' ) );
 	}
 
 	/**
@@ -60,6 +62,18 @@ class FeaturedSpeakersGridTest extends WP_UnitTestCase {
 
 		$this->assertStringContainsString( "speaker.element.style.removeProperty('display');", $source );
 		$this->assertStringNotContainsString( "speaker.element.style.display = 'block';", $source );
+	}
+
+	/**
+	 * Changed speaker assets must use cache-busting file modification versions.
+	 */
+	public function test_featured_speaker_assets_use_file_modification_versions() {
+		$public_source   = $this->read_project_file( 'public/class-wpfaevent-public.php' );
+		$template_source = $this->read_project_file( 'includes/class-wpfaevent-templates.php' );
+
+		$this->assertStringContainsString( '$event_base_version', $public_source );
+		$this->assertStringContainsString( '$speakers_script_version', $public_source );
+		$this->assertStringContainsString( '$event_base_version', $template_source );
 	}
 
 	/**

@@ -539,7 +539,7 @@
 }
 
 .wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 9) {
-	display: none;
+	display: none !important;
 }
 
 .wpfaevent .wpfa-event-featured-speakers-toggle {
@@ -594,11 +594,11 @@
 	}
 
 	.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 9) {
-		display: flex;
+		display: flex !important;
 	}
 
 	.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 17) {
-		display: none;
+		display: none !important;
 	}
 }
 
@@ -608,11 +608,11 @@
 	}
 
 	.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 17) {
-		display: flex;
+		display: flex !important;
 	}
 
 	.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 25) {
-		display: none;
+		display: none !important;
 	}
 }
 
@@ -622,11 +622,11 @@
 	}
 
 	.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 25) {
-		display: flex;
+		display: flex !important;
 	}
 
 	.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 33) {
-		display: none;
+		display: none !important;
 	}
 }
 
