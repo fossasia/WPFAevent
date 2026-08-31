@@ -53,6 +53,16 @@ class FeaturedSpeakersGridTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Speaker filtering must not override the responsive grid display rules.
+	 */
+	public function test_speaker_filter_restores_stylesheet_controlled_display() {
+		$source = $this->read_project_file( 'public/js/wpfaevent-speakers.js' );
+
+		$this->assertStringContainsString( "speaker.element.style.removeProperty('display');", $source );
+		$this->assertStringNotContainsString( "speaker.element.style.display = 'block';", $source );
+	}
+
+	/**
 	 * Read a repository file fixture.
 	 *
 	 * @param string $relative_path File path relative to the plugin root.

@@ -16,7 +16,7 @@ export default [
 	},
 	{
 		ignores: [
-			
+			'eslint.config.mjs',
 			'node_modules/**',
 			'vendor/**',
 			'build/**',

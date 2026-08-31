@@ -433,7 +433,7 @@ const wpfaSpeakers = (function () {
 		// Show filtered speakers
 		filteredSpeakers.forEach((speaker) => {
 			if (speaker.element) {
-				speaker.element.style.display = 'block';
+				speaker.element.style.removeProperty('display');
 			}
 		});
 
