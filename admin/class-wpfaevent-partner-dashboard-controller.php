@@ -221,14 +221,7 @@ class Wpfaevent_Partner_Dashboard_Controller {
 		}
 
 		$records         = $this->stats->load_records( $type, $event_id );
-		$updated_records = array();
-
-		foreach ( $records as $rec ) {
-			if ( isset( $rec['id'] ) && $rec['id'] === $id ) {
-				continue; // Skip the deleted record.
-			}
-			$updated_records[] = $rec;
-		}
+		$updated_records = $this->remove_partner_record( $records, $id );
 
 		// Save the updated list back to the JSON file.
 		if ( 'sponsor' === $type ) {
@@ -251,6 +244,36 @@ class Wpfaevent_Partner_Dashboard_Controller {
 			)
 		);
 		exit;
+	}
+
+	/**
+	 * Remove a partner using the normalized key used by dashboard URLs.
+	 *
+	 * Legacy manually created partners may contain uppercase characters in their
+	 * stored IDs. Normalize both sides so those records remain deletable.
+	 *
+	 * @param array  $records Partner records.
+	 * @param string $id      Requested partner ID.
+	 * @return array
+	 */
+	private function remove_partner_record( $records, $id ) {
+		$id = sanitize_key( $id );
+
+		if ( ! is_array( $records ) || '' === $id ) {
+			return is_array( $records ) ? $records : array();
+		}
+
+		$updated_records = array();
+
+		foreach ( $records as $record ) {
+			if ( is_array( $record ) && Wpfaevent_Partner_Helper::get_partner_key( $record ) === $id ) {
+				continue;
+			}
+
+			$updated_records[] = $record;
+		}
+
+		return $updated_records;
 	}
 
 	/**

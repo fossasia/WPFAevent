@@ -440,6 +440,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 								<?php foreach ( $paged_items as $item ) : ?>
 									<?php
 									$item_id      = isset( $item['id'] ) ? $item['id'] : '';
+									$delete_id    = Wpfaevent_Partner_Helper::get_partner_key( $item );
 									$item_name    = isset( $item['name'] ) ? $item['name'] : '';
 									$item_company = isset( $item['company'] ) ? $item['company'] : '';
 									$item_phone   = isset( $item['phone'] ) ? $item['phone'] : '';
@@ -510,19 +511,19 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 												);
 												?>
 																						"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></a>
-												<?php if ( $is_manual ) : ?>
+											<?php if ( $is_manual && $delete_id ) : ?>
 													<?php
 													$delete_url = wp_nonce_url(
 														add_query_arg(
 															array(
 																'action'   => 'wpfaevent_delete_partner',
-																'id'       => $item_id,
+														'id'       => $delete_id,
 																'type'     => $type,
 																'event_id' => $event_id,
 															),
 															admin_url( 'admin-post.php' )
 														),
-														'wpfaevent_delete_partner_' . $item_id
+												'wpfaevent_delete_partner_' . $delete_id
 													);
 													?>
 													<a class="button button-small button-link-delete" href="<?php echo esc_url( $delete_url ); ?>" onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to delete this profile?', 'wpfaevent' ); ?>');"><?php esc_html_e( 'Delete', 'wpfaevent' ); ?></a>

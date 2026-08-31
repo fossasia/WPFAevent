@@ -26,6 +26,32 @@ class PartnerDashboardControllerTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Legacy mixed-case IDs should match the normalized IDs used in delete URLs.
+	 */
+	public function test_remove_partner_record_deletes_legacy_mixed_case_id() {
+		$controller = new Wpfaevent_Partner_Dashboard_Controller();
+		$method     = new ReflectionMethod( $controller, 'remove_partner_record' );
+		$method->setAccessible( true );
+		$records = array(
+			array(
+				'id'     => 'manual-sponsor-AbC12xYz',
+				'source' => 'manual',
+				'name'   => 'Legacy Sponsor',
+			),
+			array(
+				'id'     => 'manual-sponsor-current123',
+				'source' => 'manual',
+				'name'   => 'Current Sponsor',
+			),
+		);
+
+		$remaining = $method->invoke( $controller, $records, 'manual-sponsor-abc12xyz' );
+
+		$this->assertCount( 1, $remaining );
+		$this->assertSame( 'manual-sponsor-current123', $remaining[0]['id'] );
+	}
+
+	/**
 	 * Successful sponsor-group reorders should persist and redirect with a success notice.
 	 */
 	public function test_process_reorder_sponsor_groups_persists_reordered_groups() {
