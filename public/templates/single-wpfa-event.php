@@ -445,7 +445,7 @@ if ( $show_ticket_widget ) {
 						<div>
 							<h2 id="wpfa-event-speakers-title"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h2>
 						</div>
-						<a href="<?php echo esc_url( $speakers_url ); ?>"><?php esc_html_e( 'Open Event Speaker List', 'wpfaevent' ); ?></a>
+						<a href="<?php echo esc_url( $speakers_url ); ?>"><?php esc_html_e( 'Open Speaker List', 'wpfaevent' ); ?></a>
 					</div>
 
 					<?php if ( ! empty( $speaker_ids ) ) : ?>
