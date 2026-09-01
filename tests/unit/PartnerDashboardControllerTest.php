@@ -45,10 +45,36 @@ class PartnerDashboardControllerTest extends WP_UnitTestCase {
 			),
 		);
 
-		$remaining = $method->invoke( $controller, $records, 'manual-sponsor-abc12xyz' );
+		$remaining = $method->invoke( $controller, $records, 'manual-sponsor-abc12xyz', 0 );
 
 		$this->assertCount( 1, $remaining );
 		$this->assertSame( 'manual-sponsor-current123', $remaining[0]['id'] );
+	}
+
+	/**
+	 * Delete requests should remove only the indexed record when normalized IDs collide.
+	 */
+	public function test_remove_partner_record_deletes_only_indexed_normalized_id_collision() {
+		$controller = new Wpfaevent_Partner_Dashboard_Controller();
+		$method     = new ReflectionMethod( $controller, 'remove_partner_record' );
+		$method->setAccessible( true );
+		$records = array(
+			array(
+				'id'     => 'manual-sponsor-AbC123',
+				'source' => 'manual',
+				'name'   => 'Uppercase Legacy Sponsor',
+			),
+			array(
+				'id'     => 'manual-sponsor-abc123',
+				'source' => 'manual',
+				'name'   => 'Lowercase Legacy Sponsor',
+			),
+		);
+
+		$remaining = $method->invoke( $controller, $records, 'manual-sponsor-abc123', 0 );
+
+		$this->assertCount( 1, $remaining );
+		$this->assertSame( 'manual-sponsor-abc123', $remaining[0]['id'] );
 	}
 
 	/**

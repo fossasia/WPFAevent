@@ -210,18 +210,19 @@ class Wpfaevent_Partner_Dashboard_Controller {
 			wp_die( esc_html__( 'You do not have sufficient permissions to modify this page.', 'wpfaevent' ) );
 		}
 
-		$id = isset( $_GET['id'] ) ? sanitize_key( $_GET['id'] ) : '';
-		check_admin_referer( 'wpfaevent_delete_partner_' . $id );
+		$id           = isset( $_GET['id'] ) ? sanitize_key( wp_unslash( $_GET['id'] ) ) : '';
+		$record_index = isset( $_GET['record_index'] ) ? absint( wp_unslash( $_GET['record_index'] ) ) : null;
+		check_admin_referer( 'wpfaevent_delete_partner_' . $id . '_' . $record_index );
 
 		$type     = isset( $_GET['type'] ) ? sanitize_key( $_GET['type'] ) : '';
 		$event_id = isset( $_GET['event_id'] ) ? absint( $_GET['event_id'] ) : 0;
 
-		if ( ! $event_id || ! $id || ! in_array( $type, array( 'sponsor', 'exhibitor' ), true ) ) {
+		if ( ! $event_id || ! $id || null === $record_index || ! in_array( $type, array( 'sponsor', 'exhibitor' ), true ) ) {
 			wp_die( esc_html__( 'Invalid request parameters.', 'wpfaevent' ) );
 		}
 
 		$records         = $this->stats->load_records( $type, $event_id );
-		$updated_records = $this->remove_partner_record( $records, $id );
+		$updated_records = $this->remove_partner_record( $records, $id, $record_index );
 
 		// Save the updated list back to the JSON file.
 		if ( 'sponsor' === $type ) {
@@ -247,33 +248,29 @@ class Wpfaevent_Partner_Dashboard_Controller {
 	}
 
 	/**
-	 * Remove a partner using the normalized key used by dashboard URLs.
+	 * Remove an indexed partner using the normalized key used by dashboard URLs.
 	 *
 	 * Legacy manually created partners may contain uppercase characters in their
-	 * stored IDs. Normalize both sides so those records remain deletable.
+	 * stored IDs. Normalize both sides so those records remain deletable, while
+	 * the record index prevents collisions from removing multiple records.
 	 *
-	 * @param array  $records Partner records.
-	 * @param string $id      Requested partner ID.
+	 * @param array  $records      Partner records.
+	 * @param string $id           Requested partner ID.
+	 * @param int    $record_index Requested record index.
 	 * @return array
 	 */
-	private function remove_partner_record( $records, $id ) {
+	private function remove_partner_record( $records, $id, $record_index ) {
 		$id = sanitize_key( $id );
 
-		if ( ! is_array( $records ) || '' === $id ) {
+		if ( ! is_array( $records ) || '' === $id || ! isset( $records[ $record_index ] ) ) {
 			return is_array( $records ) ? $records : array();
 		}
 
-		$updated_records = array();
-
-		foreach ( $records as $record ) {
-			if ( is_array( $record ) && Wpfaevent_Partner_Helper::get_partner_key( $record ) === $id ) {
-				continue;
-			}
-
-			$updated_records[] = $record;
+		if ( is_array( $records[ $record_index ] ) && Wpfaevent_Partner_Helper::get_partner_key( $records[ $record_index ] ) === $id ) {
+			unset( $records[ $record_index ] );
 		}
 
-		return $updated_records;
+		return array_values( $records );
 	}
 
 	/**
