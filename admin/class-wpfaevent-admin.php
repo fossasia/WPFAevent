@@ -926,4 +926,49 @@ class Wpfaevent_Admin {
 		</div>
 		<?php
 	}
+
+	/**
+	 * Render a hidden event_id field on the Add Track taxonomy form.
+	 *
+	 * @since 1.0.0
+	 */
+	public function render_track_form_event_id_field() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$event_id = isset( $_GET['event_id'] ) ? absint( wp_unslash( $_GET['event_id'] ) ) : 0;
+
+		if ( $event_id ) {
+			echo '<input type="hidden" name="event_id" value="' . esc_attr( (string) $event_id ) . '">';
+		}
+	}
+
+	/**
+	 * Associate a newly created track term with its parent event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $term_id Term ID.
+	 */
+	public function associate_created_track_with_event( $term_id ) {
+		$term_id  = absint( $term_id );
+		$event_id = 0;
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_REQUEST['event_id'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended
+			$event_id = absint( wp_unslash( $_REQUEST['event_id'] ) );
+		} elseif ( ! empty( $_SERVER['HTTP_REFERER'] ) ) {
+			$referer = sanitize_text_field( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
+			$query   = wp_parse_url( $referer, PHP_URL_QUERY );
+			if ( $query ) {
+				parse_str( (string) $query, $params );
+				if ( isset( $params['event_id'] ) ) {
+					$event_id = absint( $params['event_id'] );
+				}
+			}
+		}
+
+		if ( $term_id && $event_id && 'wpfa_event' === get_post_type( $event_id ) ) {
+			wp_set_post_terms( $event_id, array( $term_id ), 'wpfa_event_track', true );
+		}
+	}
 }
