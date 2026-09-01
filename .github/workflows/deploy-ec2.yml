@@ -18,6 +18,7 @@ jobs:
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment: production
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     env:
@@ -62,6 +63,11 @@ jobs:
 
             cd "$PLUGIN_PATH"
 
+            if ! command -v composer >/dev/null 2>&1; then
+              echo "Composer is required on the EC2 instance."
+              exit 1
+            fi
+
             if [ -n "$(git status --porcelain)" ]; then
               echo "Deployment aborted because the plugin checkout has uncommitted changes."
               git status --short
@@ -71,11 +77,6 @@ jobs:
             git fetch origin "$DEPLOY_BRANCH"
             git checkout "$DEPLOY_BRANCH"
             git reset --hard "origin/$DEPLOY_BRANCH"
-
-            if ! command -v composer >/dev/null 2>&1; then
-              echo "Composer is required on the EC2 instance."
-              exit 1
-            fi
 
             composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 
