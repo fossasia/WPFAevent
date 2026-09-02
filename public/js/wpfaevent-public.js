@@ -30,6 +30,60 @@
 	 */
 
 	$(function () {
+		$('.wpfa-event-featured-speakers').each(function () {
+			const $group = $(this);
+			const $grid = $group.find('.wpfa-featured-speakers-grid').first();
+			const $toggle = $group
+				.find('.wpfa-event-featured-speakers-toggle')
+				.first();
+
+			if (!$grid.length || !$toggle.length) {
+				return;
+			}
+
+			const collapsedLabel = $toggle.text().trim();
+			const expandedLabel = $toggle.data('expanded-label');
+			const speakerCount = $grid.children('.wpfa-speaker-card').length;
+			let isExpanded = false;
+
+			const getVisibleLimit = function () {
+				if (window.innerWidth >= 1441) {
+					return 32;
+				}
+
+				if (window.innerWidth >= 1025) {
+					return 24;
+				}
+
+				if (window.innerWidth >= 769) {
+					return 16;
+				}
+
+				return 8;
+			};
+
+			const refreshGrid = function () {
+				const hasOverflow = speakerCount > getVisibleLimit();
+
+				$group.toggleClass(
+					'wpfa-event-featured-speakers--collapsed',
+					hasOverflow && !isExpanded
+				);
+				$toggle.prop('hidden', !hasOverflow);
+			};
+
+			$toggle.on('click', function () {
+				isExpanded = !isExpanded;
+				$toggle
+					.attr('aria-expanded', isExpanded ? 'true' : 'false')
+					.text(isExpanded ? expandedLabel : collapsedLabel);
+				refreshGrid();
+			});
+
+			$(window).on('resize', refreshGrid);
+			refreshGrid();
+		});
+
 		const showPublicNotice = function (message) {
 			let $notice = $('#wpfa-public-notice');
 

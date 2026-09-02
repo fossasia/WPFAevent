@@ -745,6 +745,9 @@ class Wpfaevent_Templates {
 	 * @return void
 	 */
 	private static function register_block_assets() {
+		$event_base_path    = WPFAEVENT_PATH . 'public/css/templates/event-base.css';
+		$event_base_version = file_exists( $event_base_path ) ? (string) filemtime( $event_base_path ) : WPFAEVENT_VERSION;
+
 		wp_register_style(
 			'wpfaevent',
 			WPFAEVENT_URL . 'public/css/wpfaevent-public.css',
@@ -805,7 +808,7 @@ class Wpfaevent_Templates {
 			'wpfaevent-event-base',
 			WPFAEVENT_URL . 'public/css/templates/event-base.css',
 			array( 'wpfaevent' ),
-			WPFAEVENT_VERSION,
+			$event_base_version,
 			'all'
 		);
 

@@ -220,15 +220,8 @@ class Wpfaevent_JSONAPI_Parser {
 		$sponsor_resource = $this->normalize_eventyay_api_resource( $sponsor_resource );
 		$source_id        = $this->eventyay_resource_identifier( $sponsor_resource );
 		$name             = $this->eventyay_first_present_text( $sponsor_resource, array( 'name', 'title', 'label' ) );
-		$type             = $this->eventyay_first_present_text( $sponsor_resource, array( 'level_name', 'level-name', 'tier', 'category', 'sponsor_type', 'sponsor-type', 'sponsorship_type', 'sponsorship-type', 'package', 'package_name', 'package-name' ) );
+		$type             = $this->eventyay_sponsor_group_name( $sponsor_resource );
 		$level            = $this->eventyay_first_present_raw( $sponsor_resource, array( 'level', 'position', 'order', 'sort_order', 'sort-order' ) );
-
-		if ( '' === $type ) {
-			$fallback_type = $this->eventyay_first_present_text( $sponsor_resource, array( 'type' ) );
-			if ( ! in_array( strtolower( $fallback_type ), array( 'sponsor', 'sponsors' ), true ) ) {
-				$type = $fallback_type;
-			}
-		}
 
 		return array(
 			'id'          => $source_id ? 'eventyay-sponsor-' . sanitize_key( $source_id ) : 'eventyay-sponsor-' . sanitize_title( $name ),
@@ -241,6 +234,38 @@ class Wpfaevent_JSONAPI_Parser {
 			'type'        => sanitize_text_field( $type ),
 			'level'       => is_numeric( $level ) ? absint( $level ) : 0,
 		);
+	}
+
+	/**
+	 * Resolve an Eventyay sponsor group name without falling back to generic resource types.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $sponsor_resource Eventyay sponsor resource.
+	 * @return string
+	 */
+	public function eventyay_sponsor_group_name( $sponsor_resource ) {
+		$sponsor_resource = $this->normalize_eventyay_api_resource( $sponsor_resource );
+		$type             = $this->eventyay_first_present_text(
+			$sponsor_resource,
+			array( 'level_name', 'level-name', 'tier', 'category', 'sponsor_type', 'sponsor-type', 'sponsorship_type', 'sponsorship-type', 'package', 'package_name', 'package-name' )
+		);
+
+		if ( '' !== $type ) {
+			return $type;
+		}
+
+		$type = $this->eventyay_first_present_text( $sponsor_resource, array( 'type' ) );
+		if ( '' === $type ) {
+			return '';
+		}
+
+		$type_key = sanitize_key( $type );
+		if ( in_array( $type_key, array( 'sponsor', 'sponsors' ), true ) ) {
+			return '';
+		}
+
+		return $type;
 	}
 
 	/**
@@ -988,6 +1013,20 @@ class Wpfaevent_JSONAPI_Parser {
 		foreach ( $eventyay_resource as $key => $value ) {
 			if ( in_array( $key, array( 'attributes', 'relationships' ), true ) ) {
 				continue;
+			}
+
+			if (
+				'type' === $key
+				&& isset( $normalized['type'] )
+				&& is_string( $normalized['type'] )
+				&& is_scalar( $value )
+			) {
+				$attribute_type = trim( $normalized['type'] );
+				$resource_type  = trim( (string) $value );
+
+				if ( '' !== $attribute_type && '' !== $resource_type && sanitize_key( $attribute_type ) !== sanitize_key( $resource_type ) ) {
+					continue;
+				}
 			}
 
 			$normalized[ $key ] = $value;
@@ -2461,7 +2500,7 @@ class Wpfaevent_JSONAPI_Parser {
 				$group_name = __( 'Sponsors', 'wpfaevent' );
 			}
 
-			$key = sanitize_key( $group_name );
+			$key = Wpfaevent_Partner_Helper::normalize_sponsor_group_key( $group_name );
 			if ( empty( $groups[ $key ] ) ) {
 				$groups[ $key ] = array(
 					'group_name'         => sanitize_text_field( $group_name ),
@@ -2515,22 +2554,80 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @return array
 	 */
 	public function merge_eventyay_sponsor_groups( $imported, $existing ) {
-		$existing = is_array( $existing ) ? $existing : array();
-		$groups   = array();
+		$existing        = is_array( $existing ) ? $existing : array();
+		$group_map       = array();
+		$ordered_entries = array();
+		$ordered_keys    = array();
 
 		foreach ( $existing as $group ) {
-			if ( ! is_array( $group ) || $this->is_eventyay_sponsor_group( $group ) ) {
+			if ( ! is_array( $group ) ) {
 				continue;
 			}
 
-			$groups[] = $group;
+			$group_key = Wpfaevent_Partner_Helper::get_sponsor_group_key( $group );
+
+			if ( $this->is_eventyay_sponsor_group( $group ) ) {
+				if ( '' !== $group_key && ! in_array( $group_key, $ordered_keys, true ) ) {
+					$ordered_entries[] = $group_key;
+					$ordered_keys[]    = $group_key;
+				}
+
+				continue;
+			}
+
+			if ( '' !== $group_key ) {
+				if ( ! in_array( $group_key, $ordered_keys, true ) ) {
+					$ordered_entries[] = $group_key;
+					$ordered_keys[]    = $group_key;
+				}
+
+				$group_map[ $group_key ] = $group;
+				continue;
+			}
+
+			$ordered_entries[] = array(
+				'__raw_group' => $group,
+			);
 		}
 
-		foreach ( $this->group_eventyay_sponsors( $imported ) as $group ) {
-			$groups[] = $group;
+		$imported_groups = $this->group_eventyay_sponsors( $imported );
+
+		foreach ( $imported_groups as $group ) {
+			$group_key = Wpfaevent_Partner_Helper::get_sponsor_group_key( $group );
+			if ( '' === $group_key ) {
+				$ordered_entries[] = array(
+					'__raw_group' => $group,
+				);
+				continue;
+			}
+
+			$group_map[ $group_key ] = $group;
+
+			if ( ! in_array( $group_key, $ordered_keys, true ) ) {
+				$ordered_entries[] = $group_key;
+				$ordered_keys[]    = $group_key;
+			}
 		}
 
-		return $groups;
+		$merged_groups = array();
+
+		foreach ( $ordered_entries as $entry ) {
+			if ( is_array( $entry ) && isset( $entry['__raw_group'] ) ) {
+				$merged_groups[] = $entry['__raw_group'];
+				continue;
+			}
+
+			if ( isset( $group_map[ $entry ] ) ) {
+				$merged_groups[] = $group_map[ $entry ];
+				unset( $group_map[ $entry ] );
+			}
+		}
+
+		foreach ( $group_map as $group ) {
+			$merged_groups[] = $group;
+		}
+
+		return $merged_groups;
 	}
 
 	/**

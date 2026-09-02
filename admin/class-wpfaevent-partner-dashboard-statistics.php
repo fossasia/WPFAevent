@@ -66,8 +66,7 @@ class Wpfaevent_Partner_Dashboard_Statistics {
 		}
 
 		if ( 'sponsor' === $type ) {
-			$raw_groups = $this->store->read_dashboard_json_file( 'sponsors-' . $event_id . '.json', array() );
-			$raw_groups = is_array( $raw_groups ) ? $raw_groups : array();
+			$raw_groups = $this->load_sponsor_groups( $event_id );
 			$sponsors   = array();
 
 			foreach ( $raw_groups as $group ) {
@@ -91,6 +90,22 @@ class Wpfaevent_Partner_Dashboard_Statistics {
 
 			return is_array( $exhibitors ) ? $exhibitors : array();
 		}
+	}
+
+	/**
+	 * Load sponsor groups for an event.
+	 *
+	 * @param int $event_id Event ID.
+	 * @return array
+	 */
+	public function load_sponsor_groups( $event_id ) {
+		if ( ! $event_id ) {
+			return array();
+		}
+
+		$raw_groups = $this->store->read_dashboard_json_file( 'sponsors-' . $event_id . '.json', array() );
+
+		return is_array( $raw_groups ) ? $raw_groups : array();
 	}
 
 	/**

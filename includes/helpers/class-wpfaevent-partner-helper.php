@@ -151,6 +151,42 @@ class Wpfaevent_Partner_Helper {
 	}
 
 	/**
+	 * Normalize a sponsor group key without changing the existing stored format.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $value Source key or group name.
+	 * @return string
+	 */
+	public static function normalize_sponsor_group_key( $value ) {
+		return sanitize_key( (string) $value );
+	}
+
+	/**
+	 * Build a stable sponsor group key from stored group metadata.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $group Sponsor group.
+	 * @return string
+	 */
+	public static function get_sponsor_group_key( $group ) {
+		if ( ! is_array( $group ) ) {
+			return '';
+		}
+
+		if ( ! empty( $group['eventyay_group_key'] ) ) {
+			return self::normalize_sponsor_group_key( $group['eventyay_group_key'] );
+		}
+
+		if ( ! empty( $group['group_name'] ) ) {
+			return self::normalize_sponsor_group_key( $group['group_name'] );
+		}
+
+		return '';
+	}
+
+	/**
 	 * Build a partner detail URL.
 	 *
 	 * @since 1.0.0

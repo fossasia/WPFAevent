@@ -263,11 +263,13 @@ class Wpfaevent {
 		$this->loader->add_action( 'admin_post_wpfaevent_sync_event_dashboard', $event_dashboard_page, 'handle_sync' );
 		$this->loader->add_action( 'wp_ajax_wpfaevent_sync_event_dashboard', $event_dashboard_page, 'handle_sync_ajax' );
 		$this->loader->add_action( 'wp_ajax_wpfaevent_save_dashboard_field', $event_dashboard_page, 'handle_save_field_ajax' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_save_featured_speakers', $event_dashboard_page, 'handle_save_featured_speakers_ajax' );
 
 		$partner_dashboard = new Wpfaevent_Partner_Dashboard();
 		$this->loader->add_action( 'admin_menu', $partner_dashboard, 'register_menu_pages' );
 		$this->loader->add_action( 'admin_post_wpfaevent_save_partner', $partner_dashboard, 'handle_save_partner' );
 		$this->loader->add_action( 'admin_post_wpfaevent_delete_partner', $partner_dashboard, 'handle_delete_partner' );
+		$this->loader->add_action( 'admin_post_wpfaevent_reorder_sponsor_groups', $partner_dashboard, 'handle_reorder_sponsor_groups' );
 
 		// Add settings link to the plugins page.
 		$plugin_basename = plugin_basename( dirname( __DIR__ ) . '/wpfaevent.php' );

@@ -77,6 +77,7 @@ class Wpfaevent_Event_Dashboard_Data {
 				$is_featured  = in_array( $sp_post->ID, $featured_ids, true );
 
 				$speakers_list[] = array(
+					'id'           => $sp_post->ID,
 					'name'         => $sp_post->post_title,
 					'title'        => $position,
 					'organization' => $organization,
@@ -432,7 +433,29 @@ class Wpfaevent_Event_Dashboard_Data {
 				continue;
 			}
 
+			$speaker_id = 0;
+			if ( ! empty( $speaker['eventyay_speaker_id'] ) && class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ) {
+				$found = Wpfaevent_Event_Speaker_Relation_Manager::find_eventyay_speaker_post_ids( $speaker['eventyay_speaker_id'], $speaker['name'] );
+				if ( ! empty( $found ) ) {
+					$speaker_id = (int) $found[0];
+				}
+			}
+			if ( ! $speaker_id ) {
+				$posts = get_posts(
+					array(
+						'post_type'      => 'wpfa_speaker',
+						'title'          => $speaker['name'],
+						'posts_per_page' => 1,
+						'fields'         => 'ids',
+					)
+				);
+				if ( ! empty( $posts ) ) {
+					$speaker_id = (int) $posts[0];
+				}
+			}
+
 			$normalized[] = array(
+				'id'           => $speaker_id,
 				'name'         => sanitize_text_field( $speaker['name'] ),
 				'title'        => ! empty( $speaker['title'] ) ? sanitize_text_field( $speaker['title'] ) : '',
 				'organization' => ! empty( $speaker['organization'] ) ? sanitize_text_field( $speaker['organization'] ) : '',

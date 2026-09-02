@@ -146,7 +146,7 @@ class Wpfaevent_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'js/wpfaevent-admin.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_script( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'js/wpfaevent-admin.js', array( 'jquery', 'jquery-ui-sortable' ), $this->version, false );
 	}
 
 	/**
