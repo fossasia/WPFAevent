@@ -2,7 +2,7 @@
     "name": "fossasia/wpfaevent",
     "description": "WPFA Event WordPress plugin",
     "type": "wordpress-plugin",
-    "license": "Apache-2.0",
+    "license": "GPL-2.0-or-later",
 
     "require-dev": {
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
