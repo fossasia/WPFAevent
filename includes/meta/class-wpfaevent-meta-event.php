@@ -726,6 +726,67 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
+	 * Match imported dashboard speaker rows to linked speaker posts.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array<int>        $speaker_ids        Linked speaker post IDs.
+	 * @param array<int, array> $dashboard_speakers Imported dashboard speaker rows.
+	 * @return array<int, int> Dashboard row index to speaker post ID.
+	 */
+	public static function map_dashboard_speakers_to_post_ids( $speaker_ids, $dashboard_speakers ) {
+		$speaker_ids = self::sanitize_post_id_list( $speaker_ids );
+
+		if ( ! is_array( $dashboard_speakers ) || empty( $dashboard_speakers ) ) {
+			return array();
+		}
+
+		$eventyay_map = array();
+		$name_map     = array();
+
+		foreach ( $speaker_ids as $speaker_id ) {
+			if ( 'wpfa_speaker' !== get_post_type( $speaker_id ) ) {
+				continue;
+			}
+
+			$eventyay_id = sanitize_text_field( get_post_meta( $speaker_id, '_wpfa_eventyay_speaker_id', true ) );
+
+			if ( '' !== $eventyay_id ) {
+				$eventyay_map[ $eventyay_id ] = $speaker_id;
+			}
+
+			$name_key = sanitize_title( get_the_title( $speaker_id ) );
+
+			if ( '' !== $name_key ) {
+				$name_map[ $name_key ] = $speaker_id;
+			}
+		}
+
+		$matches = array();
+
+		foreach ( array_values( $dashboard_speakers ) as $dashboard_index => $dashboard_speaker ) {
+			if ( ! is_array( $dashboard_speaker ) ) {
+				continue;
+			}
+
+			$eventyay_id = isset( $dashboard_speaker['eventyay_speaker_id'] ) && is_scalar( $dashboard_speaker['eventyay_speaker_id'] )
+				? sanitize_text_field( (string) $dashboard_speaker['eventyay_speaker_id'] )
+				: '';
+			$name_key    = isset( $dashboard_speaker['name'] ) && is_scalar( $dashboard_speaker['name'] )
+				? sanitize_title( (string) $dashboard_speaker['name'] )
+				: '';
+
+			if ( '' !== $eventyay_id && isset( $eventyay_map[ $eventyay_id ] ) ) {
+				$matches[ $dashboard_index ] = (int) $eventyay_map[ $eventyay_id ];
+			} elseif ( '' !== $name_key && isset( $name_map[ $name_key ] ) ) {
+				$matches[ $dashboard_index ] = (int) $name_map[ $name_key ];
+			}
+		}
+
+		return $matches;
+	}
+
+	/**
 	 * Resolve featured speaker IDs from explicit event meta and dashboard speaker flags.
 	 *
 	 * @since 1.0.0
@@ -738,42 +799,34 @@ class Wpfaevent_Meta_Event {
 	public static function resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers = array() ) {
 		$event_id    = absint( $event_id );
 		$speaker_ids = self::sanitize_post_id_list( $speaker_ids );
-		$featured    = array_values( array_intersect( self::get_event_featured_speaker_ids( $event_id ), $speaker_ids ) );
+
+		$is_manual = 'yes' === get_post_meta( $event_id, 'wpfa_event_featured_speakers_manual', true );
+
+		if ( $is_manual ) {
+			$featured = self::get_event_featured_speaker_ids( $event_id );
+			$featured = array_values( array_intersect( $featured, $speaker_ids ) );
+			$featured = array_values(
+				array_filter(
+					$featured,
+					static function ( $speaker_id ) {
+						return 'wpfa_speaker' === get_post_type( $speaker_id );
+					}
+				)
+			);
+			return apply_filters( 'wpfa_event_featured_speaker_ids', $featured, $event_id, $speaker_ids, $dashboard_speakers );
+		}
+
+		$featured = array_values( array_intersect( self::get_event_featured_speaker_ids( $event_id ), $speaker_ids ) );
 
 		if ( is_array( $dashboard_speakers ) && ! empty( $dashboard_speakers ) ) {
-			$eventyay_map = array();
-			$name_map     = array();
+			$dashboard_speaker_ids = self::map_dashboard_speakers_to_post_ids( $speaker_ids, $dashboard_speakers );
 
-			foreach ( $speaker_ids as $speaker_id ) {
-				$eventyay_id = sanitize_text_field( get_post_meta( $speaker_id, '_wpfa_eventyay_speaker_id', true ) );
-
-				if ( '' !== $eventyay_id ) {
-					$eventyay_map[ $eventyay_id ] = $speaker_id;
-				}
-
-				$name_key = sanitize_title( get_the_title( $speaker_id ) );
-
-				if ( '' !== $name_key ) {
-					$name_map[ $name_key ] = $speaker_id;
-				}
-			}
-
-			foreach ( $dashboard_speakers as $dashboard_speaker ) {
+			foreach ( array_values( $dashboard_speakers ) as $dashboard_index => $dashboard_speaker ) {
 				if ( ! is_array( $dashboard_speaker ) || empty( $dashboard_speaker['featured'] ) ) {
 					continue;
 				}
 
-				$matched_id = 0;
-
-				if ( ! empty( $dashboard_speaker['eventyay_speaker_id'] ) && isset( $eventyay_map[ $dashboard_speaker['eventyay_speaker_id'] ] ) ) {
-					$matched_id = (int) $eventyay_map[ $dashboard_speaker['eventyay_speaker_id'] ];
-				} elseif ( ! empty( $dashboard_speaker['name'] ) ) {
-					$name_key = sanitize_title( $dashboard_speaker['name'] );
-
-					if ( isset( $name_map[ $name_key ] ) ) {
-						$matched_id = (int) $name_map[ $name_key ];
-					}
-				}
+				$matched_id = isset( $dashboard_speaker_ids[ $dashboard_index ] ) ? $dashboard_speaker_ids[ $dashboard_index ] : 0;
 
 				if ( $matched_id && ! in_array( $matched_id, $featured, true ) ) {
 					$featured[] = $matched_id;
