@@ -968,7 +968,11 @@ class Wpfaevent_Admin {
 		}
 
 		if ( $term_id && $event_id && 'wpfa_event' === get_post_type( $event_id ) ) {
-			wp_set_post_terms( $event_id, array( $term_id ), 'wpfa_event_track', true );
+			$result = wp_set_post_terms( $event_id, array( $term_id ), 'wpfa_event_track', true );
+
+			if ( is_wp_error( $result ) ) {
+				wp_delete_term( $term_id, 'wpfa_event_track' );
+			}
 		}
 	}
 }
