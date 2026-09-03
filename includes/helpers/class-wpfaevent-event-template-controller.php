@@ -1001,7 +1001,22 @@ class Wpfaevent_Event_Template_Controller {
 			$custom_sections[ $custom_tab['slug'] ] = $custom_tab['title'];
 		}
 
-		$has_speakers = $show_speakers && ( ! empty( $speaker_ids ) || ! empty( $dashboard_speakers ) );
+		// Both speaker sources skip entries they cannot render, so count only those that survive.
+		$renderable_speaker_ids = array_filter(
+			$speaker_ids,
+			static function ( $speaker_id ) {
+				return 'wpfa_speaker' === get_post_type( $speaker_id ) && 'publish' === get_post_status( $speaker_id );
+			}
+		);
+
+		$renderable_dashboard_speakers = array_filter(
+			$dashboard_speakers,
+			static function ( $dashboard_speaker ) {
+				return is_array( $dashboard_speaker ) && ! empty( $dashboard_speaker['name'] );
+			}
+		);
+
+		$has_speakers = $show_speakers && ( ! empty( $renderable_speaker_ids ) || ! empty( $renderable_dashboard_speakers ) );
 		$has_schedule = $show_schedule && ! empty( $schedule_items );
 
 		$wpfa_event_nav_context = array(

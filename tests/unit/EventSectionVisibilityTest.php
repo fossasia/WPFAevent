@@ -122,6 +122,41 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Linked speakers that are no longer published render no cards, so the section stays hidden.
+	 */
+	public function test_event_page_hides_speakers_section_when_linked_speakers_are_unpublished() {
+		$speaker_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Draft Speaker',
+				'post_type'   => 'wpfa_speaker',
+				'post_status' => 'draft',
+			)
+		);
+
+		update_post_meta( $this->event_id, 'wpfa_event_speakers', array( $speaker_id ) );
+
+		$output = $this->render_event_template();
+
+		$this->assertStringNotContainsString( 'id="wpfa-event-speakers-title"', $output );
+	}
+
+	/**
+	 * Dashboard speaker rows without a name render no cards, so the section stays hidden.
+	 */
+	public function test_event_page_hides_speakers_section_when_dashboard_speakers_have_no_name() {
+		$this->write_dashboard_json(
+			'speakers',
+			array(
+				array( 'position' => 'Engineer' ),
+			)
+		);
+
+		$output = $this->render_event_template();
+
+		$this->assertStringNotContainsString( 'id="wpfa-event-speakers-title"', $output );
+	}
+
+	/**
 	 * Store a single-session dashboard schedule for the event fixture.
 	 */
 	private function write_schedule_fixture() {
