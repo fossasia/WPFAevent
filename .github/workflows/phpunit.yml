@@ -1,0 +1,83 @@
+name: PHPUnit
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  file-filter:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      php: ${{ steps.filter.outputs.php }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            php:
+              - '**/*.php'
+              - 'composer.json'
+              - 'phpunit.xml.dist'
+              - 'bin/install-wp-tests.sh'
+              - '.github/workflows/phpunit.yml'
+
+  phpunit:
+    name: PHPUnit Test Suite
+    needs: file-filter
+    if: |
+      always() &&
+      (github.event_name == 'push' || needs.file-filter.outputs.php == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      # The database is intentionally left uncreated so that
+      # bin/install-wp-tests.sh creates it without prompting to drop it.
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: wordpress_test_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli
+          coverage: none
+          tools: composer
+
+      - name: Install MySQL client
+        run: sudo apt-get update && sudo apt-get install -y mysql-client
+
+      - name: Install PHP dependencies
+        uses: ramsey/composer-install@v4
+        with:
+          composer-options: '--prefer-dist --optimize-autoloader --no-scripts'
+
+      - name: Install the WordPress test suite
+        run: bash bin/install-wp-tests.sh wordpress_test root wordpress_test_password 127.0.0.1 latest
+
+      - name: Run PHPUnit
+        run: composer test
