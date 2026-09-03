@@ -1001,6 +1001,9 @@ class Wpfaevent_Event_Template_Controller {
 			$custom_sections[ $custom_tab['slug'] ] = $custom_tab['title'];
 		}
 
+		$has_speakers = $show_speakers && ( ! empty( $speaker_ids ) || ! empty( $dashboard_speakers ) );
+		$has_schedule = $show_schedule && ! empty( $schedule_items );
+
 		$wpfa_event_nav_context = array(
 			'show_about'      => $show_about,
 			'show_speakers'   => $show_speakers,
@@ -1009,8 +1012,8 @@ class Wpfaevent_Event_Template_Controller {
 			'show_exhibitors' => $show_exhibitors,
 			'has_about'       => $show_about && '' !== trim( $about_content ),
 			'has_tickets'     => $show_ticket_section,
-			'has_speakers'    => $show_speakers && ( ! empty( $speaker_ids ) || ! empty( $dashboard_speakers ) ),
-			'has_schedule'    => $show_schedule && ! empty( $schedule_items ),
+			'has_speakers'    => $has_speakers,
+			'has_schedule'    => $has_schedule,
 			'has_sponsors'    => $show_sponsors && ! empty( $visible_sponsor_groups ),
 			'has_exhibitors'  => $show_exhibitors && ! empty( $visible_exhibitors ),
 			'has_venue'       => '' !== trim( wp_strip_all_tags( $venue_information ) ),
@@ -1074,6 +1077,8 @@ class Wpfaevent_Event_Template_Controller {
 			'show_schedule'                            => $show_schedule,
 			'show_sponsors'                            => $show_sponsors,
 			'show_exhibitors'                          => $show_exhibitors,
+			'has_speakers'                             => $has_speakers,
+			'has_schedule'                             => $has_schedule,
 			'venue_information'                        => $venue_information,
 			'event_additional_url'                     => $event_additional_url,
 			'custom_tabs'                              => $custom_tabs,
@@ -1167,6 +1172,8 @@ class Wpfaevent_Event_Template_Controller {
 			'show_schedule'                            => false,
 			'show_sponsors'                            => false,
 			'show_exhibitors'                          => false,
+			'has_speakers'                             => false,
+			'has_schedule'                             => false,
 			'venue_information'                        => '',
 			'event_additional_url'                     => '',
 			'custom_tabs'                              => array(),
