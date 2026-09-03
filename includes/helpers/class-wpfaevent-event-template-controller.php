@@ -169,13 +169,22 @@ class Wpfaevent_Event_Template_Controller {
 
 			$linked_speaker_ids = $normalize_post_id_list( array_merge( $speaker_ids, $reverse_speaker_ids ) );
 
+			if ( empty( $linked_speaker_ids ) ) {
+				return array();
+			}
+
 			// The forward meta list is unfiltered, and templates skip anything not publicly viewable.
-			return array_values(
-				array_filter(
-					$linked_speaker_ids,
-					static function ( $speaker_id ) {
-						return 'wpfa_speaker' === get_post_type( $speaker_id ) && 'publish' === get_post_status( $speaker_id );
-					}
+			return $normalize_post_id_list(
+				get_posts(
+					array(
+						'post_type'      => 'wpfa_speaker',
+						'post_status'    => 'publish',
+						'post__in'       => $linked_speaker_ids,
+						'orderby'        => 'post__in',
+						'posts_per_page' => -1,
+						'fields'         => 'ids',
+						'no_found_rows'  => true,
+					)
 				)
 			);
 		};

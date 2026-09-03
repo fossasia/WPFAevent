@@ -200,6 +200,24 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Published speakers belonging to no event must not leak into an unrelated event.
+	 */
+	public function test_event_page_ignores_speakers_that_are_not_linked_to_the_event() {
+		$this->factory->post->create(
+			array(
+				'post_title'  => 'Unrelated Speaker',
+				'post_type'   => 'wpfa_speaker',
+				'post_status' => 'publish',
+			)
+		);
+
+		$output = $this->render_event_template();
+
+		$this->assertStringNotContainsString( 'id="wpfa-event-speakers-title"', $output );
+		$this->assertStringNotContainsString( 'Unrelated Speaker', $output );
+	}
+
+	/**
 	 * Store a single-session dashboard schedule for the event fixture.
 	 */
 	private function write_schedule_fixture() {
