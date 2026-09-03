@@ -1012,7 +1012,12 @@ class Wpfaevent_Event_Template_Controller {
 		$renderable_dashboard_speakers = array_filter(
 			$dashboard_speakers,
 			static function ( $dashboard_speaker ) {
-				return is_array( $dashboard_speaker ) && ! empty( $dashboard_speaker['name'] );
+				if ( ! is_array( $dashboard_speaker ) || ! isset( $dashboard_speaker['name'] ) || ! is_scalar( $dashboard_speaker['name'] ) ) {
+					return false;
+				}
+
+				// Match the card partial, which displays the sanitized name.
+				return '' !== sanitize_text_field( (string) $dashboard_speaker['name'] );
 			}
 		);
 

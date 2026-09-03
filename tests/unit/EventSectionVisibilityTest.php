@@ -157,6 +157,22 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * A dashboard speaker name that sanitizes away is not a speaker.
+	 */
+	public function test_event_page_hides_speakers_section_when_dashboard_speaker_names_are_blank() {
+		$this->write_dashboard_json(
+			'speakers',
+			array(
+				array( 'name' => '   ' ),
+			)
+		);
+
+		$output = $this->render_event_template();
+
+		$this->assertStringNotContainsString( 'id="wpfa-event-speakers-title"', $output );
+	}
+
+	/**
 	 * Store a single-session dashboard schedule for the event fixture.
 	 */
 	private function write_schedule_fixture() {
