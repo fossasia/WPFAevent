@@ -534,6 +534,37 @@
 	margin-bottom: 0;
 }
 
+.wpfaevent .wpfa-event-detail .wpfa-featured-speakers-grid {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 9) {
+	display: none !important;
+}
+
+.wpfaevent .wpfa-event-featured-speakers-toggle {
+	background: var(--event-primary);
+	border: 1px solid var(--event-primary);
+	border-radius: var(--event-radius);
+	color: #fff;
+	cursor: pointer;
+	display: block;
+	font: inherit;
+	font-weight: 800;
+	margin: 24px auto 0;
+	padding: 10px 20px;
+}
+
+.wpfaevent .wpfa-event-featured-speakers-toggle:hover,
+.wpfaevent .wpfa-event-featured-speakers-toggle:focus-visible {
+	background: var(--event-primary-dark);
+	border-color: var(--event-primary-dark);
+}
+
+.wpfaevent .wpfa-event-featured-speakers-toggle[hidden] {
+	display: none;
+}
+
 .wpfaevent .wpfa-event-detail .wpfa-speaker-card {
 	background: #fff;
 	border: 1px solid var(--event-line);
@@ -555,6 +586,48 @@
 
 .wpfaevent .wpfa-event-featured-speakers {
 	margin-bottom: 32px;
+}
+
+@media (min-width: 769px) {
+	.wpfaevent .wpfa-event-detail .wpfa-featured-speakers-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 9) {
+		display: flex !important;
+	}
+
+	.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 17) {
+		display: none !important;
+	}
+}
+
+@media (min-width: 1025px) {
+	.wpfaevent .wpfa-event-detail .wpfa-featured-speakers-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 17) {
+		display: flex !important;
+	}
+
+	.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 25) {
+		display: none !important;
+	}
+}
+
+@media (min-width: 1441px) {
+	.wpfaevent .wpfa-event-detail .wpfa-featured-speakers-grid {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+
+	.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 25) {
+		display: flex !important;
+	}
+
+	.wpfaevent .wpfa-event-featured-speakers--collapsed .wpfa-featured-speakers-grid > .wpfa-speaker-card:nth-child(n + 33) {
+		display: none !important;
+	}
 }
 
 .wpfaevent .wpfa-event-featured-speakers h3,

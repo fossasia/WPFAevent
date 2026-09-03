@@ -166,6 +166,12 @@ if ( ! empty( $featured_speaker_ids ) ) {
 			$speaker_a_is_featured = in_array( absint( $speaker_a ), $featured_speaker_ids, true );
 			$speaker_b_is_featured = in_array( absint( $speaker_b ), $featured_speaker_ids, true );
 
+			if ( $speaker_a_is_featured && $speaker_b_is_featured ) {
+				$index_a = array_search( absint( $speaker_a ), $featured_speaker_ids, true );
+				$index_b = array_search( absint( $speaker_b ), $featured_speaker_ids, true );
+				return $index_a <=> $index_b;
+			}
+
 			if ( $speaker_a_is_featured !== $speaker_b_is_featured ) {
 				return $speaker_a_is_featured ? -1 : 1;
 			}

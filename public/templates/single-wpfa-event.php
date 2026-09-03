@@ -445,14 +445,14 @@ if ( $show_ticket_widget ) {
 						<div>
 							<h2 id="wpfa-event-speakers-title"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h2>
 						</div>
-						<a href="<?php echo esc_url( $speakers_url ); ?>"><?php esc_html_e( 'Open Event Speaker List', 'wpfaevent' ); ?></a>
+						<a href="<?php echo esc_url( $speakers_url ); ?>"><?php esc_html_e( 'Open Speaker List', 'wpfaevent' ); ?></a>
 					</div>
 
 					<?php if ( ! empty( $speaker_ids ) ) : ?>
 						<?php if ( $featured_speaker_count ) : ?>
-							<div class="wpfa-event-featured-speakers">
+							<div class="wpfa-event-featured-speakers wpfa-event-featured-speakers--collapsed">
 								<h3><?php esc_html_e( 'Featured Speakers', 'wpfaevent' ); ?></h3>
-								<div class="wpfa-speakers-grid wpfa-featured-speakers-grid">
+								<div id="wpfa-event-featured-speakers-grid" class="wpfa-speakers-grid wpfa-featured-speakers-grid">
 									<?php
 									$wpfa_hide_speaker_card_admin_actions = true;
 									$wpfa_schedule_display_timezone       = $selected_schedule_timezone;
@@ -471,6 +471,11 @@ if ( $show_ticket_widget ) {
 									unset( $wpfa_speaker_card_variant );
 									?>
 								</div>
+								<?php if ( 8 < $featured_speaker_count ) : ?>
+									<button type="button" class="wpfa-event-featured-speakers-toggle" aria-controls="wpfa-event-featured-speakers-grid" aria-expanded="false" data-expanded-label="<?php esc_attr_e( 'Show Less', 'wpfaevent' ); ?>">
+										<?php esc_html_e( 'View All', 'wpfaevent' ); ?>
+									</button>
+								<?php endif; ?>
 							</div>
 						<?php endif; ?>
 
@@ -508,9 +513,9 @@ if ( $show_ticket_widget ) {
 						<?php endif; ?>
 					<?php elseif ( ! empty( $dashboard_speakers ) ) : ?>
 						<?php if ( ! empty( $dashboard_featured_speakers ) ) : ?>
-							<div class="wpfa-event-featured-speakers">
+							<div class="wpfa-event-featured-speakers wpfa-event-featured-speakers--collapsed">
 								<h3><?php esc_html_e( 'Featured Speakers', 'wpfaevent' ); ?></h3>
-								<div class="wpfa-speakers-grid wpfa-featured-speakers-grid">
+								<div id="wpfa-event-featured-speakers-grid" class="wpfa-speakers-grid wpfa-featured-speakers-grid">
 									<?php foreach ( $dashboard_featured_speakers as $speaker ) : ?>
 										<?php
 										$wpfa_dashboard_speaker_is_featured = true;
@@ -521,6 +526,11 @@ if ( $show_ticket_widget ) {
 										?>
 									<?php endforeach; ?>
 								</div>
+								<?php if ( 8 < count( $dashboard_featured_speakers ) ) : ?>
+									<button type="button" class="wpfa-event-featured-speakers-toggle" aria-controls="wpfa-event-featured-speakers-grid" aria-expanded="false" data-expanded-label="<?php esc_attr_e( 'Show Less', 'wpfaevent' ); ?>">
+										<?php esc_html_e( 'View All', 'wpfaevent' ); ?>
+									</button>
+								<?php endif; ?>
 							</div>
 
 							<?php if ( ! empty( $dashboard_regular_speakers ) ) : ?>

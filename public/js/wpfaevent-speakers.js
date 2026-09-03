@@ -137,7 +137,6 @@ const wpfaSpeakers = (function () {
 			const link = card.querySelector('.wpfa-speaker-name a')?.href || '';
 			const speakerId = card.dataset.speakerId || '';
 
-
 			return {
 				id: speakerId,
 				name,
@@ -434,7 +433,7 @@ const wpfaSpeakers = (function () {
 		// Show filtered speakers
 		filteredSpeakers.forEach((speaker) => {
 			if (speaker.element) {
-				speaker.element.style.display = 'block';
+				speaker.element.style.removeProperty('display');
 			}
 		});
 
