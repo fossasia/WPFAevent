@@ -116,6 +116,7 @@ class Wpfaevent_Admin_Event_Metabox {
 		$lead_text  = get_post_meta( $post->ID, 'wpfa_event_lead_text', true );
 		$reg_link   = get_post_meta( $post->ID, 'wpfa_event_registration_link', true );
 		$cfs_link   = get_post_meta( $post->ID, 'wpfa_event_cfs_link', true );
+		$colors     = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_colors( $post->ID ) : array();
 		$speakers   = $this->get_event_speaker_ids( $post->ID );
 
 		?>
@@ -196,6 +197,20 @@ class Wpfaevent_Admin_Event_Metabox {
 				<th><label for="wpfa_event_cfs_link"><?php esc_html_e( 'Call for Speakers Link', 'wpfaevent' ); ?></label></th>
 				<td><input type="url" id="wpfa_event_cfs_link" name="wpfa_event_cfs_link" value="<?php echo esc_attr( $cfs_link ); ?>" class="regular-text" placeholder="https://eventyay.com/e/.../cfs"></td>
 			</tr>
+			<?php if ( class_exists( 'Wpfaevent_Meta_Event' ) ) : ?>
+				<tr>
+					<th><?php esc_html_e( 'Event Colors', 'wpfaevent' ); ?></th>
+					<td>
+						<?php foreach ( Wpfaevent_Meta_Event::get_event_color_meta_fields() as $meta_key => $label ) : ?>
+							<p>
+								<label for="<?php echo esc_attr( $meta_key ); ?>"><?php echo esc_html( $label ); ?></label><br>
+								<input type="text" id="<?php echo esc_attr( $meta_key ); ?>" name="<?php echo esc_attr( $meta_key ); ?>" value="<?php echo esc_attr( isset( $colors[ $meta_key ] ) ? $colors[ $meta_key ] : '' ); ?>" class="regular-text" placeholder="#D51007">
+							</p>
+						<?php endforeach; ?>
+						<p class="description"><?php esc_html_e( 'Enter a hex or RGB color, for example #F97316. Imported Eventyay colors can be overridden here.', 'wpfaevent' ); ?></p>
+					</td>
+				</tr>
+			<?php endif; ?>
 			<tr>
 				<th><label for="wpfa_event_speakers"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></label></th>
 				<td>
@@ -802,6 +817,17 @@ class Wpfaevent_Admin_Event_Metabox {
 				}
 
 				update_post_meta( $post_id, $field, $value );
+			}
+		}
+
+		if ( class_exists( 'Wpfaevent_Meta_Event' ) ) {
+			foreach ( array_keys( Wpfaevent_Meta_Event::get_event_color_meta_fields() ) as $meta_key ) {
+				if ( ! isset( $_POST[ $meta_key ] ) ) {
+					continue;
+				}
+
+				$color = Wpfaevent_Meta_Event::sanitize_color_value( sanitize_text_field( wp_unslash( $_POST[ $meta_key ] ) ) );
+				$this->update_or_delete_post_meta( $post_id, $meta_key, $color );
 			}
 		}
 
