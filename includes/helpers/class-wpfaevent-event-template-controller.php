@@ -167,7 +167,17 @@ class Wpfaevent_Event_Template_Controller {
 				)
 			);
 
-			return $normalize_post_id_list( array_merge( $speaker_ids, $reverse_speaker_ids ) );
+			$linked_speaker_ids = $normalize_post_id_list( array_merge( $speaker_ids, $reverse_speaker_ids ) );
+
+			// The forward meta list is unfiltered, and templates skip anything not publicly viewable.
+			return array_values(
+				array_filter(
+					$linked_speaker_ids,
+					static function ( $speaker_id ) {
+						return 'wpfa_speaker' === get_post_type( $speaker_id ) && 'publish' === get_post_status( $speaker_id );
+					}
+				)
+			);
 		};
 
 		$format_event_date = static function ( $date ) {
@@ -1001,14 +1011,7 @@ class Wpfaevent_Event_Template_Controller {
 			$custom_sections[ $custom_tab['slug'] ] = $custom_tab['title'];
 		}
 
-		// Both speaker sources skip entries they cannot render, so count only those that survive.
-		$renderable_speaker_ids = array_filter(
-			$speaker_ids,
-			static function ( $speaker_id ) {
-				return 'wpfa_speaker' === get_post_type( $speaker_id ) && 'publish' === get_post_status( $speaker_id );
-			}
-		);
-
+		// Dashboard rows without a displayable name render no card, so they are not speakers.
 		$renderable_dashboard_speakers = array_filter(
 			$dashboard_speakers,
 			static function ( $dashboard_speaker ) {
@@ -1021,7 +1024,7 @@ class Wpfaevent_Event_Template_Controller {
 			}
 		);
 
-		$has_speakers = $show_speakers && ( ! empty( $renderable_speaker_ids ) || ! empty( $renderable_dashboard_speakers ) );
+		$has_speakers = $show_speakers && ( ! empty( $speaker_ids ) || ! empty( $renderable_dashboard_speakers ) );
 		$has_schedule = $show_schedule && ! empty( $schedule_items );
 
 		$wpfa_event_nav_context = array(

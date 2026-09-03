@@ -173,6 +173,33 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * An unpublished linked speaker must not shadow renderable dashboard speakers.
+	 */
+	public function test_event_page_renders_dashboard_speakers_despite_unpublished_linked_speaker() {
+		$speaker_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Draft Speaker',
+				'post_type'   => 'wpfa_speaker',
+				'post_status' => 'draft',
+			)
+		);
+
+		update_post_meta( $this->event_id, 'wpfa_event_speakers', array( $speaker_id ) );
+
+		$this->write_dashboard_json(
+			'speakers',
+			array(
+				array( 'name' => 'Dashboard Speaker' ),
+			)
+		);
+
+		$output = $this->render_event_template();
+
+		$this->assertStringContainsString( 'id="wpfa-event-speakers-title"', $output );
+		$this->assertStringContainsString( 'Dashboard Speaker', $output );
+	}
+
+	/**
 	 * Store a single-session dashboard schedule for the event fixture.
 	 */
 	private function write_schedule_fixture() {
