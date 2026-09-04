@@ -49,6 +49,8 @@ $show_speakers                            = $event_data['show_speakers'];
 $show_schedule                            = $event_data['show_schedule'];
 $show_sponsors                            = $event_data['show_sponsors'];
 $show_exhibitors                          = $event_data['show_exhibitors'];
+$has_speakers                             = $event_data['has_speakers'];
+$has_schedule                             = $event_data['has_schedule'];
 $venue_information                        = $event_data['venue_information'];
 $event_additional_url                     = $event_data['event_additional_url'];
 $custom_tabs                              = $event_data['custom_tabs'];
@@ -438,7 +440,7 @@ if ( $show_ticket_widget ) {
 			</section>
 		<?php endif; ?>
 
-		<?php if ( $show_speakers ) : ?>
+		<?php if ( $has_speakers ) : ?>
 			<section id="speakers" class="wpfa-event-section wpfa-event-speakers" aria-labelledby="wpfa-event-speakers-title">
 				<div class="container">
 					<div class="wpfa-event-section-head">
@@ -574,14 +576,12 @@ if ( $show_ticket_widget ) {
 								</p>
 							<?php endif; ?>
 						<?php endif; ?>
-					<?php else : ?>
-						<p class="wpfa-empty-state"><?php esc_html_e( 'No speakers have been imported for this event yet.', 'wpfaevent' ); ?></p>
 					<?php endif; ?>
 				</div>
 			</section>
 		<?php endif; ?>
 
-		<?php if ( $show_schedule ) : ?>
+		<?php if ( $has_schedule ) : ?>
 			<section id="schedule-overview" class="wpfa-event-section wpfa-event-schedule" aria-labelledby="wpfa-event-schedule-title">
 				<div class="container">
 					<div class="wpfa-event-section-head">
@@ -907,10 +907,8 @@ if ( $show_ticket_widget ) {
 								?>
 							</p>
 						<?php endif; ?>
-					<?php elseif ( ! empty( $schedule_items ) && $has_schedule_filters && ( $current_day_filter || $current_track_filter || $current_room_filter ) && empty( $filtered_schedule_items ) ) : ?>
+					<?php elseif ( $has_schedule_filters && ( $current_day_filter || $current_track_filter || $current_room_filter ) && empty( $filtered_schedule_items ) ) : ?>
 						<p class="wpfa-empty-state"><?php esc_html_e( 'No sessions match the selected filters.', 'wpfaevent' ); ?></p>
-					<?php else : ?>
-						<p class="wpfa-empty-state"><?php esc_html_e( 'No schedule has been imported for this event yet.', 'wpfaevent' ); ?></p>
 					<?php endif; ?>
 				</div>
 			</section>
