@@ -644,12 +644,12 @@ class Wpfaevent_Meta_Event {
 			return '#FFFFFF';
 		}
 
-		$luminance = 0;
+		$coefficients = array( 0.2126, 0.7152, 0.0722 );
+		$luminance    = 0;
 		foreach ( $rgb as $index => $channel ) {
-			$channel    = $channel / 255;
-			$channel    = $channel <= 0.03928 ? $channel / 12.92 : pow( ( $channel + 0.055 ) / 1.055, 2.4 );
-			$coefficient = array( 0.2126, 0.7152, 0.0722 );
-			$luminance  += $channel * $coefficient[ $index ];
+			$channel   = $channel / 255;
+			$channel   = $channel <= 0.03928 ? $channel / 12.92 : pow( ( $channel + 0.055 ) / 1.055, 2.4 );
+			$luminance += $channel * $coefficients[ $index ];
 		}
 
 		return $luminance > 0.179 ? '#000000' : '#FFFFFF';
