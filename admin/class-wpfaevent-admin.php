@@ -967,7 +967,7 @@ class Wpfaevent_Admin {
 			}
 		}
 
-		if ( $term_id && $event_id && 'wpfa_event' === get_post_type( $event_id ) ) {
+		if ( $term_id && $event_id && 'wpfa_event' === get_post_type( $event_id ) && current_user_can( 'edit_post', $event_id ) ) {
 			$result = wp_set_post_terms( $event_id, array( $term_id ), 'wpfa_event_track', true );
 
 			if ( is_wp_error( $result ) ) {
