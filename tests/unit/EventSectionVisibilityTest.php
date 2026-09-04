@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for empty event section visibility (Issue #273).
+ * Unit tests for empty event section visibility.
  *
  * @package Wpfaevent
  */
