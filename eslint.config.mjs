@@ -16,7 +16,6 @@ export default [
 	},
 	{
 		ignores: [
-
 			'node_modules/**',
 			'vendor/**',
 			'build/**',
