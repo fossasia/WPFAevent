@@ -952,10 +952,10 @@ class Wpfaevent_Admin {
 		$term_id  = absint( $term_id );
 		$event_id = 0;
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_REQUEST['event_id'] ) ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended
-			$event_id = absint( wp_unslash( $_REQUEST['event_id'] ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing
+		if ( isset( $_POST['event_id'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$event_id = absint( wp_unslash( $_POST['event_id'] ) );
 		} elseif ( ! empty( $_SERVER['HTTP_REFERER'] ) ) {
 			$referer = sanitize_text_field( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
 			$query   = wp_parse_url( $referer, PHP_URL_QUERY );
