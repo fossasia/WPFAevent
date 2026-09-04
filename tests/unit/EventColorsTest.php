@@ -79,4 +79,28 @@ class EventColorsTest extends WP_UnitTestCase {
 		$this->assertMatchesRegularExpression( '/\.wpfaevent \.wpfa-event-hero \{.*?var\(--event-primary\);/s', $stylesheet );
 		$this->assertStringNotContainsString( 'linear-gradient(135deg, #8f0a05 0%, #D51007 52%, #f15b53 100%)', $stylesheet );
 	}
+
+	/**
+	 * Events without a primary color keep the FOSSASIA red fallback.
+	 */
+	public function test_event_hero_uses_fossasia_red_when_no_custom_color_is_set() {
+		$stylesheet = file_get_contents( dirname( __DIR__, 2 ) . '/public/css/templates/event-base.css' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a repository fixture in a unit test.
+		$data       = Wpfaevent_Event_Template_Controller::get_event_template_data( $this->event_id );
+
+		$this->assertNotFalse( $stylesheet );
+		$this->assertStringContainsString( '--event-primary: var(--brand, #D51007);', $stylesheet );
+		$this->assertSame( '', $data['event_style_attr'] );
+	}
+
+	/**
+	 * A light primary color receives dark text for accessible hero contrast.
+	 */
+	public function test_light_primary_color_uses_dark_contrast_text() {
+		update_post_meta( $this->event_id, 'wpfa_event_primary_color', '#FDE68A' );
+
+		$data = Wpfaevent_Event_Template_Controller::get_event_template_data( $this->event_id );
+
+		$this->assertSame( '#000000', Wpfaevent_Meta_Event::get_contrast_text_color( '#FDE68A' ) );
+		$this->assertStringContainsString( '--event-primary: #FDE68A; --event-primary-contrast: #000000', $data['event_style_attr'] );
+	}
 }

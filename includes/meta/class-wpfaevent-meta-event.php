@@ -618,6 +618,44 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
+	 * Get an accessible text color for an event color background.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $color Background color.
+	 * @return string Accessible black or white text color.
+	 */
+	public static function get_contrast_text_color( $color ) {
+		$color = self::sanitize_color_value( $color );
+		$rgb   = array();
+
+		if ( preg_match( '/^#([0-9A-F]{3}|[0-9A-F]{6})$/', $color, $matches ) ) {
+			$hex = $matches[1];
+			if ( 3 === strlen( $hex ) ) {
+				$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+			}
+
+			$rgb = array( hexdec( substr( $hex, 0, 2 ) ), hexdec( substr( $hex, 2, 2 ) ), hexdec( substr( $hex, 4, 2 ) ) );
+		} elseif ( preg_match( '/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/', $color, $matches ) ) {
+			$rgb = array( min( 255, (int) $matches[1] ), min( 255, (int) $matches[2] ), min( 255, (int) $matches[3] ) );
+		}
+
+		if ( 3 !== count( $rgb ) ) {
+			return '#FFFFFF';
+		}
+
+		$luminance = 0;
+		foreach ( $rgb as $index => $channel ) {
+			$channel    = $channel / 255;
+			$channel    = $channel <= 0.03928 ? $channel / 12.92 : pow( ( $channel + 0.055 ) / 1.055, 2.4 );
+			$coefficient = array( 0.2126, 0.7152, 0.0722 );
+			$luminance  += $channel * $coefficient[ $index ];
+		}
+
+		return $luminance > 0.179 ? '#000000' : '#FFFFFF';
+	}
+
+	/**
 	 * Sanitize event language values.
 	 *
 	 * @since 1.0.0
