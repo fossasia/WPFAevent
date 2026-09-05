@@ -1591,7 +1591,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param string $api_url   API endpoint URL.
 	 * @param string $api_token Optional API token.
 	 * @return array|WP_Error
-	 * @phpstan-return array<string, mixed>|WP_Error
+	 * @phpstan-return array<array-key, mixed>|WP_Error
 	 */
 	public function fetch_eventyay_rest_json( $api_url, $api_token = '' ) {
 		if ( empty( $api_url ) || ! wp_http_validate_url( $api_url ) ) {
@@ -1685,7 +1685,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param string $api_url  API endpoint URL.
 	 * @return array|WP_Error
 	 * @phpstan-param array<string, mixed> $response
-	 * @phpstan-return array<string, mixed>|WP_Error
+	 * @phpstan-return array<array-key, mixed>|WP_Error
 	 */
 	public function decode_eventyay_rest_response( $response, $api_url ) {
 		$status = absint( wp_remote_retrieve_response_code( $response ) );
@@ -1870,7 +1870,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 *
 	 * @param string $body Response body.
 	 * @return array|string
-	 * @phpstan-return array<string, mixed>|string
+	 * @phpstan-return array<array-key, mixed>|string
 	 */
 	public function decode_eventyay_error_body( $body ) {
 		$decoded = json_decode( $body, true );
