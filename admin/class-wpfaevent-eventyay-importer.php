@@ -656,7 +656,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $settings Import settings.
 	 * @return array|WP_Error
 	 * @phpstan-param array<string, mixed> $settings
-	 * @phpstan-return array<string, mixed>|WP_Error
+	 * @phpstan-return array<array-key, mixed>|WP_Error
 	 */
 	public function fetch_single_eventyay_event_from_settings( $settings ) {
 		$settings = wp_parse_args( is_array( $settings ) ? $settings : array(), $this->get_eventyay_import_default_settings() );
@@ -693,9 +693,9 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $events   Fetched Eventyay event resources.
 	 * @param array $settings Import settings.
 	 * @return array|WP_Error
-	 * @phpstan-param list<array<string, mixed>> $events
+	 * @phpstan-param list<array<array-key, mixed>> $events
 	 * @phpstan-param array<string, mixed> $settings
-	 * @phpstan-return array<string, mixed>|WP_Error
+	 * @phpstan-return array<array-key, mixed>|WP_Error
 	 */
 	private function match_configured_eventyay_event( $events, $settings ) {
 		$event_slug = isset( $settings['event_slug'] ) ? $this->sanitize_eventyay_path_segment( $settings['event_slug'] ) : '';
@@ -758,7 +758,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $settings       Import settings.
 	 * @param int   $target_post_id Optional target event post ID to update in place.
 	 * @return array|WP_Error
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return array<string, mixed>|WP_Error
 	 */
@@ -820,7 +820,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $settings Import settings.
 	 * @return array|WP_Error Event resources and metadata.
 	 * @phpstan-param array<string, mixed> $settings
-	 * @phpstan-return array{events: list<array<string, mixed>>, pages: int, endpoint: string}|WP_Error
+	 * @phpstan-return array{events: list<array<array-key, mixed>>, pages: int, endpoint: string}|WP_Error
 	 */
 	private function fetch_eventyay_event_resources( $settings ) {
 		$endpoints = $this->build_eventyay_event_endpoint_candidates( $settings );
@@ -862,7 +862,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $settings Import settings.
 	 * @return array|WP_Error Event resources and metadata.
 	 * @phpstan-param array<string, mixed> $settings
-	 * @phpstan-return array{events: list<array<string, mixed>>, pages: int, endpoint: string}|WP_Error
+	 * @phpstan-return array{events: list<array<array-key, mixed>>, pages: int, endpoint: string}|WP_Error
 	 */
 	private function fetch_eventyay_event_resources_from_endpoint( $endpoint, $settings ) {
 		if ( empty( $endpoint ) || ! wp_http_validate_url( $endpoint ) ) {
@@ -1179,9 +1179,9 @@ class Wpfaevent_Eventyay_Importer {
 		 * @param array $settings     Import settings.
 		 * @param bool  $fetch_detail Whether to fetch the detail endpoint if the list item is sparse.
 		 * @return array
-		 * @phpstan-param array<string, mixed> $event
+		 * @phpstan-param array<array-key, mixed> $event
 		 * @phpstan-param array<string, mixed> $settings
-		 * @phpstan-return array<string, mixed>
+		 * @phpstan-return array<array-key, mixed>
 		 */
 	private function hydrate_eventyay_event_resource( $event, $settings, $fetch_detail ) {
 		$event      = $this->normalize_eventyay_event_resource( $event );
@@ -1220,8 +1220,8 @@ class Wpfaevent_Eventyay_Importer {
 		 *
 		 * @param array $payload API payload.
 		 * @return array
-		 * @phpstan-param array<string, mixed> $payload
-		 * @phpstan-return list<array<string, mixed>>
+		 * @phpstan-param array<array-key, mixed> $payload
+		 * @phpstan-return list<array<array-key, mixed>>
 		 */
 	private function extract_eventyay_event_resources( $payload ) {
 		$resources = array();
@@ -1264,8 +1264,8 @@ class Wpfaevent_Eventyay_Importer {
 		 *
 		 * @param array $event Eventyay event resource.
 		 * @return array
-		 * @phpstan-param array<string, mixed> $event
-		 * @phpstan-return array<string, mixed>
+		 * @phpstan-param array<array-key, mixed> $event
+		 * @phpstan-return array<array-key, mixed>
 		 */
 	private function normalize_eventyay_event_resource( $event ) {
 		if ( ! is_array( $event ) ) {
@@ -1300,7 +1300,7 @@ class Wpfaevent_Eventyay_Importer {
 		 *
 		 * @param array $event Normalized Eventyay event resource.
 		 * @return bool
-		 * @phpstan-param array<string, mixed> $event
+		 * @phpstan-param array<array-key, mixed> $event
 		 */
 	private function eventyay_event_resource_needs_detail( $event ) {
 		$has_start    = '' !== trim( $this->eventyay_event_datetime( $event, 'start' ) );
@@ -1317,9 +1317,9 @@ class Wpfaevent_Eventyay_Importer {
 		 * @param array $base   Existing event fields.
 		 * @param array $detail Detail event fields.
 		 * @return array
-		 * @phpstan-param array<string, mixed> $base
-		 * @phpstan-param array<string, mixed> $detail
-		 * @phpstan-return array<string, mixed>
+		 * @phpstan-param array<array-key, mixed> $base
+		 * @phpstan-param array<array-key, mixed> $detail
+		 * @phpstan-return array<array-key, mixed>
 		 */
 	private function merge_eventyay_event_resource( $base, $detail ) {
 		$base   = $this->normalize_eventyay_event_resource( $base );
@@ -1348,7 +1348,7 @@ class Wpfaevent_Eventyay_Importer {
 		 * @param string $event_slug Eventyay event slug.
 		 * @return array|WP_Error
 		 * @phpstan-param array<string, mixed> $settings
-		 * @phpstan-return array<string, mixed>|WP_Error
+		 * @phpstan-return array<array-key, mixed>|WP_Error
 		 */
 	private function fetch_eventyay_event_settings_resource( $settings, $event_slug ) {
 		$settings_endpoint = $this->build_eventyay_event_settings_endpoint( $settings, $event_slug );
@@ -1480,7 +1480,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param string $resource_type Partner resource type. Accepts sponsors or exhibitors.
 	 * @return array Endpoint URLs.
 	 * @phpstan-param array<string, mixed> $settings
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 * @phpstan-return list<string>
 	 */
 	private function build_eventyay_partner_endpoint_candidates( $settings, $event, $event_slug, $resource_type ) {
@@ -1564,7 +1564,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param string $resource_type Partner resource type.
 	 * @return array Endpoint URLs.
 	 * @phpstan-param array<string, mixed> $settings
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 * @phpstan-return list<string>
 	 */
 	private function build_eventyay_legacy_partner_endpoints( $settings, $event, $event_slug, $resource_type ) {
@@ -1630,7 +1630,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array|WP_Error Import result.
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return array<string, int>|WP_Error
 	 */
@@ -1686,8 +1686,8 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param string $resource_type Partner resource type.
 	 * @return array|WP_Error Partner resources and metadata.
 	 * @phpstan-param array<string, mixed> $settings
-	 * @phpstan-param array<string, mixed> $event
-	 * @phpstan-return array{resources: list<array<string, mixed>>, pages: int, endpoint: string}|WP_Error
+	 * @phpstan-param array<array-key, mixed> $event
+	 * @phpstan-return array{resources: list<array<array-key, mixed>>, pages: int, endpoint: string}|WP_Error
 	 */
 	private function fetch_eventyay_partner_collection( $settings, $event, $event_slug, $resource_type ) {
 		$endpoints = $this->build_eventyay_partner_endpoint_candidates( $settings, $event, $event_slug, $resource_type );
@@ -1744,7 +1744,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param string $resource_type Partner resource type.
 	 * @return array|WP_Error Partner resources and metadata.
 	 * @phpstan-param array<string, mixed> $settings
-	 * @phpstan-return array{resources: list<array<string, mixed>>, pages: int, endpoint: string}|WP_Error
+	 * @phpstan-return array{resources: list<array<array-key, mixed>>, pages: int, endpoint: string}|WP_Error
 	 */
 	private function fetch_eventyay_partner_resources( $endpoint, $settings, $resource_type ) {
 		$resources = array();
@@ -1828,7 +1828,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $resources Eventyay sponsor resources.
 	 * @param array $settings  Import settings.
 	 * @return array
-	 * @phpstan-param list<array<string, mixed>> $resources
+	 * @phpstan-param list<array<array-key, mixed>> $resources
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return list<array<string, mixed>>
 	 */
@@ -1875,7 +1875,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $sponsor_resource Eventyay sponsor resource.
 	 * @param array $settings Import settings.
 	 * @return array
-	 * @phpstan-param array<string, mixed> $sponsor_resource
+	 * @phpstan-param array<array-key, mixed> $sponsor_resource
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return array<string, mixed>
 	 */
@@ -1917,7 +1917,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $sponsor_resource Eventyay sponsor resource.
 	 * @return string
-	 * @phpstan-param array<string, mixed> $sponsor_resource
+	 * @phpstan-param array<array-key, mixed> $sponsor_resource
 	 */
 	private function eventyay_sponsor_group_name( $sponsor_resource ) {
 		$type = $this->eventyay_first_present_text(
@@ -2123,7 +2123,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $resources Eventyay exhibitor resources.
 	 * @param array $settings  Import settings.
 	 * @return array
-	 * @phpstan-param list<array<string, mixed>> $resources
+	 * @phpstan-param list<array<array-key, mixed>> $resources
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return list<array<string, mixed>>
 	 */
@@ -2170,7 +2170,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $exhibitor_resource Eventyay exhibitor resource.
 	 * @param array $settings Import settings.
 	 * @return array
-	 * @phpstan-param array<string, mixed> $exhibitor_resource
+	 * @phpstan-param array<array-key, mixed> $exhibitor_resource
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return array<string, mixed>
 	 */
@@ -2493,7 +2493,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $settings Import settings.
 	 * @return array|WP_Error Submission resources and metadata.
 	 * @phpstan-param array<string, mixed> $settings
-	 * @phpstan-return array{submissions: list<array<string, mixed>>, pages: int}|WP_Error
+	 * @phpstan-return array{submissions: list<array<array-key, mixed>>, pages: int}|WP_Error
 	 */
 	private function fetch_eventyay_program_resources( $endpoint, $settings ) {
 		$submissions = array();
@@ -2603,7 +2603,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $settings Import settings.
 	 * @return array|WP_Error Slot resources and metadata.
 	 * @phpstan-param array<string, mixed> $settings
-	 * @phpstan-return array{slots: list<array<string, mixed>>, pages: int}|WP_Error
+	 * @phpstan-return array{slots: list<array<array-key, mixed>>, pages: int}|WP_Error
 	 */
 	private function fetch_eventyay_slot_resources( $endpoint, $settings ) {
 		$slots     = array();
@@ -3097,7 +3097,7 @@ class Wpfaevent_Eventyay_Importer {
 		 *
 		 * @param array $event Eventyay event resource.
 		 * @return string
-		 * @phpstan-param array<string, mixed> $event
+		 * @phpstan-param array<array-key, mixed> $event
 		 */
 	private function eventyay_event_slug( $event ) {
 		$slug = $this->eventyay_first_present_text( $event, array( 'slug', 'identifier', 'code' ) );
@@ -3125,7 +3125,7 @@ class Wpfaevent_Eventyay_Importer {
 		 *
 		 * @param array $event Eventyay event resource.
 		 * @return string
-		 * @phpstan-param array<string, mixed> $event
+		 * @phpstan-param array<array-key, mixed> $event
 		 */
 	private function eventyay_event_title( $event ) {
 		return $this->eventyay_first_present_text( $event, array( 'name', 'title', 'label' ) );
@@ -3139,7 +3139,7 @@ class Wpfaevent_Eventyay_Importer {
 		 * @param array  $event Eventyay event resource.
 		 * @param string $type  Date type. Accepts start or end.
 		 * @return string
-		 * @phpstan-param array<string, mixed> $event
+		 * @phpstan-param array<array-key, mixed> $event
 		 */
 	private function eventyay_event_datetime( $event, $type ) {
 		$keys = ( 'end' === $type )
@@ -3156,7 +3156,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return string
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 */
 	private function eventyay_event_timezone( $event ) {
 		return Wpfaevent_Meta_Event::sanitize_timezone(
@@ -3175,7 +3175,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return string
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 */
 	private function eventyay_event_location( $event ) {
 		$location = $this->eventyay_event_first_present_raw(
@@ -3204,7 +3204,7 @@ class Wpfaevent_Eventyay_Importer {
 		 *
 		 * @param array $event Eventyay event resource.
 		 * @return array<string>
-		 * @phpstan-param array<string, mixed> $event
+		 * @phpstan-param array<array-key, mixed> $event
 		 */
 	private function eventyay_event_languages( $event ) {
 		$languages = $this->eventyay_event_first_present_raw(
@@ -3238,7 +3238,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return array<string, string>
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 */
 	private function eventyay_event_colors( $event ) {
 		$color_fields = array(
@@ -3272,7 +3272,7 @@ class Wpfaevent_Eventyay_Importer {
 			 * @param array $settings          Import settings.
 			 * @param int   $preferred_post_id Optional preferred WordPress event post ID.
 			 * @return array|WP_Error Upsert result.
-			 * @phpstan-param array<string, mixed> $event
+			 * @phpstan-param array<array-key, mixed> $event
 			 * @phpstan-param array<string, mixed> $settings
 			 * @phpstan-return array{id: int, created: bool, event_slug: string}|WP_Error
 			 */
@@ -3389,7 +3389,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array|WP_Error Dashboard sync result.
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return array{about_updated: int}|WP_Error
 	 */
@@ -3488,7 +3488,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $settings    Import settings.
 	 * @param string $event_slug  Eventyay event slug.
 	 * @return array
-	 * @phpstan-param list<array<string, mixed>> $submissions
+	 * @phpstan-param list<array<array-key, mixed>> $submissions
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return array<string, mixed>
 	 */
@@ -3557,7 +3557,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $settings       Import settings.
 	 * @param string $event_slug     Eventyay event slug.
 	 * @return array
-	 * @phpstan-param list<array<string, mixed>> $slot_resources
+	 * @phpstan-param list<array<array-key, mixed>> $slot_resources
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return array<string, mixed>
 	 */
@@ -3700,7 +3700,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $submission Eventyay submission resource.
 	 * @return array
-	 * @phpstan-param array<string, mixed> $submission
+	 * @phpstan-param array<array-key, mixed> $submission
 	 * @phpstan-return array<string, mixed>
 	 */
 	private function normalize_eventyay_submission_session( $submission ) {
@@ -3747,8 +3747,8 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $slot       Eventyay slot resource.
 	 * @param array $submission Eventyay submission resource.
 	 * @return array
-	 * @phpstan-param array<string, mixed> $slot
-	 * @phpstan-param array<string, mixed> $submission
+	 * @phpstan-param array<array-key, mixed> $slot
+	 * @phpstan-param array<array-key, mixed> $submission
 	 * @phpstan-return array<string, mixed>
 	 */
 	private function normalize_eventyay_slot_session( $slot, $submission ) {
@@ -3812,7 +3812,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $slot Eventyay slot resource.
 	 * @return string
-	 * @phpstan-param array<string, mixed> $slot
+	 * @phpstan-param array<array-key, mixed> $slot
 	 */
 	private function eventyay_slot_room_name( $slot ) {
 		$slot = $this->normalize_eventyay_api_resource( $slot );
@@ -3842,7 +3842,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $settings         Import settings.
 	 * @param string $event_slug       Eventyay event slug.
 	 * @return array
-	 * @phpstan-param array<string, mixed> $speaker_resource
+	 * @phpstan-param array<array-key, mixed> $speaker_resource
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return array<string, mixed>
 	 */
@@ -3903,7 +3903,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $speaker_resource Normalized Eventyay speaker resource.
 	 * @return bool
-	 * @phpstan-param array<string, mixed> $speaker_resource
+	 * @phpstan-param array<array-key, mixed> $speaker_resource
 	 */
 	private function eventyay_speaker_is_featured( $speaker_resource ) {
 		$featured = $this->eventyay_first_present_raw(
@@ -3935,7 +3935,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $speaker_resource Normalized Eventyay speaker resource.
 	 * @return int
-	 * @phpstan-param array<string, mixed> $speaker_resource
+	 * @phpstan-param array<array-key, mixed> $speaker_resource
 	 */
 	private function eventyay_speaker_featured_order( $speaker_resource ) {
 		$order = $this->eventyay_first_present_raw(
@@ -3998,7 +3998,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $submission Eventyay submission resource.
 	 * @return string
-	 * @phpstan-param array<string, mixed> $submission
+	 * @phpstan-param array<array-key, mixed> $submission
 	 */
 	private function eventyay_submission_abstract( $submission ) {
 		return $this->eventyay_first_present_rich_text(
@@ -4019,8 +4019,8 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $submission Eventyay submission resource.
 	 * @return array
-	 * @phpstan-param array<string, mixed> $submission
-	 * @phpstan-return array<string, mixed>
+	 * @phpstan-param array<array-key, mixed> $submission
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	private function eventyay_first_slot( $submission ) {
 		if ( ! empty( $submission['slot'] ) && is_array( $submission['slot'] ) ) {
@@ -4045,8 +4045,8 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @return array
-	 * @phpstan-param array<string, mixed> $eventyay_resource
-	 * @phpstan-return array<string, mixed>
+	 * @phpstan-param array<array-key, mixed> $eventyay_resource
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	private function normalize_eventyay_api_resource( $eventyay_resource ) {
 		if ( ! is_array( $eventyay_resource ) ) {
@@ -4172,7 +4172,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @return string
-	 * @phpstan-param array<string, mixed> $eventyay_resource
+	 * @phpstan-param array<array-key, mixed> $eventyay_resource
 	 */
 	private function eventyay_resource_identifier( $eventyay_resource ) {
 		foreach ( array( '_eventyay_source_id', 'code', 'id', 'slug' ) as $key ) {
@@ -4192,7 +4192,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @param array $keys              Candidate keys.
 	 * @return string
-	 * @phpstan-param array<string, mixed> $eventyay_resource
+	 * @phpstan-param array<array-key, mixed> $eventyay_resource
 	 * @phpstan-param list<string> $keys
 	 */
 	private function eventyay_first_present_text( $eventyay_resource, $keys ) {
@@ -4209,7 +4209,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @param array $keys              Candidate keys.
 	 * @return string
-	 * @phpstan-param array<string, mixed> $eventyay_resource
+	 * @phpstan-param array<array-key, mixed> $eventyay_resource
 	 * @phpstan-param list<string> $keys
 	 */
 	private function eventyay_first_present_rich_text( $eventyay_resource, $keys ) {
@@ -4226,7 +4226,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @param array $keys              Candidate keys.
 	 * @return mixed
-	 * @phpstan-param array<string, mixed> $eventyay_resource
+	 * @phpstan-param array<array-key, mixed> $eventyay_resource
 	 * @phpstan-param list<string> $keys
 	 */
 	private function eventyay_first_present_raw( $eventyay_resource, $keys ) {
@@ -4337,7 +4337,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return bool
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 */
 	private function eventyay_event_has_settings_payload( $event ) {
 		foreach ( array( '_eventyay_settings', 'settings' ) as $settings_key ) {
@@ -4358,7 +4358,7 @@ class Wpfaevent_Eventyay_Importer {
 			 * @param array $keys             Candidate keys.
 			 * @param bool  $include_settings Whether to check Eventyay settings payloads.
 			 * @return mixed
-			 * @phpstan-param array<string, mixed> $event
+			 * @phpstan-param array<array-key, mixed> $event
 			 * @phpstan-param list<string> $keys
 			 */
 	private function eventyay_event_first_present_raw( $event, $keys, $include_settings = false ) {
@@ -4545,7 +4545,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return string
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 */
 	private function eventyay_event_description( $event ) {
 		$value = $this->eventyay_event_first_present_raw(
@@ -4598,7 +4598,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return string
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 * @phpstan-param array<string, mixed> $settings
 	 */
 	private function eventyay_public_event_url( $event, $settings, $event_slug ) {
@@ -5067,7 +5067,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $payload JSON:API document.
 	 * @return array|WP_Error
-	 * @phpstan-param array<string, mixed> $payload
+	 * @phpstan-param array<array-key, mixed> $payload
 	 * @phpstan-return array{speakers: list<array<string, mixed>>, session_count: int}|WP_Error
 	 */
 	private function normalize_eventyay_payload( $payload ) {
@@ -5157,7 +5157,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $session_resource Session resource.
 	 * @param array $included         Indexed included resources.
 	 * @return array
-	 * @phpstan-param array<string, mixed> $session_resource
+	 * @phpstan-param array<array-key, mixed> $session_resource
 	 * @phpstan-param array<string, mixed> $included
 	 * @phpstan-return array<string, mixed>
 	 */
@@ -5197,7 +5197,7 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $speaker_resource Speaker resource.
 	 * @return array
-	 * @phpstan-param array<string, mixed> $speaker_resource
+	 * @phpstan-param array<array-key, mixed> $speaker_resource
 	 * @phpstan-return array<string, mixed>
 	 */
 	private function normalize_eventyay_speaker_resource( $speaker_resource ) {
@@ -5881,8 +5881,8 @@ class Wpfaevent_Eventyay_Importer {
 	 *
 	 * @param array $jsonapi_resource JSON:API resource.
 	 * @return array
-	 * @phpstan-param array<string, mixed> $jsonapi_resource
-	 * @phpstan-return array<string, mixed>
+	 * @phpstan-param array<array-key, mixed> $jsonapi_resource
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	private function get_jsonapi_attributes( $jsonapi_resource ) {
 		return isset( $jsonapi_resource['attributes'] ) && is_array( $jsonapi_resource['attributes'] ) ? $jsonapi_resource['attributes'] : array();
@@ -5896,7 +5896,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $attributes Attribute map.
 	 * @param array $keys       Candidate keys.
 	 * @return string
-	 * @phpstan-param array<string, mixed> $attributes
+	 * @phpstan-param array<array-key, mixed> $attributes
 	 * @phpstan-param list<string> $keys
 	 */
 	private function attribute_value( $attributes, $keys ) {
@@ -5946,9 +5946,9 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array $resource_identifier JSON:API resource identifier.
 	 * @param array $included            Indexed included resources.
 	 * @return array
-	 * @phpstan-param array<string, mixed> $resource_identifier
+	 * @phpstan-param array<array-key, mixed> $resource_identifier
 	 * @phpstan-param array<string, mixed> $included
-	 * @phpstan-return array<string, mixed>
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	private function resolve_jsonapi_resource( $resource_identifier, $included ) {
 		if ( ! $this->is_jsonapi_resource( $resource_identifier ) ) {
@@ -5987,7 +5987,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $jsonapi_resource JSON:API resource.
 	 * @param string $name             Relationship name.
 	 * @return array
-	 * @phpstan-param array<string, mixed> $jsonapi_resource
+	 * @phpstan-param array<array-key, mixed> $jsonapi_resource
 	 * @phpstan-return array<int|string, mixed>
 	 */
 	private function get_jsonapi_relationship_resources( $jsonapi_resource, $name ) {
@@ -6027,7 +6027,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @param array  $jsonapi_resource JSON:API resource.
 	 * @param string $type             Expected singular type.
 	 * @return bool
-	 * @phpstan-param array<string, mixed> $jsonapi_resource
+	 * @phpstan-param array<array-key, mixed> $jsonapi_resource
 	 */
 	private function jsonapi_type_is( $jsonapi_resource, $type ) {
 		if ( empty( $jsonapi_resource['type'] ) ) {

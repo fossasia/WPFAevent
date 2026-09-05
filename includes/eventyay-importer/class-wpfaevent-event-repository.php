@@ -45,7 +45,7 @@ class Wpfaevent_Event_Repository {
 	 * @param array $event    Eventyay event resource.
 	 * @param array $settings Import settings.
 	 * @return array|WP_Error Upsert result.
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return array{id: int, created: bool, event_slug: string}|WP_Error
 	 */

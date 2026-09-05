@@ -132,7 +132,7 @@ class Wpfaevent_Event_Dashboard_Sync_Service {
 	 * @param array $settings       Eventyay import settings.
 	 * @param bool  $overwrite_logo Whether to overwrite the saved event logo.
 	 * @return array<string, bool>|WP_Error
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 * @phpstan-param array<string, mixed> $settings
 	 */
 	private function update_dashboard_media_settings( $event_id, $event, $settings, $overwrite_logo ) {
@@ -178,7 +178,7 @@ class Wpfaevent_Event_Dashboard_Sync_Service {
 	 * @param array $event    Eventyay event resource.
 	 * @param array $settings Eventyay import settings.
 	 * @return array<string, string>
-	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<array-key, mixed> $event
 	 * @phpstan-param array<string, mixed> $settings
 	 */
 	private function extract_event_media_urls( $event, $settings ) {
@@ -233,7 +233,7 @@ class Wpfaevent_Event_Dashboard_Sync_Service {
 	 * @param array $data Source array.
 	 * @param array $keys Candidate keys.
 	 * @return mixed
-	 * @phpstan-param array<string, mixed> $data
+	 * @phpstan-param array<array-key, mixed> $data
 	 * @phpstan-param list<string> $keys
 	 */
 	private function first_present_value( $data, $keys ) {
