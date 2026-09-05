@@ -32,6 +32,7 @@ if ( ! function_exists( 'wpfa_render_pagination' ) ) {
 	 *                             Default empty array.
 	 *
 	 * @return void Outputs HTML directly.
+	 * @phpstan-param array<string, mixed> $query_args
 	 */
 	function wpfa_render_pagination( $total_pages, $current_page, $aria_label = 'Pagination', $query_args = array() ) {
 		// Bail if there is only one page.

@@ -59,6 +59,7 @@ class Wpfaevent_Partner_Dashboard_Statistics {
 	 * @param string $type     Accepts 'sponsor' or 'exhibitor'.
 	 * @param int    $event_id Event ID.
 	 * @return array
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	public function load_records( $type, $event_id ) {
 		if ( ! $event_id ) {
@@ -97,6 +98,7 @@ class Wpfaevent_Partner_Dashboard_Statistics {
 	 *
 	 * @param int $event_id Event ID.
 	 * @return array
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	public function load_sponsor_groups( $event_id ) {
 		if ( ! $event_id ) {
@@ -113,6 +115,7 @@ class Wpfaevent_Partner_Dashboard_Statistics {
 	 *
 	 * @param array $records Records list.
 	 * @return array<string, int> Map of count types to count values.
+	 * @phpstan-param array<array-key, mixed> $records
 	 */
 	public function get_active_inactive_stats( $records ) {
 		$active_count   = 0;
@@ -143,6 +146,8 @@ class Wpfaevent_Partner_Dashboard_Statistics {
 	 * @param string $orderby       Field to order by.
 	 * @param string $order         Asc or desc order.
 	 * @return array Filtered and sorted records.
+	 * @phpstan-param array<array-key, mixed> $records
+	 * @phpstan-return list<mixed>
 	 */
 	public function filter_and_sort_records( $records, $type, $search_query, $status_filter, $cat_filter, $orderby, $order ) {
 		$filtered_records = array();

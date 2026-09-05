@@ -22,6 +22,7 @@ class Wpfaevent_Taxonomies_Speaker {
 	 * Registers all speaker taxonomies.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public static function register() {
 		self::register_speaker_category_taxonomy();
@@ -34,6 +35,7 @@ class Wpfaevent_Taxonomies_Speaker {
 	 * (e.g., "AI", "Web Development", "Cloud", "Open Source").
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	private static function register_speaker_category_taxonomy() {
 		$labels = array(

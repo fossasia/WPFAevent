@@ -28,6 +28,7 @@ class Wpfaevent_Loader {
 	 * @since    1.0.0
 	 * @access   protected
 	 * @var      array    $actions    The actions registered with WordPress to fire when the plugin loads.
+	 * @phpstan-var array<int, array{hook: string, component: object|string, callback: string, priority: int, accepted_args: int}>
 	 */
 	protected $actions;
 
@@ -37,6 +38,7 @@ class Wpfaevent_Loader {
 	 * @since    1.0.0
 	 * @access   protected
 	 * @var      array    $filters    The filters registered with WordPress to fire when the plugin loads.
+	 * @phpstan-var array<int, array{hook: string, component: object|string, callback: string, priority: int, accepted_args: int}>
 	 */
 	protected $filters;
 
@@ -60,6 +62,7 @@ class Wpfaevent_Loader {
 	 * @param    string $callback         The name of the function definition on the $component.
 	 * @param    int    $priority         Optional. The priority at which the function should be fired. Default is 10.
 	 * @param    int    $accepted_args    Optional. The number of arguments that should be passed to the $callback. Default is 1.
+	 * @return   void
 	 * @phpstan-param object|string $component
 	 */
 	public function add_action( $hook, $component, $callback, $priority = 10, $accepted_args = 1 ) {
@@ -75,6 +78,7 @@ class Wpfaevent_Loader {
 	 * @param    string $callback         The name of the function definition on the $component.
 	 * @param    int    $priority         Optional. The priority at which the function should be fired. Default is 10.
 	 * @param    int    $accepted_args    Optional. The number of arguments that should be passed to the $callback. Default is 1.
+	 * @return   void
 	 * @phpstan-param object|string $component
 	 */
 	public function add_filter( $hook, $component, $callback, $priority = 10, $accepted_args = 1 ) {
@@ -95,6 +99,8 @@ class Wpfaevent_Loader {
 	 * @param    int    $accepted_args    The number of arguments that should be passed to the $callback.
 	 * @return   array                                  The collection of actions and filters registered with WordPress.
 	 * @phpstan-param object|string $component
+	 * @phpstan-param array<int, array{hook: string, component: object|string, callback: string, priority: int, accepted_args: int}> $hooks
+	 * @phpstan-return array<int, array{hook: string, component: object|string, callback: string, priority: int, accepted_args: int}>
 	 */
 	private function add( $hooks, $hook, $component, $callback, $priority, $accepted_args ) {
 
@@ -113,6 +119,7 @@ class Wpfaevent_Loader {
 	 * Register the filters and actions with WordPress.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function run() {
 

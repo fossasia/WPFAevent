@@ -30,6 +30,7 @@ class Wpfaevent_Speakers_Handler {
 	 * Handle AJAX request to get speaker data.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_get_speaker() {
 		// Verify nonce.
@@ -98,6 +99,7 @@ class Wpfaevent_Speakers_Handler {
 	 * Handle AJAX request to add a new speaker.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_add_speaker() {
 		// Verify nonce.
@@ -263,6 +265,7 @@ class Wpfaevent_Speakers_Handler {
 	 * Handle AJAX request to update a speaker.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_update_speaker() {
 		// Verify nonce.
@@ -433,6 +436,7 @@ class Wpfaevent_Speakers_Handler {
 	 * Handle AJAX request to delete a speaker.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_delete_speaker() {
 		// Verify nonce.

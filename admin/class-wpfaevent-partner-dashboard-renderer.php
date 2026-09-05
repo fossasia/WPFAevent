@@ -57,6 +57,8 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 
 	/**
 	 * Render Sponsors Management Page callback.
+	 *
+	 * @return void
 	 */
 	public function render_sponsors_page() {
 		$this->render_dashboard_page( 'sponsor' );
@@ -64,6 +66,8 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 
 	/**
 	 * Render Exhibitors Management Page callback.
+	 *
+	 * @return void
 	 */
 	public function render_exhibitors_page() {
 		$this->render_dashboard_page( 'exhibitor' );
@@ -73,6 +77,7 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 	 * Unified layout generator for both Sponsors and Exhibitors dashboards.
 	 *
 	 * @param string $type Accepts 'sponsor' or 'exhibitor'.
+	 * @return void
 	 */
 	public function render_dashboard_page( $type ) {
 		if ( ! current_user_can( 'edit_events' ) ) {
@@ -583,6 +588,8 @@ class Wpfaevent_Partner_Dashboard_Renderer {
 	 * @param string $type     Accepts 'sponsor' or 'exhibitor'.
 	 * @param int    $event_id Event ID.
 	 * @param array  $item     Existing item for editing, or empty for creation.
+	 * @return void
+	 * @phpstan-param array<string, mixed> $item
 	 */
 	public function render_form( $type, $event_id, $item = array() ) {
 		$is_edit           = ! empty( $item );

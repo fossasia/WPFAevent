@@ -104,6 +104,7 @@ class Wpfaevent_Admin {
 	 * Register the stylesheets for the admin area.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function enqueue_styles() {
 
@@ -131,6 +132,7 @@ class Wpfaevent_Admin {
 	 * Register the JavaScript for the admin area.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function enqueue_scripts() {
 
@@ -155,6 +157,8 @@ class Wpfaevent_Admin {
 	 * @since    1.0.0
 	 * @param    array $links Existing plugin action links.
 	 * @return   array Modified plugin action links.
+	 * @phpstan-param array<array-key, string> $links
+	 * @phpstan-return array<array-key, string>
 	 */
 	public function add_settings_link( $links ) {
 		$settings_link = sprintf(
@@ -177,6 +181,7 @@ class Wpfaevent_Admin {
 	 * Register the settings page in WordPress admin.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function register_settings_page() {
 		add_menu_page(
@@ -221,6 +226,7 @@ class Wpfaevent_Admin {
 	 * Remove taxonomy submenu items from the Events admin menu.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function remove_event_taxonomy_submenus() {
 		remove_submenu_page( 'edit.php?post_type=wpfa_event', 'edit-tags.php?taxonomy=wpfa_event_track&post_type=wpfa_event' );
@@ -235,6 +241,7 @@ class Wpfaevent_Admin {
 	 * Render the settings page placeholder.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function render_settings_page() {
 		// Check user capabilities.
@@ -314,6 +321,7 @@ class Wpfaevent_Admin {
 	 * Register plugin settings stored under WPFAEvent -> Settings.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function register_plugin_settings() {
 		register_setting(
@@ -331,6 +339,7 @@ class Wpfaevent_Admin {
 	 * Render the per-user plugin access assignment table.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	private function render_user_access_settings_fields() {
 		$access_labels   = Wpfaevent_Roles::get_access_level_labels();
@@ -405,6 +414,7 @@ class Wpfaevent_Admin {
 	 * Render the access-level reference guide shown above the assignment table.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	private function render_user_access_level_guide() {
 		?>
@@ -442,6 +452,7 @@ class Wpfaevent_Admin {
 	 * Register Eventyay import options.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function register_eventyay_import_settings() {
 		register_setting(
@@ -463,6 +474,7 @@ class Wpfaevent_Admin {
 	 *
 	 * @param mixed $input Raw option input.
 	 * @return array Sanitized settings.
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function sanitize_eventyay_import_settings( $input ) {
 		return $this->get_eventyay_importer()->sanitize_eventyay_import_settings( $input );
@@ -472,6 +484,7 @@ class Wpfaevent_Admin {
 	 * Render the Eventyay import page.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function render_eventyay_import_page() {
 		$this->get_eventyay_importer()->render_settings_page();
@@ -481,6 +494,7 @@ class Wpfaevent_Admin {
 	 * Render the Eventyay update page.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function render_eventyay_update_page() {
 		$this->get_eventyay_importer()->render_update_events_page();
@@ -500,6 +514,7 @@ class Wpfaevent_Admin {
 	 * Handle Eventyay import form submissions.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function handle_eventyay_events_import() {
 		$this->get_eventyay_importer()->handle_eventyay_events_import();
@@ -511,6 +526,7 @@ class Wpfaevent_Admin {
 	 * @since 1.0.0
 	 *
 	 * @param string $post_type Current admin list post type.
+	 * @return void
 	 */
 	public function render_speaker_event_filter( $post_type = '' ) {
 		if ( 'wpfa_speaker' !== $post_type ) {
@@ -555,6 +571,7 @@ class Wpfaevent_Admin {
 	 * @since 1.0.0
 	 *
 	 * @param WP_Query $query Admin posts query.
+	 * @return void
 	 */
 	public function filter_speaker_admin_list( $query ) {
 		if ( ! $query instanceof WP_Query || ! $this->is_speaker_admin_list_query( $query ) ) {
@@ -601,6 +618,8 @@ class Wpfaevent_Admin {
 	 *
 	 * @param array $views Existing list table views.
 	 * @return array
+	 * @phpstan-param array<string, string> $views
+	 * @phpstan-return array<string, string>
 	 */
 	public function filter_speaker_admin_views( $views ) {
 		unset( $views );
@@ -636,6 +655,7 @@ class Wpfaevent_Admin {
 	 * Intercept the Speakers admin list screen to render our custom dashboard layout.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function intercept_speaker_list_screen() {
 		$screen = get_current_screen();
@@ -744,6 +764,7 @@ class Wpfaevent_Admin {
 	 * Render the opening of the dashboard layout wrapper on the classic list table screen.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function begin_speaker_table_layout() {
 		$screen = get_current_screen();
@@ -789,6 +810,7 @@ class Wpfaevent_Admin {
 	 * Render the closing of the dashboard layout wrapper on the classic list table screen.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function end_speaker_table_layout() {
 		$screen = get_current_screen();
@@ -887,6 +909,7 @@ class Wpfaevent_Admin {
 	 * Render a "Back to Event Dashboard" button on standard admin list pages.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function render_back_to_dashboard_button() {
 		$screen = get_current_screen();

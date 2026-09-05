@@ -61,6 +61,7 @@ class Wpfaevent_Cache {
 	 *
 	 * @since    1.0.0
 	 * @param    int $post_id    The post ID being saved/deleted.
+	 * @return   void
 	 */
 	public static function clear_page_cache( $post_id ) {
 		// Only clear for pages (not posts, CPTs, etc.).

@@ -25,6 +25,7 @@ class Wpfaevent_Activator {
 	 * Activate the plugin.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public static function activate() {
 		// Load CPT classes to register them before flushing.
@@ -59,6 +60,7 @@ class Wpfaevent_Activator {
 	 * Grant custom capabilities to administrator role.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	private static function add_capabilities() {
 		$role = get_role( 'administrator' );

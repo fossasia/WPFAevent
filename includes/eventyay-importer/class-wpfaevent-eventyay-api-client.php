@@ -36,6 +36,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 *
 	 * @param array $settings Import settings.
 	 * @return array|WP_Error Event resources and metadata.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array{events: list<array<array-key, mixed>>, pages: int, endpoint: string}|WP_Error
 	 */
 	public function fetch_eventyay_event_resources( $settings ) {
 		$endpoints = $this->build_eventyay_event_endpoint_candidates( $settings );
@@ -76,6 +78,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param string $endpoint Event endpoint URL.
 	 * @param array  $settings Import settings.
 	 * @return array|WP_Error Event resources and metadata.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array{events: list<array<array-key, mixed>>, pages: int, endpoint: string}|WP_Error
 	 */
 	public function fetch_eventyay_event_resources_from_endpoint( $endpoint, $settings ) {
 		if ( empty( $endpoint ) || ! wp_http_validate_url( $endpoint ) ) {
@@ -153,6 +157,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 *
 	 * @param array $settings Import settings.
 	 * @return array|WP_Error Endpoint URLs.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return list<string>|WP_Error
 	 */
 	public function build_eventyay_event_endpoint_candidates( $settings ) {
 		$primary_endpoint = $this->build_eventyay_events_endpoint( $settings );
@@ -179,6 +185,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 *
 	 * @param array $settings Import settings.
 	 * @return array Endpoint URLs.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return list<string>
 	 */
 	public function build_eventyay_legacy_event_endpoint_candidates( $settings ) {
 		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
@@ -250,6 +258,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array $endpoints        Endpoint URLs that were tried.
 	 * @param array $not_found_errors 404 errors returned by the endpoints.
 	 * @return WP_Error
+	 * @phpstan-param list<string> $endpoints
+	 * @phpstan-param list<WP_Error> $not_found_errors
 	 */
 	public function eventyay_event_not_found_error( $endpoints, $not_found_errors ) {
 		$tried_endpoints = implode( ', ', array_map( 'esc_url_raw', $endpoints ) );
@@ -281,6 +291,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 *
 	 * @param array $settings Import settings.
 	 * @return string|WP_Error Endpoint URL.
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function build_eventyay_events_endpoint( $settings ) {
 		$settings = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
@@ -329,6 +340,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return string|WP_Error Endpoint URL.
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function build_eventyay_event_endpoint( $settings, $event_slug ) {
 		$settings               = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
@@ -345,6 +357,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return string|WP_Error Endpoint URL.
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function build_eventyay_event_settings_endpoint( $settings, $event_slug ) {
 		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
@@ -382,6 +395,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array|WP_Error
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<array-key, mixed>|WP_Error
 	 */
 	public function fetch_eventyay_event_settings_resource( $settings, $event_slug ) {
 		$settings_endpoint = $this->build_eventyay_event_settings_endpoint( $settings, $event_slug );
@@ -400,6 +415,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return string|WP_Error Endpoint URL.
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function build_eventyay_submissions_endpoint( $settings, $event_slug ) {
 		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
@@ -446,6 +462,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return string|WP_Error Endpoint URL.
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function build_eventyay_speakers_endpoint( $settings, $event_slug ) {
 		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
@@ -492,6 +509,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return string|WP_Error Endpoint URL.
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function build_eventyay_slots_endpoint( $settings, $event_slug ) {
 		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
@@ -540,6 +558,9 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param string $event_slug    Eventyay event slug.
 	 * @param string $resource_type Partner resource type. Accepts sponsors or exhibitors.
 	 * @return array Endpoint URLs.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-param array<array-key, mixed> $event
+	 * @phpstan-return list<string>
 	 */
 	public function build_eventyay_partner_endpoint_candidates( $settings, $event, $event_slug, $resource_type ) {
 		$resource_type = sanitize_key( $resource_type );
@@ -570,6 +591,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param string $event_slug    Eventyay event slug.
 	 * @param string $resource_type Partner resource type.
 	 * @return string|WP_Error Endpoint URL.
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function build_eventyay_modern_partner_endpoint( $settings, $event_slug, $resource_type ) {
 		$settings      = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
@@ -620,6 +642,9 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param string $event_slug    Eventyay event slug.
 	 * @param string $resource_type Partner resource type.
 	 * @return array Endpoint URLs.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-param array<array-key, mixed> $event
+	 * @phpstan-return list<string>
 	 */
 	public function build_eventyay_legacy_partner_endpoints( $settings, $event, $event_slug, $resource_type ) {
 		$settings      = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
@@ -684,6 +709,9 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param string $event_slug    Eventyay event slug.
 	 * @param string $resource_type Partner resource type.
 	 * @return array|WP_Error Partner resources.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-param array<array-key, mixed> $event
+	 * @phpstan-return array{resources: list<array<array-key, mixed>>, pages: int, endpoint: string}|WP_Error
 	 */
 	public function fetch_eventyay_partner_collection( $settings, $event, $event_slug, $resource_type ) {
 		$endpoints = $this->build_eventyay_partner_endpoint_candidates( $settings, $event, $event_slug, $resource_type );
@@ -739,6 +767,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings      Import settings.
 	 * @param string $resource_type Partner resource type.
 	 * @return array|WP_Error Partner resources and metadata.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array{resources: list<array<array-key, mixed>>, pages: int, endpoint: string}|WP_Error
 	 */
 	public function fetch_eventyay_partner_resources( $endpoint, $settings, $resource_type ) {
 		$resources = array();
@@ -822,6 +852,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param string $endpoint Submission endpoint.
 	 * @param array  $settings Import settings.
 	 * @return array|WP_Error Submission resources and metadata.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array{submissions: list<array<array-key, mixed>>, pages: int}|WP_Error
 	 */
 	public function fetch_eventyay_program_resources( $endpoint, $settings ) {
 		$submissions = array();
@@ -890,6 +922,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array|WP_Error Normalized speaker program payload.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, mixed>|WP_Error
 	 */
 	public function fetch_eventyay_event_speaker_program( $settings, $event_slug ) {
 		$endpoint = $this->build_eventyay_speakers_endpoint( $settings, $event_slug );
@@ -928,6 +962,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array|WP_Error
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, array<string, mixed>>|WP_Error
 	 */
 	public function fetch_eventyay_public_speaker_featured_map( $settings, $event_slug ) {
 		$page_url = $this->build_eventyay_public_speakers_page_url( $settings, $event_slug );
@@ -976,6 +1012,9 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $import
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function enrich_legacy_eventyay_speakers_with_featured_state( $import, $settings, $event_slug ) {
 		if ( ! is_array( $import ) || empty( $import['speakers'] ) || empty( $settings['organizer_slug'] ) ) {
@@ -1000,6 +1039,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return list<array<string, mixed>>
 	 */
 	private function fetch_eventyay_featured_speakers( $settings, $event_slug ) {
 		$endpoints = $this->build_eventyay_featured_speaker_endpoint_candidates( $settings, $event_slug );
@@ -1022,6 +1063,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array|WP_Error
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, array<string, mixed>>|WP_Error
 	 */
 	public function fetch_eventyay_public_event_featured_map_fallback( $settings, $event_slug ) {
 		$page_url = $this->build_eventyay_public_event_url( $settings, $event_slug );
@@ -1067,6 +1110,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return list<string>
 	 */
 	private function build_eventyay_featured_speaker_endpoint_candidates( $settings, $event_slug ) {
 		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
@@ -1105,6 +1150,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return string|WP_Error
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function build_eventyay_public_event_url( $settings, $event_slug ) {
 		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
@@ -1133,6 +1179,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return string|WP_Error
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function build_eventyay_public_speakers_page_url( $settings, $event_slug ) {
 		$settings   = wp_parse_args( $settings, $this->get_eventyay_import_default_settings() );
@@ -1162,6 +1209,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return list<array<string, mixed>>
 	 */
 	private function fetch_eventyay_featured_speakers_from_endpoint( $endpoint, $settings, $event_slug ) {
 		if ( empty( $endpoint ) || ! wp_http_validate_url( $endpoint ) ) {
@@ -1217,6 +1266,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param string $endpoint Speaker endpoint.
 	 * @param array  $settings Import settings.
 	 * @return array|WP_Error Speaker resources and metadata.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array{speakers: list<array<array-key, mixed>>, pages: int}|WP_Error
 	 */
 	public function fetch_eventyay_speaker_resources( $endpoint, $settings ) {
 		$speakers  = array();
@@ -1299,6 +1350,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array|WP_Error Normalized slot program payload.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, mixed>|WP_Error
 	 */
 	public function fetch_eventyay_event_slot_program( $settings, $event_slug ) {
 		$endpoint = $this->build_eventyay_slots_endpoint( $settings, $event_slug );
@@ -1322,6 +1375,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param string $endpoint Slot endpoint.
 	 * @param array  $settings Import settings.
 	 * @return array|WP_Error Slot resources and metadata.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array{slots: list<array<array-key, mixed>>, pages: int}|WP_Error
 	 */
 	public function fetch_eventyay_slot_resources( $endpoint, $settings ) {
 		$slots     = array();
@@ -1536,6 +1591,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param string $api_url   API endpoint URL.
 	 * @param string $api_token Optional API token.
 	 * @return array|WP_Error
+	 * @phpstan-return array<array-key, mixed>|WP_Error
 	 */
 	public function fetch_eventyay_rest_json( $api_url, $api_token = '' ) {
 		if ( empty( $api_url ) || ! wp_http_validate_url( $api_url ) ) {
@@ -1628,6 +1684,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array  $response WordPress HTTP response.
 	 * @param string $api_url  API endpoint URL.
 	 * @return array|WP_Error
+	 * @phpstan-param array<string, mixed> $response
+	 * @phpstan-return array<array-key, mixed>|WP_Error
 	 */
 	public function decode_eventyay_rest_response( $response, $api_url ) {
 		$status = absint( wp_remote_retrieve_response_code( $response ) );
@@ -1812,6 +1870,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 *
 	 * @param string $body Response body.
 	 * @return array|string
+	 * @phpstan-return array<array-key, mixed>|string
 	 */
 	public function decode_eventyay_error_body( $body ) {
 		$decoded = json_decode( $body, true );
@@ -1830,6 +1889,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 *
 	 * @param string $api_url Eventyay API URL.
 	 * @return array|WP_Error
+	 * @phpstan-return array<string, mixed>|WP_Error
 	 */
 	public function fetch_eventyay_json( $api_url ) {
 		$headers = array(
@@ -2039,6 +2099,9 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @param array $settings     Import settings.
 	 * @param bool  $fetch_detail Whether to fetch the detail endpoint if the list item is sparse.
 	 * @return array
+	 * @phpstan-param array<array-key, mixed> $event
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	public function hydrate_eventyay_event_resource( $event, $settings, $fetch_detail ) {
 		$event      = $this->parser->normalize_eventyay_event_resource( $event );
@@ -2076,6 +2139,7 @@ class Wpfaevent_Eventyay_API_Client {
 	 * @since 1.0.0
 	 *
 	 * @return array
+	 * @phpstan-return array{base_url: string, organizer_slug: string, event_slug: string, api_token: string, post_status: string}
 	 */
 	public function get_eventyay_import_default_settings() {
 		return array(
@@ -2108,6 +2172,8 @@ class Wpfaevent_Eventyay_API_Client {
 	 *
 	 * @param string $message Log message.
 	 * @param array  $context Additional context data.
+	 * @return void
+	 * @phpstan-param array<string, mixed> $context
 	 */
 	private function safe_debug_log( $message, $context = array() ) {
 		if ( ! ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) ) {

@@ -367,6 +367,7 @@ class Wpfaevent_Event_Dashboard_Data {
 	 *
 	 * @param array $schedule Schedule payload.
 	 * @return array<int, array<string, string>>
+	 * @phpstan-param array<string, mixed> $schedule
 	 */
 	private function get_schedule_sessions( $schedule ) {
 		if ( ! is_array( $schedule ) ) {
@@ -420,6 +421,7 @@ class Wpfaevent_Event_Dashboard_Data {
 	 *
 	 * @param array $speakers Raw speakers payload.
 	 * @return array<int, array<string, mixed>>
+	 * @phpstan-param array<array-key, mixed> $speakers
 	 */
 	private function get_dashboard_speakers( $speakers ) {
 		if ( ! is_array( $speakers ) ) {
@@ -473,6 +475,7 @@ class Wpfaevent_Event_Dashboard_Data {
 	 * @param int   $event_id  Event post ID.
 	 * @param array $sessions  Normalized schedule sessions.
 	 * @return array<int, string>
+	 * @phpstan-param array<int, array<string, mixed>> $sessions
 	 */
 	private function get_track_names( $event_id, $sessions ) {
 		$tracks = $this->get_term_names( $event_id, 'wpfa_event_track' );
@@ -496,6 +499,7 @@ class Wpfaevent_Event_Dashboard_Data {
 	 * @param array  $site_settings Site settings JSON.
 	 * @param string $site_logo_url Global site logo URL.
 	 * @return array<int, array<string, string>>
+	 * @phpstan-param array<string, mixed> $site_settings
 	 */
 	private function get_event_assets( $event_id, $site_settings, $site_logo_url ) {
 		$featured_image_url = get_the_post_thumbnail_url( $event_id, 'large' );

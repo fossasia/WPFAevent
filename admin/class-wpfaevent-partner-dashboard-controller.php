@@ -47,6 +47,8 @@ class Wpfaevent_Partner_Dashboard_Controller {
 
 	/**
 	 * POST Handler to Save Sponsor/Exhibitor.
+	 *
+	 * @return void
 	 */
 	public function handle_save_partner() {
 		if ( ! current_user_can( 'edit_events' ) ) {
@@ -204,6 +206,8 @@ class Wpfaevent_Partner_Dashboard_Controller {
 
 	/**
 	 * GET Handler to Delete Sponsor/Exhibitor.
+	 *
+	 * @return void
 	 */
 	public function handle_delete_partner() {
 		if ( ! current_user_can( 'edit_events' ) ) {
@@ -258,6 +262,8 @@ class Wpfaevent_Partner_Dashboard_Controller {
 	 * @param string $id           Requested partner ID.
 	 * @param int    $record_index Requested record index.
 	 * @return array
+	 * @phpstan-param array<array-key, mixed> $records
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	private function remove_partner_record( $records, $id, $record_index ) {
 		$id = sanitize_key( $id );
@@ -279,6 +285,9 @@ class Wpfaevent_Partner_Dashboard_Controller {
 	 * @param array $records         Flat sponsor records.
 	 * @param array $existing_groups Existing sponsor groups.
 	 * @return array
+	 * @phpstan-param array<array-key, mixed> $records
+	 * @phpstan-param array<array-key, mixed> $existing_groups
+	 * @phpstan-return list<array<string, mixed>>
 	 */
 	private function build_sponsor_groups_from_records( $records, $existing_groups ) {
 		$existing_groups = is_array( $existing_groups ) ? $existing_groups : array();
@@ -362,6 +371,9 @@ class Wpfaevent_Partner_Dashboard_Controller {
 	 * @param array $groups      Existing groups.
 	 * @param array $group_order Submitted order.
 	 * @return array
+	 * @phpstan-param array<array-key, mixed> $groups
+	 * @phpstan-param list<string> $group_order
+	 * @phpstan-return list<array<array-key, mixed>>
 	 */
 	private function reorder_sponsor_groups( $groups, $group_order ) {
 		$groups      = is_array( $groups ) ? $groups : array();
@@ -402,6 +414,7 @@ class Wpfaevent_Partner_Dashboard_Controller {
 	 * @param int   $event_id   Event ID.
 	 * @param array $group_keys Submitted group keys.
 	 * @return array<string, mixed>
+	 * @phpstan-param list<string> $group_keys
 	 */
 	private function process_reorder_sponsor_groups( $event_id, $group_keys ) {
 		$existing_groups = $this->store->read_dashboard_json_file( 'sponsors-' . $event_id . '.json', array() );

@@ -114,6 +114,7 @@ class Wpfaevent_Event_Navigation_Helper {
 	 * @param array<string, mixed>   $context           Section availability context.
 	 * @param array<int, array>|null $navigation_items  Optional preloaded navigation items.
 	 * @return array<int, array<string, mixed>>
+	 * @phpstan-param array<int, array<string, mixed>>|null $navigation_items
 	 */
 	public static function build_nav_items( $context, $navigation_items = null ) {
 		if ( null === $navigation_items ) {
