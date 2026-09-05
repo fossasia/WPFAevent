@@ -57,9 +57,7 @@
 }
 
 .wpfaevent .wpfa-event-hero {
-	background:
-		linear-gradient(135deg, rgba(0, 0, 0, 0.32) 0%, transparent 52%, rgba(255, 255, 255, 0.28) 100%),
-		var(--event-primary);
+	background: var(--event-primary);
 	color: var(--event-primary-contrast);
 	overflow: hidden;
 	padding: 56px 0 52px;

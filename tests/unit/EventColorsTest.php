@@ -103,4 +103,41 @@ class EventColorsTest extends WP_UnitTestCase {
 		$this->assertSame( '#000000', Wpfaevent_Meta_Event::get_contrast_text_color( '#FDE68A' ) );
 		$this->assertStringContainsString( '--event-primary: #FDE68A; --event-primary-contrast: #000000', $data['event_style_attr'] );
 	}
+
+	/**
+	 * Event colors support only opaque CSS color formats.
+	 */
+	public function test_event_color_sanitizer_rejects_transparent_and_invalid_colors() {
+		$transparent_colors = array(
+			'rgba(0, 0, 0, 0)',
+			'rgba(0, 0, 0, 0.32)',
+			'rgba(255, 255, 255, 0.28)',
+			'rgba(119, 119, 119, 0.5)',
+		);
+
+		foreach ( $transparent_colors as $color ) {
+			$this->assertSame( '', Wpfaevent_Meta_Event::sanitize_color_value( $color ) );
+			$this->assertSame( '#FFFFFF', Wpfaevent_Meta_Event::get_contrast_text_color( $color ) );
+		}
+
+		$this->assertSame( '', Wpfaevent_Meta_Event::sanitize_color_value( 'rgb(256, 0, 0)' ) );
+		$this->assertSame( 'rgb(47, 143, 91)', Wpfaevent_Meta_Event::sanitize_color_value( 'rgb(47,143,91)' ) );
+	}
+
+	/**
+	 * Hero text contrast is chosen against its solid, rendered event color.
+	 */
+	public function test_event_hero_contrast_uses_solid_primary_color() {
+		$stylesheet = file_get_contents( dirname( __DIR__, 2 ) . '/public/css/templates/event-base.css' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a repository fixture in a unit test.
+
+		$this->assertNotFalse( $stylesheet );
+		$this->assertMatchesRegularExpression( '/\.wpfaevent \.wpfa-event-hero \{\s*background: var\(--event-primary\);/s', $stylesheet );
+		$this->assertStringNotContainsString( 'linear-gradient(135deg, rgba(0, 0, 0, 0.32)', $stylesheet );
+
+		$this->assertSame( '#000000', Wpfaevent_Meta_Event::get_contrast_text_color( '#777777' ) );
+		$this->assertSame( '#FFFFFF', Wpfaevent_Meta_Event::get_contrast_text_color( '#000000' ) );
+		$this->assertSame( '#000000', Wpfaevent_Meta_Event::get_contrast_text_color( '#FFFFFF' ) );
+		$this->assertSame( '#FFFFFF', Wpfaevent_Meta_Event::get_contrast_text_color( '#D51007' ) );
+		$this->assertSame( '#000000', Wpfaevent_Meta_Event::get_contrast_text_color( '#F97316' ) );
+	}
 }
