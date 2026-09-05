@@ -261,7 +261,7 @@ class Wpfaevent_Eventyay_Importer {
 					<?php esc_html_e( 'Use this to import the configured Eventyay event. Use the Update Event menu item when that event changes after the initial import.', 'wpfaevent' ); ?>
 				</p>
 
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<form class="wpfaevent-eventyay-import-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="wpfaevent_import_eventyay_events">
 					<input type="hidden" name="wpfaevent_eventyay_return_page" value="wpfaevent-import-events">
 					<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
@@ -279,6 +279,16 @@ class Wpfaevent_Eventyay_Importer {
 						<li><?php esc_html_e( 'Frontend rendering for imported data is handled by the follow-up display PR.', 'wpfaevent' ); ?></li>
 					</ul>
 				</div>
+		</div>
+
+		<div id="wpfaevent-import-progress-overlay" style="display:none;" role="status" aria-live="polite">
+			<div class="wpfaevent-progress-card">
+				<div class="wpfaevent-spinner-container">
+					<div class="wpfaevent-spinner"></div>
+				</div>
+				<h3 id="wpfaevent-progress-title"><?php esc_html_e( 'Importing from Eventyay', 'wpfaevent' ); ?></h3>
+				<p id="wpfaevent-progress-status"><?php esc_html_e( 'This can take a while. Keep this page open until the import finishes.', 'wpfaevent' ); ?></p>
+			</div>
 		</div>
 		<?php
 	}
