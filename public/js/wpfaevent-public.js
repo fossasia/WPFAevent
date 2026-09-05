@@ -122,6 +122,38 @@
 				$('.wpfa-schedule-calendar').css('display', 'none');
 			}
 
+			// The form's view input is server-rendered, so keep it in step with the
+			// switch or the next filter submit reverts the chosen view. The schedule
+			// page reads `view` while the single event template reads `schedule_view`,
+			// so take the name from this switch's own calendar link.
+			const calendarHref =
+				$switch
+					.find('a')
+					.filter(function () {
+						return (
+							($(this).attr('href') || '').indexOf(
+								'view=calendar'
+							) !== -1
+						);
+					})
+					.attr('href') || '';
+			const viewParam =
+				calendarHref.indexOf('schedule_view=calendar') !== -1
+					? 'schedule_view'
+					: 'view';
+			const $filterForm = $('.wpfa-schedule-filter-form');
+			$filterForm
+				.find('input[name="view"], input[name="schedule_view"]')
+				.remove();
+
+			if (isCalendar) {
+				$('<input>', {
+					type: 'hidden',
+					name: viewParam,
+					value: 'calendar',
+				}).appendTo($filterForm);
+			}
+
 			if (window.history && window.history.replaceState) {
 				window.history.replaceState(null, '', href);
 			}
@@ -201,9 +233,57 @@
 			}
 		);
 
-		// Auto-submit filter form if language selection changes (since Apply button is hidden)
-		$(document).on('change', '#wpfa-schedule-language', function () {
-			$(this).closest('form').submit();
+		// The Apply button is hidden above, so the server-side filters submit their
+		// form themselves. A closed select fires `change` for every option an arrow
+		// key passes over, and submitting each one would navigate away mid-choice and
+		// leave focus on the body, so keyboard changes are held until the select is
+		// committed with Enter or left.
+		const scheduleFilterSelects = [
+			'#wpfa-schedule-language',
+			'#wpfa-schedule-day',
+			'#wpfa-schedule-track',
+			'#wpfa-schedule-room',
+			'#wpfa-event-schedule-day',
+			'#wpfa-event-schedule-track',
+			'#wpfa-event-schedule-room',
+		].join(', ');
+
+		let isKeyboardFiltering = false;
+		let $pendingFilter = null;
+
+		const submitFilterForm = function ($select) {
+			$pendingFilter = null;
+			$select.closest('form').submit();
+		};
+
+		$(document).on('keydown', scheduleFilterSelects, function (e) {
+			if ('Enter' === e.key) {
+				if ($pendingFilter) {
+					submitFilterForm($pendingFilter);
+				}
+
+				return;
+			}
+
+			isKeyboardFiltering = true;
+		});
+
+		$(document).on('change', scheduleFilterSelects, function () {
+			if (isKeyboardFiltering) {
+				$pendingFilter = $(this);
+
+				return;
+			}
+
+			submitFilterForm($(this));
+		});
+
+		$(document).on('blur', scheduleFilterSelects, function () {
+			isKeyboardFiltering = false;
+
+			if ($pendingFilter) {
+				submitFilterForm($pendingFilter);
+			}
 		});
 
 		const speakerPlaceholderSvg =
