@@ -660,6 +660,14 @@ class Wpfaevent_Event_Template_Controller {
 			}
 		}
 
+		if ( ! empty( $event_colors['wpfa_event_primary_color'] ) && class_exists( 'Wpfaevent_Meta_Event' ) ) {
+			$event_style_vars[] = '--event-primary-contrast: ' . Wpfaevent_Meta_Event::get_contrast_text_color( $event_colors['wpfa_event_primary_color'] );
+		}
+
+		if ( ! empty( $event_colors['wpfa_event_hover_button_color'] ) && class_exists( 'Wpfaevent_Meta_Event' ) ) {
+			$event_style_vars[] = '--event-primary-dark-contrast: ' . Wpfaevent_Meta_Event::get_contrast_text_color( $event_colors['wpfa_event_hover_button_color'] );
+		}
+
 		$event_style_attr = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
 
 		foreach ( $sponsor_groups as $sponsor_group ) {

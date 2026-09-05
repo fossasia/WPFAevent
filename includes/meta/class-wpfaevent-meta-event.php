@@ -618,6 +618,44 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
+	 * Get an accessible text color for an opaque event color background.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $color Background color.
+	 * @return string Accessible black or white text color.
+	 */
+	public static function get_contrast_text_color( $color ) {
+		$color = self::sanitize_color_value( $color );
+		$rgb   = array();
+
+		if ( preg_match( '/^#([0-9A-F]{3}|[0-9A-F]{6})$/', $color, $matches ) ) {
+			$hex = $matches[1];
+			if ( 3 === strlen( $hex ) ) {
+				$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+			}
+
+			$rgb = array( hexdec( substr( $hex, 0, 2 ) ), hexdec( substr( $hex, 2, 2 ) ), hexdec( substr( $hex, 4, 2 ) ) );
+		} elseif ( preg_match( '/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/', $color, $matches ) ) {
+			$rgb = array( (int) $matches[1], (int) $matches[2], (int) $matches[3] );
+		}
+
+		if ( 3 !== count( $rgb ) ) {
+			return '#FFFFFF';
+		}
+
+		$coefficients = array( 0.2126, 0.7152, 0.0722 );
+		$luminance    = 0;
+		foreach ( $rgb as $index => $channel ) {
+			$channel    = $channel / 255;
+			$channel    = $channel <= 0.03928 ? $channel / 12.92 : pow( ( $channel + 0.055 ) / 1.055, 2.4 );
+			$luminance += $channel * $coefficients[ $index ];
+		}
+
+		return $luminance > 0.179 ? '#000000' : '#FFFFFF';
+	}
+
+	/**
 	 * Sanitize event language values.
 	 *
 	 * @since 1.0.0
@@ -671,7 +709,10 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
-	 * Sanitize an imported event color value.
+	 * Sanitize an opaque event color value.
+	 *
+	 * Alpha colors are not supported because event colors are used as solid
+	 * backgrounds for controls and the event hero.
 	 *
 	 * @since 1.0.0
 	 *
@@ -706,8 +747,14 @@ class Wpfaevent_Meta_Event {
 			return '#' . strtoupper( $color );
 		}
 
-		if ( preg_match( '/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(\s*,\s*(0|1|0?\.\d+))?\s*\)$/', $color ) ) {
-			return $color;
+		if ( preg_match( '/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/', $color, $matches ) ) {
+			$red   = (int) $matches[1];
+			$green = (int) $matches[2];
+			$blue  = (int) $matches[3];
+
+			if ( 255 >= $red && 255 >= $green && 255 >= $blue ) {
+				return sprintf( 'rgb(%d, %d, %d)', $red, $green, $blue );
+			}
 		}
 
 		return '';
