@@ -122,6 +122,19 @@
 				$('.wpfa-schedule-calendar').css('display', 'none');
 			}
 
+			// The form's view input is server-rendered, so keep it in step with the
+			// switch or the next filter submit reverts the chosen view.
+			const $filterForm = $('.wpfa-schedule-filter-form');
+			$filterForm.find('input[name="view"]').remove();
+
+			if (isCalendar) {
+				$('<input>', {
+					type: 'hidden',
+					name: 'view',
+					value: 'calendar',
+				}).appendTo($filterForm);
+			}
+
 			if (window.history && window.history.replaceState) {
 				window.history.replaceState(null, '', href);
 			}
