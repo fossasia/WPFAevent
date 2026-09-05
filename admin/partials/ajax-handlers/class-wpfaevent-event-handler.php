@@ -30,6 +30,7 @@ class Wpfaevent_Event_Handler {
 	 * Handle AJAX request to get event data.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_get_event() {
 		// Verify nonce. Third param 'false' ensures we can handle the error response manually via JSON.
@@ -94,6 +95,7 @@ class Wpfaevent_Event_Handler {
 	 * Handle AJAX request to add a new event.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_add_event() {
 		// Verify nonce. Third param 'false' ensures we can handle the error response manually via JSON.
@@ -235,6 +237,7 @@ class Wpfaevent_Event_Handler {
 	 * Handle AJAX request to update an event.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_update_event() {
 		// Verify nonce. Third param 'false' ensures we can handle the error response manually via JSON.
@@ -382,6 +385,7 @@ class Wpfaevent_Event_Handler {
 	 * @param int   $event_id Event post ID.
 	 * @param array $request  Request data.
 	 * @return void
+	 * @phpstan-param array<string, mixed> $request
 	 */
 	private function save_event_timing_meta( $event_id, $request ) {
 		$event_id = absint( $event_id );
@@ -499,6 +503,7 @@ class Wpfaevent_Event_Handler {
 	 * Handle AJAX request to delete an event.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_delete_event() {
 		// Verify nonce. Third param 'false' ensures we can handle the error response manually via JSON.
