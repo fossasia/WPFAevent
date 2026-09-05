@@ -35,6 +35,7 @@ class Wpfaevent_Admin_Settings_Renderer {
 	 * Render the settings configuration and import page.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function render_settings_page() {
 		if ( ! Wpfaevent_Roles::current_user_can_import_eventyay() ) {
@@ -57,6 +58,7 @@ class Wpfaevent_Admin_Settings_Renderer {
 	 * Render the update events dashboard module.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function render_update_events_page() {
 		if ( ! Wpfaevent_Roles::current_user_can_import_eventyay() ) {

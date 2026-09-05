@@ -65,6 +65,7 @@ class Wpfaevent_AJAX_Controller {
 	 * Handle Eventyay JSON:API speaker sync for the admin dashboard.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function ajax_sync_eventyay() {
 		if ( ! check_ajax_referer( 'fossasia_admin_nonce', 'nonce', false ) ) {
@@ -155,6 +156,7 @@ class Wpfaevent_AJAX_Controller {
 	 * Get all events for chunked imports.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function ajax_import_get_events() {
 		if ( ! check_ajax_referer( 'wpfaevent_import_eventyay_events', 'nonce', false ) ) {
@@ -217,6 +219,7 @@ class Wpfaevent_AJAX_Controller {
 	 * Import a single event for chunked imports.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function ajax_import_single_event() {
 		if ( ! check_ajax_referer( 'wpfaevent_import_eventyay_events', 'nonce', false ) ) {
@@ -280,6 +283,7 @@ class Wpfaevent_AJAX_Controller {
 	 * Save the final import summary transient for notices.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function ajax_import_save_summary() {
 		if ( ! check_ajax_referer( 'wpfaevent_import_eventyay_events', 'nonce', false ) ) {

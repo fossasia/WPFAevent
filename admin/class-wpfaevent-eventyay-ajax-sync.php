@@ -45,6 +45,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * Handle Eventyay JSON:API speaker sync for the admin dashboard.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function ajax_sync_eventyay() {
 		if ( ! check_ajax_referer( 'fossasia_admin_nonce', 'nonce', false ) ) {
@@ -317,6 +318,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @param string $api_url   Eventyay API URL.
 	 * @param string $api_token Optional API token for Authorization header.
 	 * @return array|WP_Error
+	 * @phpstan-return array<string, mixed>|WP_Error
 	 */
 	private function fetch_eventyay_json( $api_url, $api_token = '' ) {
 		if ( '' === trim( (string) $api_token ) ) {
@@ -358,6 +360,9 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @param array $imported Imported Eventyay speakers.
 	 * @param array $existing Existing dashboard speakers.
 	 * @return array
+	 * @phpstan-param list<array<string, mixed>> $imported
+	 * @phpstan-param list<array<string, mixed>> $existing
+	 * @phpstan-return list<array<string, mixed>>
 	 */
 	private function merge_dashboard_speaker_state( $imported, $existing ) {
 		if ( ! is_array( $existing ) ) {
@@ -415,6 +420,8 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 *
 	 * @param array $speaker Speaker data.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $speaker
+	 * @phpstan-return list<string>
 	 */
 	private function get_dashboard_speaker_state_keys( $speaker ) {
 		$keys = array();
@@ -441,6 +448,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 *
 	 * @param array $speaker Speaker data.
 	 * @return bool
+	 * @phpstan-param array<string, mixed> $speaker
 	 */
 	private function is_eventyay_dashboard_speaker( $speaker ) {
 		if ( isset( $speaker['source'] ) && 'eventyay' === $speaker['source'] ) {
@@ -588,6 +596,8 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @param array $speakers Imported speakers.
 	 * @param int   $event_id Event post ID.
 	 * @return array
+	 * @phpstan-param list<array<string, mixed>> $speakers
+	 * @phpstan-return array{created: int, updated: int, ids: list<int>, featured_ids: list<int>}
 	 */
 	private function sync_eventyay_speaker_posts( $speakers, $event_id ) {
 		$result         = array(
@@ -693,6 +703,8 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @param array  $speaker     Speaker data.
 	 * @param string $post_status WordPress post status for the speaker.
 	 * @return array|WP_Error
+	 * @phpstan-param array<string, mixed> $speaker
+	 * @phpstan-return array{id: int, created: bool}|WP_Error
 	 */
 	private function upsert_eventyay_speaker_post( $speaker, $post_status = 'draft' ) {
 		if ( empty( $speaker['eventyay_speaker_id'] ) || empty( $speaker['name'] ) ) {
@@ -1041,6 +1053,8 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @param string $event_slug Eventyay event slug.
 	 * @param array  $settings   Import settings.
 	 * @return array|WP_Error
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array{speakers: int, created_speakers: int, updated_speakers: int, sessions: int, schedule_rows: int}|WP_Error
 	 */
 	public function sync_speakers_for_event( $event_id, $event_slug, $settings ) {
 		$event_id  = absint( $event_id );
@@ -1117,6 +1131,8 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @param array  $settings   Import settings.
 	 * @param string $api_url    Primary speakers API URL.
 	 * @return array|WP_Error Normalized import payload.
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, mixed>|WP_Error
 	 */
 	private function fetch_speakers_with_fallback( $event_id, $event_slug, $settings, $api_url ) {
 		$api_token = ! empty( $settings['api_token'] ) ? $settings['api_token'] : '';
@@ -1233,6 +1249,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 * @param int   $event_id Imported WordPress event post ID.
 	 * @param array $sessions Normalized Eventyay sessions.
 	 * @return int|WP_Error Number of imported schedule data rows.
+	 * @phpstan-param list<array<string, mixed>> $sessions
 	 */
 	private function write_eventyay_schedule_table( $event_id, $sessions ) {
 		$event_id = absint( $event_id );
@@ -1268,6 +1285,8 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 	 *
 	 * @param array $sessions Normalized Eventyay sessions.
 	 * @return array
+	 * @phpstan-param list<array<string, mixed>> $sessions
+	 * @phpstan-return array{name: string, rows: int, cols: int, data: list<list<string>>, sessions: list<array<string, string>>, source: string}
 	 */
 	private function build_eventyay_schedule_table( $sessions ) {
 		usort(

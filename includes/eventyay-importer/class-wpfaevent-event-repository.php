@@ -45,6 +45,9 @@ class Wpfaevent_Event_Repository {
 	 * @param array $event    Eventyay event resource.
 	 * @param array $settings Import settings.
 	 * @return array|WP_Error Upsert result.
+	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array{id: int, created: bool, event_slug: string}|WP_Error
 	 */
 	public function upsert_eventyay_event_post( $event, $settings ) {
 		$event      = $this->parser->normalize_eventyay_event_resource( $event );
@@ -329,6 +332,7 @@ class Wpfaevent_Event_Repository {
 	 * @param int   $event_id Imported WordPress event post ID.
 	 * @param array $sessions Normalized Eventyay sessions.
 	 * @return int|WP_Error Number of imported schedule data rows.
+	 * @phpstan-param list<array<string, mixed>> $sessions
 	 */
 	public function write_eventyay_schedule_table( $event_id, $sessions ) {
 		$event_id = absint( $event_id );
@@ -364,6 +368,8 @@ class Wpfaevent_Event_Repository {
 	 *
 	 * @param array $sessions Normalized Eventyay sessions.
 	 * @return array
+	 * @phpstan-param list<array<string, mixed>> $sessions
+	 * @phpstan-return array{name: string, rows: int, cols: int, data: list<list<string>>, sessions: list<array<string, string>>, source: string}
 	 */
 	public function build_eventyay_schedule_table( $sessions ) {
 		usort(

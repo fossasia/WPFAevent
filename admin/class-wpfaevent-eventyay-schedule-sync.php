@@ -37,6 +37,7 @@ class Wpfaevent_Eventyay_Schedule_Sync {
 	 * @param int   $event_id Imported WordPress event post ID.
 	 * @param array $sessions Normalized Eventyay sessions.
 	 * @return int|WP_Error Number of imported schedule data rows.
+	 * @phpstan-param list<array<string, mixed>> $sessions
 	 */
 	public function write_eventyay_schedule_table( $event_id, $sessions ) {
 		$event_id = absint( $event_id );
@@ -70,6 +71,8 @@ class Wpfaevent_Eventyay_Schedule_Sync {
 	 *
 	 * @param array $sessions Normalized Eventyay sessions.
 	 * @return array
+	 * @phpstan-param list<array<string, mixed>> $sessions
+	 * @phpstan-return array{name: string, rows: int, cols: int, data: list<list<string>>, sessions: list<array<string, string>>, source: string}
 	 */
 	private function build_eventyay_schedule_table( $sessions ) {
 		usort(
