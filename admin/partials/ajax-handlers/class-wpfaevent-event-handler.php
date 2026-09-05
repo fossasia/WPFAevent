@@ -412,7 +412,10 @@ class Wpfaevent_Event_Handler {
 			$this->update_or_delete_post_meta( $event_id, 'wpfa_event_timezone', $timezone );
 		}
 
-		$all_day = isset( $request['all_day'] ) && rest_sanitize_boolean( wp_unslash( $request['all_day'] ) );
+		$posted_all_day = isset( $request['all_day'] ) ? wp_unslash( $request['all_day'] ) : false;
+		$all_day        = is_bool( $posted_all_day ) || is_string( $posted_all_day ) || is_int( $posted_all_day )
+			? rest_sanitize_boolean( $posted_all_day )
+			: (bool) $posted_all_day;
 		update_post_meta( $event_id, 'wpfa_event_all_day', $all_day ? '1' : '0' );
 
 		$posted_start_time = isset( $request['start_time'] ) ? sanitize_text_field( wp_unslash( $request['start_time'] ) ) : '';

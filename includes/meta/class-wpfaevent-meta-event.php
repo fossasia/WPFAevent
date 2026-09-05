@@ -501,7 +501,14 @@ class Wpfaevent_Meta_Event {
 	 * @return bool
 	 */
 	public static function sanitize_boolean_value( $value ) {
-		return rest_sanitize_boolean( $value );
+		// rest_sanitize_boolean() is documented for bool|string|int. Anything else
+		// reaches its `return (bool) $value` unchanged, so this narrows the call
+		// without altering the result.
+		if ( is_bool( $value ) || is_string( $value ) || is_int( $value ) ) {
+			return rest_sanitize_boolean( $value );
+		}
+
+		return (bool) $value;
 	}
 
 	/**
@@ -540,7 +547,7 @@ class Wpfaevent_Meta_Event {
 		$value = get_post_meta( $event_id, 'wpfa_event_all_day', true );
 
 		if ( '' !== $value ) {
-			return rest_sanitize_boolean( $value );
+			return self::sanitize_boolean_value( $value );
 		}
 
 		return '' === self::sanitize_time_value( get_post_meta( $event_id, 'wpfa_event_start_time', true ) )
