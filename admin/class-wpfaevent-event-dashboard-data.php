@@ -475,7 +475,7 @@ class Wpfaevent_Event_Dashboard_Data {
 	 * @param int   $event_id  Event post ID.
 	 * @param array $sessions  Normalized schedule sessions.
 	 * @return array<int, string>
-	 * @phpstan-param array<int, array<string, string>> $sessions
+	 * @phpstan-param array<int, array<string, mixed>> $sessions
 	 */
 	private function get_track_names( $event_id, $sessions ) {
 		$tracks = $this->get_term_names( $event_id, 'wpfa_event_track' );

@@ -744,7 +744,7 @@ class Wpfaevent_Meta_Event {
 	 * @param array<int>        $speaker_ids        Linked speaker post IDs.
 	 * @param array<int, array> $dashboard_speakers Imported dashboard speaker rows.
 	 * @return array<int, int> Dashboard row index to speaker post ID.
-	 * @phpstan-param array<int, array<string, mixed>> $dashboard_speakers
+	 * @phpstan-param array<array-key, mixed> $dashboard_speakers
 	 */
 	public static function map_dashboard_speakers_to_post_ids( $speaker_ids, $dashboard_speakers ) {
 		$speaker_ids = self::sanitize_post_id_list( $speaker_ids );
@@ -807,7 +807,7 @@ class Wpfaevent_Meta_Event {
 	 * @param array<int>        $speaker_ids        Linked speaker post IDs.
 	 * @param array<int, array> $dashboard_speakers Imported dashboard speaker rows.
 	 * @return array<int>
-	 * @phpstan-param array<int, array<string, mixed>> $dashboard_speakers
+	 * @phpstan-param array<array-key, mixed> $dashboard_speakers
 	 */
 	public static function resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers = array() ) {
 		$event_id    = absint( $event_id );

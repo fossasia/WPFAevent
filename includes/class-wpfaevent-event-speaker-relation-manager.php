@@ -172,7 +172,7 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 	 * @param array<int>        $speaker_ids        Linked speaker post IDs.
 	 * @param array<int, array> $dashboard_speakers Imported dashboard speaker rows.
 	 * @return array<int>
-	 * @phpstan-param array<int, array<string, mixed>> $dashboard_speakers
+	 * @phpstan-param array<array-key, mixed> $dashboard_speakers
 	 */
 	public static function resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers = array() ) {
 		$event_id    = absint( $event_id );

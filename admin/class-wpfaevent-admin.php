@@ -157,7 +157,7 @@ class Wpfaevent_Admin {
 	 * @since    1.0.0
 	 * @param    array $links Existing plugin action links.
 	 * @return   array Modified plugin action links.
-	 * @phpstan-param array<string, string> $links
+	 * @phpstan-param array<array-key, string> $links
 	 * @phpstan-return array<array-key, string>
 	 */
 	public function add_settings_link( $links ) {
