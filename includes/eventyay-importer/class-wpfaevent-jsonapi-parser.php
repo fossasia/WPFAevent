@@ -36,6 +36,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_event_resource( $event ) {
 		if ( ! is_array( $event ) ) {
@@ -70,6 +72,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $payload API payload.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $payload
+	 * @phpstan-return list<array<string, mixed>>
 	 */
 	public function extract_eventyay_event_resources( $payload ) {
 		$resources = array();
@@ -112,6 +116,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $event Normalized Eventyay event resource.
 	 * @return bool
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public function eventyay_event_resource_needs_detail( $event ) {
 		$has_start    = '' !== trim( $this->eventyay_event_datetime( $event, 'start' ) );
@@ -128,6 +133,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $base   Existing event fields.
 	 * @param array $detail Detail event fields.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $base
+	 * @phpstan-param array<string, mixed> $detail
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function merge_eventyay_event_resource( $base, $detail ) {
 		$base   = $this->normalize_eventyay_event_resource( $base );
@@ -171,6 +179,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $resources Eventyay sponsor resources.
 	 * @param array $settings  Import settings.
 	 * @return array
+	 * @phpstan-param list<array<string, mixed>> $resources
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return list<array<string, mixed>>
 	 */
 	public function normalize_eventyay_sponsor_resources( $resources, $settings ) {
 		$sponsors = array();
@@ -215,6 +226,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $sponsor_resource Eventyay sponsor resource.
 	 * @param array $settings Import settings.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $sponsor_resource
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_sponsor_resource( $sponsor_resource, $settings ) {
 		$sponsor_resource = $this->normalize_eventyay_api_resource( $sponsor_resource );
@@ -243,6 +257,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $sponsor_resource Eventyay sponsor resource.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $sponsor_resource
 	 */
 	public function eventyay_sponsor_group_name( $sponsor_resource ) {
 		$sponsor_resource = $this->normalize_eventyay_api_resource( $sponsor_resource );
@@ -276,6 +291,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $resources Eventyay exhibitor resources.
 	 * @param array $settings  Import settings.
 	 * @return array
+	 * @phpstan-param list<array<string, mixed>> $resources
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return list<array<string, mixed>>
 	 */
 	public function normalize_eventyay_exhibitor_resources( $resources, $settings ) {
 		$exhibitors = array();
@@ -320,6 +338,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $exhibitor_resource Eventyay exhibitor resource.
 	 * @param array $settings Import settings.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $exhibitor_resource
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_exhibitor_resource( $exhibitor_resource, $settings ) {
 		$exhibitor_resource = $this->normalize_eventyay_api_resource( $exhibitor_resource );
@@ -353,6 +374,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array  $settings    Import settings.
 	 * @param string $event_slug  Eventyay event slug.
 	 * @return array
+	 * @phpstan-param array<int, mixed> $submissions
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_submissions_payload( $submissions, $settings, $event_slug ) {
 		$speakers      = array();
@@ -419,6 +443,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array  $settings          Import settings.
 	 * @param string $event_slug        Eventyay event slug.
 	 * @return array
+	 * @phpstan-param array<int, mixed> $speaker_resources
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_speakers_payload( $speaker_resources, $settings, $event_slug ) {
 		$speakers = array();
@@ -478,6 +505,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array  $settings       Import settings.
 	 * @param string $event_slug     Eventyay event slug.
 	 * @return array
+	 * @phpstan-param array<int, mixed> $slot_resources
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_slots_payload( $slot_resources, $settings, $event_slug ) {
 		$speakers = array();
@@ -542,6 +572,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $base  Base program payload.
 	 * @param array $extra Extra program payload.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $base
+	 * @phpstan-param array<string, mixed> $extra
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function merge_eventyay_program_payloads( $base, $extra ) {
 		$base  = is_array( $base ) ? $base : array();
@@ -585,6 +618,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $sessions Session list.
 	 * @param array $session  Session payload.
 	 * @return array
+	 * @phpstan-param array<string, array<string, mixed>> $sessions
+	 * @phpstan-param array<string, mixed> $session
+	 * @phpstan-return array<string, array<string, mixed>>
 	 */
 	public function merge_eventyay_session_payload( $sessions, $session ) {
 		if ( ! $this->eventyay_session_has_content( $session ) ) {
@@ -612,6 +648,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $submission Eventyay submission resource.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $submission
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_submission_session( $submission ) {
 		$submission = $this->normalize_eventyay_api_resource( $submission );
@@ -657,6 +695,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $slot       Eventyay slot resource.
 	 * @param array $submission Eventyay submission resource.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $slot
+	 * @phpstan-param array<string, mixed> $submission
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_slot_session( $slot, $submission ) {
 		$slot       = $this->normalize_eventyay_api_resource( $slot );
@@ -700,6 +741,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $session Normalized session.
 	 * @return bool
+	 * @phpstan-param array<string, mixed> $session
 	 */
 	public function eventyay_session_has_content( $session ) {
 		foreach ( array( 'title', 'date', 'time', 'end_time', 'abstract', 'track', 'room' ) as $key ) {
@@ -718,6 +760,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $slot Eventyay slot resource.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $slot
 	 */
 	public function eventyay_slot_room_name( $slot ) {
 		$slot = $this->normalize_eventyay_api_resource( $slot );
@@ -747,6 +790,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array  $settings         Import settings.
 	 * @param string $event_slug       Eventyay event slug.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $speaker_resource
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_submission_speaker( $speaker_resource, $settings, $event_slug ) {
 		$speaker_resource = $this->normalize_eventyay_api_resource( $speaker_resource );
@@ -805,6 +851,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $speaker_resource Normalized Eventyay speaker resource.
 	 * @return bool
+	 * @phpstan-param array<string, mixed> $speaker_resource
 	 */
 	public function eventyay_speaker_is_featured( $speaker_resource ) {
 		$featured = $this->eventyay_first_present_raw(
@@ -836,6 +883,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $speaker_resource Normalized Eventyay speaker resource.
 	 * @return int
+	 * @phpstan-param array<string, mixed> $speaker_resource
 	 */
 	public function eventyay_speaker_featured_order( $speaker_resource ) {
 		$order = $this->eventyay_first_present_raw(
@@ -864,6 +912,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $speaker_resource Normalized Eventyay speaker resource.
 	 * @return bool
+	 * @phpstan-param array<string, mixed> $speaker_resource
 	 */
 	public function eventyay_speaker_featured_state_known( $speaker_resource ) {
 		return $this->eventyay_has_present_key(
@@ -894,6 +943,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $speaker_resource Eventyay resource array.
 	 * @param array $keys             Candidate keys.
 	 * @return bool
+	 * @phpstan-param array<string, mixed> $speaker_resource
+	 * @phpstan-param list<string> $keys
 	 */
 	public function eventyay_has_present_key( $speaker_resource, $keys ) {
 		if ( ! is_array( $speaker_resource ) ) {
@@ -950,6 +1001,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $submission Eventyay submission resource.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $submission
 	 */
 	public function eventyay_submission_abstract( $submission ) {
 		return $this->eventyay_first_present_rich_text(
@@ -970,6 +1022,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $submission Eventyay submission resource.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $submission
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function eventyay_first_slot( $submission ) {
 		if ( ! empty( $submission['slot'] ) && is_array( $submission['slot'] ) ) {
@@ -994,6 +1048,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $eventyay_resource
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_api_resource( $eventyay_resource ) {
 		if ( ! is_array( $eventyay_resource ) ) {
@@ -1077,6 +1133,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param mixed $value Raw value.
 	 * @return array
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	public function eventyay_list_value( $value ) {
 		if ( ! is_array( $value ) ) {
@@ -1118,6 +1175,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $eventyay_resource
 	 */
 	public function eventyay_resource_identifier( $eventyay_resource ) {
 		foreach ( array( '_eventyay_source_id', 'code', 'id', 'slug' ) as $key ) {
@@ -1137,6 +1195,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @param array $keys              Candidate keys.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $eventyay_resource
+	 * @phpstan-param list<string> $keys
 	 */
 	public function eventyay_first_present_text( $eventyay_resource, $keys ) {
 		$value = $this->eventyay_first_present_raw( $eventyay_resource, $keys );
@@ -1152,6 +1212,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @param array $keys              Candidate keys.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $eventyay_resource
+	 * @phpstan-param list<string> $keys
 	 */
 	public function eventyay_first_present_rich_text( $eventyay_resource, $keys ) {
 		$value = $this->eventyay_first_present_raw( $eventyay_resource, $keys );
@@ -1167,6 +1229,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @param array $keys              Candidate keys.
 	 * @return mixed
+	 * @phpstan-param array<string, mixed> $eventyay_resource
+	 * @phpstan-param list<string> $keys
 	 */
 	public function eventyay_first_present_raw( $eventyay_resource, $keys ) {
 		foreach ( $keys as $key ) {
@@ -1298,6 +1362,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return bool
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public function eventyay_event_has_settings_payload( $event ) {
 		foreach ( array( '_eventyay_settings', 'settings' ) as $settings_key ) {
@@ -1318,6 +1383,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $keys             Candidate keys.
 	 * @param bool  $include_settings Whether to check Eventyay settings payloads.
 	 * @return mixed
+	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param list<string> $keys
 	 */
 	public function eventyay_event_first_present_raw( $event, $keys, $include_settings = false ) {
 		$value = $this->eventyay_first_present_raw( $event, $keys );
@@ -1460,6 +1527,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public function eventyay_event_description( $event ) {
 		$value = $this->eventyay_event_first_present_raw(
@@ -1495,6 +1563,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function eventyay_public_event_url( $event, $settings, $event_slug ) {
 		$url = $this->eventyay_url_value(
@@ -1545,6 +1615,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array|WP_Error
+	 * @phpstan-param array<string, mixed> $payload
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, mixed>|WP_Error
 	 */
 	public function normalize_eventyay_payload( $payload, $settings = array(), $event_slug = '' ) {
 		if ( ! array_key_exists( 'data', $payload ) && array_key_exists( 'results', $payload ) && is_array( $payload['results'] ) ) {
@@ -1638,6 +1711,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return array
+	 * @phpstan-param array<int, mixed> $results
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_rest_speakers_payload( $results, $settings = array(), $event_slug = '' ) {
 		$speakers = array();
@@ -1702,6 +1778,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $slots Raw slots array from the Eventyay slots API.
 	 * @return array
+	 * @phpstan-param array<int, mixed> $slots
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function transform_slots_to_speakers_payload( $slots ) {
 		$speakers_map = array();
@@ -1787,6 +1865,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $session_resource Session resource.
 	 * @param array $included         Indexed included resources.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $session_resource
+	 * @phpstan-param array<string, mixed> $included
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_session_resource( $session_resource, $included ) {
 		$attributes = $this->get_jsonapi_attributes( $session_resource );
@@ -1824,6 +1905,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $speaker_resource Speaker resource.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $speaker_resource
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function normalize_eventyay_speaker_resource( $speaker_resource ) {
 		$attributes = $this->get_jsonapi_attributes( $speaker_resource );
@@ -1884,6 +1967,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $jsonapi_resource JSON:API resource.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $jsonapi_resource
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function get_jsonapi_attributes( $jsonapi_resource ) {
 		return isset( $jsonapi_resource['attributes'] ) && is_array( $jsonapi_resource['attributes'] ) ? $jsonapi_resource['attributes'] : array();
@@ -1897,6 +1982,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $attributes Attribute map.
 	 * @param array $keys       Candidate keys.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $attributes
+	 * @phpstan-param list<string> $keys
 	 */
 	public function attribute_value( $attributes, $keys ) {
 		foreach ( $keys as $key ) {
@@ -1915,6 +2002,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $resources Included resources.
 	 * @return array
+	 * @phpstan-param array<int, mixed> $resources
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function index_jsonapi_resources( $resources ) {
 		$index = array();
@@ -1943,6 +2032,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $resource_identifier JSON:API resource identifier.
 	 * @param array $included            Indexed included resources.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $resource_identifier
+	 * @phpstan-param array<string, mixed> $included
+	 * @phpstan-return array<string, mixed>
 	 */
 	public function resolve_jsonapi_resource( $resource_identifier, $included ) {
 		if ( ! $this->is_jsonapi_resource( $resource_identifier ) ) {
@@ -1981,6 +2073,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array  $jsonapi_resource JSON:API resource.
 	 * @param string $name             Relationship name.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $jsonapi_resource
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	public function get_jsonapi_relationship_resources( $jsonapi_resource, $name ) {
 		if ( empty( $jsonapi_resource['relationships'][ $name ] ) || ! is_array( $jsonapi_resource['relationships'][ $name ] ) ) {
@@ -2019,6 +2113,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array  $jsonapi_resource JSON:API resource.
 	 * @param string $type             Expected singular type.
 	 * @return bool
+	 * @phpstan-param array<string, mixed> $jsonapi_resource
 	 */
 	public function jsonapi_type_is( $jsonapi_resource, $type ) {
 		if ( empty( $jsonapi_resource['type'] ) ) {
@@ -2185,6 +2280,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public function eventyay_event_slug( $event ) {
 		$slug = $this->eventyay_first_present_text( $event, array( 'slug', 'identifier', 'code' ) );
@@ -2212,6 +2308,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public function eventyay_event_title( $event ) {
 		return $this->eventyay_first_present_text( $event, array( 'name', 'title', 'label' ) );
@@ -2225,6 +2322,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array  $event Eventyay event resource.
 	 * @param string $type  Date type. Accepts start or end.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public function eventyay_event_datetime( $event, $type ) {
 		$keys = ( 'end' === $type )
@@ -2241,6 +2339,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public function eventyay_event_timezone( $event ) {
 		return Wpfaevent_Meta_Event::sanitize_timezone(
@@ -2259,6 +2358,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public function eventyay_event_location( $event ) {
 		$location = $this->eventyay_event_first_present_raw(
@@ -2287,6 +2387,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return array<string>
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public function eventyay_event_languages( $event ) {
 		$languages = $this->eventyay_event_first_present_raw(
@@ -2320,6 +2421,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $event Eventyay event resource.
 	 * @return array<string, string>
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public function eventyay_event_colors( $event ) {
 		$color_fields = array(
@@ -2352,6 +2454,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $event    Eventyay event resource.
 	 * @param array $settings Import settings.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function eventyay_event_header_image_url( $event, $settings ) {
 		$value = $this->eventyay_event_first_present_raw(
@@ -2407,6 +2511,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $event    Eventyay event resource.
 	 * @param array $settings Import settings.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function eventyay_event_logo_url( $event, $settings ) {
 		$value = $this->eventyay_event_first_present_raw(
@@ -2443,6 +2549,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array  $settings   Import settings.
 	 * @param string $event_slug Eventyay event slug.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public function eventyay_ticket_widget_url( $event, $settings, $event_slug ) {
 		$url = $this->eventyay_url_value(
@@ -2482,6 +2590,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $sponsors Imported sponsors.
 	 * @return array
+	 * @phpstan-param list<array<string, mixed>> $sponsors
+	 * @phpstan-return array<string, array<string, mixed>>
 	 */
 	public function group_eventyay_sponsors( $sponsors ) {
 		$groups = array();
@@ -2525,6 +2635,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $group Sponsor group.
 	 * @return bool
+	 * @phpstan-param array<string, mixed> $group
 	 */
 	public function is_eventyay_sponsor_group( $group ) {
 		if ( ! empty( $group['source'] ) && 'eventyay' === $group['source'] ) {
@@ -2552,6 +2663,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $imported Imported sponsors.
 	 * @param array $existing Existing dashboard sponsor groups.
 	 * @return array
+	 * @phpstan-param list<array<string, mixed>> $imported
+	 * @phpstan-param array<int, mixed> $existing
+	 * @phpstan-return list<array<string, mixed>>
 	 */
 	public function merge_eventyay_sponsor_groups( $imported, $existing ) {
 		$existing        = is_array( $existing ) ? $existing : array();
@@ -2638,6 +2752,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $imported Imported records.
 	 * @param array $existing Existing records.
 	 * @return array
+	 * @phpstan-param list<array<string, mixed>> $imported
+	 * @phpstan-param array<int, mixed> $existing
+	 * @phpstan-return list<array<string, mixed>>
 	 */
 	public function merge_eventyay_flat_records( $imported, $existing ) {
 		$existing = is_array( $existing ) ? $existing : array();
@@ -2666,6 +2783,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $imported Imported Eventyay speakers.
 	 * @param array $existing Existing dashboard speakers.
 	 * @return array
+	 * @phpstan-param array<int, array<string, mixed>> $imported
+	 * @phpstan-param array<int, mixed> $existing
+	 * @phpstan-return list<array<string, mixed>>
 	 */
 	public function merge_dashboard_speaker_state( $imported, $existing ) {
 		if ( ! is_array( $existing ) ) {
@@ -2731,6 +2851,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $speakers              Imported speaker records to enrich.
 	 * @param array $supplemental_speakers Supplemental normalized speaker records.
 	 * @return array
+	 * @phpstan-param array<int, array<string, mixed>> $speakers
+	 * @phpstan-param array<int, array<string, mixed>> $supplemental_speakers
+	 * @phpstan-return array<int, array<string, mixed>>
 	 */
 	public function merge_supplemental_speakers( $speakers, $supplemental_speakers ) {
 		if ( ! is_array( $speakers ) || empty( $speakers ) || ! is_array( $supplemental_speakers ) || empty( $supplemental_speakers ) ) {
@@ -2803,6 +2926,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $speaker    Imported speaker record.
 	 * @param array $candidates Supplemental speaker candidates with the same name key.
 	 * @return int|null
+	 * @phpstan-param array<string, mixed> $speaker
+	 * @phpstan-param list<array<string, mixed>> $candidates
 	 */
 	private function match_supplemental_speaker_candidate_index( $speaker, $candidates ) {
 		if ( 1 === count( $candidates ) ) {
@@ -2859,6 +2984,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array    $candidates Candidate speaker records.
 	 * @param callable $matcher    Match callback.
 	 * @return int|null
+	 * @phpstan-param list<array<string, mixed>> $candidates
 	 */
 	private function find_unique_candidate_index( $candidates, $matcher ) {
 		$matched_index = null;
@@ -2886,6 +3012,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $speaker      Imported speaker record.
 	 * @param array $supplemental Supplemental speaker record.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $speaker
+	 * @phpstan-param array<string, mixed> $supplemental
+	 * @phpstan-return array<string, mixed>
 	 */
 	private function merge_eventyay_supplemental_speaker_record( $speaker, $supplemental ) {
 		foreach ( array( 'title', 'position', 'organization', 'category', 'image', 'bio' ) as $field ) {
@@ -2924,6 +3053,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param string $html Public speakers page HTML.
 	 * @return array<string, array>
+	 * @phpstan-return array<string, array<string, mixed>>
 	 */
 	public function extract_eventyay_public_speaker_featured_map( $html ) {
 		if ( ! is_string( $html ) || '' === trim( $html ) ) {
@@ -2974,6 +3104,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array<int, array>    $speakers     Normalized speakers.
 	 * @param array<string, array> $featured_map Public featured speaker map keyed by Eventyay speaker code.
 	 * @return array<int, array>
+	 * @phpstan-param array<int, array<string, mixed>> $speakers
+	 * @phpstan-param array<string, array<string, mixed>> $featured_map
+	 * @phpstan-return array<int, array<string, mixed>>
 	 */
 	public function apply_eventyay_public_speaker_featured_map( $speakers, $featured_map ) {
 		if ( ! is_array( $speakers ) || empty( $featured_map ) ) {
@@ -3019,6 +3152,8 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $speaker Speaker data.
 	 * @return array
+	 * @phpstan-param array<string, mixed> $speaker
+	 * @phpstan-return list<string>
 	 */
 	public function get_dashboard_speaker_state_keys( $speaker ) {
 		$keys = array();
@@ -3045,6 +3180,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @param array $speaker Speaker data.
 	 * @return bool
+	 * @phpstan-param array<string, mixed> $speaker
 	 */
 	public function is_eventyay_dashboard_speaker( $speaker ) {
 		if ( isset( $speaker['source'] ) && 'eventyay' === $speaker['source'] ) {
@@ -3063,6 +3199,9 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @param array $speaker  Speaker data.
 	 * @param array $session  Session data.
 	 * @return void
+	 * @phpstan-param array<string, array<string, mixed>> $speakers
+	 * @phpstan-param array<string, mixed> $speaker
+	 * @phpstan-param array<string, mixed> $session
 	 */
 	public function merge_eventyay_speaker( &$speakers, $speaker, $session ) {
 		$key = ! empty( $speaker['eventyay_speaker_id'] ) ? 'eventyay:' . $speaker['eventyay_speaker_id'] : 'name:' . sanitize_title( $speaker['name'] );
