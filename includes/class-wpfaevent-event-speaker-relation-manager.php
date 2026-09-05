@@ -172,6 +172,7 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 	 * @param array<int>        $speaker_ids        Linked speaker post IDs.
 	 * @param array<int, array> $dashboard_speakers Imported dashboard speaker rows.
 	 * @return array<int>
+	 * @phpstan-param array<int, array<string, mixed>> $dashboard_speakers
 	 */
 	public static function resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers = array() ) {
 		$event_id    = absint( $event_id );
@@ -500,6 +501,7 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 	 * @param int          $speaker_id  Speaker post ID.
 	 * @param string|array $post_status Event post status filter.
 	 * @return array<int>
+	 * @phpstan-param string|array<int, string> $post_status
 	 */
 	public static function get_events_referencing_speaker( $speaker_id, $post_status = 'any' ) {
 		$speaker_id = absint( $speaker_id );
@@ -548,6 +550,7 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 	 * @param int          $speaker_id  Speaker post ID.
 	 * @param string|array $post_status Event post status filter.
 	 * @return array<int>
+	 * @phpstan-param string|array<int, string> $post_status
 	 */
 	public static function get_events_linked_to_speaker( $speaker_id, $post_status = 'publish' ) {
 		$speaker_id = absint( $speaker_id );
@@ -604,6 +607,7 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 	 * @param int  $speaker_id       Speaker post ID.
 	 * @param int  $event_id         Event post ID.
 	 * @param bool $check_capability Whether to require edit access to the speaker.
+	 * @return void
 	 */
 	public static function add_event_to_speaker( $speaker_id, $event_id, $check_capability = true ) {
 		$speaker_id = absint( $speaker_id );
@@ -631,6 +635,7 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 	 * @param int  $speaker_id       Speaker post ID.
 	 * @param int  $event_id         Event post ID.
 	 * @param bool $check_capability Whether to require edit access to the speaker.
+	 * @return void
 	 */
 	public static function remove_event_from_speaker( $speaker_id, $event_id, $check_capability = true ) {
 		$speaker_id = absint( $speaker_id );
@@ -676,6 +681,7 @@ class Wpfaevent_Event_Speaker_Relation_Manager {
 	 * @param int        $event_id          Event post ID.
 	 * @param array<int> $previous_speakers Speaker IDs before save.
 	 * @param array<int> $current_speakers  Speaker IDs after save.
+	 * @return void
 	 */
 	public static function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
 		$event_id          = absint( $event_id );

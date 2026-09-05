@@ -29,6 +29,7 @@ class Wpfaevent_Meta_Event {
 	 * Registers all event meta fields.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public static function register() {
 		// Event date fields.
@@ -306,6 +307,8 @@ class Wpfaevent_Meta_Event {
 	 *
 	 * @param array $speaker_ids Array of speaker post IDs.
 	 * @return array Sanitized array of integers.
+	 * @phpstan-param array<int|string, mixed> $speaker_ids
+	 * @phpstan-return list<int>
 	 */
 	public static function sanitize_speaker_ids( $speaker_ids ) {
 		if ( ! is_array( $speaker_ids ) ) {
@@ -326,6 +329,7 @@ class Wpfaevent_Meta_Event {
 	 * @param int        $event_id          Event post ID.
 	 * @param array<int> $previous_speakers Speaker IDs before save.
 	 * @param array<int> $current_speakers  Speaker IDs after save.
+	 * @return void
 	 */
 	public static function sync_event_speaker_relationships( $event_id, $previous_speakers, $current_speakers ) {
 		$event_id          = absint( $event_id );
@@ -733,6 +737,7 @@ class Wpfaevent_Meta_Event {
 	 * @param array<int>        $speaker_ids        Linked speaker post IDs.
 	 * @param array<int, array> $dashboard_speakers Imported dashboard speaker rows.
 	 * @return array<int, int> Dashboard row index to speaker post ID.
+	 * @phpstan-param array<int, array<string, mixed>> $dashboard_speakers
 	 */
 	public static function map_dashboard_speakers_to_post_ids( $speaker_ids, $dashboard_speakers ) {
 		$speaker_ids = self::sanitize_post_id_list( $speaker_ids );
@@ -795,6 +800,7 @@ class Wpfaevent_Meta_Event {
 	 * @param array<int>        $speaker_ids        Linked speaker post IDs.
 	 * @param array<int, array> $dashboard_speakers Imported dashboard speaker rows.
 	 * @return array<int>
+	 * @phpstan-param array<int, array<string, mixed>> $dashboard_speakers
 	 */
 	public static function resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers = array() ) {
 		$event_id    = absint( $event_id );
@@ -847,6 +853,7 @@ class Wpfaevent_Meta_Event {
 	 *
 	 * @param mixed $tabs Raw custom tabs.
 	 * @return array
+	 * @phpstan-return list<array{title: string, slug: string, content: string}>
 	 */
 	public static function sanitize_custom_tabs( $tabs ) {
 		if ( is_string( $tabs ) ) {

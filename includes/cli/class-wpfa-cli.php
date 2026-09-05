@@ -37,6 +37,9 @@ class WPFA_CLI {
 	 *
 	 * @param array $args Positional command arguments.
 	 * @param array $assoc_args Associative command arguments.
+	 * @return void
+	 * @phpstan-param list<string> $args
+	 * @phpstan-param array<string, string|bool> $assoc_args
 	 */
 	public static function seed( $args, $assoc_args ) {
 		if ( isset( $assoc_args['from-json'] ) ) {
@@ -54,6 +57,8 @@ class WPFA_CLI {
 
 	/**
 	 * Minimal hardcoded seed (2 speakers, 1 event).
+	 *
+	 * @return void
 	 */
 	private static function seed_minimal() {
 		$placeholder = 'https://via.placeholder.com/300x300.png?text=Speaker';
@@ -137,6 +142,7 @@ class WPFA_CLI {
 	 * }
 	 *
 	 * @param string $path Path to the JSON seed file.
+	 * @return void
 	 */
 	private static function seed_from_json( $path ) {
 		if ( ! file_exists( $path ) ) {
@@ -236,6 +242,8 @@ class WPFA_CLI {
 	 * @param array  $postarr Post arguments passed to WordPress.
 	 * @param array  $meta Meta fields to store on the post.
 	 * @return int post ID
+	 * @phpstan-param array<string, mixed> $postarr
+	 * @phpstan-param array<string, mixed> $meta
 	 */
 	private static function upsert_post_by_slug( $post_type, $slug, $postarr, $meta ) {
 		$existing = get_page_by_path( $slug, OBJECT, $post_type );
@@ -270,6 +278,7 @@ class WPFA_CLI {
 	 * @param int   $event_id Event post ID.
 	 * @param array $speaker_ids Related speaker post IDs.
 	 * @return void
+	 * @phpstan-param list<int> $speaker_ids
 	 */
 	private static function sync_relationships( $event_id, $speaker_ids ) {
 		$event_id    = absint( $event_id );
@@ -305,6 +314,8 @@ class WPFA_CLI {
 	 * @param array $args Positional command arguments.
 	 * @param array $assoc_args Associative command arguments.
 	 * @return void
+	 * @phpstan-param list<string> $args
+	 * @phpstan-param array<string, string|bool> $assoc_args
 	 */
 	public static function import( $args, $assoc_args ) {
 		unset( $args, $assoc_args );

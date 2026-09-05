@@ -25,6 +25,7 @@ class Wpfaevent_Deactivator {
 	 * Deactivate the plugin.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public static function deactivate() {
 		require_once plugin_dir_path( __FILE__ ) . 'class-wpfaevent-cron-scheduler.php';

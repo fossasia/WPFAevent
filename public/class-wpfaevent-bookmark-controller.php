@@ -24,6 +24,7 @@ class Wpfaevent_Bookmark_Controller {
 	 * Toggle bookmark/favorite status of an event for the current logged-in user.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_toggle_bookmark() {
 		// Verify nonce.

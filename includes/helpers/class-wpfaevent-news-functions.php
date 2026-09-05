@@ -196,6 +196,7 @@ function wpfa_clear_news_cache() {
  * @type bool   $success Whether the feed was fetched successfully.
  * @type string $message Human-readable status message.
  * }
+ * @phpstan-return array{success: bool, message: string}
  */
 function wpfa_test_news_feed() {
 	wpfa_ensure_feed_loaded();
