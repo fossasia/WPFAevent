@@ -123,14 +123,33 @@
 			}
 
 			// The form's view input is server-rendered, so keep it in step with the
-			// switch or the next filter submit reverts the chosen view.
+			// switch or the next filter submit reverts the chosen view. The schedule
+			// page reads `view` while the single event template reads `schedule_view`,
+			// so take the name from this switch's own calendar link.
+			const calendarHref =
+				$switch
+					.find('a')
+					.filter(function () {
+						return (
+							($(this).attr('href') || '').indexOf(
+								'view=calendar'
+							) !== -1
+						);
+					})
+					.attr('href') || '';
+			const viewParam =
+				calendarHref.indexOf('schedule_view=calendar') !== -1
+					? 'schedule_view'
+					: 'view';
 			const $filterForm = $('.wpfa-schedule-filter-form');
-			$filterForm.find('input[name="view"]').remove();
+			$filterForm
+				.find('input[name="view"], input[name="schedule_view"]')
+				.remove();
 
 			if (isCalendar) {
 				$('<input>', {
 					type: 'hidden',
-					name: 'view',
+					name: viewParam,
 					value: 'calendar',
 				}).appendTo($filterForm);
 			}
@@ -214,10 +233,19 @@
 			}
 		);
 
-		// Auto-submit filter form when a server-side filter changes (since Apply button is hidden)
+		// Auto-submit the filter form when a server-side filter changes (the Apply
+		// button is hidden above).
 		$(document).on(
 			'change',
-			'#wpfa-schedule-language, #wpfa-schedule-day, #wpfa-schedule-track, #wpfa-schedule-room',
+			[
+				'#wpfa-schedule-language',
+				'#wpfa-schedule-day',
+				'#wpfa-schedule-track',
+				'#wpfa-schedule-room',
+				'#wpfa-event-schedule-day',
+				'#wpfa-event-schedule-track',
+				'#wpfa-event-schedule-room',
+			].join(', '),
 			function () {
 				$(this).closest('form').submit();
 			}
