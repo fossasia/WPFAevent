@@ -224,22 +224,28 @@
 			}
 		);
 
-		// Progressive enhancement: Hide timezone forms submit/apply buttons when JS is loaded
+		// Progressive enhancement: hide Apply once every filter in the form applies
+		// itself. The language filter still needs a submit, so a form carrying one
+		// keeps its button.
 		$('.wpfa-event-timezone-form, .wpfa-schedule-filter-form').each(
 			function () {
-				if ($(this).find('.wpfa-event-timezone-select').length) {
-					$(this).find('button[type="submit"]').hide();
+				const $form = $(this);
+
+				if (
+					$form.find('.wpfa-event-timezone-select').length &&
+					!$form.find('#wpfa-schedule-language').length
+				) {
+					$form.find('button[type="submit"]').hide();
 				}
 			}
 		);
 
-		// The Apply button is hidden above, so the server-side filters submit their
-		// form themselves. A closed select fires `change` for every option an arrow
-		// key passes over, and submitting each one would navigate away mid-choice and
-		// leave focus on the body, so keyboard changes are held until the select is
-		// committed with Enter or left.
+		// Day, track and room are filtered on the server, so the page fetches the
+		// filtered markup and swaps the schedule in rather than navigating. Issue #280
+		// asks for the schedule to update without a refresh, like the timezone filter.
+		// Because nothing navigates any more, the `change` a select fires while the
+		// user arrows through options is harmless, so no keyboard bookkeeping is needed.
 		const scheduleFilterSelects = [
-			'#wpfa-schedule-language',
 			'#wpfa-schedule-day',
 			'#wpfa-schedule-track',
 			'#wpfa-schedule-room',
@@ -248,42 +254,161 @@
 			'#wpfa-event-schedule-room',
 		].join(', ');
 
-		let isKeyboardFiltering = false;
-		let $pendingFilter = null;
+		const canFetchSchedule = !!(
+			window.fetch &&
+			window.URL &&
+			window.DOMParser
+		);
+		let scheduleRequestId = 0;
+		let scheduleFilterTimer = null;
 
-		const submitFilterForm = function ($select) {
-			$pendingFilter = null;
-			$select.closest('form').submit();
+		// The server decides which view is visible from the URL, but the switch above
+		// toggles it without reloading, so re-apply the active one after every swap.
+		const applyActiveScheduleView = function () {
+			const $active = $('.wpfa-schedule-view-switch a.is-active').first();
+
+			if (!$active.length) {
+				return;
+			}
+
+			const activeHref = $active.attr('href') || '';
+			const isCalendar =
+				activeHref.indexOf('view=calendar') !== -1 ||
+				activeHref.indexOf('schedule_view=calendar') !== -1;
+
+			$('.wpfa-schedule-calendar').css(
+				'display',
+				isCalendar ? '' : 'none'
+			);
+			$('.wpfa-schedule-program').css(
+				'display',
+				isCalendar ? 'none' : ''
+			);
 		};
 
-		$(document).on('keydown', scheduleFilterSelects, function (e) {
-			if ('Enter' === e.key) {
-				if ($pendingFilter) {
-					submitFilterForm($pendingFilter);
+		// The schedule page wraps both views plus the empty state in one browser
+		// element; the single event template renders the two views on their own.
+		const swapScheduleMarkup = function (doc) {
+			const swapInto = function (selector) {
+				const current = document.querySelectorAll(selector);
+				const fresh = doc.querySelectorAll(selector);
+
+				if (!current.length || current.length !== fresh.length) {
+					return false;
 				}
 
-				return;
+				current.forEach(function (element, index) {
+					element.innerHTML = fresh[index].innerHTML;
+				});
+
+				return true;
+			};
+
+			if (swapInto('.wpfa-schedule-session-browser')) {
+				return true;
 			}
 
-			isKeyboardFiltering = true;
-		});
+			const swappedProgram = swapInto('.wpfa-schedule-program');
+			const swappedCalendar = swapInto('.wpfa-schedule-calendar');
+
+			return swappedProgram || swappedCalendar;
+		};
+
+		const scheduleRegionSelector = [
+			'.wpfa-schedule-session-browser',
+			'.wpfa-schedule-program',
+			'.wpfa-schedule-calendar',
+		].join(', ');
+
+		const fetchFilteredSchedule = function ($select) {
+			const $form = $select.closest('form');
+			const url = new window.URL(window.location.href);
+
+			// Read every filter in the form, not just the one that changed. A quick
+			// second change cancels the first one's pending request, so building the
+			// URL from a single select would drop the earlier selection and leave the
+			// controls showing a filter the schedule had not applied.
+			$form.find(scheduleFilterSelects).each(function () {
+				const $filter = $(this);
+				const filterName = $filter.attr('name');
+
+				if (!filterName) {
+					return;
+				}
+
+				const value = $filter.val();
+
+				if (value) {
+					url.searchParams.set(filterName, value);
+				} else {
+					url.searchParams.delete(filterName);
+				}
+			});
+
+			const requestId = ++scheduleRequestId;
+			const $regions = $(scheduleRegionSelector);
+			$regions.attr('aria-busy', 'true');
+
+			window
+				.fetch(url.toString(), {
+					credentials: 'same-origin',
+					headers: { 'X-Requested-With': 'XMLHttpRequest' },
+				})
+				.then(function (response) {
+					if (!response.ok) {
+						throw new Error('Unexpected response');
+					}
+
+					return response.text();
+				})
+				.then(function (html) {
+					// A later change already won; its response is the current one.
+					if (requestId !== scheduleRequestId) {
+						return;
+					}
+
+					const doc = new window.DOMParser().parseFromString(
+						html,
+						'text/html'
+					);
+
+					if (!swapScheduleMarkup(doc)) {
+						throw new Error('Schedule markup not found');
+					}
+
+					applyActiveScheduleView();
+					$regions.removeAttr('aria-busy');
+
+					if (window.history && window.history.replaceState) {
+						window.history.replaceState(null, '', url.toString());
+					}
+				})
+				.catch(function () {
+					if (requestId !== scheduleRequestId) {
+						return;
+					}
+
+					$regions.removeAttr('aria-busy');
+					// Fall back to the plain navigation the form would have done.
+					$select.closest('form').trigger('submit');
+				});
+		};
 
 		$(document).on('change', scheduleFilterSelects, function () {
-			if (isKeyboardFiltering) {
-				$pendingFilter = $(this);
+			const $select = $(this);
+
+			if (!canFetchSchedule) {
+				$select.closest('form').trigger('submit');
 
 				return;
 			}
 
-			submitFilterForm($(this));
-		});
-
-		$(document).on('blur', scheduleFilterSelects, function () {
-			isKeyboardFiltering = false;
-
-			if ($pendingFilter) {
-				submitFilterForm($pendingFilter);
-			}
+			// Arrowing through a closed select fires `change` per option, so wait for
+			// the user to settle before spending a request.
+			window.clearTimeout(scheduleFilterTimer);
+			scheduleFilterTimer = window.setTimeout(function () {
+				fetchFilteredSchedule($select);
+			}, 150);
 		});
 
 		const speakerPlaceholderSvg =
