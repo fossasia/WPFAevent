@@ -297,8 +297,14 @@
 					return false;
 				}
 
+				// Move the parsed nodes across rather than assigning innerHTML.
+				// The markup is our own same-origin page and neither route runs a
+				// <script>, but this skips serialising the parsed tree back to a
+				// string just for the browser to parse it a second time.
 				current.forEach(function (element, index) {
-					element.innerHTML = fresh[index].innerHTML;
+					element.replaceWith(
+						document.importNode(fresh[index], true)
+					);
 				});
 
 				return true;
@@ -320,7 +326,7 @@
 			'.wpfa-schedule-calendar',
 		].join(', ');
 
-		const fetchFilteredSchedule = function ($select) {
+		const fetchFilteredSchedule = function ($select, requestId) {
 			const $form = $select.closest('form');
 			const url = new window.URL(window.location.href);
 
@@ -345,7 +351,6 @@
 				}
 			});
 
-			const requestId = ++scheduleRequestId;
 			const $regions = $(scheduleRegionSelector);
 			$regions.attr('aria-busy', 'true');
 
@@ -377,7 +382,8 @@
 					}
 
 					applyActiveScheduleView();
-					$regions.removeAttr('aria-busy');
+					// The swap replaced the elements, so re-query before clearing.
+					$(scheduleRegionSelector).removeAttr('aria-busy');
 
 					if (window.history && window.history.replaceState) {
 						window.history.replaceState(null, '', url.toString());
@@ -403,11 +409,17 @@
 				return;
 			}
 
+			// Claim the token now, not when the request starts. A reply already in
+			// flight for the previous selection would otherwise still pass the
+			// staleness check during the debounce and paint a filter the user has
+			// moved past.
+			const requestId = ++scheduleRequestId;
+
 			// Arrowing through a closed select fires `change` per option, so wait for
 			// the user to settle before spending a request.
 			window.clearTimeout(scheduleFilterTimer);
 			scheduleFilterTimer = window.setTimeout(function () {
-				fetchFilteredSchedule($select);
+				fetchFilteredSchedule($select, requestId);
 			}, 150);
 		});
 
