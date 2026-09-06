@@ -310,7 +310,15 @@
 				return true;
 			};
 
+			// Both templates wrap the views, the preview note and the empty state in
+			// one element. Swapping that wrapper rather than the views themselves is
+			// what lets a filter that matches nothing render its empty state, since
+			// the views are not printed at all in that case.
 			if (swapInto('.wpfa-schedule-session-browser')) {
+				return true;
+			}
+
+			if (swapInto('.wpfa-event-schedule-browser')) {
 				return true;
 			}
 
@@ -320,8 +328,36 @@
 			return swappedProgram || swappedCalendar;
 		};
 
+		// The view switch and Reset links are server-rendered with the filters in
+		// their href. Filtering used to be a navigation, which re-rendered them; now
+		// it does not, so take the fresh ones from the response. Only the attribute
+		// is copied, so the element the user is on keeps its focus.
+		const refreshScheduleControlLinks = function (doc) {
+			[
+				['.wpfa-schedule-view-switch a', 'href'],
+				['.wpfa-schedule-filter-reset', 'href'],
+				['.wpfa-schedule-filter-reset', 'data-reset-url'],
+			].forEach(function (pair) {
+				const current = document.querySelectorAll(pair[0]);
+				const fresh = doc.querySelectorAll(pair[0]);
+
+				if (!current.length || current.length !== fresh.length) {
+					return;
+				}
+
+				current.forEach(function (element, index) {
+					const value = fresh[index].getAttribute(pair[1]);
+
+					if (null !== value) {
+						element.setAttribute(pair[1], value);
+					}
+				});
+			});
+		};
+
 		const scheduleRegionSelector = [
 			'.wpfa-schedule-session-browser',
+			'.wpfa-event-schedule-browser',
 			'.wpfa-schedule-program',
 			'.wpfa-schedule-calendar',
 		].join(', ');
@@ -381,6 +417,7 @@
 						throw new Error('Schedule markup not found');
 					}
 
+					refreshScheduleControlLinks(doc);
 					applyActiveScheduleView();
 					// The swap replaced the elements, so re-query before clearing.
 					$(scheduleRegionSelector).removeAttr('aria-busy');
