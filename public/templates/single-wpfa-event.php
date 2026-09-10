@@ -672,6 +672,8 @@ if ( $show_ticket_widget ) {
 							</div>
 						<?php endif; ?>
 					</div>
+					<!-- Stable wrapper so the filters can swap the schedule in place. -->
+					<div class="wpfa-event-schedule-browser">
 					<?php if ( ! empty( $schedule_preview_items ) ) : ?>
 						<div class="wpfa-schedule-calendar" role="list" style="<?php echo 'calendar' === $current_schedule_view ? '' : 'display:none;'; ?>">
 							<?php foreach ( $schedule_preview_day_groups as $day_label => $day_sessions ) : ?>
@@ -910,6 +912,7 @@ if ( $show_ticket_widget ) {
 					<?php elseif ( $has_schedule_filters && ( $current_day_filter || $current_track_filter || $current_room_filter ) && empty( $filtered_schedule_items ) ) : ?>
 						<p class="wpfa-empty-state"><?php esc_html_e( 'No sessions match the selected filters.', 'wpfaevent' ); ?></p>
 					<?php endif; ?>
+					</div>
 				</div>
 			</section>
 		<?php endif; ?>

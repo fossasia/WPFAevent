@@ -122,6 +122,38 @@
 				$('.wpfa-schedule-calendar').css('display', 'none');
 			}
 
+			// The form's view input is server-rendered, so keep it in step with the
+			// switch or the next filter submit reverts the chosen view. The schedule
+			// page reads `view` while the single event template reads `schedule_view`,
+			// so take the name from this switch's own calendar link.
+			const calendarHref =
+				$switch
+					.find('a')
+					.filter(function () {
+						return (
+							($(this).attr('href') || '').indexOf(
+								'view=calendar'
+							) !== -1
+						);
+					})
+					.attr('href') || '';
+			const viewParam =
+				calendarHref.indexOf('schedule_view=calendar') !== -1
+					? 'schedule_view'
+					: 'view';
+			const $filterForm = $('.wpfa-schedule-filter-form');
+			$filterForm
+				.find('input[name="view"], input[name="schedule_view"]')
+				.remove();
+
+			if (isCalendar) {
+				$('<input>', {
+					type: 'hidden',
+					name: viewParam,
+					value: 'calendar',
+				}).appendTo($filterForm);
+			}
+
 			if (window.history && window.history.replaceState) {
 				window.history.replaceState(null, '', href);
 			}
@@ -192,18 +224,240 @@
 			}
 		);
 
-		// Progressive enhancement: Hide timezone forms submit/apply buttons when JS is loaded
+		// Progressive enhancement: hide Apply once every filter in the form applies
+		// itself. The language filter still needs a submit, so a form carrying one
+		// keeps its button.
 		$('.wpfa-event-timezone-form, .wpfa-schedule-filter-form').each(
 			function () {
-				if ($(this).find('.wpfa-event-timezone-select').length) {
-					$(this).find('button[type="submit"]').hide();
+				const $form = $(this);
+
+				if (
+					$form.find('.wpfa-event-timezone-select').length &&
+					!$form.find('#wpfa-schedule-language').length
+				) {
+					$form.find('button[type="submit"]').hide();
 				}
 			}
 		);
 
-		// Auto-submit filter form if language selection changes (since Apply button is hidden)
-		$(document).on('change', '#wpfa-schedule-language', function () {
-			$(this).closest('form').submit();
+		// Day, track and room are filtered on the server, so the page fetches the
+		// filtered markup and swaps the schedule in rather than navigating. Issue #280
+		// asks for the schedule to update without a refresh, like the timezone filter.
+		// Because nothing navigates any more, the `change` a select fires while the
+		// user arrows through options is harmless, so no keyboard bookkeeping is needed.
+		const scheduleFilterSelects = [
+			'#wpfa-schedule-day',
+			'#wpfa-schedule-track',
+			'#wpfa-schedule-room',
+			'#wpfa-event-schedule-day',
+			'#wpfa-event-schedule-track',
+			'#wpfa-event-schedule-room',
+		].join(', ');
+
+		const canFetchSchedule = !!(
+			window.fetch &&
+			window.URL &&
+			window.DOMParser
+		);
+		let scheduleRequestId = 0;
+		let scheduleFilterTimer = null;
+
+		// The server decides which view is visible from the URL, but the switch above
+		// toggles it without reloading, so re-apply the active one after every swap.
+		const applyActiveScheduleView = function () {
+			const $active = $('.wpfa-schedule-view-switch a.is-active').first();
+
+			if (!$active.length) {
+				return;
+			}
+
+			const activeHref = $active.attr('href') || '';
+			const isCalendar =
+				activeHref.indexOf('view=calendar') !== -1 ||
+				activeHref.indexOf('schedule_view=calendar') !== -1;
+
+			$('.wpfa-schedule-calendar').css(
+				'display',
+				isCalendar ? '' : 'none'
+			);
+			$('.wpfa-schedule-program').css(
+				'display',
+				isCalendar ? 'none' : ''
+			);
+		};
+
+		// The schedule page wraps both views plus the empty state in one browser
+		// element; the single event template renders the two views on their own.
+		const swapScheduleMarkup = function (doc) {
+			const swapInto = function (selector) {
+				const current = document.querySelectorAll(selector);
+				const fresh = doc.querySelectorAll(selector);
+
+				if (!current.length || current.length !== fresh.length) {
+					return false;
+				}
+
+				// Move the parsed nodes across rather than assigning innerHTML.
+				// The markup is our own same-origin page and neither route runs a
+				// <script>, but this skips serialising the parsed tree back to a
+				// string just for the browser to parse it a second time.
+				current.forEach(function (element, index) {
+					element.replaceWith(
+						document.importNode(fresh[index], true)
+					);
+				});
+
+				return true;
+			};
+
+			// Both templates wrap the views, the preview note and the empty state in
+			// one element. Swapping that wrapper rather than the views themselves is
+			// what lets a filter that matches nothing render its empty state, since
+			// the views are not printed at all in that case.
+			if (swapInto('.wpfa-schedule-session-browser')) {
+				return true;
+			}
+
+			if (swapInto('.wpfa-event-schedule-browser')) {
+				return true;
+			}
+
+			const swappedProgram = swapInto('.wpfa-schedule-program');
+			const swappedCalendar = swapInto('.wpfa-schedule-calendar');
+
+			return swappedProgram || swappedCalendar;
+		};
+
+		// The view switch and Reset links are server-rendered with the filters in
+		// their href. Filtering used to be a navigation, which re-rendered them; now
+		// it does not, so take the fresh ones from the response. Only the attribute
+		// is copied, so the element the user is on keeps its focus.
+		const refreshScheduleControlLinks = function (doc) {
+			[
+				['.wpfa-schedule-view-switch a', 'href'],
+				['.wpfa-schedule-filter-reset', 'href'],
+				['.wpfa-schedule-filter-reset', 'data-reset-url'],
+			].forEach(function (pair) {
+				const current = document.querySelectorAll(pair[0]);
+				const fresh = doc.querySelectorAll(pair[0]);
+
+				if (!current.length || current.length !== fresh.length) {
+					return;
+				}
+
+				current.forEach(function (element, index) {
+					const value = fresh[index].getAttribute(pair[1]);
+
+					if (null !== value) {
+						element.setAttribute(pair[1], value);
+					}
+				});
+			});
+		};
+
+		const scheduleRegionSelector = [
+			'.wpfa-schedule-session-browser',
+			'.wpfa-event-schedule-browser',
+			'.wpfa-schedule-program',
+			'.wpfa-schedule-calendar',
+		].join(', ');
+
+		const fetchFilteredSchedule = function ($select, requestId) {
+			const $form = $select.closest('form');
+			const url = new window.URL(window.location.href);
+
+			// Read every filter in the form, not just the one that changed. A quick
+			// second change cancels the first one's pending request, so building the
+			// URL from a single select would drop the earlier selection and leave the
+			// controls showing a filter the schedule had not applied.
+			$form.find(scheduleFilterSelects).each(function () {
+				const $filter = $(this);
+				const filterName = $filter.attr('name');
+
+				if (!filterName) {
+					return;
+				}
+
+				const value = $filter.val();
+
+				if (value) {
+					url.searchParams.set(filterName, value);
+				} else {
+					url.searchParams.delete(filterName);
+				}
+			});
+
+			const $regions = $(scheduleRegionSelector);
+			$regions.attr('aria-busy', 'true');
+
+			window
+				.fetch(url.toString(), {
+					credentials: 'same-origin',
+					headers: { 'X-Requested-With': 'XMLHttpRequest' },
+				})
+				.then(function (response) {
+					if (!response.ok) {
+						throw new Error('Unexpected response');
+					}
+
+					return response.text();
+				})
+				.then(function (html) {
+					// A later change already won; its response is the current one.
+					if (requestId !== scheduleRequestId) {
+						return;
+					}
+
+					const doc = new window.DOMParser().parseFromString(
+						html,
+						'text/html'
+					);
+
+					if (!swapScheduleMarkup(doc)) {
+						throw new Error('Schedule markup not found');
+					}
+
+					refreshScheduleControlLinks(doc);
+					applyActiveScheduleView();
+					// The swap replaced the elements, so re-query before clearing.
+					$(scheduleRegionSelector).removeAttr('aria-busy');
+
+					if (window.history && window.history.replaceState) {
+						window.history.replaceState(null, '', url.toString());
+					}
+				})
+				.catch(function () {
+					if (requestId !== scheduleRequestId) {
+						return;
+					}
+
+					$regions.removeAttr('aria-busy');
+					// Fall back to the plain navigation the form would have done.
+					$select.closest('form').trigger('submit');
+				});
+		};
+
+		$(document).on('change', scheduleFilterSelects, function () {
+			const $select = $(this);
+
+			if (!canFetchSchedule) {
+				$select.closest('form').trigger('submit');
+
+				return;
+			}
+
+			// Claim the token now, not when the request starts. A reply already in
+			// flight for the previous selection would otherwise still pass the
+			// staleness check during the debounce and paint a filter the user has
+			// moved past.
+			const requestId = ++scheduleRequestId;
+
+			// Arrowing through a closed select fires `change` per option, so wait for
+			// the user to settle before spending a request.
+			window.clearTimeout(scheduleFilterTimer);
+			scheduleFilterTimer = window.setTimeout(function () {
+				fetchFilteredSchedule($select, requestId);
+			}, 150);
 		});
 
 		const speakerPlaceholderSvg =
