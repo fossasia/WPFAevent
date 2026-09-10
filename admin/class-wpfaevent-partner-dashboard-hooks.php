@@ -31,6 +31,8 @@ class Wpfaevent_Partner_Dashboard_Hooks {
 
 	/**
 	 * Register the submenu pages for Sponsors and Exhibitors.
+	 *
+	 * @return void
 	 */
 	public function register_menu_pages() {
 		add_submenu_page(

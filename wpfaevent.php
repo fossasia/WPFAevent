@@ -65,6 +65,7 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-wpfaevent.php';
  * not affect the page life cycle.
  *
  * @since    1.0.0
+ * @return   void
  */
 function run_wpfaevent() {
 

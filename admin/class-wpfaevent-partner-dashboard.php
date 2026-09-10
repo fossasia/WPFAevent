@@ -39,6 +39,8 @@ class Wpfaevent_Partner_Dashboard {
 
 	/**
 	 * Register the submenu pages for Sponsors and Exhibitors.
+	 *
+	 * @return void
 	 */
 	public function register_menu_pages() {
 		$this->hooks->register_menu_pages();
@@ -46,6 +48,8 @@ class Wpfaevent_Partner_Dashboard {
 
 	/**
 	 * POST Handler to Save Sponsor/Exhibitor.
+	 *
+	 * @return void
 	 */
 	public function handle_save_partner() {
 		$this->controller->handle_save_partner();
@@ -53,6 +57,8 @@ class Wpfaevent_Partner_Dashboard {
 
 	/**
 	 * GET Handler to Delete Sponsor/Exhibitor.
+	 *
+	 * @return void
 	 */
 	public function handle_delete_partner() {
 		$this->controller->handle_delete_partner();
@@ -60,6 +66,8 @@ class Wpfaevent_Partner_Dashboard {
 
 	/**
 	 * POST Handler to save sponsor group order.
+	 *
+	 * @return void
 	 */
 	public function handle_reorder_sponsor_groups() {
 		$this->controller->handle_reorder_sponsor_groups();

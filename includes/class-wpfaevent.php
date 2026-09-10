@@ -104,6 +104,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function load_dependencies() {
 		// Loader.
@@ -186,6 +187,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function define_cpt_hooks() {
 		// Register Event CPT (static method call).
@@ -200,6 +202,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function define_taxonomy_hooks() {
 		// Register Event and Speaker taxonomies.
@@ -212,6 +215,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function define_meta_hooks() {
 		// Register Event meta fields.
@@ -226,6 +230,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function define_page_hooks() {
 		$this->loader->add_action( 'init', 'Wpfaevent_Additional_Information_Helper', 'ensure_additional_information_page', 21 );
@@ -238,6 +243,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function define_admin_hooks() {
 		// Instantiate the admin class.
@@ -333,6 +339,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function define_public_hooks() {
 		// Instantiate the public class.
@@ -362,6 +369,7 @@ class Wpfaevent {
 	 * Run the loader to execute all of the hooks with WordPress.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function run() {
 		$this->loader->run();

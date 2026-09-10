@@ -30,6 +30,7 @@ class Wpfaevent_Admin_Event_Metabox {
 	 * Register meta boxes for the Event CPT.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function register_meta_boxes() {
 		add_meta_box(
@@ -93,6 +94,7 @@ class Wpfaevent_Admin_Event_Metabox {
 	 *
 	 * @since 1.0.0
 	 * @param WP_Post $post The post object.
+	 * @return void
 	 */
 	public function render_event_meta_box( $post ) {
 		wp_nonce_field( 'wpfa_event_meta_nonce', 'wpfa_event_meta_nonce' );
@@ -239,6 +241,7 @@ class Wpfaevent_Admin_Event_Metabox {
 	 *
 	 * @since 1.0.0
 	 * @param WP_Post $post The post object.
+	 * @return void
 	 */
 	public function render_eventyay_sync_meta_box( $post ) {
 		$eventyay_id = get_post_meta( $post->ID, '_eventyay_event_slug', true );
@@ -319,6 +322,7 @@ class Wpfaevent_Admin_Event_Metabox {
 	 *
 	 * @since 1.0.0
 	 * @param WP_Post $post The post object.
+	 * @return void
 	 */
 	public function render_event_schedule_meta_box( $post ) {
 		$sessions = array();
@@ -457,6 +461,7 @@ class Wpfaevent_Admin_Event_Metabox {
 	 *
 	 * @since 1.0.1
 	 * @param WP_Post $post The post object.
+	 * @return void
 	 */
 	public function render_event_sponsors_meta_box( $post ) {
 		$sponsors = array();
@@ -589,6 +594,7 @@ class Wpfaevent_Admin_Event_Metabox {
 	 *
 	 * @since 1.0.1
 	 * @param WP_Post $post The post object.
+	 * @return void
 	 */
 	public function render_event_exhibitors_meta_box( $post ) {
 		$exhibitors = array();
@@ -711,6 +717,7 @@ class Wpfaevent_Admin_Event_Metabox {
 	 *
 	 * @since 1.0.0
 	 * @param int $post_id The post ID.
+	 * @return void
 	 */
 	public function save_event_meta( $post_id ) {
 		$event_nonce = isset( $_POST['wpfa_event_meta_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_event_meta_nonce'] ) ) : '';
