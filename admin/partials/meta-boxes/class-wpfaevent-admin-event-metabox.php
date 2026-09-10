@@ -434,13 +434,13 @@ class Wpfaevent_Admin_Event_Metabox {
 				$('#wpfaevent-add-session-row').on('click', function(e) {
 					e.preventDefault();
 					const html = `<tr>
-						<td><input type="date" name="wpfa_schedule_sessions[\${sessionIndex}][date]" required></td>
-						<td><input type="time" name="wpfa_schedule_sessions[\${sessionIndex}][start_time]" required></td>
-						<td><input type="time" name="wpfa_schedule_sessions[\${sessionIndex}][end_time]"></td>
-						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][title]" required></td>
-						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][speakers]"></td>
-						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][track]"></td>
-						<td><input type="text" name="wpfa_schedule_sessions[\${sessionIndex}][room]"></td>
+						<td><input type="date" name="wpfa_schedule_sessions[${sessionIndex}][date]" required></td>
+						<td><input type="time" name="wpfa_schedule_sessions[${sessionIndex}][start_time]" required></td>
+						<td><input type="time" name="wpfa_schedule_sessions[${sessionIndex}][end_time]"></td>
+						<td><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][title]" required></td>
+						<td><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][speakers]"></td>
+						<td><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][track]"></td>
+						<td><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][room]"></td>
 						<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session">Remove</a></td>
 					</tr>`;
 					$('#wpfaevent-schedule-sessions-body').append(html);
@@ -548,31 +548,31 @@ class Wpfaevent_Admin_Event_Metabox {
 						<div class="wpfaevent-meta-card-grid">
 							<div class="wpfaevent-meta-card-field">
 								<label>Tier/Group Name</label>
-								<input type="text" name="wpfa_sponsors[\${sponsorIndex}][group_name]" required placeholder="e.g. Gold Sponsors">
+								<input type="text" name="wpfa_sponsors[${sponsorIndex}][group_name]" required placeholder="e.g. Gold Sponsors">
 							</div>
 							<div class="wpfaevent-meta-card-field">
 								<label>Logo Size</label>
-								<input type="number" name="wpfa_sponsors[\${sponsorIndex}][logo_size]" value="160" required min="50" max="500">
+								<input type="number" name="wpfa_sponsors[${sponsorIndex}][logo_size]" value="160" required min="50" max="500">
 							</div>
 							<div class="wpfaevent-meta-card-field">
 								<label>Sponsor Name</label>
-								<input type="text" name="wpfa_sponsors[\${sponsorIndex}][name]" required>
+								<input type="text" name="wpfa_sponsors[${sponsorIndex}][name]" required>
 							</div>
 							<div class="wpfaevent-meta-card-field">
 								<label>Logo URL</label>
-								<input type="url" name="wpfa_sponsors[\${sponsorIndex}][image]" required placeholder="https://">
+								<input type="url" name="wpfa_sponsors[${sponsorIndex}][image]" required placeholder="https://">
 							</div>
 							<div class="wpfaevent-meta-card-field">
 								<label>Website URL</label>
-								<input type="url" name="wpfa_sponsors[\${sponsorIndex}][link]" placeholder="https://">
+								<input type="url" name="wpfa_sponsors[${sponsorIndex}][link]" placeholder="https://">
 							</div>
 							<div class="wpfaevent-meta-card-field">
 								<label>Sort Level</label>
-								<input type="number" name="wpfa_sponsors[\${sponsorIndex}][level]" value="0" min="0">
+								<input type="number" name="wpfa_sponsors[${sponsorIndex}][level]" value="0" min="0">
 							</div>
 							<div class="wpfaevent-meta-card-field span-2">
 								<label>Description</label>
-								<input type="text" name="wpfa_sponsors[\${sponsorIndex}][description]">
+								<input type="text" name="wpfa_sponsors[${sponsorIndex}][description]">
 							</div>
 						</div>
 					</div>`;
@@ -667,35 +667,35 @@ class Wpfaevent_Admin_Event_Metabox {
 						<div class="wpfaevent-meta-card-grid">
 							<div class="wpfaevent-meta-card-field">
 								<label>Exhibitor Name</label>
-								<input type="text" name="wpfa_exhibitors[\${exhibitorIndex}][name]" required>
+								<input type="text" name="wpfa_exhibitors[${exhibitorIndex}][name]" required>
 							</div>
 							<div class="wpfaevent-meta-card-field">
 								<label>Logo URL</label>
-								<input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][logo]" required placeholder="https://">
+								<input type="url" name="wpfa_exhibitors[${exhibitorIndex}][logo]" required placeholder="https://">
 							</div>
 							<div class="wpfaevent-meta-card-field">
 								<label>Banner URL</label>
-								<input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][banner]" placeholder="https://">
+								<input type="url" name="wpfa_exhibitors[${exhibitorIndex}][banner]" placeholder="https://">
 							</div>
 							<div class="wpfaevent-meta-card-field">
 								<label>Website URL</label>
-								<input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][link]" placeholder="https://">
+								<input type="url" name="wpfa_exhibitors[${exhibitorIndex}][link]" placeholder="https://">
 							</div>
 							<div class="wpfaevent-meta-card-field">
 								<label>Email</label>
-								<input type="email" name="wpfa_exhibitors[\${exhibitorIndex}][contact_email]">
+								<input type="email" name="wpfa_exhibitors[${exhibitorIndex}][contact_email]">
 							</div>
 							<div class="wpfaevent-meta-card-field">
 								<label>Contact Link</label>
-								<input type="url" name="wpfa_exhibitors[\${exhibitorIndex}][contact_link]" placeholder="https://">
+								<input type="url" name="wpfa_exhibitors[${exhibitorIndex}][contact_link]" placeholder="https://">
 							</div>
 							<div class="wpfaevent-meta-card-field">
 								<label>Sort Order</label>
-								<input type="number" name="wpfa_exhibitors[\${exhibitorIndex}][position]" value="0" min="0">
+								<input type="number" name="wpfa_exhibitors[${exhibitorIndex}][position]" value="0" min="0">
 							</div>
 							<div class="wpfaevent-meta-card-field span-2">
 								<label>Description</label>
-								<input type="text" name="wpfa_exhibitors[\${exhibitorIndex}][description]">
+								<input type="text" name="wpfa_exhibitors[${exhibitorIndex}][description]">
 							</div>
 						</div>
 					</div>`;
