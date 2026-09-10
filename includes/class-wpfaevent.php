@@ -253,6 +253,8 @@ class Wpfaevent {
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_plugin_settings' );
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_eventyay_import_settings' );
 		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'render_back_to_dashboard_button' );
+		$this->loader->add_action( 'wpfa_event_track_add_form_fields', $this->plugin_admin, 'render_track_form_event_id_field' );
+		$this->loader->add_action( 'created_wpfa_event_track', $this->plugin_admin, 'associate_created_track_with_event' );
 
 		$event_dashboard_page = new Wpfaevent_Event_Dashboard_Page();
 		$this->loader->add_action( 'admin_menu', $event_dashboard_page, 'register_page' );
