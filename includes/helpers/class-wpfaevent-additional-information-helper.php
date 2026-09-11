@@ -244,6 +244,8 @@ class Wpfaevent_Additional_Information_Helper {
 			'selected_event_title'            => '',
 			'selected_event_url'              => '',
 			'venue_information'               => '',
+			'transportation_information'      => '',
+			'hotel_information'               => '',
 			'has_information'                 => false,
 			'additional_information_page_url' => self::get_additional_information_page_url(),
 			'event_schedule_url'              => home_url( '/full-schedule/' ),
@@ -301,9 +303,13 @@ class Wpfaevent_Additional_Information_Helper {
 		$data['selected_event_title'] = (string) get_the_title( $event_id );
 		$data['selected_event_url']   = (string) get_permalink( $event_id );
 
-		$venue_information         = trim( (string) get_post_meta( $event_id, 'wpfa_event_venue_information', true ) );
-		$data['venue_information'] = $venue_information;
-		$data['has_information']   = '' !== trim( wp_strip_all_tags( $venue_information ) );
+		$venue_information                = trim( (string) get_post_meta( $event_id, 'wpfa_event_venue_information', true ) );
+		$transportation_information       = trim( (string) get_post_meta( $event_id, 'wpfa_event_transportation_information', true ) );
+		$hotel_information                = trim( (string) get_post_meta( $event_id, 'wpfa_event_hotel_information', true ) );
+		$data['venue_information']        = $venue_information;
+		$data['transportation_information'] = $transportation_information;
+		$data['hotel_information']        = $hotel_information;
+		$data['has_information']          = '' !== trim( wp_strip_all_tags( $venue_information . $transportation_information . $hotel_information ) );
 
 		$schedule_page_url            = class_exists( 'Wpfaevent_Schedule_Helper' ) ? Wpfaevent_Schedule_Helper::get_schedule_page_url() : home_url( '/full-schedule/' );
 		$data['event_schedule_url']   = add_query_arg( 'event', $data['selected_event_slug'], $schedule_page_url );
