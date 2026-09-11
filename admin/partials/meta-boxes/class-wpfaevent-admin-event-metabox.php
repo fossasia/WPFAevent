@@ -863,7 +863,7 @@ class Wpfaevent_Admin_Event_Metabox {
 		);
 
 		foreach ( $rich_text_fields as $field ) {
-			if ( isset( $_POST[ $field ] ) ) {
+			if ( isset( $_POST[ $field ] ) && is_string( $_POST[ $field ] ) ) {
 				$value = wp_kses_post( wp_unslash( $_POST[ $field ] ) );
 				$this->update_or_delete_post_meta( $post_id, $field, $value );
 			}

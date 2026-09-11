@@ -468,6 +468,14 @@
 	line-height: 1.75;
 }
 
+.wpfaevent .wpfa-additional-information-block:first-child h3 {
+	margin-top: 0;
+}
+
+.wpfaevent .wpfa-additional-information-block + .wpfa-additional-information-block {
+	margin-top: 8px;
+}
+
 .wpfaevent .wpfa-schedule-tabs {
 	display: flex;
 	flex-wrap: wrap;

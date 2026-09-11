@@ -920,11 +920,11 @@ if ( $show_ticket_widget ) {
 		<?php endif; ?>
 
 		<?php if ( '' !== trim( wp_strip_all_tags( $venue_information . $transportation_information . $hotel_information ) ) ) : ?>
-			<section id="venue" class="wpfa-event-section wpfa-event-venue" aria-labelledby="wpfa-event-venue-title">
+			<section id="additional-information" class="wpfa-event-section wpfa-event-additional-information" aria-labelledby="wpfa-event-additional-information-title">
 				<div class="container">
 					<div class="wpfa-event-section-head">
 						<div>
-							<h2 id="wpfa-event-venue-title"><?php esc_html_e( 'Additional information', 'wpfaevent' ); ?></h2>
+							<h2 id="wpfa-event-additional-information-title"><?php esc_html_e( 'Additional information', 'wpfaevent' ); ?></h2>
 							<p><?php esc_html_e( 'Nearby hotels, transportation, parking, directions, and venue notes.', 'wpfaevent' ); ?></p>
 						</div>
 						<a href="<?php echo esc_url( $event_additional_url ); ?>"><?php esc_html_e( 'View Additional Information', 'wpfaevent' ); ?></a>

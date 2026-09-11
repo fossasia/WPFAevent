@@ -1052,7 +1052,7 @@ class Wpfaevent_Event_Template_Controller {
 			'has_schedule'    => $has_schedule,
 			'has_sponsors'    => $show_sponsors && ! empty( $visible_sponsor_groups ),
 			'has_exhibitors'  => $show_exhibitors && ! empty( $visible_exhibitors ),
-			'has_venue'       => '' !== trim( wp_strip_all_tags( $venue_information . $transportation_information . $hotel_information ) ),
+			'has_additional_information' => '' !== trim( wp_strip_all_tags( $venue_information . $transportation_information . $hotel_information ) ),
 			'custom_sections' => $custom_sections,
 		);
 		$wpfa_event_nav_items   = class_exists( 'Wpfaevent_Event_Navigation_Helper' )
