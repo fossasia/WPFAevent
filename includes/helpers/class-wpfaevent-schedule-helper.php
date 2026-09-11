@@ -742,6 +742,7 @@ class Wpfaevent_Schedule_Helper {
 	 * @param array        $item           Schedule item.
 	 * @param DateTimeZone $event_timezone Event timezone.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $item
 	 */
 	private static function build_schedule_session_calendar_url( $event_id, $item, $event_timezone ) {
 		if ( ! class_exists( 'Wpfaevent_Calendar' ) ) {

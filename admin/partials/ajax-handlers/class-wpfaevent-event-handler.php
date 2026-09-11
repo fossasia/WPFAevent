@@ -30,6 +30,7 @@ class Wpfaevent_Event_Handler {
 	 * Handle AJAX request to get event data.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_get_event() {
 		// Verify nonce. Third param 'false' ensures we can handle the error response manually via JSON.
@@ -94,6 +95,7 @@ class Wpfaevent_Event_Handler {
 	 * Handle AJAX request to add a new event.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_add_event() {
 		// Verify nonce. Third param 'false' ensures we can handle the error response manually via JSON.
@@ -235,6 +237,7 @@ class Wpfaevent_Event_Handler {
 	 * Handle AJAX request to update an event.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_update_event() {
 		// Verify nonce. Third param 'false' ensures we can handle the error response manually via JSON.
@@ -382,6 +385,7 @@ class Wpfaevent_Event_Handler {
 	 * @param int   $event_id Event post ID.
 	 * @param array $request  Request data.
 	 * @return void
+	 * @phpstan-param array<string, mixed> $request
 	 */
 	private function save_event_timing_meta( $event_id, $request ) {
 		$event_id = absint( $event_id );
@@ -408,7 +412,10 @@ class Wpfaevent_Event_Handler {
 			$this->update_or_delete_post_meta( $event_id, 'wpfa_event_timezone', $timezone );
 		}
 
-		$all_day = isset( $request['all_day'] ) && rest_sanitize_boolean( wp_unslash( $request['all_day'] ) );
+		$posted_all_day = isset( $request['all_day'] ) ? wp_unslash( $request['all_day'] ) : false;
+		$all_day        = is_bool( $posted_all_day ) || is_string( $posted_all_day ) || is_int( $posted_all_day )
+			? rest_sanitize_boolean( $posted_all_day )
+			: (bool) $posted_all_day;
 		update_post_meta( $event_id, 'wpfa_event_all_day', $all_day ? '1' : '0' );
 
 		$posted_start_time = isset( $request['start_time'] ) ? sanitize_text_field( wp_unslash( $request['start_time'] ) ) : '';
@@ -499,6 +506,7 @@ class Wpfaevent_Event_Handler {
 	 * Handle AJAX request to delete an event.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function ajax_delete_event() {
 		// Verify nonce. Third param 'false' ensures we can handle the error response manually via JSON.

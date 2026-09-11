@@ -29,6 +29,7 @@ class Wpfaevent_Meta_Speaker {
 	 * Registers all speaker meta fields.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public static function register() {
 		$string_meta_fields = array(
@@ -115,6 +116,7 @@ class Wpfaevent_Meta_Speaker {
 	 * Register the Speaker Details meta box.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public static function add_meta_boxes() {
 		add_meta_box(
@@ -135,6 +137,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @since 1.0.0
 	 *
 	 * @param WP_Post $post Speaker post object.
+	 * @return void
 	 */
 	public static function render_meta_box( $post ) {
 		wp_nonce_field( 'wpfa_speaker_meta_nonce', 'wpfa_speaker_meta_nonce' );
@@ -183,6 +186,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @since 1.0.0
 	 *
 	 * @param int $post_id Speaker post ID.
+	 * @return void
 	 */
 	public static function save_meta( $post_id ) {
 		$speaker_nonce = isset( $_POST['wpfa_speaker_meta_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['wpfa_speaker_meta_nonce'] ) ) : '';
@@ -247,6 +251,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @param int          $speaker_id  Speaker post ID.
 	 * @param string|array $post_status Event post status filter.
 	 * @return array<int>
+	 * @phpstan-param string|array<int, string> $post_status
 	 */
 	public static function get_events_referencing_speaker( $speaker_id, $post_status = 'any' ) {
 		return Wpfaevent_Event_Speaker_Relation_Manager::get_events_referencing_speaker( $speaker_id, $post_status );
@@ -260,6 +265,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @param int          $speaker_id  Speaker post ID.
 	 * @param string|array $post_status Event post status filter.
 	 * @return array<int>
+	 * @phpstan-param string|array<int, string> $post_status
 	 */
 	public static function get_events_linked_to_speaker( $speaker_id, $post_status = 'publish' ) {
 		return Wpfaevent_Event_Speaker_Relation_Manager::get_events_linked_to_speaker( $speaker_id, $post_status );
@@ -273,6 +279,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @param int  $speaker_id       Speaker post ID.
 	 * @param int  $event_id         Event post ID.
 	 * @param bool $check_capability Whether to require edit access to the speaker.
+	 * @return void
 	 */
 	public static function add_event_to_speaker( $speaker_id, $event_id, $check_capability = true ) {
 		Wpfaevent_Event_Speaker_Relation_Manager::add_event_to_speaker( $speaker_id, $event_id, $check_capability );
@@ -286,6 +293,7 @@ class Wpfaevent_Meta_Speaker {
 	 * @param int  $speaker_id       Speaker post ID.
 	 * @param int  $event_id         Event post ID.
 	 * @param bool $check_capability Whether to require edit access to the speaker.
+	 * @return void
 	 */
 	public static function remove_event_from_speaker( $speaker_id, $event_id, $check_capability = true ) {
 		Wpfaevent_Event_Speaker_Relation_Manager::remove_event_from_speaker( $speaker_id, $event_id, $check_capability );
@@ -333,6 +341,8 @@ class Wpfaevent_Meta_Speaker {
 	 * @since 1.0.0
 	 * @param array $event_ids Array of event post IDs.
 	 * @return array Sanitized array of integers.
+	 * @phpstan-param array<int|string, mixed> $event_ids
+	 * @phpstan-return array<int>
 	 */
 	public static function sanitize_event_ids( $event_ids ) {
 		return Wpfaevent_Event_Speaker_Relation_Manager::sanitize_post_id_list( $event_ids );

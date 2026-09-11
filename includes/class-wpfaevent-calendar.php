@@ -26,6 +26,7 @@ class Wpfaevent_Calendar {
 	 * Register calendar REST routes.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public static function register_rest_routes() {
 		register_rest_route(
@@ -92,6 +93,7 @@ class Wpfaevent_Calendar {
 	 *
 	 * @param array $event Normalized event calendar data.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public static function build_google_calendar_url( $event ) {
 		$dates = self::format_google_calendar_dates( $event );
@@ -232,6 +234,7 @@ class Wpfaevent_Calendar {
 	 *
 	 * @param array $event Normalized event calendar data.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public static function build_event_ics_content( $event ) {
 		$dtstamp = isset( $event['dtstamp'] ) && $event['dtstamp'] instanceof DateTimeInterface
@@ -303,6 +306,7 @@ class Wpfaevent_Calendar {
 	 *
 	 * @param int $event_id Event post ID.
 	 * @return array|WP_Error
+	 * @phpstan-return array<string, mixed>|WP_Error
 	 */
 	public static function get_event_calendar_data( $event_id ) {
 		$event_id = absint( $event_id );
@@ -503,6 +507,7 @@ class Wpfaevent_Calendar {
 	 *
 	 * @param array $event Normalized event calendar data.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $event
 	 */
 	public static function format_google_calendar_dates( $event ) {
 		if ( ! empty( $event['all_day'] ) ) {
@@ -550,6 +555,7 @@ class Wpfaevent_Calendar {
 	 *
 	 * @param array $lines Lines.
 	 * @return string
+	 * @phpstan-param list<string> $lines
 	 */
 	private static function render_ics_lines( $lines ) {
 		$lines = array_filter(

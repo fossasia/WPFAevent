@@ -104,6 +104,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function load_dependencies() {
 		// Loader.
@@ -186,6 +187,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function define_cpt_hooks() {
 		// Register Event CPT (static method call).
@@ -200,6 +202,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function define_taxonomy_hooks() {
 		// Register Event and Speaker taxonomies.
@@ -212,6 +215,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function define_meta_hooks() {
 		// Register Event meta fields.
@@ -226,6 +230,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function define_page_hooks() {
 		$this->loader->add_action( 'init', 'Wpfaevent_Additional_Information_Helper', 'ensure_additional_information_page', 21 );
@@ -238,6 +243,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function define_admin_hooks() {
 		// Instantiate the admin class.
@@ -253,6 +259,8 @@ class Wpfaevent {
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_plugin_settings' );
 		$this->loader->add_action( 'admin_init', $this->plugin_admin, 'register_eventyay_import_settings' );
 		$this->loader->add_action( 'admin_notices', $this->plugin_admin, 'render_back_to_dashboard_button' );
+		$this->loader->add_action( 'wpfa_event_track_add_form_fields', $this->plugin_admin, 'render_track_form_event_id_field' );
+		$this->loader->add_action( 'created_wpfa_event_track', $this->plugin_admin, 'associate_created_track_with_event' );
 
 		$event_dashboard_page = new Wpfaevent_Event_Dashboard_Page();
 		$this->loader->add_action( 'admin_menu', $event_dashboard_page, 'register_page' );
@@ -331,6 +339,7 @@ class Wpfaevent {
 	 *
 	 * @since    1.0.0
 	 * @access   private
+	 * @return   void
 	 */
 	private function define_public_hooks() {
 		// Instantiate the public class.
@@ -360,6 +369,7 @@ class Wpfaevent {
 	 * Run the loader to execute all of the hooks with WordPress.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function run() {
 		$this->loader->run();

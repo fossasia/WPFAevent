@@ -26,6 +26,7 @@ class Wpfaevent_Eventyay_Post_Manager {
 	 * @param array $post_data Arguments passed to wp_insert_post/wp_update_post.
 	 * @param int   $post_id   Existing post ID to update, or 0 to insert.
 	 * @return int|WP_Error New or updated post ID, or WP_Error on database error.
+	 * @phpstan-param array<string, mixed> $post_data
 	 */
 	public function save_event_post( $post_data, $post_id = 0 ) {
 		if ( $post_id ) {
@@ -48,6 +49,7 @@ class Wpfaevent_Eventyay_Post_Manager {
 	 * @param int   $post_id  Target post ID.
 	 * @param array $metadata Key-value pairs of metadata fields.
 	 * @return void
+	 * @phpstan-param array<string, mixed> $metadata
 	 */
 	public function sync_event_metadata( $post_id, $metadata ) {
 		$post_id = absint( $post_id );
