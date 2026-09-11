@@ -287,7 +287,7 @@ class Wpfaevent_Eventyay_Importer {
 					<div class="wpfaevent-spinner"></div>
 				</div>
 				<h3 id="wpfaevent-progress-title"><?php esc_html_e( 'Importing from Eventyay', 'wpfaevent' ); ?></h3>
-				<p id="wpfaevent-progress-status"><?php esc_html_e( 'This can take a while. Keep this page open until the import finishes.', 'wpfaevent' ); ?></p>
+				<p id="wpfaevent-progress-status"><?php esc_html_e( 'This can take a while. Keep this page open.', 'wpfaevent' ); ?></p>
 			</div>
 		</div>
 		<?php
