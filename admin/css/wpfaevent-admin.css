@@ -94,7 +94,11 @@
 	align-items: center;
 	justify-content: center;
 	flex-direction: column;
-	display: none; /* Controlled by JS setting display: flex */
+	display: none;
+}
+
+#wpfaevent-import-progress-overlay.is-visible {
+	display: flex;
 }
 
 /* Card layout */

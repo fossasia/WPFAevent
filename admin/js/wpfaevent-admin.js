@@ -145,7 +145,7 @@
 					.addClass('disabled')
 					.attr('aria-disabled', 'true');
 
-				$('#wpfaevent-import-progress-overlay').css('display', 'flex');
+				$('#wpfaevent-import-progress-overlay').addClass('is-visible');
 			});
 		}
 

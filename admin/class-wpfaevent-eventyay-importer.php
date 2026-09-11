@@ -281,7 +281,7 @@ class Wpfaevent_Eventyay_Importer {
 				</div>
 		</div>
 
-		<div id="wpfaevent-import-progress-overlay" style="display:none;" role="status" aria-live="polite">
+		<div id="wpfaevent-import-progress-overlay" role="status" aria-live="polite">
 			<div class="wpfaevent-progress-card">
 				<div class="wpfaevent-spinner-container">
 					<div class="wpfaevent-spinner"></div>
