@@ -122,9 +122,6 @@
 			$container.prepend($notice);
 		}
 
-		// The import posts and reloads, so nothing on the page moved while it ran.
-		// Show the overlay for the duration of that request. The form still posts
-		// normally, so the import itself is unchanged.
 		const $eventyayImportForm = $('.wpfaevent-eventyay-import-form');
 
 		if ($eventyayImportForm.length) {
@@ -138,8 +135,6 @@
 
 				importRunning = true;
 
-				// Left enabled so the button still posts its own value; the styling
-				// and aria state are what stop a second run.
 				$(this)
 					.find('[type="submit"]')
 					.addClass('disabled')
