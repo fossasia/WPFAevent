@@ -1,11 +1,7 @@
 <?php
 /**
- * Flags trailing whitespace inside inline HTML.
- *
- * Squiz.WhiteSpace.SuperfluousWhitespace only registers PHP tokens, so its
- * end-of-line check cannot reach the markup regions of template files. This
- * sniff covers that gap and is deliberately limited to T_INLINE_HTML so that
- * whitespace in PHP code is still reported by the Squiz sniff alone.
+ * Flags trailing whitespace inside inline HTML - the one place
+ * Squiz.WhiteSpace.SuperfluousWhitespace can't reach, since it never registers T_INLINE_HTML.
  *
  * @package Wpfaevent
  */
@@ -21,20 +17,15 @@ class InlineHtmlTrailingWhitespaceSniff implements Sniff {
 		return array( T_INLINE_HTML );
 	}
 
-	/**
-	 * PHP_CodeSniffer emits one inline HTML token per line, splitting a line into
-	 * several tokens when PHP is embedded mid-line; only the token carrying the
-	 * newline actually ends the line.
-	 */
+	// PHPCS splits multi-line markup into one T_INLINE_HTML token per line, so $content
+	// below is never more than one line.
 	public function process( File $phpcsFile, $stackPtr ) {
 		$tokens        = $phpcsFile->getTokens();
 		$content       = $tokens[ $stackPtr ]['content'];
 		$eol           = $phpcsFile->eolChar;
 		$ends_with_eol = substr( $content, - strlen( $eol ) ) === $eol;
 
-		// Without a newline the line usually continues into a PHP tag, where the
-		// whitespace before the tag is meaningful - unless this token is the last
-		// in the file, i.e. the file has no trailing newline at all.
+		// Skip: continues into a PHP tag (meaningful whitespace) - unless this is genuinely EOF.
 		if ( ! $ends_with_eol && isset( $tokens[ $stackPtr + 1 ] ) ) {
 			return;
 		}

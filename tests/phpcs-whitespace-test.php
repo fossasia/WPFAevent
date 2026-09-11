@@ -1,12 +1,6 @@
 <?php
-// phpcs:ignoreFile -- Standalone CLI test that shells out to PHP_CodeSniffer.
-/**
- * Guards the custom inline-HTML whitespace sniff (Squiz's own sniff can't see T_INLINE_HTML).
- *
- * Run with: php tests/phpcs-whitespace-test.php
- *
- * @package Wpfaevent
- */
+// phpcs:ignoreFile
+// Guards the custom inline-HTML whitespace sniff. Run with: php tests/phpcs-whitespace-test.php
 
 $wpfaevent_root   = dirname( __DIR__ );
 $wpfaevent_sniff  = 'WPFAEvent.WhiteSpace.InlineHtmlTrailingWhitespace';
@@ -34,11 +28,7 @@ if ( ! file_exists( $wpfaevent_phpcs ) || ! file_exists( $wpfaevent_phpcbf ) ) {
 	wpfaevent_phpcs_test_fail( 'PHP_CodeSniffer is not installed. Run "composer install" first.' );
 }
 
-/*
- * The fixture lives inside the repository because the ruleset skips system temp
- * directories, and it is generated at run time because a committed file with
- * intentional trailing whitespace would fail the whitespace-check workflow.
- */
+// Not sys temp: phpcs.xml excludes */tmp/*. Generated at runtime to avoid committing real trailing whitespace.
 $wpfaevent_fixture_dir = $wpfaevent_root . '/tests/.phpcs-whitespace-fixture-' . getmypid();
 
 if ( ! is_dir( $wpfaevent_fixture_dir ) && ! mkdir( $wpfaevent_fixture_dir ) ) {
@@ -57,7 +47,7 @@ register_shutdown_function(
 
 $wpfaevent_fixture_file = $wpfaevent_fixture_dir . '/fixture.php';
 
-// Concatenated/escaped so no editor or commit hook silently strips the whitespace under test.
+// Concatenated so no editor strips the whitespace under test.
 $wpfaevent_fixture_lines = array(
 	'<?php',
 	'$heading = "Hi";',
@@ -71,12 +61,7 @@ $wpfaevent_fixture_lines = array(
 
 file_put_contents( $wpfaevent_fixture_file, implode( "\n", $wpfaevent_fixture_lines ) . "\n" );
 
-/**
- * Runs the sniff alone against a fixture and returns the lines it flagged.
- *
- * Restricting the run with --sniffs also proves the sniff is registered in
- * phpcs.xml: PHP_CodeSniffer aborts when asked for a code it cannot resolve.
- */
+// --sniffs also proves registration in phpcs.xml: PHPCS aborts on an unknown code.
 function wpfaevent_phpcs_flagged_lines( $phpcs, $standard, $sniff, $file ) {
 	$report = array();
 	$status = 0;
@@ -119,7 +104,6 @@ wpfaevent_phpcs_test_assert_same(
 	'PHPCS should flag the trailing spaces after markup and the whitespace-only line, and nothing else.'
 );
 
-// The violation must stay auto-fixable so that "composer phpcbf" can clean it up.
 exec(
 	escapeshellarg( $wpfaevent_phpcbf )
 		. ' --standard=' . escapeshellarg( $wpfaevent_standard )
@@ -139,10 +123,7 @@ wpfaevent_phpcs_test_assert_same(
 	'PHPCBF should strip the trailing whitespace and leave the rest of the file untouched.'
 );
 
-/*
- * A file with no trailing newline at all has no "next line" for the last inline-HTML
- * token to end at, which is a separate code path from every line above.
- */
+// No trailing newline at all - a separate code path from the fixture above.
 $wpfaevent_eof_fixture_file = $wpfaevent_fixture_dir . '/fixture-no-eol.php';
 file_put_contents( $wpfaevent_eof_fixture_file, "<?php\necho 1;\n?>\nBye   " );
 
