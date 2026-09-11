@@ -15,30 +15,16 @@ namespace WPFAEvent\Sniffs\WhiteSpace;
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;
 
-/**
- * Reports whitespace at the end of an inline HTML line.
- */
 class InlineHtmlTrailingWhitespaceSniff implements Sniff {
 
-	/**
-	 * Returns the token types this sniff listens for.
-	 *
-	 * @return array<int|string>
-	 */
 	public function register() {
 		return array( T_INLINE_HTML );
 	}
 
 	/**
-	 * Processes an inline HTML token.
-	 *
-	 * PHP_CodeSniffer emits one inline HTML token per line, and splits a line
-	 * into several tokens when PHP is embedded mid-line. Only the token that
-	 * carries the newline actually ends the line.
-	 *
-	 * @param File $phpcsFile The file being scanned.
-	 * @param int  $stackPtr  Position of the current token in the token stack.
-	 * @return void
+	 * PHP_CodeSniffer emits one inline HTML token per line, splitting a line into
+	 * several tokens when PHP is embedded mid-line; only the token carrying the
+	 * newline actually ends the line.
 	 */
 	public function process( File $phpcsFile, $stackPtr ) {
 		$tokens  = $phpcsFile->getTokens();

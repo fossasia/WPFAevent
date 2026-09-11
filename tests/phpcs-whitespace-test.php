@@ -1,11 +1,7 @@
 <?php
 // phpcs:ignoreFile -- Standalone CLI test that shells out to PHP_CodeSniffer.
 /**
- * Trailing whitespace ruleset checks.
- *
- * The bundled Squiz.WhiteSpace.SuperfluousWhitespace sniff never registers
- * T_INLINE_HTML, so it cannot see trailing whitespace inside the markup regions
- * of template files. These checks guard the custom sniff that covers that gap.
+ * Guards the custom inline-HTML whitespace sniff (Squiz's own sniff can't see T_INLINE_HTML).
  *
  * Run with: php tests/phpcs-whitespace-test.php
  *
@@ -17,25 +13,11 @@ $wpfaevent_sniff  = 'WPFAEvent.WhiteSpace.InlineHtmlTrailingWhitespace';
 $wpfaevent_phpcs  = $wpfaevent_root . '/vendor/bin/phpcs';
 $wpfaevent_phpcbf = $wpfaevent_root . '/vendor/bin/phpcbf';
 
-/**
- * Fails the test run with a message.
- *
- * @param string $message Failure description.
- * @return void
- */
 function wpfaevent_phpcs_test_fail( $message ) {
 	fwrite( STDERR, $message . PHP_EOL );
 	exit( 1 );
 }
 
-/**
- * Asserts that two values are identical.
- *
- * @param mixed  $expected Expected value.
- * @param mixed  $actual   Actual value.
- * @param string $message  Failure description.
- * @return void
- */
 function wpfaevent_phpcs_test_assert_same( $expected, $actual, $message ) {
 	if ( $expected === $actual ) {
 		return;
@@ -75,17 +57,16 @@ register_shutdown_function(
 
 $wpfaevent_fixture_file = $wpfaevent_fixture_dir . '/fixture.php';
 
-// Trailing whitespace is built from escape sequences so that no editor or commit
-// hook can silently strip what the fixture is meant to exercise.
+// Concatenated/escaped so no editor or commit hook silently strips the whitespace under test.
 $wpfaevent_fixture_lines = array(
-	'<?php',                    // 1.
-	'$heading = "Hi";',         // 2.
-	'?>',                       // 3.
-	'<div class="a">' . '  ',   // 4: trailing spaces after markup.
-	"\t\t",                     // 5: whitespace-only line inside markup.
-	'</div>',                   // 6.
-	'<?php',                    // 7.
-	'echo $heading;',           // 8.
+	'<?php',
+	'$heading = "Hi";',
+	'?>',
+	'<div class="a">' . '  ',   // line 4: trailing spaces after markup.
+	"\t\t",                     // line 5: whitespace-only line inside markup.
+	'</div>',
+	'<?php',
+	'echo $heading;',
 );
 
 file_put_contents( $wpfaevent_fixture_file, implode( "\n", $wpfaevent_fixture_lines ) . "\n" );
