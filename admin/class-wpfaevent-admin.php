@@ -954,6 +954,7 @@ class Wpfaevent_Admin {
 	 * Render a hidden event_id field on the Add Track taxonomy form.
 	 *
 	 * @since 1.0.0
+	 * @return void
 	 */
 	public function render_track_form_event_id_field() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -970,6 +971,7 @@ class Wpfaevent_Admin {
 	 * @since 1.0.0
 	 *
 	 * @param int $term_id Term ID.
+	 * @return void
 	 */
 	public function associate_created_track_with_event( $term_id ) {
 		$term_id  = absint( $term_id );
