@@ -147,6 +147,7 @@ class Wpfaevent_Public {
 	 *
 	 * @since    1.0.0
 	 * @return   array    Associative array of color values.
+	 * @phpstan-return array<string, mixed>
 	 */
 	private function get_theme_colors() {
 		$colors = array(
@@ -222,6 +223,7 @@ class Wpfaevent_Public {
 	 * Register public assets so templates, shortcodes, and blocks can enqueue them.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	private function register_assets() {
 		$event_base_path         = WPFAEVENT_PATH . 'public/css/templates/event-base.css';
@@ -423,6 +425,7 @@ class Wpfaevent_Public {
 	 * Register the stylesheets for the public-facing side of the site.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function enqueue_styles() {
 
@@ -589,6 +592,7 @@ class Wpfaevent_Public {
 	 * Register the JavaScript for the public-facing side of the site.
 	 *
 	 * @since    1.0.0
+	 * @return   void
 	 */
 	public function enqueue_scripts() {
 

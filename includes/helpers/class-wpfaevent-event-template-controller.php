@@ -61,6 +61,7 @@ class Wpfaevent_Event_Template_Controller {
 	 * @param string $type     Partner type.
 	 * @param array  $partner  Partner array.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $partner
 	 */
 	private static function get_partner_detail_url( $event_id, $type, $partner ) {
 		if ( is_callable( self::$partner_helper_provider ) ) {
@@ -77,6 +78,7 @@ class Wpfaevent_Event_Template_Controller {
 	 * @since 1.0.0
 	 * @param int $event_id Event ID.
 	 * @return array
+	 * @phpstan-return array<string, string>
 	 */
 	private static function get_event_colors( $event_id ) {
 		if ( is_callable( self::$meta_event_provider ) ) {

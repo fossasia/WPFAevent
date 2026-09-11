@@ -28,6 +28,8 @@ class Wpfaevent_Speaker_Repository {
 	 * @param array $speakers Imported speakers.
 	 * @param int   $event_id Event post ID.
 	 * @return array
+	 * @phpstan-param list<array<string, mixed>> $speakers
+	 * @phpstan-return array{created: int, updated: int, ids: list<int>, featured_ids: list<int>}
 	 */
 	public function sync_eventyay_speaker_posts( $speakers, $event_id ) {
 		$result         = array(
@@ -287,6 +289,8 @@ class Wpfaevent_Speaker_Repository {
 	 * @param array  $speaker     Speaker data.
 	 * @param string $post_status Optional. Post status. Default 'draft'.
 	 * @return array|WP_Error
+	 * @phpstan-param array<string, mixed> $speaker
+	 * @phpstan-return array{id: int, created: bool}|WP_Error
 	 */
 	public function upsert_eventyay_speaker_post( $speaker, $post_status = 'draft' ) {
 		if ( empty( $speaker['eventyay_speaker_id'] ) || empty( $speaker['name'] ) ) {

@@ -30,6 +30,8 @@ class Wpfaevent_JSONAPI_Resource_Utils {
 	 *
 	 * @param array $payload JSON:API document payload.
 	 * @return array
+	 * @phpstan-param array<array-key, mixed> $payload
+	 * @phpstan-return array<array-key, array<array-key, mixed>>
 	 */
 	public function extract_eventyay_event_resources( $payload ) {
 		if ( ! is_array( $payload ) || empty( $payload ) ) {
@@ -56,6 +58,8 @@ class Wpfaevent_JSONAPI_Resource_Utils {
 	 *
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @return array
+	 * @phpstan-param array<array-key, mixed> $eventyay_resource
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	public function normalize_eventyay_api_resource( $eventyay_resource ) {
 		if ( ! is_array( $eventyay_resource ) ) {
@@ -121,6 +125,7 @@ class Wpfaevent_JSONAPI_Resource_Utils {
 	 *
 	 * @param mixed $value Raw value.
 	 * @return array
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	public function eventyay_list_value( $value ) {
 		if ( ! is_array( $value ) ) {
@@ -160,6 +165,7 @@ class Wpfaevent_JSONAPI_Resource_Utils {
 	 *
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @return string
+	 * @phpstan-param array<array-key, mixed> $eventyay_resource
 	 */
 	public function eventyay_resource_identifier( $eventyay_resource ) {
 		foreach ( array( '_eventyay_source_id', 'code', 'id', 'slug' ) as $key ) {
@@ -178,6 +184,8 @@ class Wpfaevent_JSONAPI_Resource_Utils {
 	 * @param array $keys Candidate keys.
 	 * @param bool  $include_settings Unused parameter to maintain signature compat.
 	 * @return mixed
+	 * @phpstan-param array<array-key, mixed> $eventyay_resource
+	 * @phpstan-param list<string> $keys
 	 */
 	public function eventyay_first_present_raw( $eventyay_resource, $keys, $include_settings = false ) {
 		foreach ( $keys as $key ) {
@@ -207,6 +215,8 @@ class Wpfaevent_JSONAPI_Resource_Utils {
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @param array $keys Candidate keys.
 	 * @return string
+	 * @phpstan-param array<array-key, mixed> $eventyay_resource
+	 * @phpstan-param list<string> $keys
 	 */
 	public function eventyay_first_present_text( $eventyay_resource, $keys ) {
 		return $this->eventyay_text_value( $this->eventyay_first_present_raw( $eventyay_resource, $keys ) );
@@ -218,6 +228,8 @@ class Wpfaevent_JSONAPI_Resource_Utils {
 	 * @param array $eventyay_resource Eventyay resource.
 	 * @param array $keys Candidate keys.
 	 * @return string
+	 * @phpstan-param array<array-key, mixed> $eventyay_resource
+	 * @phpstan-param list<string> $keys
 	 */
 	public function eventyay_first_present_rich_text( $eventyay_resource, $keys ) {
 		return $this->eventyay_rich_text_value( $this->eventyay_first_present_raw( $eventyay_resource, $keys ) );
@@ -403,6 +415,8 @@ class Wpfaevent_JSONAPI_Resource_Utils {
 	 *
 	 * @param array $jsonapi_resource JSON:API resource.
 	 * @return array
+	 * @phpstan-param array<array-key, mixed> $jsonapi_resource
+	 * @phpstan-return array<array-key, mixed>
 	 */
 	public function get_jsonapi_attributes( $jsonapi_resource ) {
 		return isset( $jsonapi_resource['attributes'] ) && is_array( $jsonapi_resource['attributes'] ) ? $jsonapi_resource['attributes'] : array();
@@ -414,6 +428,8 @@ class Wpfaevent_JSONAPI_Resource_Utils {
 	 * @param array $attributes Attribute map.
 	 * @param array $keys Candidate keys.
 	 * @return string
+	 * @phpstan-param array<array-key, mixed> $attributes
+	 * @phpstan-param list<string> $keys
 	 */
 	public function attribute_value( $attributes, $keys ) {
 		foreach ( $keys as $key ) {

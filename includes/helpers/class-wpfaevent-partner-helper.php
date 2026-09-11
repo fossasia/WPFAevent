@@ -133,6 +133,7 @@ class Wpfaevent_Partner_Helper {
 	 *
 	 * @param array $partner Partner record.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $partner
 	 */
 	public static function get_partner_key( $partner ) {
 		if ( ! is_array( $partner ) ) {
@@ -169,6 +170,7 @@ class Wpfaevent_Partner_Helper {
 	 *
 	 * @param array $group Sponsor group.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $group
 	 */
 	public static function get_sponsor_group_key( $group ) {
 		if ( ! is_array( $group ) ) {
@@ -195,6 +197,7 @@ class Wpfaevent_Partner_Helper {
 	 * @param string $type     Partner type. Accepts exhibitor or sponsor.
 	 * @param array  $partner  Partner record.
 	 * @return string
+	 * @phpstan-param array<string, mixed> $partner
 	 */
 	public static function get_partner_detail_url( $event_id, $type, $partner ) {
 		$event_id = absint( $event_id );
@@ -371,6 +374,7 @@ class Wpfaevent_Partner_Helper {
 	 * @param int    $event_id    Event post ID.
 	 * @param string $partner_key Partner key.
 	 * @return array
+	 * @phpstan-return array<string, mixed>
 	 */
 	private static function find_exhibitor_by_key( $event_id, $partner_key ) {
 		$exhibitors = self::read_dashboard_json_file( 'exhibitors-' . absint( $event_id ) . '.json', array() );

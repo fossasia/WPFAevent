@@ -166,10 +166,14 @@
 	justify-content: center;
 	line-height: 1.2;
 	min-height: 40px;
+	/* A grid item with a fixed min-width uses it as its automatic minimum instead
+	   of min-content, so a nowrap label wider than 112px spilled out of the box.
+	   max-content keeps the floor for short labels and grows for long ones. */
 	min-width: 112px;
 	padding: 9px 14px;
 	text-decoration: none;
 	white-space: nowrap;
+	width: max-content;
 }
 
 .wpfaevent .wpfa-schedule-filter-form button:hover,

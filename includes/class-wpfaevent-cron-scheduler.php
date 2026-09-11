@@ -36,6 +36,7 @@ class Wpfaevent_Cron_Scheduler {
 	 *
 	 * @param array $settings Saved Eventyay import settings (plain-text, not encrypted).
 	 * @return void
+	 * @phpstan-param array<string, mixed> $settings
 	 */
 	public static function schedule( array $settings ) {
 		self::clear();
