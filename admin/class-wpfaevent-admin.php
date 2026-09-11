@@ -955,7 +955,7 @@ class Wpfaevent_Admin {
 	 *
 	 * @since 1.0.0
 	 */
-	public function render_track_form_event_id_field() {
+	public function render_track_form_event_id_field(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$event_id = isset( $_GET['event_id'] ) ? absint( wp_unslash( $_GET['event_id'] ) ) : 0;
 
@@ -971,7 +971,7 @@ class Wpfaevent_Admin {
 	 *
 	 * @param int $term_id Term ID.
 	 */
-	public function associate_created_track_with_event( $term_id ) {
+	public function associate_created_track_with_event( $term_id ): void {
 		$term_id  = absint( $term_id );
 		$event_id = 0;
 

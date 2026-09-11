@@ -728,8 +728,8 @@ class Wpfaevent_Admin_Event_Metabox {
 	 * @since 1.0.0
 	 * @param WP_Post $post The post object.
 	 */
-	public function render_event_additional_information_meta_box( $post ) {
-		$venue_information         = get_post_meta( $post->ID, 'wpfa_event_venue_information', true );
+	public function render_event_additional_information_meta_box( $post ): void {
+		$venue_information          = get_post_meta( $post->ID, 'wpfa_event_venue_information', true );
 		$transportation_information = get_post_meta( $post->ID, 'wpfa_event_transportation_information', true );
 		$hotel_information          = get_post_meta( $post->ID, 'wpfa_event_hotel_information', true );
 
