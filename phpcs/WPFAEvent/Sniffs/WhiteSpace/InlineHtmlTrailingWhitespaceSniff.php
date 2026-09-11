@@ -27,17 +27,19 @@ class InlineHtmlTrailingWhitespaceSniff implements Sniff {
 	 * newline actually ends the line.
 	 */
 	public function process( File $phpcsFile, $stackPtr ) {
-		$tokens  = $phpcsFile->getTokens();
-		$content = $tokens[ $stackPtr ]['content'];
-		$eol     = $phpcsFile->eolChar;
+		$tokens        = $phpcsFile->getTokens();
+		$content       = $tokens[ $stackPtr ]['content'];
+		$eol           = $phpcsFile->eolChar;
+		$ends_with_eol = substr( $content, - strlen( $eol ) ) === $eol;
 
-		// Without a newline the line continues into a PHP tag, where the
-		// whitespace before the tag is meaningful.
-		if ( substr( $content, - strlen( $eol ) ) !== $eol ) {
+		// Without a newline the line usually continues into a PHP tag, where the
+		// whitespace before the tag is meaningful - unless this token is the last
+		// in the file, i.e. the file has no trailing newline at all.
+		if ( ! $ends_with_eol && isset( $tokens[ $stackPtr + 1 ] ) ) {
 			return;
 		}
 
-		$line    = substr( $content, 0, - strlen( $eol ) );
+		$line    = $ends_with_eol ? substr( $content, 0, - strlen( $eol ) ) : $content;
 		$trimmed = rtrim( $line, " \t" );
 
 		if ( $trimmed === $line ) {
@@ -47,7 +49,7 @@ class InlineHtmlTrailingWhitespaceSniff implements Sniff {
 		$fix = $phpcsFile->addFixableError( 'Whitespace found at end of line', $stackPtr, 'Found' );
 
 		if ( true === $fix ) {
-			$phpcsFile->fixer->replaceToken( $stackPtr, $trimmed . $eol );
+			$phpcsFile->fixer->replaceToken( $stackPtr, $trimmed . ( $ends_with_eol ? $eol : '' ) );
 		}
 	}
 }

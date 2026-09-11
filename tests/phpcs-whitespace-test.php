@@ -71,56 +71,58 @@ $wpfaevent_fixture_lines = array(
 
 file_put_contents( $wpfaevent_fixture_file, implode( "\n", $wpfaevent_fixture_lines ) . "\n" );
 
-/*
+/**
+ * Runs the sniff alone against a fixture and returns the lines it flagged.
+ *
  * Restricting the run with --sniffs also proves the sniff is registered in
  * phpcs.xml: PHP_CodeSniffer aborts when asked for a code it cannot resolve.
  */
-$wpfaevent_report = array();
-$wpfaevent_status = 0;
-exec(
-	escapeshellarg( $wpfaevent_phpcs )
-		. ' --standard=' . escapeshellarg( $wpfaevent_root . '/phpcs.xml' )
-		. ' --sniffs=' . escapeshellarg( $wpfaevent_sniff )
-		. ' --report=csv --no-colors '
-		. escapeshellarg( $wpfaevent_fixture_file ) . ' 2>&1',
-	$wpfaevent_report,
-	$wpfaevent_status
-);
-
-$wpfaevent_report_text = implode( PHP_EOL, $wpfaevent_report );
-
-if ( 0 === $wpfaevent_status ) {
-	wpfaevent_phpcs_test_fail(
-		'PHPCS reported no trailing whitespace inside inline HTML.' . PHP_EOL . $wpfaevent_report_text
+function wpfaevent_phpcs_flagged_lines( $phpcs, $standard, $sniff, $file ) {
+	$report = array();
+	$status = 0;
+	exec(
+		escapeshellarg( $phpcs )
+			. ' --standard=' . escapeshellarg( $standard )
+			. ' --sniffs=' . escapeshellarg( $sniff )
+			. ' --report=csv --no-colors '
+			. escapeshellarg( $file ) . ' 2>&1',
+		$report,
+		$status
 	);
-}
 
-$wpfaevent_flagged_lines = array();
-
-foreach ( $wpfaevent_report as $wpfaevent_row ) {
-	$wpfaevent_columns = str_getcsv( $wpfaevent_row );
-
-	if ( isset( $wpfaevent_columns[1], $wpfaevent_columns[5] )
-		&& is_numeric( $wpfaevent_columns[1] )
-		&& $wpfaevent_sniff . '.Found' === $wpfaevent_columns[5]
-	) {
-		$wpfaevent_flagged_lines[] = (int) $wpfaevent_columns[1];
+	if ( 0 === $status ) {
+		wpfaevent_phpcs_test_fail(
+			'PHPCS reported no violations.' . PHP_EOL . implode( PHP_EOL, $report )
+		);
 	}
+
+	$lines = array();
+
+	foreach ( $report as $row ) {
+		$columns = str_getcsv( $row );
+
+		if ( isset( $columns[1], $columns[5] ) && is_numeric( $columns[1] ) && $sniff . '.Found' === $columns[5] ) {
+			$lines[] = (int) $columns[1];
+		}
+	}
+
+	sort( $lines );
+
+	return $lines;
 }
 
-sort( $wpfaevent_flagged_lines );
+$wpfaevent_standard = $wpfaevent_root . '/phpcs.xml';
 
 wpfaevent_phpcs_test_assert_same(
 	array( 4, 5 ),
-	$wpfaevent_flagged_lines,
+	wpfaevent_phpcs_flagged_lines( $wpfaevent_phpcs, $wpfaevent_standard, $wpfaevent_sniff, $wpfaevent_fixture_file ),
 	'PHPCS should flag the trailing spaces after markup and the whitespace-only line, and nothing else.'
-	. PHP_EOL . $wpfaevent_report_text
 );
 
 // The violation must stay auto-fixable so that "composer phpcbf" can clean it up.
 exec(
 	escapeshellarg( $wpfaevent_phpcbf )
-		. ' --standard=' . escapeshellarg( $wpfaevent_root . '/phpcs.xml' )
+		. ' --standard=' . escapeshellarg( $wpfaevent_standard )
 		. ' --sniffs=' . escapeshellarg( $wpfaevent_sniff )
 		. ' --no-colors '
 		. escapeshellarg( $wpfaevent_fixture_file ) . ' 2>&1'
@@ -135,6 +137,33 @@ wpfaevent_phpcs_test_assert_same(
 	) . "\n",
 	$wpfaevent_fixed,
 	'PHPCBF should strip the trailing whitespace and leave the rest of the file untouched.'
+);
+
+/*
+ * A file with no trailing newline at all has no "next line" for the last inline-HTML
+ * token to end at, which is a separate code path from every line above.
+ */
+$wpfaevent_eof_fixture_file = $wpfaevent_fixture_dir . '/fixture-no-eol.php';
+file_put_contents( $wpfaevent_eof_fixture_file, "<?php\necho 1;\n?>\nBye   " );
+
+wpfaevent_phpcs_test_assert_same(
+	array( 4 ),
+	wpfaevent_phpcs_flagged_lines( $wpfaevent_phpcs, $wpfaevent_standard, $wpfaevent_sniff, $wpfaevent_eof_fixture_file ),
+	'PHPCS should flag trailing whitespace on the last line even without a final newline.'
+);
+
+exec(
+	escapeshellarg( $wpfaevent_phpcbf )
+		. ' --standard=' . escapeshellarg( $wpfaevent_standard )
+		. ' --sniffs=' . escapeshellarg( $wpfaevent_sniff )
+		. ' --no-colors '
+		. escapeshellarg( $wpfaevent_eof_fixture_file ) . ' 2>&1'
+);
+
+wpfaevent_phpcs_test_assert_same(
+	"<?php\necho 1;\n?>\nBye",
+	file_get_contents( $wpfaevent_eof_fixture_file ),
+	'PHPCBF should strip the trailing whitespace without adding a final newline that was never there.'
 );
 
 fwrite( STDOUT, 'PHPCS whitespace tests passed.' . PHP_EOL );
