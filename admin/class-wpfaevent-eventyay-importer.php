@@ -89,6 +89,9 @@ class Wpfaevent_Eventyay_Importer {
 					esc_html__( 'Please enter a valid public Eventyay event URL with both organizer and event slugs.', 'wpfaevent' ),
 					'error'
 				);
+			} else {
+				$settings['organizer_slug'] = $parsed_event_url['organizer_slug'];
+				$settings['event_slug']     = $parsed_event_url['event_slug'];
 			}
 		}
 
