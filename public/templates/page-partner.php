@@ -13,6 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+
 $partner_request = class_exists( 'Wpfaevent_Partner_Helper' )
 	? Wpfaevent_Partner_Helper::resolve_partner_request()
 	: array(
@@ -105,6 +107,7 @@ $partner_classes = array(
 );
 $partner_label   = $partner_label ? $partner_label : __( 'Partner', 'wpfaevent' );
 ?>
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -113,7 +116,7 @@ $partner_label   = $partner_label ? $partner_label : __( 'Partner', 'wpfaevent' 
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent wpfa-event-template wpfa-partner-template' ); ?><?php echo $event_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>
-<?php wp_body_open(); ?>
+	<?php wp_body_open(); ?>
 
 <div id="page" class="site">
 	<?php
@@ -130,8 +133,13 @@ $partner_label   = $partner_label ? $partner_label : __( 'Partner', 'wpfaevent' 
 		include $nav_partial;
 	}
 	?>
+<?php endif; ?>
 
+<?php if ( $wpfaevent_is_embed ) : ?>
+	<section class="wpfaevent wpfa-event-template wpfa-partner-template <?php echo esc_attr( implode( ' ', $partner_classes ) ); ?>"<?php echo $event_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>
+<?php else : ?>
 	<main class="<?php echo esc_attr( implode( ' ', $partner_classes ) ); ?>">
+<?php endif; ?>
 		<section class="wpfa-partner-detail-hero">
 			<div class="container">
 				<div class="wpfa-partner-detail-hero-inner">
@@ -241,11 +249,15 @@ $partner_label   = $partner_label ? $partner_label : __( 'Partner', 'wpfaevent' 
 				<?php endif; ?>
 			</div>
 		</section>
+<?php if ( $wpfaevent_is_embed ) : ?>
+	</section>
+<?php else : ?>
 	</main>
 
 	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
 </div>
 
-<?php wp_footer(); ?>
+	<?php wp_footer(); ?>
 </body>
 </html>
+<?php endif; ?>

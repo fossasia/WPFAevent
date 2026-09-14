@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+$wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
+
 if ( class_exists( 'Wpfaevent_Additional_Information_Helper' ) ) {
 	$page_data = Wpfaevent_Additional_Information_Helper::get_additional_information_page_data();
 } else {
@@ -58,6 +60,7 @@ $event_additional_url            = $page_data['event_additional_url'];
 $event_style_attr                = $page_data['event_style_attr'];
 $header_vars                     = $page_data['header_vars'];
 ?>
+<?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -66,7 +69,7 @@ $header_vars                     = $page_data['header_vars'];
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent wpfa-event-template wpfa-additional-information-template' ); ?><?php echo $event_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>
-<?php wp_body_open(); ?>
+	<?php wp_body_open(); ?>
 
 <div id="page" class="site">
 	<?php
@@ -83,8 +86,13 @@ $header_vars                     = $page_data['header_vars'];
 		include $nav_partial;
 	}
 	?>
+<?php endif; ?>
 
+<?php if ( $wpfaevent_is_embed ) : ?>
+	<section class="wpfaevent wpfa-event-template wpfa-additional-information-template wpfa-additional-information"<?php echo $event_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>
+<?php else : ?>
 	<main class="wpfa-additional-information">
+<?php endif; ?>
 		<section class="wpfa-additional-information-hero">
 			<div class="container">
 				<p class="wpfa-event-kicker"><?php esc_html_e( 'Venue and travel', 'wpfaevent' ); ?></p>
@@ -135,11 +143,15 @@ $header_vars                     = $page_data['header_vars'];
 				<?php endif; ?>
 			</div>
 		</section>
+<?php if ( $wpfaevent_is_embed ) : ?>
+	</section>
+<?php else : ?>
 	</main>
 
 	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
 </div>
 
-<?php wp_footer(); ?>
+	<?php wp_footer(); ?>
 </body>
 </html>
+<?php endif; ?>
