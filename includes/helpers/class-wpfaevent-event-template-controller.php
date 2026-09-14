@@ -418,22 +418,24 @@ class Wpfaevent_Event_Template_Controller {
 		$exhibitors         = $read_dashboard_json( 'exhibitors-' . absint( $event_id ) . '.json', array() );
 		$section_visibility = isset( $site_settings['section_visibility'] ) && is_array( $site_settings['section_visibility'] ) ? $site_settings['section_visibility'] : array();
 
-		$event_title            = get_the_title( $event_id );
-		$start_date             = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
-		$end_date               = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
-		$location               = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
-		$venue_information      = trim( (string) get_post_meta( $event_id, 'wpfa_event_venue_information', true ) );
-		$custom_tabs            = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_custom_tabs( get_post_meta( $event_id, 'wpfa_event_custom_tabs', true ) ) : array();
-		$event_languages        = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array();
-		$event_language_label   = implode( ', ', $event_languages );
-		$event_url              = get_post_meta( $event_id, 'wpfa_event_url', true );
-		$event_url              = $event_url ? esc_url_raw( $event_url ) : '';
-		$event_header_image_url = get_post_meta( $event_id, 'wpfa_event_header_image_url', true );
-		$event_header_image_url = $event_header_image_url ? esc_url_raw( $event_header_image_url ) : '';
-		$event_logo_url         = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
-		$event_logo_url         = $event_logo_url ? esc_url_raw( $event_logo_url ) : '';
-		$ticket_widget_url      = get_post_meta( $event_id, 'wpfa_event_ticket_widget_url', true );
-		$ticket_widget_url      = $ticket_widget_url ? esc_url_raw( $ticket_widget_url ) : '';
+		$event_title                = get_the_title( $event_id );
+		$start_date                 = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_start_date', true ) );
+		$end_date                   = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_end_date', true ) );
+		$location                   = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
+		$venue_information          = trim( (string) get_post_meta( $event_id, 'wpfa_event_venue_information', true ) );
+		$transportation_information = trim( (string) get_post_meta( $event_id, 'wpfa_event_transportation_information', true ) );
+		$hotel_information          = trim( (string) get_post_meta( $event_id, 'wpfa_event_hotel_information', true ) );
+		$custom_tabs                = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_custom_tabs( get_post_meta( $event_id, 'wpfa_event_custom_tabs', true ) ) : array();
+		$event_languages            = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::sanitize_language_list( get_post_meta( $event_id, 'wpfa_event_languages', true ) ) : array();
+		$event_language_label       = implode( ', ', $event_languages );
+		$event_url                  = get_post_meta( $event_id, 'wpfa_event_url', true );
+		$event_url                  = $event_url ? esc_url_raw( $event_url ) : '';
+		$event_header_image_url     = get_post_meta( $event_id, 'wpfa_event_header_image_url', true );
+		$event_header_image_url     = $event_header_image_url ? esc_url_raw( $event_header_image_url ) : '';
+		$event_logo_url             = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
+		$event_logo_url             = $event_logo_url ? esc_url_raw( $event_logo_url ) : '';
+		$ticket_widget_url          = get_post_meta( $event_id, 'wpfa_event_ticket_widget_url', true );
+		$ticket_widget_url          = $ticket_widget_url ? esc_url_raw( $ticket_widget_url ) : '';
 
 		if ( ! $event_header_image_url && ! empty( $site_settings['event_header_image_url'] ) ) {
 			$event_header_image_url = esc_url_raw( $site_settings['event_header_image_url'] );
@@ -1039,19 +1041,19 @@ class Wpfaevent_Event_Template_Controller {
 		$has_schedule = $show_schedule && ! empty( $schedule_items );
 
 		$wpfa_event_nav_context = array(
-			'show_about'      => $show_about,
-			'show_speakers'   => $show_speakers,
-			'show_schedule'   => $show_schedule,
-			'show_sponsors'   => $show_sponsors,
-			'show_exhibitors' => $show_exhibitors,
-			'has_about'       => $show_about && '' !== trim( $about_content ),
-			'has_tickets'     => $show_ticket_section,
-			'has_speakers'    => $has_speakers,
-			'has_schedule'    => $has_schedule,
-			'has_sponsors'    => $show_sponsors && ! empty( $visible_sponsor_groups ),
-			'has_exhibitors'  => $show_exhibitors && ! empty( $visible_exhibitors ),
-			'has_venue'       => '' !== trim( wp_strip_all_tags( $venue_information ) ),
-			'custom_sections' => $custom_sections,
+			'show_about'                 => $show_about,
+			'show_speakers'              => $show_speakers,
+			'show_schedule'              => $show_schedule,
+			'show_sponsors'              => $show_sponsors,
+			'show_exhibitors'            => $show_exhibitors,
+			'has_about'                  => $show_about && '' !== trim( $about_content ),
+			'has_tickets'                => $show_ticket_section,
+			'has_speakers'               => $has_speakers,
+			'has_schedule'               => $has_schedule,
+			'has_sponsors'               => $show_sponsors && ! empty( $visible_sponsor_groups ),
+			'has_exhibitors'             => $show_exhibitors && ! empty( $visible_exhibitors ),
+			'has_additional_information' => '' !== trim( wp_strip_all_tags( $venue_information . $transportation_information . $hotel_information ) ),
+			'custom_sections'            => $custom_sections,
 		);
 		$wpfa_event_nav_items   = class_exists( 'Wpfaevent_Event_Navigation_Helper' )
 			? Wpfaevent_Event_Navigation_Helper::build_nav_items( $wpfa_event_nav_context )
@@ -1114,6 +1116,8 @@ class Wpfaevent_Event_Template_Controller {
 			'has_speakers'                             => $has_speakers,
 			'has_schedule'                             => $has_schedule,
 			'venue_information'                        => $venue_information,
+			'transportation_information'               => $transportation_information,
+			'hotel_information'                        => $hotel_information,
 			'event_additional_url'                     => $event_additional_url,
 			'custom_tabs'                              => $custom_tabs,
 			'featured_speaker_ids'                     => $featured_speaker_ids,
@@ -1209,6 +1213,8 @@ class Wpfaevent_Event_Template_Controller {
 			'has_speakers'                             => false,
 			'has_schedule'                             => false,
 			'venue_information'                        => '',
+			'transportation_information'               => '',
+			'hotel_information'                        => '',
 			'event_additional_url'                     => '',
 			'custom_tabs'                              => array(),
 			'featured_speaker_ids'                     => array(),
