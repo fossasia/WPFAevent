@@ -6,7 +6,9 @@
 .wpfaevent.wpfa-single-event-template,
 .wpfaevent.wpfa-schedule-template {
 	--event-primary: var(--brand, #D51007);
+	--event-primary-contrast: #fff;
 	--event-primary-dark: #b20d06;
+	--event-primary-dark-contrast: #fff;
 	--event-ink: #243447;
 	--event-line: #dfe6ee;
 	--event-soft: #f4f7fb;
@@ -55,9 +57,8 @@
 }
 
 .wpfaevent .wpfa-event-hero {
-	background:
-		linear-gradient(135deg, #8f0a05 0%, #D51007 52%, #f15b53 100%);
-	color: #fff;
+	background: var(--event-primary);
+	color: var(--event-primary-contrast);
 	overflow: hidden;
 	padding: 56px 0 52px;
 	position: relative;
@@ -100,7 +101,7 @@
 }
 
 .wpfaevent .wpfa-event-kicker {
-	color: rgba(255, 255, 255, 0.78);
+	color: var(--event-primary-contrast);
 	font-size: 0.9rem;
 	font-weight: 800;
 	letter-spacing: 0;
@@ -110,7 +111,7 @@
 }
 
 .wpfaevent .wpfa-event-hero h1 {
-	color: #fff;
+	color: var(--event-primary-contrast);
 	font-size: clamp(2.4rem, 6vw, 5.4rem);
 	font-weight: 800;
 	letter-spacing: 0;
@@ -121,7 +122,7 @@
 }
 
 .wpfaevent .wpfa-event-hero-text {
-	color: rgba(255, 255, 255, 0.9);
+	color: var(--event-primary-contrast);
 	font-size: 1.12rem;
 	font-weight: 400;
 	line-height: 1.7;
@@ -145,7 +146,7 @@
 	background: rgba(255, 255, 255, 0.16);
 	border: 1px solid rgba(255, 255, 255, 0.25);
 	border-radius: var(--event-radius);
-	color: #fff;
+	color: var(--event-primary-contrast);
 	display: inline-flex;
 	font-size: 1rem;
 	font-weight: 700;
@@ -201,7 +202,7 @@
 	background: var(--event-primary);
 	border-radius: var(--event-radius);
 	box-shadow: 0 8px 18px rgba(213, 16, 7, 0.2);
-	color: #fff;
+	color: var(--event-primary-contrast);
 	display: flex;
 	font-size: 1.12rem;
 	font-weight: 800;
@@ -215,7 +216,7 @@
 
 .wpfaevent .wpfa-event-register:hover {
 	background: var(--event-primary-dark);
-	color: #fff;
+	color: var(--event-primary-dark-contrast);
 }
 
 .wpfaevent .wpfa-event-calendar-link {
