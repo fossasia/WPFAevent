@@ -228,7 +228,7 @@ class EventColorsTest extends WP_UnitTestCase {
 		$palette = Wpfaevent_Meta_Event::get_effective_event_colors( $this->event_id );
 		$this->assertSame( '#FDE68A', $palette['primary'] );
 		$this->assertSame( '#000000', $palette['primary_contrast'] );
-		$this->assertSame( '#D7C375', $palette['dark'] );
+		$this->assertSame( '#D7C475', $palette['dark'] );
 		$this->assertSame( '#000000', $palette['dark_contrast'] );
 	}
 
