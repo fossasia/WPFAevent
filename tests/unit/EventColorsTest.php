@@ -191,4 +191,69 @@ class EventColorsTest extends WP_UnitTestCase {
 		$this->assertSame( '#FFFFFF', Wpfaevent_Meta_Event::get_contrast_text_color( '#D51007' ) );
 		$this->assertSame( '#000000', Wpfaevent_Meta_Event::get_contrast_text_color( '#F97316' ) );
 	}
+
+	/**
+	 * Centralized style attribute generator produces complete variables.
+	 */
+	public function test_build_event_style_attribute_generates_consistent_variables() {
+		$this->assertSame( '', Wpfaevent_Meta_Event::build_event_style_attribute( $this->event_id ) );
+
+		update_post_meta( $this->event_id, 'wpfa_event_primary_color', '#0073AA' );
+		update_post_meta( $this->event_id, 'wpfa_event_theme_background_color', '#F0F4F8' );
+		update_post_meta( $this->event_id, 'wpfa_event_theme_success_color', '#2F8F5B' );
+		update_post_meta( $this->event_id, 'wpfa_event_theme_danger_color', '#DC2626' );
+
+		$style_attr = Wpfaevent_Meta_Event::build_event_style_attribute( $this->event_id );
+		$this->assertStringContainsString( '--event-primary: #0073AA', $style_attr );
+		$this->assertStringContainsString( '--event-primary-dark: #006291', $style_attr );
+		$this->assertStringContainsString( '--event-primary-contrast: #FFFFFF', $style_attr );
+		$this->assertStringContainsString( '--event-primary-dark-contrast: #FFFFFF', $style_attr );
+		$this->assertStringContainsString( '--event-soft: #F0F4F8', $style_attr );
+		$this->assertStringContainsString( '--event-success: #2F8F5B', $style_attr );
+		$this->assertStringContainsString( '--event-danger: #DC2626', $style_attr );
+	}
+
+	/**
+	 * Hero with header image enforces white text over the dark overlay.
+	 */
+	public function test_event_hero_with_header_image_preserves_white_text() {
+		$stylesheet = file_get_contents( dirname( __DIR__, 2 ) . '/public/css/templates/event.css' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a repository fixture in a unit test.
+
+		$this->assertNotFalse( $stylesheet );
+		$this->assertMatchesRegularExpression( '/\.wpfaevent \.wpfa-event-hero\.has-event-header-image.*?color:\s*#fff;/s', $stylesheet );
+		$this->assertMatchesRegularExpression( '/\.wpfaevent \.wpfa-event-hero\.has-event-header-image h1.*?color:\s*#fff;/s', $stylesheet );
+	}
+
+	/**
+	 * Ticket section background uses the soft background variable.
+	 */
+	public function test_ticket_section_uses_theme_background_color_variable() {
+		$stylesheet = file_get_contents( dirname( __DIR__, 2 ) . '/public/css/templates/event.css' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a repository fixture in a unit test.
+
+		$this->assertNotFalse( $stylesheet );
+		$this->assertMatchesRegularExpression( '/\.wpfaevent \.wpfa-event-tickets \{\s*background:\s*var\(--event-soft\);/s', $stylesheet );
+	}
+
+	/**
+	 * Schedule controls use the primary color variable and avoid hardcoded dark navy.
+	 */
+	public function test_schedule_controls_use_theme_color_variables() {
+		$stylesheet = file_get_contents( dirname( __DIR__, 2 ) . '/public/css/templates/schedule.css' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a repository fixture in a unit test.
+
+		$this->assertNotFalse( $stylesheet );
+		$this->assertStringNotContainsString( '.wpfa-schedule-view-switch a.is-active {\n\tbackground: #17233a;', $stylesheet );
+		$this->assertMatchesRegularExpression( '/\.wpfaevent \.wpfa-schedule-view-switch a\.is-active \{\s*background:\s*var\(--event-primary\);/s', $stylesheet );
+		$this->assertMatchesRegularExpression( '/\.wpfaevent \.wpfa-schedule-filter-form button \{\s*background:\s*var\(--event-primary\);/s', $stylesheet );
+	}
+
+	/**
+	 * Speakers template declares theme variables and links brand to event primary.
+	 */
+	public function test_speakers_template_declares_theme_variables() {
+		$stylesheet = file_get_contents( dirname( __DIR__, 2 ) . '/public/css/templates/speakers.css' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a repository fixture in a unit test.
+
+		$this->assertNotFalse( $stylesheet );
+		$this->assertStringContainsString( '--event-primary: var(--brand, #D51007);', $stylesheet );
+		$this->assertStringContainsString( '--brand: var(--event-primary);', $stylesheet );
+	}
 }

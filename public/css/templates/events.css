@@ -344,8 +344,9 @@
 	text-transform: capitalize;
 }
 
-.wpfaevent .event-badge--upcoming {
-	background: #1a7f3c;
+.wpfaevent .event-badge--upcoming,
+.wpfaevent .event-badge--success {
+	background: var(--event-success, #2f8f5b);
 	color: #fff;
 }
 
@@ -362,6 +363,11 @@
 .wpfaevent .event-badge--warning {
 	background: #ffc107;
 	color: #212529;
+}
+
+.wpfaevent .event-badge--danger {
+	background: var(--event-danger, #D51007);
+	color: #fff;
 }
 
 /* Title */

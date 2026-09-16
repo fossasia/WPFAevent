@@ -6,6 +6,25 @@
    LAYOUT & STRUCTURE
    ========================================================================== */
 
+/* Theme Variables */
+.wpfaevent.wpfa-speakers-template,
+.wpfaevent .wpfa-speakers {
+	--event-primary: var(--brand, #D51007);
+	--event-primary-dark: #b20d06;
+	--event-primary-contrast: #fff;
+	--event-primary-dark-contrast: #fff;
+	--event-ink: #243447;
+	--event-line: #dfe6ee;
+	--event-soft: #f4f7fb;
+	--event-panel: #fff;
+	--event-muted: #657386;
+	--event-shadow: 0 10px 28px rgba(36, 52, 71, 0.1);
+	--event-radius: 6px;
+	--event-success: #2f8f5b;
+	--event-danger: #D51007;
+	--brand: var(--event-primary);
+}
+
 /* Hero Section */
 .wpfaevent .wpfa-speakers-hero {
 	text-align: center;
@@ -101,6 +120,11 @@
 	color: #888;
 }
 
+.wpfaevent .wpfa-speakers-search button:hover,
+.wpfaevent .wpfa-speakers-search button:focus {
+	color: var(--event-primary);
+}
+
 /* Filter Buttons */
 .wpfaevent .wpfa-speakers-filters {
 	display: flex;
@@ -127,12 +151,13 @@
 
 .wpfaevent .wpfa-speakers-filters a.wpfa-filter-btn:hover {
 	background: #dde1e6;
+	color: var(--event-primary-dark);
 	text-decoration: none;
 }
 
 .wpfaevent .wpfa-speakers-filters a.wpfa-filter-btn.active {
-	background: var(--brand);
-	color: #fff;
+	background: var(--event-primary);
+	color: var(--event-primary-contrast, #fff);
 }
 
 .wpfaevent .wpfa-filter-count {
@@ -354,8 +379,8 @@
 }
 
 .wpfaevent .wpfa-social-link:hover {
-	background: var(--brand);
-	color: white;
+	background: var(--event-primary);
+	color: var(--event-primary-contrast, #fff);
 }
 
 /* ==========================================================================
@@ -414,8 +439,8 @@
 	gap: 8px;
 	margin: 20px auto;
 	padding: 10px 20px;
-	background: var(--brand);
-	color: white;
+	background: var(--event-primary);
+	color: var(--event-primary-contrast, #fff);
 	border: none;
 	border-radius: 4px;
 	font-weight: 600;
@@ -424,7 +449,8 @@
 }
 
 .wpfaevent .wpfa-add-speaker-btn:hover {
-	background: #c00;
+	background: var(--event-primary-dark);
+	color: var(--event-primary-dark-contrast, #fff);
 }
 
 /* ==========================================================================
@@ -558,14 +584,15 @@
 }
 
 .wpfaevent .wpfa-form-actions .wpfa-btn-primary {
-	background: var(--brand);
-	color: #fff;
+	background: var(--event-primary);
+	color: var(--event-primary-contrast, #fff);
 	padding: 10px 20px;
 	font-size: 16px;
 }
 
 .wpfaevent .wpfa-form-actions .wpfa-btn-primary:hover {
-	background: #c00;
+	background: var(--event-primary-dark);
+	color: var(--event-primary-dark-contrast, #fff);
 }
 
 .wpfaevent .wpfa-btn-secondary {

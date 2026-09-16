@@ -488,7 +488,7 @@
 .wpfaevent .wpfa-schedule-tabs a.is-active {
 	background: var(--event-primary);
 	border-color: var(--event-primary);
-	color: #fff;
+	color: var(--event-primary-contrast, #fff);
 }
 
 .wpfaevent .wpfa-event-additional-preview,

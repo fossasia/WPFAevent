@@ -629,6 +629,70 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
+	 * Build a list of CSS custom property declarations for an event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<string> Array of CSS variable declarations (e.g. '--event-primary: #D51007').
+	 */
+	public static function get_event_style_vars( $event_id ) {
+		$event_id = absint( $event_id );
+		if ( ! $event_id ) {
+			return array();
+		}
+
+		$event_colors        = self::get_event_colors( $event_id );
+		$event_color_var_map = array(
+			'wpfa_event_primary_color'          => '--event-primary',
+			'wpfa_event_hover_button_color'     => '--event-primary-dark',
+			'wpfa_event_theme_background_color' => '--event-soft',
+			'wpfa_event_theme_success_color'    => '--event-success',
+			'wpfa_event_theme_danger_color'     => '--event-danger',
+		);
+		$event_style_vars    = array();
+
+		foreach ( $event_color_var_map as $meta_key => $css_var ) {
+			if ( ! empty( $event_colors[ $meta_key ] ) ) {
+				$event_style_vars[] = $css_var . ': ' . $event_colors[ $meta_key ];
+			}
+		}
+
+		if ( ! empty( $event_colors['wpfa_event_primary_color'] ) ) {
+			$event_style_vars[] = '--event-primary-contrast: ' . self::get_contrast_text_color( $event_colors['wpfa_event_primary_color'] );
+		}
+
+		$effective_hover_color = '';
+		if ( ! empty( $event_colors['wpfa_event_hover_button_color'] ) ) {
+			$effective_hover_color = $event_colors['wpfa_event_hover_button_color'];
+		} elseif ( ! empty( $event_colors['wpfa_event_primary_color'] ) ) {
+			$effective_hover_color = self::darken_color( $event_colors['wpfa_event_primary_color'] );
+			if ( $effective_hover_color ) {
+				$event_style_vars[] = '--event-primary-dark: ' . $effective_hover_color;
+			}
+		}
+
+		if ( ! empty( $effective_hover_color ) ) {
+			$event_style_vars[] = '--event-primary-dark-contrast: ' . self::get_contrast_text_color( $effective_hover_color );
+		}
+
+		return $event_style_vars;
+	}
+
+	/**
+	 * Build an inline style attribute string containing CSS variables for an event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return string Inline style attribute (e.g. ' style="..."') or empty string.
+	 */
+	public static function build_event_style_attribute( $event_id ) {
+		$vars = self::get_event_style_vars( $event_id );
+		return $vars ? ' style="' . esc_attr( implode( '; ', $vars ) ) . '"' : '';
+	}
+
+	/**
 	 * Normalize any valid color (3-digit hex, 6-digit hex, rgb) to a 6-digit hex string.
 	 *
 	 * @since 1.0.0

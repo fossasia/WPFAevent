@@ -353,17 +353,17 @@ class Wpfaevent_Admin_Event_Metabox {
 			'wpfa_event_theme_background_color' => array(
 				'label'       => __( 'Background Color', 'wpfaevent' ),
 				'fallback'    => '#f4f7fb',
-				'description' => __( 'Background color for event container and panels.', 'wpfaevent' ),
+				'description' => __( 'Page background color used behind event content, schedule, and ticket sections.', 'wpfaevent' ),
 			),
 			'wpfa_event_theme_success_color'    => array(
 				'label'       => __( 'Success Color', 'wpfaevent' ),
 				'fallback'    => '#2f8f5b',
-				'description' => __( 'Accent color for success badges, accepted states, and highlights.', 'wpfaevent' ),
+				'description' => __( 'Accent color used for positive status badges, accepted submissions, and confirmed states (CSS: --event-success).', 'wpfaevent' ),
 			),
 			'wpfa_event_theme_danger_color'     => array(
 				'label'       => __( 'Danger Color', 'wpfaevent' ),
 				'fallback'    => '#D51007',
-				'description' => __( 'Accent color for alerts, rejections, and danger indicators.', 'wpfaevent' ),
+				'description' => __( 'Accent color used for alerts, sold-out notices, remove tags, and critical indicators (CSS: --event-danger).', 'wpfaevent' ),
 			),
 		);
 		?>
