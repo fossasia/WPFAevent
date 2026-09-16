@@ -9,6 +9,7 @@
 	--event-primary-contrast: #fff;
 	--event-primary-dark: #b20d06;
 	--event-primary-dark-contrast: #fff;
+	--event-hero-bg: linear-gradient(135deg, #8f0a05 0%, #D51007 52%, #f15b53 100%);
 	--event-ink: #243447;
 	--event-line: #dfe6ee;
 	--event-soft: #f4f7fb;
@@ -57,7 +58,7 @@
 }
 
 .wpfaevent .wpfa-event-hero {
-	background: var(--event-primary);
+	background: var(--event-hero-bg, linear-gradient(135deg, #8f0a05 0%, #D51007 52%, #f15b53 100%));
 	color: var(--event-primary-contrast);
 	overflow: hidden;
 	padding: 56px 0 52px;

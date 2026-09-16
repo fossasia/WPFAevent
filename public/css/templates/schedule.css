@@ -2,9 +2,13 @@
    Schedule Template Styles
    ========================================================================== */
 
-.wpfaevent.wpfa-schedule-template {
+.wpfaevent.wpfa-schedule-template,
+.wpfaevent .wpfa-schedule,
+.wpfa-schedule-template {
 	--event-primary: var(--brand, #D51007);
+	--event-primary-contrast: #fff;
 	--event-primary-dark: #b20d06;
+	--event-primary-dark-contrast: #fff;
 	--event-ink: #243447;
 	--event-line: #dfe6ee;
 	--event-soft: #f4f7fb;

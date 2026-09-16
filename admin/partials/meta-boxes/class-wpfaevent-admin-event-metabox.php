@@ -380,11 +380,11 @@ class Wpfaevent_Admin_Event_Metabox {
 						<label for="<?php echo esc_attr( $meta_key ); ?>"><?php echo esc_html( $config['label'] ); ?></label>
 					</th>
 					<td>
-						<div style="display:flex;align-items:center;gap:8px;">
+						<div class="wpfaevent-color-field-group">
 							<input type="color"
-								value="<?php echo esc_attr( $preview_hex ); ?>"
-								style="width:36px;height:36px;padding:2px;border:1px solid #8c8f94;border-radius:4px;cursor:pointer;background:#fff;"
-								oninput="document.getElementById('<?php echo esc_attr( $meta_key ); ?>').value = this.value;">
+								class="wpfaevent-color-picker-input"
+								data-target="<?php echo esc_attr( $meta_key ); ?>"
+								value="<?php echo esc_attr( $preview_hex ); ?>">
 							<input type="text"
 								id="<?php echo esc_attr( $meta_key ); ?>"
 								name="<?php echo esc_attr( $meta_key ); ?>"
@@ -406,35 +406,6 @@ class Wpfaevent_Admin_Event_Metabox {
 				</tr>
 			<?php endforeach; ?>
 		</table>
-		<script>
-		(function() {
-			function syncColorPicker(input) {
-				var val = input.value.trim();
-				var picker = input.previousElementSibling;
-				if (!picker || picker.type !== 'color') {
-					return;
-				}
-				if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
-					picker.value = val;
-				} else if (/^#[0-9A-Fa-f]{3}$/.test(val)) {
-					picker.value = '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3];
-				} else {
-					var m = val.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/);
-					if (m) {
-						var r = ('0' + Math.min(255, parseInt(m[1], 10)).toString(16)).slice(-2);
-						var g = ('0' + Math.min(255, parseInt(m[2], 10)).toString(16)).slice(-2);
-						var b = ('0' + Math.min(255, parseInt(m[3], 10)).toString(16)).slice(-2);
-						picker.value = '#' + r + g + b;
-					}
-				}
-			}
-			document.querySelectorAll('.wpfaevent-color-text-input').forEach(function(inp) {
-				inp.addEventListener('input', function() {
-					syncColorPicker(this);
-				});
-			});
-		})();
-		</script>
 		<?php
 	}
 

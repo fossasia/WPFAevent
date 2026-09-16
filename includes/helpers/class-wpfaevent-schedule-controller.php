@@ -45,7 +45,14 @@ class Wpfaevent_Schedule_Controller {
 			$current_view = 'list';
 		}
 
-		$selected_event_id   = self::resolve_event_filter( $current_event_filter );
+		$selected_event_id = self::resolve_event_filter( $current_event_filter );
+		if ( ! $selected_event_id ) {
+			if ( ! empty( $GLOBALS['wpfaevent_event_id'] ) ) {
+				$selected_event_id = absint( $GLOBALS['wpfaevent_event_id'] );
+			} elseif ( is_singular( 'wpfa_event' ) ) {
+				$selected_event_id = absint( get_the_ID() );
+			}
+		}
 		$selected_event_slug = $selected_event_id ? get_post_field( 'post_name', $selected_event_id ) : '';
 
 		$site_timezone_string    = wp_timezone_string();

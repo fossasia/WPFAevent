@@ -99,7 +99,14 @@ $resolve_event_filter = static function ( $event_filter ) {
 	return ! empty( $events[0] ) ? absint( $events[0] ) : 0;
 };
 
-$selected_event_id   = $resolve_event_filter( $current_event_filter );
+$selected_event_id = $resolve_event_filter( $current_event_filter );
+if ( ! $selected_event_id ) {
+	if ( ! empty( $GLOBALS['wpfaevent_event_id'] ) ) {
+		$selected_event_id = absint( $GLOBALS['wpfaevent_event_id'] );
+	} elseif ( is_singular( 'wpfa_event' ) ) {
+		$selected_event_id = absint( get_the_ID() );
+	}
+}
 $selected_event_slug = $selected_event_id ? get_post_field( 'post_name', $selected_event_id ) : '';
 
 $site_timezone_string    = wp_timezone_string();
@@ -434,7 +441,7 @@ $schedule_filter_reset_url = add_query_arg( $schedule_filter_reset_args, $schedu
 <?php endif; ?>
 
 <?php if ( $wpfaevent_is_embed ) : ?>
-	<section class="wpfa-schedule wpfaevent"<?php echo $event_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>
+	<section class="wpfa-schedule wpfa-schedule-template wpfaevent"<?php echo $event_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>
 <?php else : ?>
 	<main class="wpfa-schedule">
 <?php endif; ?>

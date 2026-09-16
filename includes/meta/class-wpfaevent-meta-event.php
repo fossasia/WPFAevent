@@ -629,6 +629,44 @@ class Wpfaevent_Meta_Event {
 	}
 
 	/**
+	 * Get the effective color palette values for an event, including derived hover and contrast colors.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<string, string> Associative map of effective colors.
+	 */
+	public static function get_effective_event_colors( $event_id ) {
+		$event_id     = absint( $event_id );
+		$saved_colors = self::get_event_colors( $event_id );
+
+		$primary_color = ! empty( $saved_colors['wpfa_event_primary_color'] )
+			? $saved_colors['wpfa_event_primary_color']
+			: '';
+
+		$hover_color = '';
+		if ( ! empty( $saved_colors['wpfa_event_hover_button_color'] ) ) {
+			$hover_color = $saved_colors['wpfa_event_hover_button_color'];
+		} elseif ( $primary_color ) {
+			$hover_color = self::darken_color( $primary_color );
+		}
+
+		$primary_contrast = $primary_color ? self::get_contrast_text_color( $primary_color ) : '#FFFFFF';
+		$hover_contrast   = $hover_color ? self::get_contrast_text_color( $hover_color ) : '#FFFFFF';
+
+		return array(
+			'primary'          => $primary_color,
+			'primary_contrast' => $primary_contrast,
+			'dark'             => $hover_color,
+			'dark_contrast'    => $hover_contrast,
+			'background'       => ! empty( $saved_colors['wpfa_event_theme_background_color'] ) ? $saved_colors['wpfa_event_theme_background_color'] : '',
+			'success'          => ! empty( $saved_colors['wpfa_event_theme_success_color'] ) ? $saved_colors['wpfa_event_theme_success_color'] : '',
+			'danger'           => ! empty( $saved_colors['wpfa_event_theme_danger_color'] ) ? $saved_colors['wpfa_event_theme_danger_color'] : '',
+			'hero_bg'          => $primary_color,
+		);
+	}
+
+	/**
 	 * Build a list of CSS custom property declarations for an event.
 	 *
 	 * @since 1.0.0
@@ -637,46 +675,33 @@ class Wpfaevent_Meta_Event {
 	 * @return array<string> Array of CSS variable declarations (e.g. '--event-primary: #D51007').
 	 */
 	public static function get_event_style_vars( $event_id ) {
-		$event_id = absint( $event_id );
-		if ( ! $event_id ) {
-			return array();
+		$palette = self::get_effective_event_colors( $event_id );
+		$vars    = array();
+
+		if ( ! empty( $palette['primary'] ) ) {
+			$vars[] = '--event-primary: ' . $palette['primary'];
+			$vars[] = '--event-primary-contrast: ' . $palette['primary_contrast'];
+			$vars[] = '--event-hero-bg: ' . $palette['hero_bg'];
 		}
 
-		$event_colors        = self::get_event_colors( $event_id );
-		$event_color_var_map = array(
-			'wpfa_event_primary_color'          => '--event-primary',
-			'wpfa_event_hover_button_color'     => '--event-primary-dark',
-			'wpfa_event_theme_background_color' => '--event-soft',
-			'wpfa_event_theme_success_color'    => '--event-success',
-			'wpfa_event_theme_danger_color'     => '--event-danger',
-		);
-		$event_style_vars    = array();
-
-		foreach ( $event_color_var_map as $meta_key => $css_var ) {
-			if ( ! empty( $event_colors[ $meta_key ] ) ) {
-				$event_style_vars[] = $css_var . ': ' . $event_colors[ $meta_key ];
-			}
+		if ( ! empty( $palette['dark'] ) ) {
+			$vars[] = '--event-primary-dark: ' . $palette['dark'];
+			$vars[] = '--event-primary-dark-contrast: ' . $palette['dark_contrast'];
 		}
 
-		if ( ! empty( $event_colors['wpfa_event_primary_color'] ) ) {
-			$event_style_vars[] = '--event-primary-contrast: ' . self::get_contrast_text_color( $event_colors['wpfa_event_primary_color'] );
+		if ( ! empty( $palette['background'] ) ) {
+			$vars[] = '--event-soft: ' . $palette['background'];
 		}
 
-		$effective_hover_color = '';
-		if ( ! empty( $event_colors['wpfa_event_hover_button_color'] ) ) {
-			$effective_hover_color = $event_colors['wpfa_event_hover_button_color'];
-		} elseif ( ! empty( $event_colors['wpfa_event_primary_color'] ) ) {
-			$effective_hover_color = self::darken_color( $event_colors['wpfa_event_primary_color'] );
-			if ( $effective_hover_color ) {
-				$event_style_vars[] = '--event-primary-dark: ' . $effective_hover_color;
-			}
+		if ( ! empty( $palette['success'] ) ) {
+			$vars[] = '--event-success: ' . $palette['success'];
 		}
 
-		if ( ! empty( $effective_hover_color ) ) {
-			$event_style_vars[] = '--event-primary-dark-contrast: ' . self::get_contrast_text_color( $effective_hover_color );
+		if ( ! empty( $palette['danger'] ) ) {
+			$vars[] = '--event-danger: ' . $palette['danger'];
 		}
 
-		return $event_style_vars;
+		return $vars;
 	}
 
 	/**

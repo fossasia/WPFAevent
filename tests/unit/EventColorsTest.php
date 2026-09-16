@@ -127,8 +127,8 @@ class EventColorsTest extends WP_UnitTestCase {
 		$stylesheet = file_get_contents( dirname( __DIR__, 2 ) . '/public/css/templates/event-base.css' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a repository fixture in a unit test.
 
 		$this->assertNotFalse( $stylesheet );
-		$this->assertMatchesRegularExpression( '/\.wpfaevent \.wpfa-event-hero \{.*?var\(--event-primary\);/s', $stylesheet );
-		$this->assertStringNotContainsString( 'linear-gradient(135deg, #8f0a05 0%, #D51007 52%, #f15b53 100%)', $stylesheet );
+		$this->assertMatchesRegularExpression( '/\.wpfaevent \.wpfa-event-hero \{.*?var\(--event-hero-bg/s', $stylesheet );
+		$this->assertStringContainsString( 'linear-gradient(135deg, #8f0a05 0%, #D51007 52%, #f15b53 100%)', $stylesheet );
 	}
 
 	/**
@@ -140,6 +140,7 @@ class EventColorsTest extends WP_UnitTestCase {
 
 		$this->assertNotFalse( $stylesheet );
 		$this->assertStringContainsString( '--event-primary: var(--brand, #D51007);', $stylesheet );
+		$this->assertStringContainsString( '--event-hero-bg: linear-gradient(135deg, #8f0a05 0%, #D51007 52%, #f15b53 100%);', $stylesheet );
 		$this->assertSame( '', $data['event_style_attr'] );
 	}
 
@@ -182,7 +183,7 @@ class EventColorsTest extends WP_UnitTestCase {
 		$stylesheet = file_get_contents( dirname( __DIR__, 2 ) . '/public/css/templates/event-base.css' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a repository fixture in a unit test.
 
 		$this->assertNotFalse( $stylesheet );
-		$this->assertMatchesRegularExpression( '/\.wpfaevent \.wpfa-event-hero \{\s*background: var\(--event-primary\);/s', $stylesheet );
+		$this->assertMatchesRegularExpression( '/\.wpfaevent \.wpfa-event-hero \{\s*background: var\(--event-hero-bg/s', $stylesheet );
 		$this->assertStringNotContainsString( 'linear-gradient(135deg, rgba(0, 0, 0, 0.32)', $stylesheet );
 
 		$this->assertSame( '#000000', Wpfaevent_Meta_Event::get_contrast_text_color( '#777777' ) );
@@ -208,9 +209,41 @@ class EventColorsTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '--event-primary-dark: #006291', $style_attr );
 		$this->assertStringContainsString( '--event-primary-contrast: #FFFFFF', $style_attr );
 		$this->assertStringContainsString( '--event-primary-dark-contrast: #FFFFFF', $style_attr );
+		$this->assertStringContainsString( '--event-hero-bg: #0073AA', $style_attr );
 		$this->assertStringContainsString( '--event-soft: #F0F4F8', $style_attr );
 		$this->assertStringContainsString( '--event-success: #2F8F5B', $style_attr );
 		$this->assertStringContainsString( '--event-danger: #DC2626', $style_attr );
+	}
+
+	/**
+	 * Centralized palette generator computes all color variants and fallbacks.
+	 */
+	public function test_get_effective_event_colors() {
+		$empty_palette = Wpfaevent_Meta_Event::get_effective_event_colors( $this->event_id );
+		$this->assertSame( '', $empty_palette['primary'] );
+		$this->assertSame( '#FFFFFF', $empty_palette['primary_contrast'] );
+		$this->assertSame( '', $empty_palette['dark'] );
+
+		update_post_meta( $this->event_id, 'wpfa_event_primary_color', '#FDE68A' );
+		$palette = Wpfaevent_Meta_Event::get_effective_event_colors( $this->event_id );
+		$this->assertSame( '#FDE68A', $palette['primary'] );
+		$this->assertSame( '#000000', $palette['primary_contrast'] );
+		$this->assertSame( '#D7C375', $palette['dark'] );
+		$this->assertSame( '#000000', $palette['dark_contrast'] );
+	}
+
+	/**
+	 * Admin color metabox uses external CSS classes and emits no inline scripts.
+	 */
+	public function test_admin_event_colors_metabox_uses_css_classes_without_inline_script() {
+		ob_start();
+		( new Wpfaevent_Admin_Event_Metabox() )->render_event_colors_meta_box( get_post( $this->event_id ) );
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'class="wpfaevent-color-field-group"', $output );
+		$this->assertStringContainsString( 'class="wpfaevent-color-picker-input"', $output );
+		$this->assertStringNotContainsString( '<script>', $output );
+		$this->assertStringNotContainsString( 'oninput=', $output );
 	}
 
 	/**
