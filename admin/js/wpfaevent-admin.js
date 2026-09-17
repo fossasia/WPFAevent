@@ -106,7 +106,53 @@
 
 			refreshSponsorGroupButtons();
 		}
+        // Synchronize color picker and text inputs in event color metabox.
+$(document).on(
+	'input change',
+	'.wpfaevent-color-picker-input',
+	function () {
+		const $picker = $(this);
+		const targetId = $picker.data('target');
+		if (targetId) {
+			$('#' + targetId).val($picker.val());
+		}
+	}
+);
 
+$(document).on(
+	'input change',
+	'.wpfaevent-color-text-input',
+	function () {
+		const $text = $(this);
+		const $picker = $text.siblings('.wpfaevent-color-picker-input');
+		if (!$picker.length) {
+			return;
+		}
+		const val = $text.val().trim();
+		if (/^#([0-9A-Fa-f]{6})$/.test(val)) {
+			$picker.val(val);
+		} else if (/^#([0-9A-Fa-f]{3})$/.test(val)) {
+			const h = val.slice(1);
+			$picker.val('#' + h[0] + h[0] + h[1] + h[1] + h[2] + h[2]);
+		} else {
+			const m = val.match(
+				/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i
+			);
+			if (m) {
+				const r = (
+					'0' + Math.min(255, parseInt(m[1], 10)).toString(16)
+				).slice(-2);
+				const g = (
+					'0' + Math.min(255, parseInt(m[2], 10)).toString(16)
+				).slice(-2);
+				const b = (
+					'0' + Math.min(255, parseInt(m[3], 10)).toString(16)
+				).slice(-2);
+				$picker.val('#' + r + g + b);
+			}
+		}
+	}
+);
 
 		// Featured Speakers Manual Ordering
 		const $speakersSection = $('#wpfaevent-speakers');
