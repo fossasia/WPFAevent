@@ -83,123 +83,123 @@
 /* Progress Overlay container */
 #wpfaevent-import-progress-overlay {
 	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	height: 100vh;
-	background: rgba(15, 23, 42, 0.75);
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
+	inset: 0;
 	z-index: 999999;
+	display: none;
 	align-items: center;
 	justify-content: center;
-	flex-direction: column;
-	display: none; /* Controlled by JS setting display: flex */
+	box-sizing: border-box;
+	padding: 16px;
+	background: rgba(0, 0, 0, 0.35);
+}
+
+#wpfaevent-import-progress-overlay.is-visible {
+	display: flex;
+	animation: wpfaevent-fade-in 0.15s ease-out;
+}
+
+@keyframes wpfaevent-fade-in {
+	from {
+		opacity: 0;
+	}
 }
 
 /* Card layout */
 #wpfaevent-import-progress-overlay .wpfaevent-progress-card {
-	background: rgba(30, 41, 59, 0.95);
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	border-radius: 20px;
-	padding: 40px;
-	width: 480px;
+	display: grid;
+	grid-template-columns: auto 1fr;
+	column-gap: 12px;
 	box-sizing: border-box;
-	text-align: center;
-	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
-				inset 0 1px 0 rgba(255, 255, 255, 0.1);
-	color: #f8fafc;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-	transform: translateY(20px);
-	animation: wpfaevent-modal-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	width: 100%;
+	max-width: 400px;
+	padding: 20px 24px;
+	background: #fff;
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	border-radius: 8px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+	color: #1d2327;
 }
 
-@keyframes wpfaevent-modal-slide-in {
-	to {
-		transform: translateY(0);
-	}
+#wpfaevent-import-progress-overlay .wpfaevent-progress-card > :not(.wpfaevent-spinner-container) {
+	grid-column: 2;
 }
 
 /* Title text */
 #wpfaevent-progress-title {
-	margin-top: 0 !important;
-	margin-bottom: 24px !important;
-	color: #ffffff !important;
-	font-size: 22px !important;
-	font-weight: 600 !important;
-	letter-spacing: -0.5px !important;
-	background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
+	margin: 0 0 4px;
+	font-size: 14px;
+	line-height: 1.4;
+	font-weight: 600;
+	color: #1d2327;
 }
 
 /* Progress bar wrapper */
 .wpfaevent-progress-bar-wrapper {
-	background: rgba(255, 255, 255, 0.08);
-	border: 1px solid rgba(255, 255, 255, 0.05);
-	border-radius: 12px;
-	height: 12px;
-	width: 100%;
-	margin: 24px 0;
+	height: 4px;
+	margin: 12px 0;
 	overflow: hidden;
-	position: relative;
-	box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+	background: #f0f0f1;
+	border-radius: 2px;
 }
 
 /* Progress bar inside */
 #wpfaevent-progress-bar {
-	background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
-	background-size: 200% auto;
-	animation: wpfaevent-shimmer 2s linear infinite;
 	width: 0%;
 	height: 100%;
-	border-radius: 12px;
-	transition: width 0.4s cubic-bezier(0.1, 0.8, 0.1, 1);
-	box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
-}
-
-@keyframes wpfaevent-shimmer {
-	0% { background-position: 0% 50%; }
-	50% { background-position: 100% 50%; }
-	100% { background-position: 0% 50%; }
+	background: var(--wp-admin-theme-color, #3858e9);
+	transition: width 0.3s ease-out;
 }
 
 /* Spinner indicator */
 .wpfaevent-spinner-container {
-	display: flex;
-	justify-content: center;
-	margin-bottom: 24px;
+	grid-column: 1;
+	grid-row: 1 / span 2;
+	padding-top: 1px;
 }
 
 .wpfaevent-spinner {
-	width: 48px;
-	height: 48px;
-	border: 3px solid rgba(99, 102, 241, 0.1);
-	border-top: 3px solid #6366f1;
-	border-right: 3px solid #a855f7;
+	box-sizing: border-box;
+	width: 18px;
+	height: 18px;
+	border: 2px solid #dcdcde;
+	border-top-color: var(--wp-admin-theme-color, #3858e9);
 	border-radius: 50%;
-	animation: wpfaevent-spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
-	filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.3));
+	animation: wpfaevent-spin 0.8s linear infinite;
 }
 
 @keyframes wpfaevent-spin {
-	0% { transform: rotate(0deg); }
-	100% { transform: rotate(360deg); }
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#wpfaevent-import-progress-overlay.is-visible {
+		animation: none;
+	}
+
+	.wpfaevent-spinner {
+		animation-duration: 2s;
+	}
+
+	#wpfaevent-progress-bar {
+		transition: none;
+	}
 }
 
 /* Status & Details styling */
 #wpfaevent-progress-status {
-	font-size: 15px !important;
-	color: #e2e8f0 !important;
-	margin-bottom: 8px !important;
-	font-weight: 500 !important;
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.5;
+	color: #646970;
 }
 
 #wpfaevent-progress-details {
-	font-size: 12px !important;
-	color: #94a3b8 !important;
-	margin-top: 0 !important;
-	line-height: 1.5 !important;
+	margin: 4px 0 0;
+	font-size: 12px;
+	line-height: 1.5;
+	color: #646970;
 }
 
 /* Importer settings card and info card visual styling */

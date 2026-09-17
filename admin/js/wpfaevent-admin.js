@@ -170,6 +170,28 @@
 			$container.prepend($notice);
 		}
 
+		const $eventyayImportForm = $('.wpfaevent-eventyay-import-form');
+
+		if ($eventyayImportForm.length) {
+			let importRunning = false;
+
+			$eventyayImportForm.on('submit', function (e) {
+				if (importRunning) {
+					e.preventDefault();
+					return;
+				}
+
+				importRunning = true;
+
+				$(this)
+					.find('[type="submit"]')
+					.addClass('disabled')
+					.attr('aria-disabled', 'true');
+
+				$('#wpfaevent-import-progress-overlay').addClass('is-visible');
+			});
+		}
+
 		if ($importForm.length || $updateForm.length) {
 			const $form = $importForm.length ? $importForm : $updateForm;
 			const rawReturnPage = $form
