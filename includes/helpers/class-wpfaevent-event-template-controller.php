@@ -526,6 +526,10 @@ class Wpfaevent_Event_Template_Controller {
 		$post_excerpt  = trim( (string) get_post_field( 'post_excerpt', $event_id ) );
 		$post_content  = trim( (string) get_post_field( 'post_content', $event_id ) );
 		$event_lead    = trim( (string) get_post_meta( $event_id, 'wpfa_event_lead_text', true ) );
+		if ( '' === $event_lead ) {
+			// Compatibility fallback: Eventyay importers still write to the legacy `_event_lead_text` meta key.
+			$event_lead = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
+		}
 
 		$main_speaker_limit             = absint( apply_filters( 'wpfa_event_main_speaker_limit', 20, $event_id ) );
 		$main_speaker_limit             = $main_speaker_limit ? $main_speaker_limit : 20;
