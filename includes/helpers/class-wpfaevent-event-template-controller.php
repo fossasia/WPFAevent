@@ -80,7 +80,7 @@ class Wpfaevent_Event_Template_Controller {
 	 * @return array
 	 * @phpstan-return array<string, string>
 	 */
-	private static function get_event_colors( $event_id ) {
+	public static function get_event_colors( $event_id ) {
 		if ( is_callable( self::$meta_event_provider ) ) {
 			return call_user_func( self::$meta_event_provider, $event_id );
 		}
@@ -646,23 +646,7 @@ class Wpfaevent_Event_Template_Controller {
 		$visible_sponsor_groups = array();
 		$sponsor_count          = 0;
 		$visible_exhibitors     = array();
-		$event_colors           = self::get_event_colors( $event_id );
-		$event_color_var_map    = array(
-			'wpfa_event_primary_color'          => '--event-primary',
-			'wpfa_event_hover_button_color'     => '--event-primary-dark',
-			'wpfa_event_theme_background_color' => '--event-soft',
-			'wpfa_event_theme_success_color'    => '--event-success',
-			'wpfa_event_theme_danger_color'     => '--event-danger',
-		);
-		$event_style_vars       = array();
-
-		foreach ( $event_color_var_map as $meta_key => $css_var ) {
-			if ( ! empty( $event_colors[ $meta_key ] ) ) {
-				$event_style_vars[] = $css_var . ': ' . $event_colors[ $meta_key ];
-			}
-		}
-
-		$event_style_attr = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
+		$event_style_attr       = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::build_event_style_attribute( $event_id ) : '';
 
 		foreach ( $sponsor_groups as $sponsor_group ) {
 			if ( ! is_array( $sponsor_group ) ) {

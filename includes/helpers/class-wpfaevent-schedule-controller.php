@@ -45,7 +45,14 @@ class Wpfaevent_Schedule_Controller {
 			$current_view = 'list';
 		}
 
-		$selected_event_id   = self::resolve_event_filter( $current_event_filter );
+		$selected_event_id = self::resolve_event_filter( $current_event_filter );
+		if ( ! $selected_event_id ) {
+			if ( ! empty( $GLOBALS['wpfaevent_event_id'] ) ) {
+				$selected_event_id = absint( $GLOBALS['wpfaevent_event_id'] );
+			} elseif ( is_singular( 'wpfa_event' ) ) {
+				$selected_event_id = absint( get_the_ID() );
+			}
+		}
 		$selected_event_slug = $selected_event_id ? get_post_field( 'post_name', $selected_event_id ) : '';
 
 		$site_timezone_string    = wp_timezone_string();
@@ -163,27 +170,9 @@ class Wpfaevent_Schedule_Controller {
 		}
 
 		$selected_event_title = $selected_event_id ? get_the_title( $selected_event_id ) : '';
-		$event_style_attr     = '';
-
-		if ( $selected_event_id && class_exists( 'Wpfaevent_Meta_Event' ) ) {
-			$event_colors        = Wpfaevent_Meta_Event::get_event_colors( $selected_event_id );
-			$event_color_var_map = array(
-				'wpfa_event_primary_color'          => '--event-primary',
-				'wpfa_event_hover_button_color'     => '--event-primary-dark',
-				'wpfa_event_theme_background_color' => '--event-soft',
-				'wpfa_event_theme_success_color'    => '--event-success',
-				'wpfa_event_theme_danger_color'     => '--event-danger',
-			);
-			$event_style_vars    = array();
-
-			foreach ( $event_color_var_map as $meta_key => $css_var ) {
-				if ( ! empty( $event_colors[ $meta_key ] ) ) {
-					$event_style_vars[] = $css_var . ': ' . $event_colors[ $meta_key ];
-				}
-			}
-
-			$event_style_attr = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
-		}
+		$event_style_attr     = ( $selected_event_id && class_exists( 'Wpfaevent_Meta_Event' ) )
+			? Wpfaevent_Meta_Event::build_event_style_attribute( $selected_event_id )
+			: '';
 
 		$site_logo_url = get_option( 'wpfa_site_logo_url', '' );
 		if ( empty( $site_logo_url ) ) {

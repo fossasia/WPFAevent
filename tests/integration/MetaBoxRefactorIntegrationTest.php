@@ -64,6 +64,7 @@ class MetaBoxRefactorIntegrationTest extends WP_UnitTestCase {
 		set_current_screen( 'wpfa_event' );
 		( new Wpfaevent_Admin_Event_Metabox() )->register_meta_boxes();
 		$this->assertArrayHasKey( 'wpfa_event_details', $wp_meta_boxes['wpfa_event']['normal']['high'] );
+		$this->assertArrayHasKey( 'wpfa_event_colors_box', $wp_meta_boxes['wpfa_event']['normal']['default'] );
 		$this->assertArrayHasKey( 'wpfa_event_schedule_box', $wp_meta_boxes['wpfa_event']['normal']['default'] );
 		$this->assertArrayHasKey( 'wpfa_event_sponsors_box', $wp_meta_boxes['wpfa_event']['normal']['default'] );
 		$this->assertArrayHasKey( 'wpfa_event_exhibitors_box', $wp_meta_boxes['wpfa_event']['normal']['default'] );
