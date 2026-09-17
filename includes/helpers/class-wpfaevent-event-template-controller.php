@@ -523,8 +523,9 @@ class Wpfaevent_Event_Template_Controller {
 		}
 
 		$about_content = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
+		$post_excerpt  = trim( (string) get_post_field( 'post_excerpt', $event_id ) );
 		$post_content  = trim( (string) get_post_field( 'post_content', $event_id ) );
-		$event_lead    = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
+		$event_lead    = trim( (string) get_post_meta( $event_id, 'wpfa_event_lead_text', true ) );
 
 		$main_speaker_limit             = absint( apply_filters( 'wpfa_event_main_speaker_limit', 20, $event_id ) );
 		$main_speaker_limit             = $main_speaker_limit ? $main_speaker_limit : 20;
@@ -774,7 +775,7 @@ class Wpfaevent_Event_Template_Controller {
 		}
 
 		if ( '' === $about_content ) {
-			$about_content = '' !== $post_content ? $post_content : $event_lead;
+			$about_content = '' !== $post_excerpt ? $post_excerpt : $post_content;
 		}
 
 		$date_label           = ! empty( $event_calendar_data['date_label'] ) ? sanitize_text_field( $event_calendar_data['date_label'] ) : $format_event_date( $start_date );
@@ -1081,6 +1082,7 @@ class Wpfaevent_Event_Template_Controller {
 			'event_language_label'                     => $event_language_label,
 			'schedule_items'                           => $schedule_items,
 			'about_content'                            => $about_content,
+			'event_lead'                               => $event_lead,
 			'register_url'                             => $register_url,
 			'register_text'                            => $register_text,
 			'event_google_url'                         => $event_google_url,
@@ -1176,6 +1178,7 @@ class Wpfaevent_Event_Template_Controller {
 			'event_language_label'                     => '',
 			'schedule_items'                           => array(),
 			'about_content'                            => '',
+			'event_lead'                               => '',
 			'register_url'                             => '',
 			'register_text'                            => '',
 			'event_google_url'                         => '',
