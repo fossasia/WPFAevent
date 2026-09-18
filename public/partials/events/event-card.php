@@ -34,7 +34,10 @@ $event_legacy_time = get_post_meta( $event_id, 'wpfa_event_time', true );
 $event_timezone    = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_timezone( $event_id ) : '';
 $event_all_day     = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_all_day( $event_id ) : false;
 $event_place       = get_post_meta( $event_id, 'wpfa_event_location', true );
-$event_lead_text       = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_lead_text', true ) );
+$event_lead_text   = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_lead_text', true ) );
+if ( '' === $event_lead_text ) {
+	$event_lead_text = sanitize_text_field( get_post_meta( $event_id, '_event_lead_text', true ) );
+}
 $event_excerpt         = (string) get_post_field( 'post_excerpt', $event_id );
 $event_display_excerpt = get_the_excerpt( $event_id );
 // Card blurb falls back to lead text when there's no excerpt, but the edit-modal
