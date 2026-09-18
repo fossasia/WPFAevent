@@ -35,7 +35,15 @@ $event_timezone    = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Eve
 $event_all_day     = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_all_day( $event_id ) : false;
 $event_place       = get_post_meta( $event_id, 'wpfa_event_location', true );
 $event_lead_text   = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_lead_text', true ) );
-$event_description = $event_lead_text ? $event_lead_text : get_the_excerpt( $event_id );
+if ( '' === $event_lead_text ) {
+	$event_lead_text = sanitize_text_field( get_post_meta( $event_id, '_event_lead_text', true ) );
+}
+$event_excerpt         = (string) get_post_field( 'post_excerpt', $event_id );
+$event_display_excerpt = get_the_excerpt( $event_id );
+// Card blurb falls back to lead text when there's no excerpt, but the edit-modal
+// "Description" field must always be populated from the real excerpt so it never
+// gets overwritten with the Hero Lead Text value.
+$event_description = $event_lead_text ? $event_lead_text : $event_display_excerpt;
 $featured_img_url  = get_the_post_thumbnail_url( $event_id, 'large' );
 if ( ! $featured_img_url ) {
 	$featured_img_url = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
@@ -128,8 +136,8 @@ $is_bookmarked       = class_exists( 'Wpfaevent_User_Preferences_Service' ) && W
 	data-end-date="<?php echo esc_attr( $event_end_date ); ?>"
 	data-place="<?php echo esc_attr( $event_place ); ?>"
 	data-track="<?php echo esc_attr( $track_slugs ); ?>"
-	data-description="<?php echo esc_attr( $event_description ); ?>"
-	data-lead-text="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_lead_text', true ) ); ?>"
+	data-description="<?php echo esc_attr( $event_excerpt ); ?>"
+	data-lead-text="<?php echo esc_attr( $event_lead_text ); ?>"
 	data-registration-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_registration_link', true ) ); ?>"
 	data-cfs-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_cfs_link', true ) ); ?>"
 	data-start-time="<?php echo esc_attr( $event_time_value ); ?>"
@@ -217,8 +225,8 @@ $is_bookmarked       = class_exists( 'Wpfaevent_User_Preferences_Service' ) && W
 					data-date="<?php echo esc_attr( $event_date ); ?>"
 					data-end-date="<?php echo esc_attr( $event_end_date ); ?>"
 					data-place="<?php echo esc_attr( $event_place ); ?>"
-					data-description="<?php echo esc_attr( $event_description ); ?>"
-					data-lead-text="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_lead_text', true ) ); ?>"
+					data-description="<?php echo esc_attr( $event_excerpt ); ?>"
+					data-lead-text="<?php echo esc_attr( $event_lead_text ); ?>"
 					data-registration-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_registration_link', true ) ); ?>"
 					data-cfs-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_cfs_link', true ) ); ?>"
 					data-start-time="<?php echo esc_attr( $event_time_value ); ?>"
