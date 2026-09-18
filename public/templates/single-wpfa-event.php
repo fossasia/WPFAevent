@@ -54,9 +54,23 @@ $has_schedule                      = $event_data['has_schedule'];
 $venue_information                 = $event_data['venue_information'];
 $event_additional_url              = $event_data['event_additional_url'];
 $custom_tabs                       = $event_data['custom_tabs'];
-$featured_speaker_ids              = $event_data['featured_speaker_ids'];
-$featured_speaker_count            = $event_data['featured_speaker_count'];
-$dashboard_featured_speakers       = $event_data['dashboard_featured_speakers'];
+$featured_speaker_ids              = array_values(
+	array_filter(
+		$event_data['featured_speaker_ids'],
+		static function ( $sid ) {
+			return 'wpfa_speaker' === get_post_type( $sid ) && 'publish' === get_post_status( $sid );
+		}
+	)
+);
+$featured_speaker_count            = count( $featured_speaker_ids );
+$dashboard_featured_speakers       = array_values(
+	array_filter(
+		$event_data['dashboard_featured_speakers'],
+		static function ( $speaker ) {
+			return is_array( $speaker ) && ! empty( $speaker['name'] );
+		}
+	)
+);
 $regular_speaker_overflow_count    = $event_data['regular_speaker_overflow_count'];
 $speaker_placeholder_url           = $event_data['speaker_placeholder_url'];
 $speakers_url                      = $event_data['speakers_url'];

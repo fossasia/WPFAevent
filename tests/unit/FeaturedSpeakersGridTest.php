@@ -83,7 +83,8 @@ class FeaturedSpeakersGridTest extends WP_UnitTestCase {
 		$source = $this->read_project_file( 'public/templates/single-wpfa-event.php' );
 
 		$this->assertStringContainsString( 'elseif ( ! empty( $regular_speaker_ids ) ) :', $source );
-		$this->assertStringNotContainsString( 'dashboard_regular_speakers', $source );
+		$this->assertSame( 1, substr_count( $source, 'wpfa-event-regular-speakers' ) );
+		$this->assertStringContainsString( "'wpfa_speaker' === get_post_type( \$sid ) && 'publish' === get_post_status( \$sid )", $source );
 	}
 
 	/**
