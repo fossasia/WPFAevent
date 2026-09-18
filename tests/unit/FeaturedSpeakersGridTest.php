@@ -77,6 +77,27 @@ class FeaturedSpeakersGridTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Main event template does not repeat regular speakers when featured speakers are present.
+	 */
+	public function test_main_event_template_excludes_regular_speakers_when_featured_exist() {
+		$source = $this->read_project_file( 'public/templates/single-wpfa-event.php' );
+
+		$this->assertStringContainsString( 'elseif ( ! empty( $regular_speaker_ids ) ) :', $source );
+		$this->assertStringNotContainsString( 'dashboard_regular_speakers', $source );
+	}
+
+	/**
+	 * All Speakers page displays a unified speaker grid without separate groups.
+	 */
+	public function test_all_speakers_page_renders_single_unified_speaker_grid() {
+		$source = $this->read_project_file( 'public/templates/page-speakers.php' );
+
+		$this->assertStringContainsString( '<div class="wpfa-speakers-grid" id="wpfa-speakers-grid">', $source );
+		$this->assertStringNotContainsString( 'wpfa-featured-speaker-group', $source );
+		$this->assertStringNotContainsString( 'wpfa-regular-speaker-group', $source );
+	}
+
+	/**
 	 * Read a repository file fixture.
 	 *
 	 * @param string $relative_path File path relative to the plugin root.

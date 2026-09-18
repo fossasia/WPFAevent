@@ -479,9 +479,7 @@ if ( $show_ticket_widget ) {
 									</button>
 								<?php endif; ?>
 							</div>
-						<?php endif; ?>
-
-						<?php if ( ! empty( $regular_speaker_ids ) ) : ?>
+						<?php elseif ( ! empty( $regular_speaker_ids ) ) : ?>
 							<div class="wpfa-event-regular-speakers">
 								<h3><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h3>
 								<div class="wpfa-speakers-grid">
@@ -534,29 +532,27 @@ if ( $show_ticket_widget ) {
 									</button>
 								<?php endif; ?>
 							</div>
-
-							<?php if ( ! empty( $dashboard_regular_speakers ) ) : ?>
-								<div class="wpfa-event-regular-speakers">
-									<h3><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h3>
-									<div class="wpfa-speakers-grid">
-										<?php foreach ( $main_dashboard_regular_speakers as $speaker ) : ?>
-											<?php include WPFAEVENT_PATH . 'public/partials/speakers/dashboard-speaker-card.php'; ?>
-										<?php endforeach; ?>
-									</div>
-									<?php if ( $dashboard_regular_speaker_overflow_count ) : ?>
-										<p class="wpfa-event-speaker-limit-note">
-											<?php
-											printf(
-												/* translators: 1: shown speaker count, 2: total speaker count. */
-												esc_html__( 'Showing the main %1$d of %2$d speakers. Open the full event speaker list to view everyone.', 'wpfaevent' ),
-												absint( count( $main_dashboard_regular_speakers ) ),
-												absint( count( $dashboard_regular_speakers ) )
-											);
-											?>
-										</p>
-									<?php endif; ?>
+						<?php elseif ( ! empty( $dashboard_regular_speakers ) ) : ?>
+							<div class="wpfa-event-regular-speakers">
+								<h3><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h3>
+								<div class="wpfa-speakers-grid">
+									<?php foreach ( $main_dashboard_regular_speakers as $speaker ) : ?>
+										<?php include WPFAEVENT_PATH . 'public/partials/speakers/dashboard-speaker-card.php'; ?>
+									<?php endforeach; ?>
 								</div>
-							<?php endif; ?>
+								<?php if ( $dashboard_regular_speaker_overflow_count ) : ?>
+									<p class="wpfa-event-speaker-limit-note">
+										<?php
+										printf(
+											/* translators: 1: shown speaker count, 2: total speaker count. */
+											esc_html__( 'Showing the main %1$d of %2$d speakers. Open the full event speaker list to view everyone.', 'wpfaevent' ),
+											absint( count( $main_dashboard_regular_speakers ) ),
+											absint( count( $dashboard_regular_speakers ) )
+										);
+										?>
+									</p>
+								<?php endif; ?>
+							</div>
 						<?php else : ?>
 							<div class="wpfa-speakers-grid">
 								<?php foreach ( $main_dashboard_speakers as $speaker ) : ?>
