@@ -77,6 +77,219 @@ class FeaturedSpeakersGridTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Clean up environment after each test.
+	 */
+	public function tearDown(): void {
+		unset( $GLOBALS['wpfaevent_template_embed'] );
+
+		parent::tearDown();
+	}
+
+	/**
+	 * Main event page renders only the Featured Speakers section when featured speakers exist.
+	 */
+	public function test_main_event_page_renders_only_featured_speakers_when_present() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Event with Featured Speakers',
+				'post_type'   => 'wpfa_event',
+				'post_status' => 'publish',
+			)
+		);
+
+		$featured_speaker_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Featured Speaker One',
+				'post_type'   => 'wpfa_speaker',
+				'post_status' => 'publish',
+			)
+		);
+
+		$regular_speaker_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Regular Speaker One',
+				'post_type'   => 'wpfa_speaker',
+				'post_status' => 'publish',
+			)
+		);
+
+		update_post_meta( $event_id, 'wpfa_event_speakers', array( $featured_speaker_id, $regular_speaker_id ) );
+		update_post_meta( $featured_speaker_id, 'wpfa_speaker_events', array( $event_id ) );
+		update_post_meta( $regular_speaker_id, 'wpfa_speaker_events', array( $event_id ) );
+		update_post_meta( $event_id, 'wpfa_event_featured_speakers', array( $featured_speaker_id ) );
+		update_post_meta( $event_id, 'wpfa_event_featured_speakers_manual', 'yes' );
+
+		$output = $this->render_event_template( $event_id );
+
+		$this->assertStringContainsString( 'wpfa-event-featured-speakers', $output );
+		$this->assertStringContainsString( 'Featured Speaker One', $output );
+		$this->assertStringNotContainsString( 'wpfa-event-regular-speakers', $output );
+		$this->assertStringNotContainsString( 'Regular Speaker One', $output );
+	}
+
+	/**
+	 * Main event page renders regular speakers when no featured speakers exist.
+	 */
+	public function test_main_event_page_renders_regular_speakers_when_no_featured_exist() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Event without Featured Speakers',
+				'post_type'   => 'wpfa_event',
+				'post_status' => 'publish',
+			)
+		);
+
+		$speaker_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Regular Speaker Only',
+				'post_type'   => 'wpfa_speaker',
+				'post_status' => 'publish',
+			)
+		);
+
+		update_post_meta( $event_id, 'wpfa_event_speakers', array( $speaker_id ) );
+		update_post_meta( $speaker_id, 'wpfa_speaker_events', array( $event_id ) );
+
+		$output = $this->render_event_template( $event_id );
+
+		$this->assertStringNotContainsString( 'wpfa-event-featured-speakers', $output );
+		$this->assertStringContainsString( 'wpfa-event-regular-speakers', $output );
+		$this->assertStringContainsString( 'Regular Speaker Only', $output );
+	}
+
+	/**
+	 * Stale or unpublished featured speaker IDs do not prevent regular speakers from displaying.
+	 */
+	public function test_invalid_featured_speakers_do_not_block_regular_speakers() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Event with Stale Featured Speakers',
+				'post_type'   => 'wpfa_event',
+				'post_status' => 'publish',
+			)
+		);
+
+		$draft_speaker_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Draft Speaker',
+				'post_type'   => 'wpfa_speaker',
+				'post_status' => 'draft',
+			)
+		);
+
+		$regular_speaker_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Active Regular Speaker',
+				'post_type'   => 'wpfa_speaker',
+				'post_status' => 'publish',
+			)
+		);
+
+		update_post_meta( $event_id, 'wpfa_event_speakers', array( $draft_speaker_id, $regular_speaker_id ) );
+		update_post_meta( $draft_speaker_id, 'wpfa_speaker_events', array( $event_id ) );
+		update_post_meta( $regular_speaker_id, 'wpfa_speaker_events', array( $event_id ) );
+		update_post_meta( $event_id, 'wpfa_event_featured_speakers', array( $draft_speaker_id, 999999 ) );
+		update_post_meta( $event_id, 'wpfa_event_featured_speakers_manual', 'yes' );
+
+		$output = $this->render_event_template( $event_id );
+
+		$this->assertStringNotContainsString( 'wpfa-event-featured-speakers', $output );
+		$this->assertStringContainsString( 'wpfa-event-regular-speakers', $output );
+		$this->assertStringContainsString( 'Active Regular Speaker', $output );
+		$this->assertStringNotContainsString( 'Draft Speaker', $output );
+	}
+
+	/**
+	 * All Speakers page renders all speakers in a single unified grid without separate groups.
+	 */
+	public function test_all_speakers_page_renders_unified_list_without_separate_featured_section() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'All Speakers Test Event',
+				'post_name'   => 'all-speakers-event',
+				'post_type'   => 'wpfa_event',
+				'post_status' => 'publish',
+			)
+		);
+
+		$featured_speaker_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Alpha Featured Speaker',
+				'post_type'   => 'wpfa_speaker',
+				'post_status' => 'publish',
+			)
+		);
+
+		$regular_speaker_id = $this->factory->post->create(
+			array(
+				'post_title'  => 'Beta Regular Speaker',
+				'post_type'   => 'wpfa_speaker',
+				'post_status' => 'publish',
+			)
+		);
+
+		update_post_meta( $event_id, 'wpfa_event_speakers', array( $featured_speaker_id, $regular_speaker_id ) );
+		update_post_meta( $featured_speaker_id, 'wpfa_speaker_events', array( $event_id ) );
+		update_post_meta( $regular_speaker_id, 'wpfa_speaker_events', array( $event_id ) );
+		update_post_meta( $event_id, 'wpfa_event_featured_speakers', array( $featured_speaker_id ) );
+		update_post_meta( $event_id, 'wpfa_event_featured_speakers_manual', 'yes' );
+
+		$output = $this->render_speakers_template( 'all-speakers-event' );
+
+		$this->assertStringContainsString( 'id="wpfa-speakers-grid"', $output );
+		$this->assertStringContainsString( 'Alpha Featured Speaker', $output );
+		$this->assertStringContainsString( 'Beta Regular Speaker', $output );
+		$this->assertStringNotContainsString( 'wpfa-featured-speaker-group', $output );
+		$this->assertStringNotContainsString( 'wpfa-regular-speaker-group', $output );
+		$this->assertStringNotContainsString( 'id="wpfa-featured-speakers-title"', $output );
+	}
+
+	/**
+	 * Render the single event template for a given event ID.
+	 *
+	 * @param int $event_id Event ID.
+	 * @return string Rendered HTML.
+	 */
+	private function render_event_template( $event_id ) {
+		$url = get_permalink( $event_id );
+		$this->go_to( $url );
+
+		$this->assertSame( $event_id, get_queried_object_id() );
+
+		ob_start();
+		include WPFAEVENT_PATH . 'public/templates/single-wpfa-event.php';
+
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * Render the speakers archive template for a given event slug.
+	 *
+	 * @param string $event_slug Optional event slug.
+	 * @return string Rendered HTML.
+	 */
+	private function render_speakers_template( $event_slug = '' ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Unit test simulates query args.
+		$old_get = $_GET;
+		$_GET    = array();
+
+		if ( '' !== $event_slug ) {
+			$_GET['event'] = $event_slug;
+		}
+
+		$GLOBALS['wpfaevent_template_embed'] = true;
+
+		ob_start();
+		include WPFAEVENT_PATH . 'public/templates/page-speakers.php';
+		$output = (string) ob_get_clean();
+
+		$_GET = $old_get;
+		unset( $GLOBALS['wpfaevent_template_embed'] );
+
+		return $output;
+	}
+
+	/**
 	 * Read a repository file fixture.
 	 *
 	 * @param string $relative_path File path relative to the plugin root.
