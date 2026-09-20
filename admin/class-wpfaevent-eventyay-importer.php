@@ -22,6 +22,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Wpfaevent_Eventyay_Importer {
 	/**
+	 * How long the in-progress marker survives without being cleared.
+	 *
+	 * Bounds the overlay if an import dies before it can clean up after itself.
+	 *
+	 * @var int
+	 */
+	const IMPORT_IN_PROGRESS_TTL = 15 * MINUTE_IN_SECONDS;
+
+	/**
 	 * API client.
 	 *
 	 * @var Wpfaevent_Eventyay_API_Client|null
@@ -270,7 +279,7 @@ class Wpfaevent_Eventyay_Importer {
 					<input type="hidden" name="action" value="wpfaevent_import_eventyay_events">
 					<input type="hidden" name="wpfaevent_eventyay_return_page" value="wpfaevent-import-events">
 					<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
-					<?php submit_button( __( 'Import Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, ( empty( $settings['organizer_slug'] ) || empty( $settings['event_slug'] ) ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
+					<?php submit_button( __( 'Import Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, ( empty( $settings['organizer_slug'] ) || empty( $settings['event_slug'] ) || self::is_import_in_progress() ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
 				</form>
 			</div>
 
@@ -357,7 +366,7 @@ class Wpfaevent_Eventyay_Importer {
 						</tr>
 					</table>
 					<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
-					<?php submit_button( __( 'Update Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false ); ?>
+					<?php submit_button( __( 'Update Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, self::is_import_in_progress() ? array( 'disabled' => 'disabled' ) : array() ); ?>
 				</form>
 
 				<p>
@@ -373,6 +382,29 @@ class Wpfaevent_Eventyay_Importer {
 	}
 
 	/**
+	 * Transient key marking that an import is running for a user.
+	 *
+	 * @since 1.0.0
+	 * @param int $user_id User to build the key for, 0 for the current user.
+	 * @return string
+	 */
+	public static function get_import_in_progress_key( $user_id = 0 ) {
+		$user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+		return 'wpfaevent_eventyay_import_in_progress_' . $user_id;
+	}
+
+	/**
+	 * Whether an import is currently running for the current user.
+	 *
+	 * @since 1.0.0
+	 * @return bool
+	 */
+	public static function is_import_in_progress() {
+		return (bool) get_transient( self::get_import_in_progress_key() );
+	}
+
+	/**
 	 * Render the overlay shown while an Eventyay import runs.
 	 *
 	 * Both the import and the update page submit the same request, so they share
@@ -382,8 +414,9 @@ class Wpfaevent_Eventyay_Importer {
 	 * @return void
 	 */
 	private function render_import_progress_overlay() {
+		$running = self::is_import_in_progress();
 		?>
-		<div id="wpfaevent-import-progress-overlay" role="status" aria-live="polite">
+		<div id="wpfaevent-import-progress-overlay" class="<?php echo $running ? 'is-visible' : ''; ?>" role="status" aria-live="polite">
 			<div class="wpfaevent-progress-card">
 				<div class="wpfaevent-spinner-container">
 					<div class="wpfaevent-spinner"></div>
@@ -425,8 +458,24 @@ class Wpfaevent_Eventyay_Importer {
 			update_option( 'wpfaevent_eventyay_import_settings', $sanitized, false );
 		}
 
+		// The import finishes even when the browser leaves, so let the admin work
+		// elsewhere meanwhile. The transient is what every page load reads to know
+		// an import is still running; its TTL is a dead man's switch, so a fatal or
+		// a timeout cannot leave someone with an overlay they can never dismiss.
+		ignore_user_abort( true );
+
+		$progress_key = self::get_import_in_progress_key();
+		set_transient( $progress_key, time(), self::IMPORT_IN_PROGRESS_TTL );
+		register_shutdown_function(
+			static function () use ( $progress_key ) {
+				delete_transient( $progress_key );
+			}
+		);
+
 		$result     = $this->import_eventyay_events_from_settings();
 		$notice_key = 'wpfaevent_eventyay_import_notice_' . get_current_user_id();
+
+		delete_transient( $progress_key );
 
 		if ( is_wp_error( $result ) ) {
 			set_transient(
