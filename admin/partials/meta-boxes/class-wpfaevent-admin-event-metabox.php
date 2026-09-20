@@ -836,12 +836,12 @@ class Wpfaevent_Admin_Event_Metabox {
 		</p>
 		<?php wp_editor( $venue_information, 'wpfa_event_venue_information', $editor_settings ); ?>
 
-		<p style="margin-top: 20px;">
+		<p class="wpfaevent-additional-info-field-label">
 			<label for="wpfa_event_transportation_information"><strong><?php esc_html_e( 'Transportation Information', 'wpfaevent' ); ?></strong></label>
 		</p>
 		<?php wp_editor( $transportation_information, 'wpfa_event_transportation_information', $editor_settings ); ?>
 
-		<p style="margin-top: 20px;">
+		<p class="wpfaevent-additional-info-field-label">
 			<label for="wpfa_event_hotel_information"><strong><?php esc_html_e( 'Hotel & Accommodation Information', 'wpfaevent' ); ?></strong></label>
 		</p>
 		<?php wp_editor( $hotel_information, 'wpfa_event_hotel_information', $editor_settings ); ?>

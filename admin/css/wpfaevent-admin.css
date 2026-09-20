@@ -41,6 +41,10 @@
     margin-bottom: 12px;
 }
 
+.wpfaevent-additional-info-field-label {
+    margin-top: 20px;
+}
+
 .wpfaevent-custom-tabs-list {
     display: grid;
     gap: 14px;
