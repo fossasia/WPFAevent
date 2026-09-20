@@ -87,10 +87,18 @@ if ( '' !== trim( $current_event_filter ) ) {
 			$selected_event_id = $candidate_event_id;
 		}
 	} else {
-		$candidate_event = get_page_by_path( sanitize_title( $current_event_filter ), OBJECT, 'wpfa_event' );
-		if ( $candidate_event instanceof WP_Post ) {
-			$selected_event_id = absint( $candidate_event->ID );
+		$candidate_event_query = new WP_Query( array(
+			'name'           => sanitize_title( $current_event_filter ),
+			'post_type'      => 'wpfa_event',
+			'post_status'    => 'publish',
+			'posts_per_page' => 1,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		) );
+		if ( ! empty( $candidate_event_query->posts ) ) {
+			$selected_event_id = absint( $candidate_event_query->posts[0] );
 		}
+		wp_reset_postdata();
 	}
 }
 

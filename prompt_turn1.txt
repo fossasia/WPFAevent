@@ -1,0 +1,27 @@
+ISSUE: fossasia/WPFAevent#312 - Event resolution missing on speakers archive and invisible hover text on speaker profile
+
+PLAN: /home/ubuntu/oss-work/wpfaevent/PLAN.md
+
+TASK:
+Fix two bugs in the WPFAevent WordPress plugin:
+
+BUG 1: In public/templates/page-speakers.php, lines 89-94, replace the get_page_by_path() call with a WP_Query to resolve the event slug for the speakers archive. The current get_page_by_path() does not work for custom post types like wpfa_event.
+
+BUG 2: In public/css/templates/speakers.css, line 383, fix the social link hover text color. Change `color: var(--event-primary-contrast, #fff);` to just `color: #fff;` because the --event-primary-contrast variable may not be set on the single speaker profile page.
+
+TEST COMMANDS:
+- Run `composer phpcs` in the repo root (WordPress Coding Standards)
+- Run `composer phpstan` in the repo root (static analysis)
+- Run `composer test -- --testsuite Unit` for unit tests
+
+TDD: Write a failing test first for the event resolution bug if feasible. For CSS changes, visual verification is sufficient.
+
+STYLE: Follow WordPress Coding Standards. Use esc_html(), esc_attr(), esc_url() for output escaping. Wrap strings in __() or _e() with 'wpfaevent' text domain.
+
+CONSTRAINTS:
+- Minimal scope - only touch the specific lines mentioned
+- No drive-by refactors
+- Keep changes under 50 lines total
+- Run phpcs after changes to verify no violations
+
+END WITH: STATUS: PASS or STATUS: FAIL followed by the last test output.

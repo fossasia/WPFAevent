@@ -379,8 +379,8 @@
 }
 
 .wpfaevent .wpfa-social-link:hover {
-	background: var(--event-primary);
-	color: var(--event-primary-contrast, #fff);
+	background: var(--event-primary, #D51007);
+	color: #fff;
 }
 
 /* ==========================================================================
