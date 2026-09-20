@@ -180,7 +180,7 @@ class Wpfaevent_Eventyay_Importer {
 				</div>
 			<?php endif; ?>
 
-			<div class="card wpfaevent-import-progress-scope" style="max-width: 960px;">
+			<div class="card" style="max-width: 960px;">
 				<h2><?php esc_html_e( 'Eventyay Event Import', 'wpfaevent' ); ?></h2>
 				<p>
 					<?php esc_html_e( 'Import events from the current Eventyay REST API endpoint:', 'wpfaevent' ); ?>
@@ -272,16 +272,6 @@ class Wpfaevent_Eventyay_Importer {
 					<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
 					<?php submit_button( __( 'Import Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, ( empty( $settings['organizer_slug'] ) || empty( $settings['event_slug'] ) ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
 				</form>
-
-				<div id="wpfaevent-import-progress-overlay" role="status" aria-live="polite">
-					<div class="wpfaevent-progress-card">
-						<div class="wpfaevent-spinner-container">
-							<div class="wpfaevent-spinner"></div>
-						</div>
-						<h3 id="wpfaevent-progress-title"><?php esc_html_e( 'Importing from Eventyay', 'wpfaevent' ); ?></h3>
-						<p id="wpfaevent-progress-status"><?php esc_html_e( 'This can take a while. Keep this page open.', 'wpfaevent' ); ?></p>
-					</div>
-				</div>
 			</div>
 
 				<div class="card" style="max-width: 960px;">
@@ -295,6 +285,8 @@ class Wpfaevent_Eventyay_Importer {
 					</ul>
 				</div>
 		</div>
+
+		<?php $this->render_import_progress_overlay(); ?>
 		<?php
 	}
 
@@ -348,7 +340,7 @@ class Wpfaevent_Eventyay_Importer {
 					<p><?php esc_html_e( 'Enter an Eventyay event URL below before updating.', 'wpfaevent' ); ?></p>
 				<?php endif; ?>
 
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<form class="wpfaevent-eventyay-import-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="wpfaevent_import_eventyay_events">
 					<input type="hidden" name="wpfaevent_eventyay_return_page" value="wpfaevent-update-events">
 					<input type="hidden" name="wpfaevent_eventyay_import_settings[base_url]" value="<?php echo esc_attr( $settings['base_url'] ); ?>">
@@ -373,6 +365,31 @@ class Wpfaevent_Eventyay_Importer {
 						<?php esc_html_e( 'Edit Eventyay import settings', 'wpfaevent' ); ?>
 					</a>
 				</p>
+			</div>
+		</div>
+
+		<?php $this->render_import_progress_overlay(); ?>
+		<?php
+	}
+
+	/**
+	 * Render the overlay shown while an Eventyay import runs.
+	 *
+	 * Both the import and the update page submit the same request, so they share
+	 * one overlay rather than keeping two copies of the markup in step.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	private function render_import_progress_overlay() {
+		?>
+		<div id="wpfaevent-import-progress-overlay" role="status" aria-live="polite">
+			<div class="wpfaevent-progress-card">
+				<div class="wpfaevent-spinner-container">
+					<div class="wpfaevent-spinner"></div>
+				</div>
+				<h3 id="wpfaevent-progress-title"><?php esc_html_e( 'Importing from Eventyay', 'wpfaevent' ); ?></h3>
+				<p id="wpfaevent-progress-status"><?php esc_html_e( 'This can take a while. Keep this page open.', 'wpfaevent' ); ?></p>
 			</div>
 		</div>
 		<?php

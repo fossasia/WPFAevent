@@ -36,7 +36,7 @@ if ( ! empty( $settings['base_url'] ) && ! empty( $settings['organizer_slug'] ) 
 		</div>
 	<?php endif; ?>
 
-	<div class="card wpfaevent-settings-card wpfaevent-import-progress-scope">
+	<div class="card wpfaevent-settings-card">
 		<h2><?php esc_html_e( 'Update Event from Eventyay', 'wpfaevent' ); ?></h2>
 		<p><?php esc_html_e( 'Run this when Eventyay data changes after events have already been imported.', 'wpfaevent' ); ?></p>
 		<p class="description">
@@ -79,20 +79,20 @@ if ( ! empty( $settings['base_url'] ) && ! empty( $settings['organizer_slug'] ) 
 				<?php esc_html_e( 'Edit Eventyay import settings', 'wpfaevent' ); ?>
 			</a>
 		</p>
+	</div>
+</div>
 
-		<!-- Progress Overlay -->
-		<div id="wpfaevent-import-progress-overlay" style="display:none;">
-			<div class="wpfaevent-progress-card">
-				<div class="wpfaevent-spinner-container">
-					<div class="wpfaevent-spinner"></div>
-				</div>
-				<h3 id="wpfaevent-progress-title"><?php esc_html_e( 'Syncing with Eventyay', 'wpfaevent' ); ?></h3>
-				<div class="wpfaevent-progress-bar-wrapper">
-					<div id="wpfaevent-progress-bar"></div>
-				</div>
-				<p id="wpfaevent-progress-status"><?php esc_html_e( 'Initializing...', 'wpfaevent' ); ?></p>
-				<p id="wpfaevent-progress-details"></p>
-			</div>
+<!-- Progress Overlay -->
+<div id="wpfaevent-import-progress-overlay" style="display:none;">
+	<div class="wpfaevent-progress-card">
+		<div class="wpfaevent-spinner-container">
+			<div class="wpfaevent-spinner"></div>
 		</div>
+		<h3 id="wpfaevent-progress-title"><?php esc_html_e( 'Syncing with Eventyay', 'wpfaevent' ); ?></h3>
+		<div class="wpfaevent-progress-bar-wrapper">
+			<div id="wpfaevent-progress-bar"></div>
+		</div>
+		<p id="wpfaevent-progress-status"><?php esc_html_e( 'Initializing...', 'wpfaevent' ); ?></p>
+		<p id="wpfaevent-progress-details"></p>
 	</div>
 </div>

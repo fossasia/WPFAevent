@@ -81,14 +81,12 @@
  */
 
 /* Progress Overlay container */
-.wpfaevent-import-progress-scope {
-	position: relative;
-}
-
 #wpfaevent-import-progress-overlay {
-	position: absolute;
+	position: fixed;
 	inset: 0;
-	z-index: 100;
+	/* Below #adminmenuwrap (9990) and #wpadminbar (99999), so the import blocks
+	   the content it owns while the admin menu stays usable. */
+	z-index: 9900;
 	display: none;
 	align-items: center;
 	justify-content: center;
@@ -110,8 +108,6 @@
 
 /* Card layout */
 #wpfaevent-import-progress-overlay .wpfaevent-progress-card {
-	position: sticky;
-	top: 48px;
 	display: grid;
 	grid-template-columns: auto 1fr;
 	column-gap: 12px;
