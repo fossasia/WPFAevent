@@ -415,7 +415,7 @@ class Wpfaevent_Eventyay_Importer {
 					'type'    => 'error',
 					'message' => $result->get_error_message(),
 				),
-				MINUTE_IN_SECONDS
+				MINUTE_IN_SECONDS * 5
 			);
 		} else {
 			set_transient(
@@ -439,7 +439,7 @@ class Wpfaevent_Eventyay_Importer {
 						absint( $result['partner_skipped'] )
 					),
 				),
-				MINUTE_IN_SECONDS
+				MINUTE_IN_SECONDS * 5
 			);
 		}
 
