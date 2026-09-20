@@ -168,13 +168,13 @@ class EventAdditionalInformationTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '<h3>Venue</h3>', $event_output );
 		$this->assertStringContainsString( 'Convention Center', $event_output );
 		$this->assertStringNotContainsString( '<h3>Transportation</h3>', $event_output );
-		$this->assertStringNotContainsString( '<h3>Hotel & Accommodation</h3>', $event_output );
+		$this->assertStringNotContainsString( '<h3>Hotel &amp; Accommodation</h3>', $event_output );
 
 		$page_output = $this->render_additional_information_template();
 		$this->assertStringContainsString( '<h3>Venue</h3>', $page_output );
 		$this->assertStringContainsString( 'Convention Center', $page_output );
 		$this->assertStringNotContainsString( '<h3>Transportation</h3>', $page_output );
-		$this->assertStringNotContainsString( '<h3>Hotel & Accommodation</h3>', $page_output );
+		$this->assertStringNotContainsString( '<h3>Hotel &amp; Accommodation</h3>', $page_output );
 	}
 
 	/**
@@ -187,13 +187,13 @@ class EventAdditionalInformationTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '<h3>Transportation</h3>', $event_output );
 		$this->assertStringContainsString( 'Shuttle bus from airport', $event_output );
 		$this->assertStringNotContainsString( '<h3>Venue</h3>', $event_output );
-		$this->assertStringNotContainsString( '<h3>Hotel & Accommodation</h3>', $event_output );
+		$this->assertStringNotContainsString( '<h3>Hotel &amp; Accommodation</h3>', $event_output );
 
 		$page_output = $this->render_additional_information_template();
 		$this->assertStringContainsString( '<h3>Transportation</h3>', $page_output );
 		$this->assertStringContainsString( 'Shuttle bus from airport', $page_output );
 		$this->assertStringNotContainsString( '<h3>Venue</h3>', $page_output );
-		$this->assertStringNotContainsString( '<h3>Hotel & Accommodation</h3>', $page_output );
+		$this->assertStringNotContainsString( '<h3>Hotel &amp; Accommodation</h3>', $page_output );
 	}
 
 	/**
@@ -203,13 +203,13 @@ class EventAdditionalInformationTest extends WP_UnitTestCase {
 		update_post_meta( $this->event_id, 'wpfa_event_hotel_information', '<p>Discounted rooms at Marina Bay</p>' );
 
 		$event_output = $this->render_event_template();
-		$this->assertStringContainsString( '<h3>Hotel & Accommodation</h3>', $event_output );
+		$this->assertStringContainsString( '<h3>Hotel &amp; Accommodation</h3>', $event_output );
 		$this->assertStringContainsString( 'Discounted rooms at Marina Bay', $event_output );
 		$this->assertStringNotContainsString( '<h3>Venue</h3>', $event_output );
 		$this->assertStringNotContainsString( '<h3>Transportation</h3>', $event_output );
 
 		$page_output = $this->render_additional_information_template();
-		$this->assertStringContainsString( '<h3>Hotel & Accommodation</h3>', $page_output );
+		$this->assertStringContainsString( '<h3>Hotel &amp; Accommodation</h3>', $page_output );
 		$this->assertStringContainsString( 'Discounted rooms at Marina Bay', $page_output );
 		$this->assertStringNotContainsString( '<h3>Venue</h3>', $page_output );
 		$this->assertStringNotContainsString( '<h3>Transportation</h3>', $page_output );
