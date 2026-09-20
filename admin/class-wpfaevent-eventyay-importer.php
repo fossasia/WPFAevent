@@ -177,7 +177,7 @@ class Wpfaevent_Eventyay_Importer {
 				</div>
 			<?php endif; ?>
 
-			<div class="card" style="max-width: 960px;">
+			<div class="card wpfaevent-import-progress-scope" style="max-width: 960px;">
 				<h2><?php esc_html_e( 'Eventyay Event Import', 'wpfaevent' ); ?></h2>
 				<p>
 					<?php esc_html_e( 'Import events from the current Eventyay REST API endpoint:', 'wpfaevent' ); ?>
@@ -269,6 +269,16 @@ class Wpfaevent_Eventyay_Importer {
 					<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
 					<?php submit_button( __( 'Import Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, ( empty( $settings['organizer_slug'] ) || empty( $settings['event_slug'] ) ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
 				</form>
+
+				<div id="wpfaevent-import-progress-overlay" role="status" aria-live="polite">
+					<div class="wpfaevent-progress-card">
+						<div class="wpfaevent-spinner-container">
+							<div class="wpfaevent-spinner"></div>
+						</div>
+						<h3 id="wpfaevent-progress-title"><?php esc_html_e( 'Importing from Eventyay', 'wpfaevent' ); ?></h3>
+						<p id="wpfaevent-progress-status"><?php esc_html_e( 'This can take a while. Keep this page open.', 'wpfaevent' ); ?></p>
+					</div>
+				</div>
 			</div>
 
 				<div class="card" style="max-width: 960px;">
@@ -281,16 +291,6 @@ class Wpfaevent_Eventyay_Importer {
 						<li><?php esc_html_e( 'Frontend rendering for imported data is handled by the follow-up display PR.', 'wpfaevent' ); ?></li>
 					</ul>
 				</div>
-		</div>
-
-		<div id="wpfaevent-import-progress-overlay" role="status" aria-live="polite">
-			<div class="wpfaevent-progress-card">
-				<div class="wpfaevent-spinner-container">
-					<div class="wpfaevent-spinner"></div>
-				</div>
-				<h3 id="wpfaevent-progress-title"><?php esc_html_e( 'Importing from Eventyay', 'wpfaevent' ); ?></h3>
-				<p id="wpfaevent-progress-status"><?php esc_html_e( 'This can take a while. Keep this page open.', 'wpfaevent' ); ?></p>
-			</div>
 		</div>
 		<?php
 	}

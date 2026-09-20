@@ -81,16 +81,20 @@
  */
 
 /* Progress Overlay container */
+.wpfaevent-import-progress-scope {
+	position: relative;
+}
+
 #wpfaevent-import-progress-overlay {
-	position: fixed;
+	position: absolute;
 	inset: 0;
-	z-index: 999999;
+	z-index: 100;
 	display: none;
 	align-items: center;
 	justify-content: center;
 	box-sizing: border-box;
 	padding: 16px;
-	background: rgba(0, 0, 0, 0.35);
+	background: rgba(255, 255, 255, 0.7);
 }
 
 #wpfaevent-import-progress-overlay.is-visible {
@@ -106,6 +110,8 @@
 
 /* Card layout */
 #wpfaevent-import-progress-overlay .wpfaevent-progress-card {
+	position: sticky;
+	top: 48px;
 	display: grid;
 	grid-template-columns: auto 1fr;
 	column-gap: 12px;
