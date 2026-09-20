@@ -727,7 +727,7 @@
 	.wpfaevent .wpfa-partner-detail-card,
 	.wpfaevent .wpfa-partner-detail-back {
 		max-width: 350px;
-		width: calc(100vw - 40px);
+		width: 100%;
 	}
 
 	.wpfaevent .wpfa-partner-detail-identity {

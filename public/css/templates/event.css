@@ -8,8 +8,27 @@
 		var(--event-header-image);
 	background-position: center;
 	background-size: cover;
+	color: #fff;
 	padding-bottom: 72px;
 	padding-top: 72px;
+}
+
+.wpfaevent .wpfa-event-hero.has-event-header-image h1,
+.wpfaevent .wpfa-event-hero.has-event-header-image .wpfa-event-meta-list span {
+	color: #fff;
+}
+
+.wpfaevent .wpfa-event-hero.has-event-header-image .wpfa-event-kicker {
+	color: rgba(255, 255, 255, 0.85);
+}
+
+.wpfaevent .wpfa-event-hero.has-event-header-image .wpfa-event-hero-text {
+	color: rgba(255, 255, 255, 0.92);
+}
+
+.wpfaevent .wpfa-event-hero.has-event-header-image .wpfa-event-meta-list span {
+	background: rgba(255, 255, 255, 0.16);
+	border-color: rgba(255, 255, 255, 0.25);
 }
 
 .wpfaevent .wpfa-event-hero.has-event-header-image::before,
@@ -37,7 +56,7 @@
 }
 
 .wpfaevent .wpfa-event-tickets {
-	background: #fff;
+	background: var(--event-soft);
 }
 
 .wpfaevent .wpfa-event-ticket-widget {
@@ -1609,7 +1628,7 @@
 	background: var(--event-primary);
 	border: 0;
 	border-radius: var(--event-radius);
-	color: #fff;
+	color: var(--event-primary-contrast, #fff);
 	cursor: pointer;
 	font: inherit;
 	font-weight: 800;
@@ -1621,6 +1640,7 @@
 
 .wpfaevent .wpfa-event-filter-submit:hover {
 	background: var(--event-primary-dark);
+	color: var(--event-primary-dark-contrast, #fff);
 }
 
 .wpfaevent .wpfa-event-results-head {

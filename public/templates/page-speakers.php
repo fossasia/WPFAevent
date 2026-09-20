@@ -257,6 +257,10 @@ $header_vars         = array(
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
 );
 
+$event_style_attr = ( $selected_event_id && class_exists( 'Wpfaevent_Meta_Event' ) )
+	? Wpfaevent_Meta_Event::build_event_style_attribute( $selected_event_id )
+	: '';
+
 ?>
 <?php if ( ! $wpfaevent_is_embed ) : ?>
 <!DOCTYPE html>
@@ -266,7 +270,7 @@ $header_vars         = array(
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<?php wp_head(); ?>
 </head>
-<body <?php body_class( 'wpfaevent' ); ?>>
+<body <?php body_class( 'wpfaevent wpfa-speakers-template' ); ?><?php echo $event_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>
 	<?php wp_body_open(); ?>
 
 <div id="page" class="site">
@@ -288,7 +292,7 @@ $header_vars         = array(
 <?php endif; ?>
 
 <?php if ( $wpfaevent_is_embed ) : ?>
-	<section class="wpfa-speakers">
+	<section class="wpfa-speakers wpfaevent"<?php echo $event_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>
 <?php else : ?>
 	<main class="wpfa-speakers">
 <?php endif; ?>

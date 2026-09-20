@@ -670,3 +670,20 @@
 #wpfaevent-speakers .wpfaevent-toggle-feature-btn:hover {
 	transform: scale(1.02);
 }
+
+/* Event Color Customization Metabox */
+.wpfaevent-color-field-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.wpfaevent-color-picker-input {
+	width: 36px;
+	height: 36px;
+	padding: 2px;
+	border: 1px solid #8c8f94;
+	border-radius: 4px;
+	cursor: pointer;
+	background: #fff;
+}
