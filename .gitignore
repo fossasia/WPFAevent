@@ -21,3 +21,5 @@ phpstan.neon
 coverage/
 clover.xml
 .claude/
+PLAN.md
+prompt_turn*.txt
