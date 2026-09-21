@@ -265,6 +265,32 @@ class Wpfaevent_Main_Navigation_Helper {
 	}
 
 	/**
+	 * Retrieve the current custom page for the queried event if active.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<string, mixed>|null Custom page navigation item or null.
+	 */
+	public static function get_current_custom_page( $event_id = 0 ) {
+		if ( $event_id <= 0 ) {
+			$event_id = (int) get_queried_object_id();
+		}
+
+		if ( empty( $_GET['custom_page'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return null;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$raw_slug = sanitize_title( wp_unslash( $_GET['custom_page'] ) );
+		if ( empty( $raw_slug ) ) {
+			return null;
+		}
+
+		return self::get_custom_page( $event_id, $raw_slug );
+	}
+
+	/**
 	 * Render the default header navigation links.
 	 *
 	 * @since 1.0.0

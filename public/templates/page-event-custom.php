@@ -18,11 +18,8 @@ if ( ! $event_id || 'wpfa_event' !== get_post_type( $event_id ) ) {
 	return;
 }
 
-// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-$page_slug = isset( $_GET['custom_page'] ) ? sanitize_title( wp_unslash( $_GET['custom_page'] ) ) : '';
-
 $page_data = class_exists( 'Wpfaevent_Main_Navigation_Helper' )
-	? Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_id, $page_slug )
+	? Wpfaevent_Main_Navigation_Helper::get_current_custom_page( $event_id )
 	: null;
 
 if ( $page_data ) {
@@ -57,7 +54,7 @@ if ( '' !== $formatted_content && false === strpos( $formatted_content, '<ul' ) 
 				$out_lines[] = '</ul>';
 				$in_list     = false;
 			}
-			$out_lines[] = $line;
+			$out_lines[] = esc_html( $line );
 		}
 	}
 	if ( $in_list ) {

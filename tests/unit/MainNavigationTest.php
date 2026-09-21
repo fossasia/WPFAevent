@@ -267,5 +267,11 @@ class MainNavigationTest extends WP_UnitTestCase {
 
 		$missing = Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_id, 'unknown-slug' );
 		$this->assertNull( $missing );
+
+		$_GET['custom_page'] = 'nested-info';
+		$current             = Wpfaevent_Main_Navigation_Helper::get_current_custom_page( $event_id );
+		$this->assertIsArray( $current );
+		$this->assertSame( 'Nested Title', $current['title'] );
+		unset( $_GET['custom_page'] );
 	}
 }
