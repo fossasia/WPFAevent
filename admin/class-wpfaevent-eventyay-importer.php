@@ -21,13 +21,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @author     FOSSASIA <contact@fossasia.org>
  */
 class Wpfaevent_Eventyay_Importer {
-	/**
-	 * How long the import lock holds without being released.
-	 *
-	 * Bounds the lock if an import dies before it can clean up after itself.
-	 *
-	 * @var int
-	 */
 	const IMPORT_IN_PROGRESS_TTL = 15 * MINUTE_IN_SECONDS;
 
 	/**
@@ -409,15 +402,8 @@ class Wpfaevent_Eventyay_Importer {
 	/**
 	 * Claim the import lock for the current user.
 	 *
-	 * Plain add_option() is an upsert, so it cannot tell a request whether it created
-	 * the row or found one already there, and two racing requests would both
-	 * proceed. INSERT IGNORE can tell, the same way WP_Upgrader::create_lock()
-	 * does. A lock older than the TTL belongs to a run that died before releasing
-	 * it; the age condition on the delete means a live lock is never taken over.
-	 *
 	 * @since 1.0.0
-	 * @return int|false Token to pass to release_import_lock(), or false when an
-	 *                   import already holds the lock.
+	 * @return int|false Lock token, or false when an import already holds the lock.
 	 */
 	public static function acquire_import_lock() {
 		global $wpdb;
@@ -425,7 +411,7 @@ class Wpfaevent_Eventyay_Importer {
 		$key     = self::get_import_in_progress_key();
 		$started = time();
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- No WordPress API creates a row only if it is absent; the option caches are cleared below.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Atomic insert-if-absent lock; caches cleared below.
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->options} WHERE option_name = %s AND option_value < %d",
@@ -451,10 +437,6 @@ class Wpfaevent_Eventyay_Importer {
 	/**
 	 * Release the import lock, if this request still holds it.
 	 *
-	 * A run that outlived the TTL may have had its lock taken over. Deleting only
-	 * the row carrying this run's token keeps it from removing the newer holder's
-	 * lock on its way out.
-	 *
 	 * @since 1.0.0
 	 * @param int $started Token returned by acquire_import_lock().
 	 * @return void
@@ -464,7 +446,7 @@ class Wpfaevent_Eventyay_Importer {
 
 		$key = self::get_import_in_progress_key();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Deletes the lock only if this run still owns it; the option cache is cleared below.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Owner-only delete; cache cleared below.
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name = %s AND option_value = %s", $key, $started ) );
 
 		wp_cache_delete( $key, 'options' );
@@ -472,9 +454,6 @@ class Wpfaevent_Eventyay_Importer {
 
 	/**
 	 * Render the overlay shown while an Eventyay import runs.
-	 *
-	 * Both the import and the update page submit the same request, so they share
-	 * one overlay rather than keeping two copies of the markup in step.
 	 *
 	 * @since 1.0.0
 	 * @return void
@@ -488,7 +467,7 @@ class Wpfaevent_Eventyay_Importer {
 					<div class="wpfaevent-spinner"></div>
 				</div>
 				<h3 id="wpfaevent-progress-title"><?php esc_html_e( 'Importing from Eventyay', 'wpfaevent' ); ?></h3>
-				<p id="wpfaevent-progress-status"><?php esc_html_e( 'This can take a while. Keep this page open.', 'wpfaevent' ); ?></p>
+				<p id="wpfaevent-progress-status"><?php esc_html_e( 'This can take a while. Please keep this page open.', 'wpfaevent' ); ?></p>
 			</div>
 		</div>
 		<?php
@@ -518,7 +497,6 @@ class Wpfaevent_Eventyay_Importer {
 
 		$notice_key = 'wpfaevent_eventyay_import_notice_' . get_current_user_id();
 
-		// Refuse before saving settings, so a second request cannot change them under a running import.
 		$lock = self::acquire_import_lock();
 		if ( false === $lock ) {
 			set_transient(
@@ -533,7 +511,6 @@ class Wpfaevent_Eventyay_Importer {
 			exit;
 		}
 
-		// Released on shutdown, so after the result notice is written and even after a fatal.
 		ignore_user_abort( true );
 		register_shutdown_function( array( __CLASS__, 'release_import_lock' ), $lock );
 

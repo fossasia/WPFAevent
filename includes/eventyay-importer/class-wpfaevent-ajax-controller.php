@@ -323,9 +323,6 @@ class Wpfaevent_AJAX_Controller {
 	/**
 	 * Report whether an Eventyay import is still running for the current user.
 	 *
-	 * Polled by the admin page so an import started in another tab, or before
-	 * navigating away, still shows its overlay and clears it once finished.
-	 *
 	 * @since 1.0.0
 	 * @return void
 	 */

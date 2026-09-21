@@ -84,8 +84,6 @@
 #wpfaevent-import-progress-overlay {
 	position: fixed;
 	inset: 0;
-	/* Below #adminmenuwrap (9990) and #wpadminbar (99999), so the import blocks
-	   the content it owns while the admin menu stays usable. */
 	z-index: 9900;
 	display: none;
 	align-items: center;

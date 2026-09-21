@@ -192,9 +192,6 @@
 				$overlay.addClass('is-visible');
 			});
 
-			// The server renders the overlay already visible when an import this
-			// user started is still running, so poll until it finishes and show
-			// the result rather than leaving a spinner no page load can clear.
 			if ($overlay.hasClass('is-visible')) {
 				const nonce = $eventyayImportForm
 					.find('input[name="_wpnonce"]')
