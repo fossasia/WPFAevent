@@ -152,6 +152,7 @@ class MainNavigationTest extends WP_UnitTestCase {
 	public function test_is_url_active() {
 		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::is_url_active( 'http://example.com/events/', '/events/' ) );
 		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::is_url_active( '/events/?filter=past', '/events/?filter=past' ) );
+		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::is_url_active( '/events/?foo=1&bar=2', '/events/?bar=2&foo=1' ) );
 		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::is_url_active( '/events/', '/events/?filter=past' ) );
 		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::is_url_active( '', '/events/' ) );
 	}
@@ -219,5 +220,52 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$latest = Wpfaevent_Main_Navigation_Helper::get_latest_custom_navigation();
 		$this->assertIsArray( $latest );
 		$this->assertSame( 'Event Specific Link', $latest[0]['text'] );
+	}
+
+	/**
+	 * Test has_custom_page and get_custom_page resolution.
+	 */
+	public function test_get_and_has_custom_page() {
+		$event_id = $this->factory->post->create( array( 'post_type' => 'wpfa_event' ) );
+		$nav_data = array(
+			array(
+				'text'    => 'Top Level Info',
+				'type'    => 'custom_page',
+				'title'   => 'Top Level Title',
+				'slug'    => 'top-level-info',
+				'content' => 'Top content',
+			),
+			array(
+				'text'  => 'Menu',
+				'type'  => 'dropdown',
+				'items' => array(
+					array(
+						'text'    => 'Nested Info',
+						'type'    => 'custom_page',
+						'title'   => 'Nested Title',
+						'slug'    => 'nested-info',
+						'content' => 'Nested content',
+					),
+				),
+			),
+		);
+
+		update_post_meta( $event_id, 'wpfa_event_custom_navigation', $nav_data );
+
+		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_id, 'top-level-info' ) );
+		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_id, 'nested-info' ) );
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_id, 'non-existent' ) );
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::has_custom_page( 0, 'top-level-info' ) );
+
+		$top = Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_id, 'top-level-info' );
+		$this->assertIsArray( $top );
+		$this->assertSame( 'Top Level Title', $top['title'] );
+
+		$nested = Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_id, 'nested-info' );
+		$this->assertIsArray( $nested );
+		$this->assertSame( 'Nested Title', $nested['title'] );
+
+		$missing = Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_id, 'unknown-slug' );
+		$this->assertNull( $missing );
 	}
 }

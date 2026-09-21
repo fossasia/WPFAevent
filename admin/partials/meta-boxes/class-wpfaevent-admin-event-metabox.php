@@ -922,11 +922,15 @@ class Wpfaevent_Admin_Event_Metabox {
 					e.preventDefault();
 					var $card = $(this).closest('.wpfaevent-meta-card');
 					var pIdx = $card.data('index');
-					var sIdx = $card.find('.wpfaevent-nav-subitem-block').length;
+					var nextSubIdx = parseInt($card.attr('data-next-sub-index'), 10);
+					if (isNaN(nextSubIdx)) {
+						nextSubIdx = $card.find('.wpfaevent-nav-subitem-block').length;
+					}
 					var tmpl = $('#wpfaevent-nav-subitem-template').html()
 						.replace(/__PIDX__/g, pIdx)
-						.replace(/__SIDX__/g, sIdx);
+						.replace(/__SIDX__/g, nextSubIdx);
 					$card.find('.wpfaevent-nav-subitems-list').append(tmpl);
+					$card.attr('data-next-sub-index', nextSubIdx + 1);
 				});
 				$('#wpfaevent-add-nav-item').on('click', function(e) {
 					e.preventDefault();
@@ -958,7 +962,7 @@ class Wpfaevent_Admin_Event_Metabox {
 		$content   = isset( $item['content'] ) ? (string) $item['content'] : '';
 		$sub_items = isset( $item['items'] ) && is_array( $item['items'] ) ? $item['items'] : array();
 		?>
-		<div class="wpfaevent-meta-card" data-index="<?php echo esc_attr( (string) $i ); ?>">
+		<div class="wpfaevent-meta-card" data-index="<?php echo esc_attr( (string) $i ); ?>" data-next-sub-index="<?php echo esc_attr( (string) count( $sub_items ) ); ?>">
 			<a href="#" class="wpfaevent-remove-card-btn"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a>
 			<div class="wpfaevent-meta-card-grid">
 				<div class="wpfaevent-meta-card-field">

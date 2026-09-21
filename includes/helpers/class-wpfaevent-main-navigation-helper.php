@@ -205,7 +205,63 @@ class Wpfaevent_Main_Navigation_Helper {
 		$url_q  = (string) wp_parse_url( (string) $url, PHP_URL_QUERY );
 		$curr_q = (string) wp_parse_url( (string) $current_uri, PHP_URL_QUERY );
 
-		return $url_q === $curr_q;
+		$url_params  = array();
+		$curr_params = array();
+		parse_str( $url_q, $url_params );
+		parse_str( $curr_q, $curr_params );
+		ksort( $url_params );
+		ksort( $curr_params );
+
+		return $url_params === $curr_params;
+	}
+
+	/**
+	 * Retrieve a custom page from an event's navigation by slug.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $event_id Event post ID.
+	 * @param string $slug     Custom page slug.
+	 * @return array<string, mixed>|null Custom page navigation item or null if not found.
+	 */
+	public static function get_custom_page( $event_id, $slug ) {
+		if ( $event_id <= 0 || empty( $slug ) ) {
+			return null;
+		}
+
+		$items = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
+		if ( ! is_array( $items ) ) {
+			return null;
+		}
+
+		foreach ( $items as $item ) {
+			if ( isset( $item['type'] ) && 'custom_page' === $item['type'] && isset( $item['slug'] ) && $item['slug'] === $slug ) {
+				return $item;
+			}
+
+			if ( isset( $item['type'] ) && 'dropdown' === $item['type'] && ! empty( $item['items'] ) && is_array( $item['items'] ) ) {
+				foreach ( $item['items'] as $sub ) {
+					if ( isset( $sub['type'] ) && 'custom_page' === $sub['type'] && isset( $sub['slug'] ) && $sub['slug'] === $slug ) {
+						return $sub;
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Check whether an event has a custom page matching the given slug.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $event_id Event post ID.
+	 * @param string $slug     Custom page slug.
+	 * @return bool
+	 */
+	public static function has_custom_page( $event_id, $slug ) {
+		return null !== self::get_custom_page( $event_id, $slug );
 	}
 
 	/**

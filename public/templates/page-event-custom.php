@@ -21,35 +21,16 @@ if ( ! $event_id || 'wpfa_event' !== get_post_type( $event_id ) ) {
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 $page_slug = isset( $_GET['custom_page'] ) ? sanitize_title( wp_unslash( $_GET['custom_page'] ) ) : '';
 
-$nav_items  = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
-$page_title = '';
-$page_body  = '';
-$found_page = false;
+$page_data = class_exists( 'Wpfaevent_Main_Navigation_Helper' )
+	? Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_id, $page_slug )
+	: null;
 
-if ( is_array( $nav_items ) ) {
-	foreach ( $nav_items as $item ) {
-		if ( isset( $item['type'] ) && 'custom_page' === $item['type'] && isset( $item['slug'] ) && $item['slug'] === $page_slug ) {
-			$page_title = ! empty( $item['title'] ) ? (string) $item['title'] : (string) $item['text'];
-			$page_body  = ! empty( $item['content'] ) ? (string) $item['content'] : '';
-			$found_page = true;
-			break;
-		}
-
-		if ( isset( $item['type'] ) && 'dropdown' === $item['type'] && ! empty( $item['items'] ) && is_array( $item['items'] ) ) {
-			foreach ( $item['items'] as $sub ) {
-				if ( isset( $sub['type'] ) && 'custom_page' === $sub['type'] && isset( $sub['slug'] ) && $sub['slug'] === $page_slug ) {
-					$page_title = ! empty( $sub['title'] ) ? (string) $sub['title'] : (string) $sub['text'];
-					$page_body  = ! empty( $sub['content'] ) ? (string) $sub['content'] : '';
-					$found_page = true;
-					break 2;
-				}
-			}
-		}
-	}
-}
-
-if ( ! $found_page ) {
+if ( $page_data ) {
+	$page_title = ! empty( $page_data['title'] ) ? (string) $page_data['title'] : (string) $page_data['text'];
+	$page_body  = ! empty( $page_data['content'] ) ? (string) $page_data['content'] : '';
+} else {
 	$page_title = __( 'Information', 'wpfaevent' );
+	$page_body  = '';
 }
 
 $event_style_attr = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::build_event_style_attribute( $event_id ) : '';

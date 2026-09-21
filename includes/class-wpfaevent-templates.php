@@ -238,9 +238,13 @@ class Wpfaevent_Templates {
 
 		if ( is_singular( 'wpfa_event' ) ) {
 			if ( ! empty( $_GET['custom_page'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				$custom_candidate = WPFAEVENT_PATH . 'public/templates/page-event-custom.php';
-				if ( file_exists( $custom_candidate ) ) {
-					return $custom_candidate;
+				$custom_slug = sanitize_title( wp_unslash( $_GET['custom_page'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$event_id    = (int) get_queried_object_id();
+				if ( class_exists( 'Wpfaevent_Main_Navigation_Helper' ) && Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_id, $custom_slug ) ) {
+					$custom_candidate = WPFAEVENT_PATH . 'public/templates/page-event-custom.php';
+					if ( file_exists( $custom_candidate ) ) {
+						return $custom_candidate;
+					}
 				}
 			}
 
