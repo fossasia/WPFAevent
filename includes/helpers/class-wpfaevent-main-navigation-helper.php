@@ -46,7 +46,7 @@ class Wpfaevent_Main_Navigation_Helper {
 			$items = ( is_array( $opt ) && ! empty( $opt ) ) ? $opt : self::get_latest_custom_navigation();
 		}
 
-		self::render_custom_nav_items( $items ? $items : self::get_default_nav_items( $fallback_args ) );
+		self::render_custom_nav_items( $items ? $items : self::get_default_nav_items( $fallback_args ), $event_id );
 	}
 
 	/**
@@ -120,10 +120,11 @@ class Wpfaevent_Main_Navigation_Helper {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<int, array<string, mixed>> $items Custom navigation items.
+	 * @param array<int, array<string, mixed>> $items    Custom navigation items.
+	 * @param int                              $event_id Optional event ID for resolving relative custom page URLs.
 	 * @return void
 	 */
-	public static function render_custom_nav_items( $items ) {
+	public static function render_custom_nav_items( $items, $event_id = 0 ) {
 		$current_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 
 		foreach ( (array) $items as $item ) {
@@ -141,7 +142,14 @@ class Wpfaevent_Main_Navigation_Helper {
 				foreach ( $item['items'] as $sub ) {
 					if ( is_array( $sub ) && ! empty( $sub['text'] ) ) {
 						$sub_href = ! empty( $sub['href'] ) ? (string) $sub['href'] : '';
-						$active   = ( ! empty( $sub['is_active'] ) || self::is_url_active( $sub_href, $current_uri ) );
+						if ( $event_id > 0 && 0 === strpos( $sub_href, '?custom_page=' ) ) {
+							$event_permalink = get_permalink( $event_id );
+							if ( $event_permalink ) {
+								$slug     = ! empty( $sub['slug'] ) ? (string) $sub['slug'] : substr( $sub_href, strlen( '?custom_page=' ) );
+								$sub_href = add_query_arg( 'custom_page', $slug, $event_permalink );
+							}
+						}
+						$active = ( ! empty( $sub['is_active'] ) || self::is_url_active( $sub_href, $current_uri ) );
 						if ( $active ) {
 							$is_active = true;
 						}
@@ -172,7 +180,14 @@ class Wpfaevent_Main_Navigation_Helper {
 				</div>
 				<?php
 			} else {
-				$href      = ! empty( $item['href'] ) ? (string) $item['href'] : '';
+				$href = ! empty( $item['href'] ) ? (string) $item['href'] : '';
+				if ( $event_id > 0 && 0 === strpos( $href, '?custom_page=' ) ) {
+					$event_permalink = get_permalink( $event_id );
+					if ( $event_permalink ) {
+						$slug = ! empty( $item['slug'] ) ? (string) $item['slug'] : substr( $href, strlen( '?custom_page=' ) );
+						$href = add_query_arg( 'custom_page', $slug, $event_permalink );
+					}
+				}
 				$is_active = ( ! empty( $item['is_active'] ) || self::is_url_active( $href, $current_uri ) );
 				$active    = $is_active ? 'active' : '';
 				printf(

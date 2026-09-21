@@ -339,11 +339,10 @@ class Wpfaevent_Meta_Event {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param mixed $items    Raw navigation items.
-	 * @param int   $event_id Optional event post ID.
+	 * @param mixed $items Raw navigation items.
 	 * @return array<int, array<string, mixed>> Sanitized navigation items.
 	 */
-	public static function sanitize_custom_navigation( $items, $event_id = 0 ) {
+	public static function sanitize_custom_navigation( $items ) {
 		if ( is_string( $items ) ) {
 			$items = json_decode( $items, true );
 		}
@@ -351,7 +350,9 @@ class Wpfaevent_Meta_Event {
 			return array();
 		}
 
-		$clean = array();
+		$clean      = array();
+		$used_slugs = array();
+
 		foreach ( $items as $item ) {
 			if ( ! is_array( $item ) || empty( $item['text'] ) ) {
 				continue;
@@ -363,7 +364,7 @@ class Wpfaevent_Meta_Event {
 				$sub_items = array();
 				if ( ! empty( $item['items'] ) && is_array( $item['items'] ) ) {
 					foreach ( $item['items'] as $sub ) {
-						$clean_sub = self::sanitize_nav_single_item( $sub, $event_id );
+						$clean_sub = self::sanitize_nav_single_item( $sub, $used_slugs );
 						if ( $clean_sub ) {
 							$sub_items[] = $clean_sub;
 						}
@@ -375,7 +376,7 @@ class Wpfaevent_Meta_Event {
 					'items' => $sub_items,
 				);
 			} else {
-				$clean_item = self::sanitize_nav_single_item( $item, $event_id );
+				$clean_item = self::sanitize_nav_single_item( $item, $used_slugs );
 				if ( $clean_item ) {
 					$clean[] = $clean_item;
 				}
@@ -390,11 +391,11 @@ class Wpfaevent_Meta_Event {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string, mixed> $item     Raw item array.
-	 * @param int                  $event_id Optional event ID.
+	 * @param array<string, mixed> $item       Raw item array.
+	 * @param array<string>        $used_slugs Tracked custom page slugs for uniqueness.
 	 * @return array<string, mixed>|null Sanitized item array or null if invalid.
 	 */
-	private static function sanitize_nav_single_item( $item, $event_id = 0 ) {
+	private static function sanitize_nav_single_item( $item, &$used_slugs ) {
 		if ( ! is_array( $item ) || empty( $item['text'] ) ) {
 			return null;
 		}
@@ -403,15 +404,20 @@ class Wpfaevent_Meta_Event {
 		$type = isset( $item['type'] ) ? (string) $item['type'] : 'link';
 
 		if ( 'custom_page' === $type ) {
-			$title   = ! empty( $item['title'] ) ? sanitize_text_field( (string) $item['title'] ) : $text;
-			$content = ! empty( $item['content'] ) ? trim( wp_kses_post( (string) $item['content'] ) ) : '';
-			$slug    = ! empty( $item['slug'] ) ? sanitize_title( (string) $item['slug'] ) : sanitize_title( $title );
-			if ( '' === $slug ) {
-				$slug = 'custom-info';
+			$title     = ! empty( $item['title'] ) ? sanitize_text_field( (string) $item['title'] ) : $text;
+			$content   = ! empty( $item['content'] ) ? trim( wp_kses_post( (string) $item['content'] ) ) : '';
+			$base_slug = ! empty( $item['slug'] ) ? sanitize_title( (string) $item['slug'] ) : sanitize_title( $title );
+			if ( '' === $base_slug ) {
+				$base_slug = 'custom-info';
 			}
 
-			$base_url = ( $event_id > 0 ) ? get_permalink( $event_id ) : '';
-			$href     = $base_url ? add_query_arg( 'custom_page', $slug, $base_url ) : ( '?custom_page=' . $slug );
+			$slug   = $base_slug;
+			$suffix = 2;
+			while ( in_array( $slug, $used_slugs, true ) ) {
+				$slug = $base_slug . '-' . $suffix;
+				++$suffix;
+			}
+			$used_slugs[] = $slug;
 
 			return array(
 				'text'    => $text,
@@ -419,7 +425,7 @@ class Wpfaevent_Meta_Event {
 				'title'   => $title,
 				'slug'    => $slug,
 				'content' => $content,
-				'href'    => $href,
+				'href'    => '?custom_page=' . $slug,
 			);
 		}
 

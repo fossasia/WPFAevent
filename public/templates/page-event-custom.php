@@ -34,9 +34,11 @@ $event_style_attr = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Even
 $event_title      = get_the_title( $event_id );
 $event_url        = get_permalink( $event_id );
 
-// Convert markdown-style bullet lines (- item or * item) into <ul><li> if plain text was entered.
+// Convert markdown-style bullet lines (- item or * item) into <ul><li> only if plain text was entered.
 $formatted_content = $page_body;
-if ( '' !== $formatted_content && false === strpos( $formatted_content, '<ul' ) && false === strpos( $formatted_content, '<ol' ) ) {
+$is_plain_text     = ( '' !== $formatted_content && wp_strip_all_tags( $formatted_content ) === $formatted_content );
+
+if ( $is_plain_text ) {
 	$lines     = explode( "\n", str_replace( "\r\n", "\n", $formatted_content ) );
 	$in_list   = false;
 	$out_lines = array();

@@ -1436,7 +1436,7 @@ class Wpfaevent_Admin_Event_Metabox {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by Wpfaevent_Meta_Event::sanitize_custom_navigation().
 			$raw_nav   = wp_unslash( $_POST['wpfa_custom_nav_items'] );
 			$clean_nav = class_exists( 'Wpfaevent_Meta_Event' )
-				? Wpfaevent_Meta_Event::sanitize_custom_navigation( $raw_nav, $post_id )
+				? Wpfaevent_Meta_Event::sanitize_custom_navigation( $raw_nav )
 				: array();
 
 			if ( ! empty( $clean_nav ) ) {

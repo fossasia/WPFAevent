@@ -274,4 +274,42 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$this->assertSame( 'Nested Title', $current['title'] );
 		unset( $_GET['custom_page'] );
 	}
+
+	/**
+	 * Test that duplicate custom page titles or slugs get unique numeric suffixes.
+	 */
+	public function test_sanitize_custom_navigation_resolves_slug_collisions() {
+		$raw_items = array(
+			array(
+				'text'  => 'First Page',
+				'type'  => 'custom_page',
+				'title' => 'Fund Info',
+			),
+			array(
+				'text'  => 'Second Page',
+				'type'  => 'custom_page',
+				'title' => 'Fund Info',
+			),
+			array(
+				'text'  => 'Dropdown',
+				'type'  => 'dropdown',
+				'items' => array(
+					array(
+						'text'  => 'Third Page',
+						'type'  => 'custom_page',
+						'title' => 'Fund Info',
+					),
+				),
+			),
+		);
+
+		$sanitized = Wpfaevent_Meta_Event::sanitize_custom_navigation( $raw_items );
+
+		$this->assertSame( 'fund-info', $sanitized[0]['slug'] );
+		$this->assertSame( '?custom_page=fund-info', $sanitized[0]['href'] );
+		$this->assertSame( 'fund-info-2', $sanitized[1]['slug'] );
+		$this->assertSame( '?custom_page=fund-info-2', $sanitized[1]['href'] );
+		$this->assertSame( 'fund-info-3', $sanitized[2]['items'][0]['slug'] );
+		$this->assertSame( '?custom_page=fund-info-3', $sanitized[2]['items'][0]['href'] );
+	}
 }
