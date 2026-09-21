@@ -89,21 +89,28 @@ class Wpfaevent_Main_Navigation_Helper {
 		$past_url    = isset( $args['past_events_url'] ) ? (string) $args['past_events_url'] : apply_filters( 'wpfaevent_past_events_url', home_url( '/events/?filter=past' ) );
 		$coc_url     = isset( $args['coc_url'] ) ? (string) $args['coc_url'] : ( $coc_page_id ? get_permalink( $coc_page_id ) : home_url( '/code-of-conduct/' ) );
 
+		$is_events_active = ! empty( $args['is_events_active'] ) && ( 'active' === $args['is_events_active'] || true === $args['is_events_active'] );
+		$is_past_active   = ! empty( $args['is_past_events_active'] ) && ( 'active' === $args['is_past_events_active'] || true === $args['is_past_events_active'] );
+		$is_coc_active    = ! empty( $args['is_coc_active'] ) && ( 'active' === $args['is_coc_active'] || true === $args['is_coc_active'] );
+
 		return array(
 			array(
-				'text' => __( 'Upcoming Events', 'wpfaevent' ),
-				'type' => 'link',
-				'href' => $events_url,
+				'text'      => __( 'Upcoming Events', 'wpfaevent' ),
+				'type'      => 'link',
+				'href'      => $events_url,
+				'is_active' => $is_events_active,
 			),
 			array(
-				'text' => __( 'Past Events', 'wpfaevent' ),
-				'type' => 'link',
-				'href' => $past_url,
+				'text'      => __( 'Past Events', 'wpfaevent' ),
+				'type'      => 'link',
+				'href'      => $past_url,
+				'is_active' => $is_past_active,
 			),
 			array(
-				'text' => __( 'Code of Conduct', 'wpfaevent' ),
-				'type' => 'link',
-				'href' => $coc_url ? $coc_url : home_url( '/code-of-conduct/' ),
+				'text'      => __( 'Code of Conduct', 'wpfaevent' ),
+				'type'      => 'link',
+				'href'      => $coc_url ? $coc_url : home_url( '/code-of-conduct/' ),
+				'is_active' => $is_coc_active,
 			),
 		);
 	}
@@ -129,12 +136,12 @@ class Wpfaevent_Main_Navigation_Helper {
 
 			if ( 'dropdown' === $type && ! empty( $item['items'] ) && is_array( $item['items'] ) ) {
 				$sub_links = '';
-				$is_active = false;
+				$is_active = ! empty( $item['is_active'] );
 
 				foreach ( $item['items'] as $sub ) {
 					if ( is_array( $sub ) && ! empty( $sub['text'] ) ) {
 						$sub_href = ! empty( $sub['href'] ) ? (string) $sub['href'] : '';
-						$active   = self::is_url_active( $sub_href, $current_uri );
+						$active   = ( ! empty( $sub['is_active'] ) || self::is_url_active( $sub_href, $current_uri ) );
 						if ( $active ) {
 							$is_active = true;
 						}
@@ -165,8 +172,9 @@ class Wpfaevent_Main_Navigation_Helper {
 				</div>
 				<?php
 			} else {
-				$href   = ! empty( $item['href'] ) ? (string) $item['href'] : '';
-				$active = self::is_url_active( $href, $current_uri ) ? 'active' : '';
+				$href      = ! empty( $item['href'] ) ? (string) $item['href'] : '';
+				$is_active = ( ! empty( $item['is_active'] ) || self::is_url_active( $href, $current_uri ) );
+				$active    = $is_active ? 'active' : '';
 				printf(
 					'<a href="%s" class="%s">%s</a>',
 					esc_url( $href ),

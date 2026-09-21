@@ -862,7 +862,7 @@ class Wpfaevent_Admin_Event_Metabox {
 			?>
 		</template>
 		<template id="wpfaevent-nav-item-template">
-			<?php $this->render_nav_item_card( '__NIDX__', array(), $wp_pages ); ?>
+			<?php $this->render_nav_item_card( '${navIndex}', array(), $wp_pages ); ?>
 		</template>
 		<template id="wpfaevent-nav-subitem-template">
 			<?php $this->render_nav_subitem_row( '__PIDX__', '__SIDX__', array(), $wp_pages ); ?>
@@ -930,7 +930,7 @@ class Wpfaevent_Admin_Event_Metabox {
 				});
 				$('#wpfaevent-add-nav-item').on('click', function(e) {
 					e.preventDefault();
-					var tmpl = $('#wpfaevent-nav-item-template').html().replace(/__NIDX__/g, navIndex);
+					var tmpl = $('#wpfaevent-nav-item-template').html().replace(/\$\{navIndex\}/g, navIndex);
 					$('#wpfaevent-nav-items-container').append(tmpl);
 					navIndex++;
 				});

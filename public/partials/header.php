@@ -71,9 +71,12 @@ $coc_url         = $coc_page_id ? get_permalink( $coc_page_id ) : home_url( '/co
 				<?php
 				Wpfaevent_Main_Navigation_Helper::render_navigation(
 					array(
-						'events_url'      => $events_url,
-						'past_events_url' => $past_events_url,
-						'coc_url'         => $coc_url,
+						'events_url'            => $events_url,
+						'past_events_url'       => $past_events_url,
+						'coc_url'               => $coc_url,
+						'is_events_active'      => $is_events_active,
+						'is_past_events_active' => $is_past_events_active,
+						'is_coc_active'         => $is_coc_active,
 					),
 					isset( $event_id ) ? (int) $event_id : 0
 				);
