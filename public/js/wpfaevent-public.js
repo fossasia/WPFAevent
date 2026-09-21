@@ -746,5 +746,20 @@
 				},
 			});
 		});
+
+		// Header navigation dropdown click/touch support
+		$('.wpfaevent .nav-dropdown-toggle').on('click', function (e) {
+			e.preventDefault();
+			const $dropdown = $(this).closest('.nav-dropdown');
+			const isOpen = $dropdown.hasClass('is-open');
+			$('.wpfaevent .nav-dropdown').removeClass('is-open');
+			$dropdown.toggleClass('is-open', !isOpen);
+		});
+
+		$(document).on('click', function (e) {
+			if (!$(e.target).closest('.wpfaevent .nav-dropdown').length) {
+				$('.wpfaevent .nav-dropdown').removeClass('is-open');
+			}
+		});
 	});
 })(jQuery);

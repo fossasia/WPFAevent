@@ -298,6 +298,19 @@ class Wpfaevent_Meta_Event {
 				'description'       => __( 'Related speaker post IDs', 'wpfaevent' ),
 			)
 		);
+
+		// Event custom navigation items and dropdowns.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_custom_navigation',
+			array(
+				'type'              => 'array',
+				'single'            => true,
+				'show_in_rest'      => false,
+				'sanitize_callback' => array( __CLASS__, 'sanitize_custom_navigation' ),
+				'description'       => __( 'Custom navigation items and dropdowns for the event', 'wpfaevent' ),
+			)
+		);
 	}
 
 	/**
@@ -319,6 +332,59 @@ class Wpfaevent_Meta_Event {
 		$speaker_ids = array_filter( $speaker_ids );
 
 		return array_values( array_unique( $speaker_ids ) );
+	}
+
+	/**
+	 * Sanitizes custom event navigation items.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $items Raw navigation items.
+	 * @return array<int, array<string, mixed>> Sanitized navigation items.
+	 */
+	public static function sanitize_custom_navigation( $items ) {
+		if ( is_string( $items ) ) {
+			$items = json_decode( $items, true );
+		}
+		if ( ! is_array( $items ) ) {
+			return array();
+		}
+
+		$clean = array();
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) || empty( $item['text'] ) ) {
+				continue;
+			}
+			$text = sanitize_text_field( (string) $item['text'] );
+			$type = isset( $item['type'] ) && 'dropdown' === $item['type'] ? 'dropdown' : 'link';
+
+			if ( 'dropdown' === $type ) {
+				$sub_items = array();
+				if ( ! empty( $item['items'] ) && is_array( $item['items'] ) ) {
+					foreach ( $item['items'] as $sub ) {
+						if ( is_array( $sub ) && ! empty( $sub['text'] ) ) {
+							$sub_items[] = array(
+								'text' => sanitize_text_field( (string) $sub['text'] ),
+								'href' => ! empty( $sub['href'] ) ? esc_url_raw( trim( (string) $sub['href'] ) ) : '',
+							);
+						}
+					}
+				}
+				$clean[] = array(
+					'text'  => $text,
+					'type'  => 'dropdown',
+					'items' => $sub_items,
+				);
+			} else {
+				$clean[] = array(
+					'text' => $text,
+					'type' => 'link',
+					'href' => ! empty( $item['href'] ) ? esc_url_raw( trim( (string) $item['href'] ) ) : '',
+				);
+			}
+		}
+
+		return $clean;
 	}
 
 	/**

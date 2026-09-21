@@ -94,6 +94,16 @@ class Wpfaevent_Admin_Event_Metabox {
 			'default'
 		);
 
+		// Event header navigation meta box.
+		add_meta_box(
+			'wpfa_event_navigation_box',
+			__( 'Event Header Navigation', 'wpfaevent' ),
+			array( $this, 'render_event_navigation_meta_box' ),
+			'wpfa_event',
+			'normal',
+			'default'
+		);
+
 		// Remove the default Custom Fields meta box to avoid UI clutter.
 		// since we have enabled 'custom-fields' support for REST API visibility.
 		remove_meta_box( 'postcustom', 'wpfa_event', 'normal' );
@@ -805,6 +815,155 @@ class Wpfaevent_Admin_Event_Metabox {
 	}
 
 	/**
+	 * Render Event Header Navigation meta box.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Post $post The post object.
+	 * @return void
+	 */
+	public function render_event_navigation_meta_box( $post ) {
+		$saved_items = get_post_meta( $post->ID, 'wpfa_event_custom_navigation', true );
+		if ( ( ! is_array( $saved_items ) || empty( $saved_items ) ) && class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ) {
+			$saved_items = Wpfaevent_Main_Navigation_Helper::get_latest_custom_navigation();
+		}
+		$items = is_array( $saved_items ) && ! empty( $saved_items )
+			? $saved_items
+			: ( class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_nav_items() : array() );
+		?>
+		<div class="wpfaevent-meta-cards-container" id="wpfaevent-nav-items-container">
+			<?php
+			foreach ( $items as $i => $item ) {
+				$this->render_nav_item_card( $i, $item );
+			}
+			?>
+		</div>
+		<p style="margin-top: 10px;">
+			<button type="button" class="button button-primary" id="wpfaevent-add-nav-item">
+				<?php esc_html_e( '+ Add Navigation Item', 'wpfaevent' ); ?>
+			</button>
+			<button type="button" class="button button-secondary" id="wpfaevent-reset-nav-default" style="margin-left: 8px;">
+				<?php esc_html_e( 'Reset to Default', 'wpfaevent' ); ?>
+			</button>
+		</p>
+		<template id="wpfaevent-nav-default-template">
+			<?php
+			$default_cards = class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_nav_items() : array();
+			foreach ( $default_cards as $di => $ditem ) {
+				$this->render_nav_item_card( $di, $ditem );
+			}
+			?>
+		</template>
+		<script>
+			jQuery(document).ready(function($) {
+				var navIndex = $('#wpfaevent-nav-items-container .wpfaevent-meta-card').length;
+				$('#wpfaevent-reset-nav-default').on('click', function(e) {
+					e.preventDefault();
+					if (!confirm('<?php echo esc_js( __( 'Reset navigation to default items?', 'wpfaevent' ) ); ?>')) {
+						return;
+					}
+					var defaultHtml = $('#wpfaevent-nav-default-template').html();
+					$('#wpfaevent-nav-items-container').html(defaultHtml);
+					navIndex = $('#wpfaevent-nav-items-container .wpfaevent-meta-card').length;
+				});
+				$('#wpfaevent-nav-items-container').on('change', '.wpfaevent-nav-type-select', function() {
+					var isDrop = $(this).val() === 'dropdown';
+					var $card = $(this).closest('.wpfaevent-meta-card');
+					$card.find('.wpfaevent-nav-link-row').toggle(!isDrop);
+					$card.find('.wpfaevent-nav-dropdown-row').toggle(isDrop);
+				});
+				$('#wpfaevent-nav-items-container').on('click', '.wpfaevent-remove-card-btn', function(e) {
+					e.preventDefault();
+					$(this).closest('.wpfaevent-meta-card').remove();
+				});
+				$('#wpfaevent-nav-items-container').on('click', '.wpfaevent-remove-subitem-btn', function(e) {
+					e.preventDefault();
+					$(this).closest('.wpfaevent-nav-subitem-row').remove();
+				});
+				$('#wpfaevent-nav-items-container').on('click', '.wpfaevent-add-subitem-btn', function(e) {
+					e.preventDefault();
+					var $card = $(this).closest('.wpfaevent-meta-card');
+					var idx = $card.data('index');
+					var subIdx = $card.find('.wpfaevent-nav-subitem-row').length;
+					$card.find('.wpfaevent-nav-subitems-list').append(
+						'<div class="wpfaevent-nav-subitem-row" style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">' +
+						'<input type="text" name="wpfa_custom_nav_items[' + idx + '][items][' + subIdx + '][text]" placeholder="<?php echo esc_js( __( 'Sub-Item Label', 'wpfaevent' ) ); ?>" required style="flex:1;">' +
+						'<input type="text" name="wpfa_custom_nav_items[' + idx + '][items][' + subIdx + '][href]" placeholder="<?php echo esc_js( __( 'Sub-Item URL', 'wpfaevent' ) ); ?>" required style="flex:1;">' +
+						'<button type="button" class="button button-link-delete wpfaevent-remove-subitem-btn" style="color:#a00;text-decoration:none;font-size:18px;line-height:1;">&times;</button></div>'
+					);
+				});
+				$('#wpfaevent-add-nav-item').on('click', function(e) {
+					e.preventDefault();
+					var html = '<div class="wpfaevent-meta-card" data-index="' + navIndex + '">' +
+						'<a href="#" class="wpfaevent-remove-card-btn"><?php echo esc_js( __( 'Remove', 'wpfaevent' ) ); ?></a>' +
+						'<div class="wpfaevent-meta-card-grid">' +
+						'<div class="wpfaevent-meta-card-field"><label><?php echo esc_js( __( 'Item Label', 'wpfaevent' ) ); ?></label><input type="text" name="wpfa_custom_nav_items[' + navIndex + '][text]" required></div>' +
+						'<div class="wpfaevent-meta-card-field"><label><?php echo esc_js( __( 'Item Type', 'wpfaevent' ) ); ?></label><select name="wpfa_custom_nav_items[' + navIndex + '][type]" class="wpfaevent-nav-type-select"><option value="link"><?php echo esc_js( __( 'Direct Link', 'wpfaevent' ) ); ?></option><option value="dropdown"><?php echo esc_js( __( 'Dropdown Submenu', 'wpfaevent' ) ); ?></option></select></div>' +
+						'<div class="wpfaevent-meta-card-field wpfaevent-nav-link-row span-2"><label><?php echo esc_js( __( 'Link URL', 'wpfaevent' ) ); ?></label><input type="text" name="wpfa_custom_nav_items[' + navIndex + '][href]"></div>' +
+						'<div class="wpfaevent-meta-card-field wpfaevent-nav-dropdown-row span-2" style="display:none;"><label><strong><?php echo esc_js( __( 'Dropdown Sub-Items', 'wpfaevent' ) ); ?></strong></label><div class="wpfaevent-nav-subitems-list"></div><button type="button" class="button button-secondary wpfaevent-add-subitem-btn" style="margin-top:8px;"><?php echo esc_js( __( '+ Add Sub-Item', 'wpfaevent' ) ); ?></button></div>' +
+						'</div></div>';
+					$('#wpfaevent-nav-items-container').append(html);
+					navIndex++;
+				});
+			});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Render a single custom nav item card for the event edit screen.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int|string           $i    Item index.
+	 * @param array<string, mixed> $item Item data.
+	 * @return void
+	 */
+	private function render_nav_item_card( $i, $item ) {
+		$text      = isset( $item['text'] ) ? (string) $item['text'] : '';
+		$type      = isset( $item['type'] ) && 'dropdown' === $item['type'] ? 'dropdown' : 'link';
+		$href      = isset( $item['href'] ) ? (string) $item['href'] : '';
+		$sub_items = isset( $item['items'] ) && is_array( $item['items'] ) ? $item['items'] : array();
+		?>
+		<div class="wpfaevent-meta-card" data-index="<?php echo esc_attr( (string) $i ); ?>">
+			<a href="#" class="wpfaevent-remove-card-btn"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a>
+			<div class="wpfaevent-meta-card-grid">
+				<div class="wpfaevent-meta-card-field">
+					<label><?php esc_html_e( 'Item Label', 'wpfaevent' ); ?></label>
+					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][text]" value="<?php echo esc_attr( $text ); ?>" required>
+				</div>
+				<div class="wpfaevent-meta-card-field">
+					<label><?php esc_html_e( 'Item Type', 'wpfaevent' ); ?></label>
+					<select name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][type]" class="wpfaevent-nav-type-select">
+						<option value="link" <?php selected( $type, 'link' ); ?>><?php esc_html_e( 'Direct Link', 'wpfaevent' ); ?></option>
+						<option value="dropdown" <?php selected( $type, 'dropdown' ); ?>><?php esc_html_e( 'Dropdown Submenu', 'wpfaevent' ); ?></option>
+					</select>
+				</div>
+				<div class="wpfaevent-meta-card-field wpfaevent-nav-link-row span-2" style="<?php echo 'dropdown' === $type ? 'display: none;' : ''; ?>">
+					<label><?php esc_html_e( 'Link URL', 'wpfaevent' ); ?></label>
+					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][href]" value="<?php echo esc_attr( $href ); ?>">
+				</div>
+				<div class="wpfaevent-meta-card-field wpfaevent-nav-dropdown-row span-2" style="<?php echo 'dropdown' === $type ? '' : 'display: none;'; ?>">
+					<label><strong><?php esc_html_e( 'Dropdown Sub-Items', 'wpfaevent' ); ?></strong></label>
+					<div class="wpfaevent-nav-subitems-list">
+						<?php foreach ( $sub_items as $si => $sub ) : ?>
+							<div class="wpfaevent-nav-subitem-row" style="display: flex; gap: 8px; margin-bottom: 6px; align-items: center;">
+								<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][items][<?php echo esc_attr( (string) $si ); ?>][text]" value="<?php echo esc_attr( isset( $sub['text'] ) ? (string) $sub['text'] : '' ); ?>" placeholder="<?php esc_attr_e( 'Sub-Item Label', 'wpfaevent' ); ?>" required style="flex: 1;">
+								<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][items][<?php echo esc_attr( (string) $si ); ?>][href]" value="<?php echo esc_attr( isset( $sub['href'] ) ? (string) $sub['href'] : '' ); ?>" placeholder="<?php esc_attr_e( 'Sub-Item URL', 'wpfaevent' ); ?>" required style="flex: 1;">
+								<button type="button" class="button button-link-delete wpfaevent-remove-subitem-btn" style="color: #a00; text-decoration: none; font-size: 18px; padding: 0 4px; line-height: 1;">&times;</button>
+							</div>
+						<?php endforeach; ?>
+					</div>
+					<button type="button" class="button button-secondary wpfaevent-add-subitem-btn" style="margin-top: 8px;">
+						<?php esc_html_e( '+ Add Sub-Item', 'wpfaevent' ); ?>
+					</button>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Save Event meta box data.
 	 *
 	 * @since 1.0.0
@@ -1165,6 +1324,24 @@ class Wpfaevent_Admin_Event_Metabox {
 				'exhibitors-' . $post_id . '.json',
 				array()
 			);
+		}
+
+		// Handle custom event navigation saving.
+		if ( isset( $_POST['wpfa_custom_nav_items'] ) && is_array( $_POST['wpfa_custom_nav_items'] ) ) {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by Wpfaevent_Meta_Event::sanitize_custom_navigation().
+			$raw_nav   = wp_unslash( $_POST['wpfa_custom_nav_items'] );
+			$clean_nav = class_exists( 'Wpfaevent_Meta_Event' )
+				? Wpfaevent_Meta_Event::sanitize_custom_navigation( $raw_nav )
+				: array();
+
+			if ( ! empty( $clean_nav ) ) {
+				update_post_meta( $post_id, 'wpfa_event_custom_navigation', $clean_nav );
+				update_option( 'wpfaevent_header_navigation', $clean_nav );
+			} else {
+				delete_post_meta( $post_id, 'wpfa_event_custom_navigation' );
+			}
+		} else {
+			delete_post_meta( $post_id, 'wpfa_event_custom_navigation' );
 		}
 	}
 
