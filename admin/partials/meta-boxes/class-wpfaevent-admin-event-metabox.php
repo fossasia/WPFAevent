@@ -830,11 +830,18 @@ class Wpfaevent_Admin_Event_Metabox {
 		$items = is_array( $saved_items ) && ! empty( $saved_items )
 			? $saved_items
 			: ( class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_nav_items() : array() );
+
+		$wp_pages = get_pages(
+			array(
+				'post_status' => 'publish',
+				'sort_column' => 'post_title',
+			)
+		);
 		?>
 		<div class="wpfaevent-meta-cards-container" id="wpfaevent-nav-items-container">
 			<?php
 			foreach ( $items as $i => $item ) {
-				$this->render_nav_item_card( $i, $item );
+				$this->render_nav_item_card( $i, $item, $wp_pages );
 			}
 			?>
 		</div>
@@ -850,9 +857,15 @@ class Wpfaevent_Admin_Event_Metabox {
 			<?php
 			$default_cards = class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_nav_items() : array();
 			foreach ( $default_cards as $di => $ditem ) {
-				$this->render_nav_item_card( $di, $ditem );
+				$this->render_nav_item_card( $di, $ditem, $wp_pages );
 			}
 			?>
+		</template>
+		<template id="wpfaevent-nav-item-template">
+			<?php $this->render_nav_item_card( '__NIDX__', array(), $wp_pages ); ?>
+		</template>
+		<template id="wpfaevent-nav-subitem-template">
+			<?php $this->render_nav_subitem_row( '__PIDX__', '__SIDX__', array(), $wp_pages ); ?>
 		</template>
 		<script>
 			jQuery(document).ready(function($) {
@@ -867,10 +880,35 @@ class Wpfaevent_Admin_Event_Metabox {
 					navIndex = $('#wpfaevent-nav-items-container .wpfaevent-meta-card').length;
 				});
 				$('#wpfaevent-nav-items-container').on('change', '.wpfaevent-nav-type-select', function() {
-					var isDrop = $(this).val() === 'dropdown';
+					var val = $(this).val();
 					var $card = $(this).closest('.wpfaevent-meta-card');
-					$card.find('.wpfaevent-nav-link-row').toggle(!isDrop);
-					$card.find('.wpfaevent-nav-dropdown-row').toggle(isDrop);
+					$card.find('.wpfaevent-nav-link-row').toggle(val === 'link');
+					$card.find('.wpfaevent-nav-page-row').toggle(val === 'page');
+					$card.find('.wpfaevent-nav-custom-page-row').toggle(val === 'custom_page');
+					$card.find('.wpfaevent-nav-dropdown-row').toggle(val === 'dropdown');
+				});
+				$('#wpfaevent-nav-items-container').on('change', '.wpfaevent-subitem-type-select', function() {
+					var val = $(this).val();
+					var $block = $(this).closest('.wpfaevent-nav-subitem-block');
+					$block.find('.wpfaevent-sub-link-row').toggle(val === 'link');
+					$block.find('.wpfaevent-sub-page-row').toggle(val === 'page');
+					$block.find('.wpfaevent-sub-custom-row').toggle(val === 'custom_page');
+				});
+				$('#wpfaevent-nav-items-container').on('change', '.wpfaevent-nav-page-select', function() {
+					var $opt = $(this).find('option:selected');
+					var $card = $(this).closest('.wpfaevent-meta-card');
+					var $txt = $card.find('input[name*="[text]"]').first();
+					if (!$txt.val() && $opt.data('title')) {
+						$txt.val($opt.data('title'));
+					}
+				});
+				$('#wpfaevent-nav-items-container').on('change', '.wpfaevent-sub-page-select', function() {
+					var $opt = $(this).find('option:selected');
+					var $block = $(this).closest('.wpfaevent-nav-subitem-block');
+					var $txt = $block.find('input[name*="[text]"]').first();
+					if (!$txt.val() && $opt.data('title')) {
+						$txt.val($opt.data('title'));
+					}
 				});
 				$('#wpfaevent-nav-items-container').on('click', '.wpfaevent-remove-card-btn', function(e) {
 					e.preventDefault();
@@ -878,31 +916,22 @@ class Wpfaevent_Admin_Event_Metabox {
 				});
 				$('#wpfaevent-nav-items-container').on('click', '.wpfaevent-remove-subitem-btn', function(e) {
 					e.preventDefault();
-					$(this).closest('.wpfaevent-nav-subitem-row').remove();
+					$(this).closest('.wpfaevent-nav-subitem-block').remove();
 				});
 				$('#wpfaevent-nav-items-container').on('click', '.wpfaevent-add-subitem-btn', function(e) {
 					e.preventDefault();
 					var $card = $(this).closest('.wpfaevent-meta-card');
-					var idx = $card.data('index');
-					var subIdx = $card.find('.wpfaevent-nav-subitem-row').length;
-					$card.find('.wpfaevent-nav-subitems-list').append(
-						'<div class="wpfaevent-nav-subitem-row" style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">' +
-						'<input type="text" name="wpfa_custom_nav_items[' + idx + '][items][' + subIdx + '][text]" placeholder="<?php echo esc_js( __( 'Sub-Item Label', 'wpfaevent' ) ); ?>" required style="flex:1;">' +
-						'<input type="text" name="wpfa_custom_nav_items[' + idx + '][items][' + subIdx + '][href]" placeholder="<?php echo esc_js( __( 'Sub-Item URL', 'wpfaevent' ) ); ?>" required style="flex:1;">' +
-						'<button type="button" class="button button-link-delete wpfaevent-remove-subitem-btn" style="color:#a00;text-decoration:none;font-size:18px;line-height:1;">&times;</button></div>'
-					);
+					var pIdx = $card.data('index');
+					var sIdx = $card.find('.wpfaevent-nav-subitem-block').length;
+					var tmpl = $('#wpfaevent-nav-subitem-template').html()
+						.replace(/__PIDX__/g, pIdx)
+						.replace(/__SIDX__/g, sIdx);
+					$card.find('.wpfaevent-nav-subitems-list').append(tmpl);
 				});
 				$('#wpfaevent-add-nav-item').on('click', function(e) {
 					e.preventDefault();
-					var html = '<div class="wpfaevent-meta-card" data-index="' + navIndex + '">' +
-						'<a href="#" class="wpfaevent-remove-card-btn"><?php echo esc_js( __( 'Remove', 'wpfaevent' ) ); ?></a>' +
-						'<div class="wpfaevent-meta-card-grid">' +
-						'<div class="wpfaevent-meta-card-field"><label><?php echo esc_js( __( 'Item Label', 'wpfaevent' ) ); ?></label><input type="text" name="wpfa_custom_nav_items[' + navIndex + '][text]" required></div>' +
-						'<div class="wpfaevent-meta-card-field"><label><?php echo esc_js( __( 'Item Type', 'wpfaevent' ) ); ?></label><select name="wpfa_custom_nav_items[' + navIndex + '][type]" class="wpfaevent-nav-type-select"><option value="link"><?php echo esc_js( __( 'Direct Link', 'wpfaevent' ) ); ?></option><option value="dropdown"><?php echo esc_js( __( 'Dropdown Submenu', 'wpfaevent' ) ); ?></option></select></div>' +
-						'<div class="wpfaevent-meta-card-field wpfaevent-nav-link-row span-2"><label><?php echo esc_js( __( 'Link URL', 'wpfaevent' ) ); ?></label><input type="text" name="wpfa_custom_nav_items[' + navIndex + '][href]"></div>' +
-						'<div class="wpfaevent-meta-card-field wpfaevent-nav-dropdown-row span-2" style="display:none;"><label><strong><?php echo esc_js( __( 'Dropdown Sub-Items', 'wpfaevent' ) ); ?></strong></label><div class="wpfaevent-nav-subitems-list"></div><button type="button" class="button button-secondary wpfaevent-add-subitem-btn" style="margin-top:8px;"><?php echo esc_js( __( '+ Add Sub-Item', 'wpfaevent' ) ); ?></button></div>' +
-						'</div></div>';
-					$('#wpfaevent-nav-items-container').append(html);
+					var tmpl = $('#wpfaevent-nav-item-template').html().replace(/__NIDX__/g, navIndex);
+					$('#wpfaevent-nav-items-container').append(tmpl);
 					navIndex++;
 				});
 			});
@@ -915,49 +944,121 @@ class Wpfaevent_Admin_Event_Metabox {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int|string           $i    Item index.
-	 * @param array<string, mixed> $item Item data.
+	 * @param int|string           $i        Item index.
+	 * @param array<string, mixed> $item     Item data.
+	 * @param array<WP_Post>       $wp_pages Published pages.
 	 * @return void
 	 */
-	private function render_nav_item_card( $i, $item ) {
+	private function render_nav_item_card( $i, $item, $wp_pages = array() ) {
 		$text      = isset( $item['text'] ) ? (string) $item['text'] : '';
-		$type      = isset( $item['type'] ) && 'dropdown' === $item['type'] ? 'dropdown' : 'link';
+		$type      = isset( $item['type'] ) ? (string) $item['type'] : 'link';
 		$href      = isset( $item['href'] ) ? (string) $item['href'] : '';
+		$page_id   = isset( $item['page_id'] ) ? absint( $item['page_id'] ) : 0;
+		$title     = isset( $item['title'] ) ? (string) $item['title'] : '';
+		$content   = isset( $item['content'] ) ? (string) $item['content'] : '';
 		$sub_items = isset( $item['items'] ) && is_array( $item['items'] ) ? $item['items'] : array();
 		?>
 		<div class="wpfaevent-meta-card" data-index="<?php echo esc_attr( (string) $i ); ?>">
 			<a href="#" class="wpfaevent-remove-card-btn"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a>
 			<div class="wpfaevent-meta-card-grid">
 				<div class="wpfaevent-meta-card-field">
-					<label><?php esc_html_e( 'Item Label', 'wpfaevent' ); ?></label>
-					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][text]" value="<?php echo esc_attr( $text ); ?>" required>
+					<label><?php esc_html_e( 'Menu Label', 'wpfaevent' ); ?></label>
+					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][text]" value="<?php echo esc_attr( $text ); ?>" required placeholder="<?php esc_attr_e( 'e.g. Fund Info, About', 'wpfaevent' ); ?>">
 				</div>
 				<div class="wpfaevent-meta-card-field">
 					<label><?php esc_html_e( 'Item Type', 'wpfaevent' ); ?></label>
 					<select name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][type]" class="wpfaevent-nav-type-select">
 						<option value="link" <?php selected( $type, 'link' ); ?>><?php esc_html_e( 'Direct Link', 'wpfaevent' ); ?></option>
+						<option value="page" <?php selected( $type, 'page' ); ?>><?php esc_html_e( 'Existing Page', 'wpfaevent' ); ?></option>
+						<option value="custom_page" <?php selected( $type, 'custom_page' ); ?>><?php esc_html_e( 'Custom Page', 'wpfaevent' ); ?></option>
 						<option value="dropdown" <?php selected( $type, 'dropdown' ); ?>><?php esc_html_e( 'Dropdown Submenu', 'wpfaevent' ); ?></option>
 					</select>
 				</div>
-				<div class="wpfaevent-meta-card-field wpfaevent-nav-link-row span-2" style="<?php echo 'dropdown' === $type ? 'display: none;' : ''; ?>">
+				<div class="wpfaevent-meta-card-field wpfaevent-nav-link-row span-2" style="<?php echo 'link' === $type ? '' : 'display: none;'; ?>">
 					<label><?php esc_html_e( 'Link URL', 'wpfaevent' ); ?></label>
-					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][href]" value="<?php echo esc_attr( $href ); ?>">
+					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][href]" value="<?php echo esc_attr( $href ); ?>" placeholder="<?php esc_attr_e( 'https://... or /events/ or #about', 'wpfaevent' ); ?>">
+				</div>
+				<div class="wpfaevent-meta-card-field wpfaevent-nav-page-row span-2" style="<?php echo 'page' === $type ? '' : 'display: none;'; ?>">
+					<label><?php esc_html_e( 'Select Existing Page', 'wpfaevent' ); ?></label>
+					<select name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][page_id]" class="wpfaevent-nav-page-select" style="width: 100%;">
+						<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
+						<?php foreach ( $wp_pages as $p ) : ?>
+							<option value="<?php echo absint( $p->ID ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>" <?php selected( $page_id, $p->ID ); ?>>
+								<?php echo esc_html( $p->post_title ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<div class="wpfaevent-meta-card-field wpfaevent-nav-custom-page-row span-2" style="<?php echo 'custom_page' === $type ? '' : 'display: none;'; ?>">
+					<label><?php esc_html_e( 'Page Heading', 'wpfaevent' ); ?></label>
+					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>">
+					<label style="margin-top: 8px;"><?php esc_html_e( 'Page Content & Bullets', 'wpfaevent' ); ?></label>
+					<textarea name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][content]" rows="4" style="width: 100%;" placeholder="<?php esc_attr_e( "Enter page details, paragraphs, or bullet points:\n- Travel grant details\n- Application requirements\n- Deadline: Oct 30", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
 				</div>
 				<div class="wpfaevent-meta-card-field wpfaevent-nav-dropdown-row span-2" style="<?php echo 'dropdown' === $type ? '' : 'display: none;'; ?>">
 					<label><strong><?php esc_html_e( 'Dropdown Sub-Items', 'wpfaevent' ); ?></strong></label>
 					<div class="wpfaevent-nav-subitems-list">
-						<?php foreach ( $sub_items as $si => $sub ) : ?>
-							<div class="wpfaevent-nav-subitem-row" style="display: flex; gap: 8px; margin-bottom: 6px; align-items: center;">
-								<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][items][<?php echo esc_attr( (string) $si ); ?>][text]" value="<?php echo esc_attr( isset( $sub['text'] ) ? (string) $sub['text'] : '' ); ?>" placeholder="<?php esc_attr_e( 'Sub-Item Label', 'wpfaevent' ); ?>" required style="flex: 1;">
-								<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][items][<?php echo esc_attr( (string) $si ); ?>][href]" value="<?php echo esc_attr( isset( $sub['href'] ) ? (string) $sub['href'] : '' ); ?>" placeholder="<?php esc_attr_e( 'Sub-Item URL', 'wpfaevent' ); ?>" required style="flex: 1;">
-								<button type="button" class="button button-link-delete wpfaevent-remove-subitem-btn" style="color: #a00; text-decoration: none; font-size: 18px; padding: 0 4px; line-height: 1;">&times;</button>
-							</div>
-						<?php endforeach; ?>
+						<?php
+						foreach ( $sub_items as $si => $sub ) {
+							$this->render_nav_subitem_row( $i, $si, $sub, $wp_pages );
+						}
+						?>
 					</div>
 					<button type="button" class="button button-secondary wpfaevent-add-subitem-btn" style="margin-top: 8px;">
 						<?php esc_html_e( '+ Add Sub-Item', 'wpfaevent' ); ?>
 					</button>
 				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render a single custom nav sub-item row.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int|string           $i        Parent item index.
+	 * @param int|string           $si       Sub-item index.
+	 * @param array<string, mixed> $sub      Sub-item data.
+	 * @param array<WP_Post>       $wp_pages Published pages.
+	 * @return void
+	 */
+	private function render_nav_subitem_row( $i, $si, $sub, $wp_pages = array() ) {
+		$text    = isset( $sub['text'] ) ? (string) $sub['text'] : '';
+		$type    = isset( $sub['type'] ) ? (string) $sub['type'] : 'link';
+		$href    = isset( $sub['href'] ) ? (string) $sub['href'] : '';
+		$page_id = isset( $sub['page_id'] ) ? absint( $sub['page_id'] ) : 0;
+		$title   = isset( $sub['title'] ) ? (string) $sub['title'] : '';
+		$content = isset( $sub['content'] ) ? (string) $sub['content'] : '';
+		$prefix  = 'wpfa_custom_nav_items[' . esc_attr( (string) $i ) . '][items][' . esc_attr( (string) $si ) . ']';
+		?>
+		<div class="wpfaevent-nav-subitem-block" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px;">
+			<div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
+				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[text]" value="<?php echo esc_attr( $text ); ?>" placeholder="<?php esc_attr_e( 'Sub-Item Label (e.g. Fund Info)', 'wpfaevent' ); ?>" required style="flex: 2;">
+				<select name="<?php echo esc_attr( $prefix ); ?>[type]" class="wpfaevent-subitem-type-select" style="flex: 1;">
+					<option value="link" <?php selected( $type, 'link' ); ?>><?php esc_html_e( 'Direct Link', 'wpfaevent' ); ?></option>
+					<option value="page" <?php selected( $type, 'page' ); ?>><?php esc_html_e( 'Existing Page', 'wpfaevent' ); ?></option>
+					<option value="custom_page" <?php selected( $type, 'custom_page' ); ?>><?php esc_html_e( 'Custom Page', 'wpfaevent' ); ?></option>
+				</select>
+				<button type="button" class="button button-link-delete wpfaevent-remove-subitem-btn" style="color: #a00; font-size: 18px; line-height: 1; padding: 0 4px;" title="<?php esc_attr_e( 'Remove Sub-Item', 'wpfaevent' ); ?>">&times;</button>
+			</div>
+			<div class="wpfaevent-sub-field wpfaevent-sub-link-row" style="<?php echo 'link' === $type ? '' : 'display: none;'; ?>">
+				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[href]" value="<?php echo esc_attr( $href ); ?>" placeholder="<?php esc_attr_e( 'Sub-Item URL (e.g. /events/ or https://...)', 'wpfaevent' ); ?>" style="width: 100%;">
+			</div>
+			<div class="wpfaevent-sub-field wpfaevent-sub-page-row" style="<?php echo 'page' === $type ? '' : 'display: none;'; ?>">
+				<select name="<?php echo esc_attr( $prefix ); ?>[page_id]" class="wpfaevent-sub-page-select" style="width: 100%;">
+					<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
+					<?php foreach ( $wp_pages as $p ) : ?>
+						<option value="<?php echo absint( $p->ID ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>" <?php selected( $page_id, $p->ID ); ?>>
+							<?php echo esc_html( $p->post_title ); ?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+			</div>
+			<div class="wpfaevent-sub-field wpfaevent-sub-custom-row" style="<?php echo 'custom_page' === $type ? '' : 'display: none;'; ?>">
+				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>" style="width: 100%; margin-bottom: 6px;">
+				<textarea name="<?php echo esc_attr( $prefix ); ?>[content]" rows="3" placeholder="<?php esc_attr_e( "Page details, text, or bullet points:\n- Travel grant details\n- Application requirements", 'wpfaevent' ); ?>" style="width: 100%;"><?php echo esc_textarea( $content ); ?></textarea>
 			</div>
 		</div>
 		<?php
@@ -1331,7 +1432,7 @@ class Wpfaevent_Admin_Event_Metabox {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by Wpfaevent_Meta_Event::sanitize_custom_navigation().
 			$raw_nav   = wp_unslash( $_POST['wpfa_custom_nav_items'] );
 			$clean_nav = class_exists( 'Wpfaevent_Meta_Event' )
-				? Wpfaevent_Meta_Event::sanitize_custom_navigation( $raw_nav )
+				? Wpfaevent_Meta_Event::sanitize_custom_navigation( $raw_nav, $post_id )
 				: array();
 
 			if ( ! empty( $clean_nav ) ) {

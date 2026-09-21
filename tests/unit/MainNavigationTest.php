@@ -59,6 +59,17 @@ class MainNavigationTest extends WP_UnitTestCase {
 						'href' => '/code-of-conduct/',
 					),
 					array(
+						'text'    => 'Fund Info',
+						'type'    => 'custom_page',
+						'title'   => 'Fund Information',
+						'content' => "- Travel Grants\n- Stipends",
+					),
+					array(
+						'text'    => 'About Page',
+						'type'    => 'page',
+						'page_id' => 999,
+					),
+					array(
 						'text' => '',
 						'href' => '',
 					),
@@ -80,11 +91,17 @@ class MainNavigationTest extends WP_UnitTestCase {
 
 		$this->assertSame( 'About', $sanitized[1]['text'] );
 		$this->assertSame( 'dropdown', $sanitized[1]['type'] );
-		$this->assertCount( 2, $sanitized[1]['items'] );
+		$this->assertCount( 4, $sanitized[1]['items'] );
 		$this->assertSame( 'Venue & Travel', $sanitized[1]['items'][0]['text'] );
 		$this->assertSame( 'https://example.com/venue', $sanitized[1]['items'][0]['href'] );
 		$this->assertSame( 'Code of Conduct', $sanitized[1]['items'][1]['text'] );
 		$this->assertSame( '/code-of-conduct/', $sanitized[1]['items'][1]['href'] );
+		$this->assertSame( 'Fund Info', $sanitized[1]['items'][2]['text'] );
+		$this->assertSame( 'custom_page', $sanitized[1]['items'][2]['type'] );
+		$this->assertSame( 'fund-information', $sanitized[1]['items'][2]['slug'] );
+		$this->assertSame( '?custom_page=fund-information', $sanitized[1]['items'][2]['href'] );
+		$this->assertSame( 'About Page', $sanitized[1]['items'][3]['text'] );
+		$this->assertSame( 'page', $sanitized[1]['items'][3]['type'] );
 	}
 
 	/**

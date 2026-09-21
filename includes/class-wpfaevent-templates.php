@@ -237,6 +237,13 @@ class Wpfaevent_Templates {
 		}
 
 		if ( is_singular( 'wpfa_event' ) ) {
+			if ( ! empty( $_GET['custom_page'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$custom_candidate = WPFAEVENT_PATH . 'public/templates/page-event-custom.php';
+				if ( file_exists( $custom_candidate ) ) {
+					return $custom_candidate;
+				}
+			}
+
 			$candidate = WPFAEVENT_PATH . 'public/templates/single-wpfa-event.php';
 
 			if ( file_exists( $candidate ) ) {

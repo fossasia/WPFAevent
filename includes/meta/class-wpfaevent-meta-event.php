@@ -339,10 +339,11 @@ class Wpfaevent_Meta_Event {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param mixed $items Raw navigation items.
+	 * @param mixed $items    Raw navigation items.
+	 * @param int   $event_id Optional event post ID.
 	 * @return array<int, array<string, mixed>> Sanitized navigation items.
 	 */
-	public static function sanitize_custom_navigation( $items ) {
+	public static function sanitize_custom_navigation( $items, $event_id = 0 ) {
 		if ( is_string( $items ) ) {
 			$items = json_decode( $items, true );
 		}
@@ -355,18 +356,16 @@ class Wpfaevent_Meta_Event {
 			if ( ! is_array( $item ) || empty( $item['text'] ) ) {
 				continue;
 			}
-			$text = sanitize_text_field( (string) $item['text'] );
-			$type = isset( $item['type'] ) && 'dropdown' === $item['type'] ? 'dropdown' : 'link';
+			$type = isset( $item['type'] ) ? (string) $item['type'] : 'link';
 
 			if ( 'dropdown' === $type ) {
+				$text      = sanitize_text_field( (string) $item['text'] );
 				$sub_items = array();
 				if ( ! empty( $item['items'] ) && is_array( $item['items'] ) ) {
 					foreach ( $item['items'] as $sub ) {
-						if ( is_array( $sub ) && ! empty( $sub['text'] ) ) {
-							$sub_items[] = array(
-								'text' => sanitize_text_field( (string) $sub['text'] ),
-								'href' => ! empty( $sub['href'] ) ? esc_url_raw( trim( (string) $sub['href'] ) ) : '',
-							);
+						$clean_sub = self::sanitize_nav_single_item( $sub, $event_id );
+						if ( $clean_sub ) {
+							$sub_items[] = $clean_sub;
 						}
 					}
 				}
@@ -376,15 +375,71 @@ class Wpfaevent_Meta_Event {
 					'items' => $sub_items,
 				);
 			} else {
-				$clean[] = array(
-					'text' => $text,
-					'type' => 'link',
-					'href' => ! empty( $item['href'] ) ? esc_url_raw( trim( (string) $item['href'] ) ) : '',
-				);
+				$clean_item = self::sanitize_nav_single_item( $item, $event_id );
+				if ( $clean_item ) {
+					$clean[] = $clean_item;
+				}
 			}
 		}
 
 		return $clean;
+	}
+
+	/**
+	 * Sanitizes a single navigation item or sub-item.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array<string, mixed> $item     Raw item array.
+	 * @param int                  $event_id Optional event ID.
+	 * @return array<string, mixed>|null Sanitized item array or null if invalid.
+	 */
+	private static function sanitize_nav_single_item( $item, $event_id = 0 ) {
+		if ( ! is_array( $item ) || empty( $item['text'] ) ) {
+			return null;
+		}
+
+		$text = sanitize_text_field( (string) $item['text'] );
+		$type = isset( $item['type'] ) ? (string) $item['type'] : 'link';
+
+		if ( 'custom_page' === $type ) {
+			$title   = ! empty( $item['title'] ) ? sanitize_text_field( (string) $item['title'] ) : $text;
+			$content = ! empty( $item['content'] ) ? trim( wp_kses_post( (string) $item['content'] ) ) : '';
+			$slug    = ! empty( $item['slug'] ) ? sanitize_title( (string) $item['slug'] ) : sanitize_title( $title );
+			if ( '' === $slug ) {
+				$slug = 'custom-info';
+			}
+
+			$base_url = ( $event_id > 0 ) ? get_permalink( $event_id ) : '';
+			$href     = $base_url ? add_query_arg( 'custom_page', $slug, $base_url ) : ( '?custom_page=' . $slug );
+
+			return array(
+				'text'    => $text,
+				'type'    => 'custom_page',
+				'title'   => $title,
+				'slug'    => $slug,
+				'content' => $content,
+				'href'    => $href,
+			);
+		}
+
+		if ( 'page' === $type ) {
+			$page_id = ! empty( $item['page_id'] ) ? absint( $item['page_id'] ) : 0;
+			$href    = $page_id ? get_permalink( $page_id ) : ( ! empty( $item['href'] ) ? esc_url_raw( trim( (string) $item['href'] ) ) : '' );
+
+			return array(
+				'text'    => $text,
+				'type'    => 'page',
+				'page_id' => $page_id,
+				'href'    => $href ? $href : '',
+			);
+		}
+
+		return array(
+			'text' => $text,
+			'type' => 'link',
+			'href' => ! empty( $item['href'] ) ? esc_url_raw( trim( (string) $item['href'] ) ) : '',
+		);
 	}
 
 	/**
