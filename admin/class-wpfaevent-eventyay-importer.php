@@ -22,9 +22,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Wpfaevent_Eventyay_Importer {
 	/**
-	 * How long the in-progress marker survives without being cleared.
+	 * How long the import lock holds without being released.
 	 *
-	 * Bounds the overlay if an import dies before it can clean up after itself.
+	 * Bounds the lock if an import dies before it can clean up after itself.
 	 *
 	 * @var int
 	 */
@@ -382,7 +382,7 @@ class Wpfaevent_Eventyay_Importer {
 	}
 
 	/**
-	 * Transient key marking that an import is running for a user.
+	 * Option key holding the import lock for a user.
 	 *
 	 * @since 1.0.0
 	 * @param int $user_id User to build the key for, 0 for the current user.
@@ -401,7 +401,73 @@ class Wpfaevent_Eventyay_Importer {
 	 * @return bool
 	 */
 	public static function is_import_in_progress() {
-		return (bool) get_transient( self::get_import_in_progress_key() );
+		$started = (int) get_option( self::get_import_in_progress_key(), 0 );
+
+		return $started > time() - self::IMPORT_IN_PROGRESS_TTL;
+	}
+
+	/**
+	 * Claim the import lock for the current user.
+	 *
+	 * Plain add_option() is an upsert, so it cannot tell a request whether it created
+	 * the row or found one already there, and two racing requests would both
+	 * proceed. INSERT IGNORE can tell, the same way WP_Upgrader::create_lock()
+	 * does. A lock older than the TTL belongs to a run that died before releasing
+	 * it; the age condition on the delete means a live lock is never taken over.
+	 *
+	 * @since 1.0.0
+	 * @return int|false Token to pass to release_import_lock(), or false when an
+	 *                   import already holds the lock.
+	 */
+	public static function acquire_import_lock() {
+		global $wpdb;
+
+		$key     = self::get_import_in_progress_key();
+		$started = time();
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- No WordPress API creates a row only if it is absent; the option caches are cleared below.
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} WHERE option_name = %s AND option_value < %d",
+				$key,
+				$started - self::IMPORT_IN_PROGRESS_TTL
+			)
+		);
+		$claimed = (bool) $wpdb->query(
+			$wpdb->prepare(
+				"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+				$key,
+				$started
+			)
+		);
+		// phpcs:enable
+
+		wp_cache_delete( $key, 'options' );
+		wp_cache_delete( 'notoptions', 'options' );
+
+		return $claimed ? $started : false;
+	}
+
+	/**
+	 * Release the import lock, if this request still holds it.
+	 *
+	 * A run that outlived the TTL may have had its lock taken over. Deleting only
+	 * the row carrying this run's token keeps it from removing the newer holder's
+	 * lock on its way out.
+	 *
+	 * @since 1.0.0
+	 * @param int $started Token returned by acquire_import_lock().
+	 * @return void
+	 */
+	public static function release_import_lock( $started ) {
+		global $wpdb;
+
+		$key = self::get_import_in_progress_key();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Deletes the lock only if this run still owns it; the option cache is cleared below.
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name = %s AND option_value = %s", $key, $started ) );
+
+		wp_cache_delete( $key, 'options' );
 	}
 
 	/**
@@ -450,6 +516,27 @@ class Wpfaevent_Eventyay_Importer {
 			$return_page = 'wpfaevent-import-events';
 		}
 
+		$notice_key = 'wpfaevent_eventyay_import_notice_' . get_current_user_id();
+
+		// Refuse before saving settings, so a second request cannot change them under a running import.
+		$lock = self::acquire_import_lock();
+		if ( false === $lock ) {
+			set_transient(
+				$notice_key,
+				array(
+					'type'    => 'warning',
+					'message' => __( 'An Eventyay import is already running. Wait for it to finish before starting another.', 'wpfaevent' ),
+				),
+				MINUTE_IN_SECONDS * 5
+			);
+			wp_safe_redirect( admin_url( 'edit.php?post_type=wpfa_event&page=' . $return_page ) );
+			exit;
+		}
+
+		// Released on shutdown, so after the result notice is written and even after a fatal.
+		ignore_user_abort( true );
+		register_shutdown_function( array( __CLASS__, 'release_import_lock' ), $lock );
+
 		if ( isset( $_POST['wpfaevent_eventyay_import_settings'] ) && is_array( $_POST['wpfaevent_eventyay_import_settings'] ) ) {
 			$raw_settings = wp_unslash( $_POST['wpfaevent_eventyay_import_settings'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Array values are sanitized immediately by sanitize_eventyay_import_settings().
 			$raw_settings = wp_parse_args( $raw_settings, $this->get_eventyay_import_settings() );
@@ -458,24 +545,7 @@ class Wpfaevent_Eventyay_Importer {
 			update_option( 'wpfaevent_eventyay_import_settings', $sanitized, false );
 		}
 
-		// The import finishes even when the browser leaves, so let the admin work
-		// elsewhere meanwhile. The transient is what every page load reads to know
-		// an import is still running; its TTL is a dead man's switch, so a fatal or
-		// a timeout cannot leave someone with an overlay they can never dismiss.
-		ignore_user_abort( true );
-
-		$progress_key = self::get_import_in_progress_key();
-		set_transient( $progress_key, time(), self::IMPORT_IN_PROGRESS_TTL );
-		register_shutdown_function(
-			static function () use ( $progress_key ) {
-				delete_transient( $progress_key );
-			}
-		);
-
-		$result     = $this->import_eventyay_events_from_settings();
-		$notice_key = 'wpfaevent_eventyay_import_notice_' . get_current_user_id();
-
-		delete_transient( $progress_key );
+		$result = $this->import_eventyay_events_from_settings();
 
 		if ( is_wp_error( $result ) ) {
 			set_transient(
