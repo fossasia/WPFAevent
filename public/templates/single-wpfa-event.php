@@ -21,74 +21,71 @@ if ( ! $event_id || 'wpfa_event' !== get_post_type( $event_id ) ) {
 
 $is_bookmarked = class_exists( 'Wpfaevent_User_Preferences_Service' ) && Wpfaevent_User_Preferences_Service::is_event_bookmarked( $event_id );
 
-$event_data                               = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
-$event_style_attr                         = $event_data['event_style_attr'];
-$header_vars                              = $event_data['header_vars'];
-$event_title                              = $event_data['event_title'];
-$date_label                               = $event_data['date_label'];
-$event_start_content                      = $event_data['event_start_content'];
-$event_end_content                        = $event_data['event_end_content'];
-$event_time_label                         = $event_data['event_time_label'];
-$event_timezone_label                     = $event_data['event_timezone_label'];
-$location                                 = $event_data['location'];
-$event_language_label                     = $event_data['event_language_label'];
-$event_url                                = $event_data['event_url'];
-$schedule_items                           = $event_data['schedule_items'];
-$about_content                            = $event_data['about_content'];
-$event_lead                               = $event_data['event_lead'];
-$register_url                             = $event_data['register_url'];
-$register_text                            = $event_data['register_text'];
-$event_google_url                         = $event_data['event_google_url'];
-$event_calendar_url                       = $event_data['event_calendar_url'];
-$speaker_count                            = $event_data['speaker_count'];
-$sponsor_count                            = $event_data['sponsor_count'];
-$visible_exhibitors                       = $event_data['visible_exhibitors'];
-$first_schedule                           = $event_data['first_schedule'];
-$wpfa_event_nav_items                     = $event_data['wpfa_event_nav_items'];
-$show_about                               = $event_data['show_about'];
-$show_speakers                            = $event_data['show_speakers'];
-$show_schedule                            = $event_data['show_schedule'];
-$show_sponsors                            = $event_data['show_sponsors'];
-$show_exhibitors                          = $event_data['show_exhibitors'];
-$has_speakers                             = $event_data['has_speakers'];
-$has_schedule                             = $event_data['has_schedule'];
-$venue_information                        = $event_data['venue_information'];
-$event_additional_url                     = $event_data['event_additional_url'];
-$custom_tabs                              = $event_data['custom_tabs'];
-$featured_speaker_ids                     = $event_data['featured_speaker_ids'];
-$featured_speaker_count                   = $event_data['featured_speaker_count'];
-$dashboard_featured_speakers              = $event_data['dashboard_featured_speakers'];
-$dashboard_regular_speakers               = $event_data['dashboard_regular_speakers'];
-$regular_speaker_overflow_count           = $event_data['regular_speaker_overflow_count'];
-$dashboard_regular_speaker_overflow_count = $event_data['dashboard_regular_speaker_overflow_count'];
-$speaker_placeholder_url                  = $event_data['speaker_placeholder_url'];
-$speakers_url                             = $event_data['speakers_url'];
-$selected_schedule_timezone_string        = $event_data['selected_schedule_timezone_string'];
-$schedule_timezone_options                = $event_data['schedule_timezone_options'];
-$format_timezone_label                    = $event_data['format_timezone_label'];
-$build_event_schedule_view_url            = $event_data['build_event_schedule_view_url'];
-$selected_schedule_timezone               = $event_data['selected_schedule_timezone'];
-$main_regular_speaker_ids                 = $event_data['main_regular_speaker_ids'];
-$speaker_ids                              = $event_data['speaker_ids'];
-$regular_speaker_ids                      = $event_data['regular_speaker_ids'];
-$main_dashboard_regular_speakers          = $event_data['main_dashboard_regular_speakers'];
-$main_dashboard_speakers                  = $event_data['main_dashboard_speakers'];
-$dashboard_speaker_overflow_count         = $event_data['dashboard_speaker_overflow_count'];
-$dashboard_speakers                       = $event_data['dashboard_speakers'];
-$schedule_preview_items                   = $event_data['schedule_preview_items'];
-$schedule_preview_day_groups              = $event_data['schedule_preview_day_groups'];
-$schedule_hidden_count                    = $event_data['schedule_hidden_count'];
-$filtered_schedule_items                  = $event_data['filtered_schedule_items'];
-$event_session_filter_options             = $event_data['event_session_filter_options'];
-$has_schedule_filters                     = $event_data['has_schedule_filters'];
-$filter_form_classes                      = $event_data['filter_form_classes'];
-$schedule_filter_reset_url                = $event_data['schedule_filter_reset_url'];
-$current_day_filter                       = $event_data['current_day_filter'];
-$current_track_filter                     = $event_data['current_track_filter'];
-$current_room_filter                      = $event_data['current_room_filter'];
-$event_schedule_url                       = $event_data['event_schedule_url'];
-$visible_sponsor_groups                   = $event_data['visible_sponsor_groups'];
-$current_schedule_view                    = $event_data['current_schedule_view'];
+$event_data                        = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+$event_style_attr                  = $event_data['event_style_attr'];
+$header_vars                       = $event_data['header_vars'];
+$event_title                       = $event_data['event_title'];
+$date_label                        = $event_data['date_label'];
+$event_start_content               = $event_data['event_start_content'];
+$event_end_content                 = $event_data['event_end_content'];
+$event_time_label                  = $event_data['event_time_label'];
+$event_timezone_label              = $event_data['event_timezone_label'];
+$location                          = $event_data['location'];
+$event_language_label              = $event_data['event_language_label'];
+$event_url                         = $event_data['event_url'];
+$schedule_items                    = $event_data['schedule_items'];
+$about_content                     = $event_data['about_content'];
+$event_lead                        = $event_data['event_lead'];
+$register_url                      = $event_data['register_url'];
+$register_text                     = $event_data['register_text'];
+$event_google_url                  = $event_data['event_google_url'];
+$event_calendar_url                = $event_data['event_calendar_url'];
+$speaker_count                     = $event_data['speaker_count'];
+$sponsor_count                     = $event_data['sponsor_count'];
+$visible_exhibitors                = $event_data['visible_exhibitors'];
+$first_schedule                    = $event_data['first_schedule'];
+$wpfa_event_nav_items              = $event_data['wpfa_event_nav_items'];
+$show_about                        = $event_data['show_about'];
+$show_speakers                     = $event_data['show_speakers'];
+$show_schedule                     = $event_data['show_schedule'];
+$show_sponsors                     = $event_data['show_sponsors'];
+$show_exhibitors                   = $event_data['show_exhibitors'];
+$has_speakers                      = $event_data['has_speakers'];
+$has_schedule                      = $event_data['has_schedule'];
+$venue_information                 = $event_data['venue_information'];
+$event_additional_url              = $event_data['event_additional_url'];
+$custom_tabs                       = $event_data['custom_tabs'];
+$featured_speaker_ids              = $event_data['featured_speaker_ids'];
+$featured_speaker_count            = $event_data['featured_speaker_count'];
+$dashboard_featured_speakers       = $event_data['dashboard_featured_speakers'];
+$regular_speaker_overflow_count    = $event_data['regular_speaker_overflow_count'];
+$speaker_placeholder_url           = $event_data['speaker_placeholder_url'];
+$speakers_url                      = $event_data['speakers_url'];
+$selected_schedule_timezone_string = $event_data['selected_schedule_timezone_string'];
+$schedule_timezone_options         = $event_data['schedule_timezone_options'];
+$format_timezone_label             = $event_data['format_timezone_label'];
+$build_event_schedule_view_url     = $event_data['build_event_schedule_view_url'];
+$selected_schedule_timezone        = $event_data['selected_schedule_timezone'];
+$main_regular_speaker_ids          = $event_data['main_regular_speaker_ids'];
+$speaker_ids                       = $event_data['speaker_ids'];
+$regular_speaker_ids               = $event_data['regular_speaker_ids'];
+$main_dashboard_speakers           = $event_data['main_dashboard_speakers'];
+$dashboard_speaker_overflow_count  = $event_data['dashboard_speaker_overflow_count'];
+$dashboard_speakers                = $event_data['dashboard_speakers'];
+$schedule_preview_items            = $event_data['schedule_preview_items'];
+$schedule_preview_day_groups       = $event_data['schedule_preview_day_groups'];
+$schedule_hidden_count             = $event_data['schedule_hidden_count'];
+$filtered_schedule_items           = $event_data['filtered_schedule_items'];
+$event_session_filter_options      = $event_data['event_session_filter_options'];
+$has_schedule_filters              = $event_data['has_schedule_filters'];
+$filter_form_classes               = $event_data['filter_form_classes'];
+$schedule_filter_reset_url         = $event_data['schedule_filter_reset_url'];
+$current_day_filter                = $event_data['current_day_filter'];
+$current_track_filter              = $event_data['current_track_filter'];
+$current_room_filter               = $event_data['current_room_filter'];
+$event_schedule_url                = $event_data['event_schedule_url'];
+$visible_sponsor_groups            = $event_data['visible_sponsor_groups'];
+$current_schedule_view             = $event_data['current_schedule_view'];
 
 $event_header_image_url    = $event_data['event_header_image_url'];
 $event_logo_url            = $event_data['event_logo_url'];
@@ -483,9 +480,7 @@ if ( $show_ticket_widget ) {
 									</button>
 								<?php endif; ?>
 							</div>
-						<?php endif; ?>
-
-						<?php if ( ! empty( $regular_speaker_ids ) ) : ?>
+						<?php elseif ( ! empty( $regular_speaker_ids ) ) : ?>
 							<div class="wpfa-event-regular-speakers">
 								<h3><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h3>
 								<div class="wpfa-speakers-grid">
@@ -538,29 +533,6 @@ if ( $show_ticket_widget ) {
 									</button>
 								<?php endif; ?>
 							</div>
-
-							<?php if ( ! empty( $dashboard_regular_speakers ) ) : ?>
-								<div class="wpfa-event-regular-speakers">
-									<h3><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></h3>
-									<div class="wpfa-speakers-grid">
-										<?php foreach ( $main_dashboard_regular_speakers as $speaker ) : ?>
-											<?php include WPFAEVENT_PATH . 'public/partials/speakers/dashboard-speaker-card.php'; ?>
-										<?php endforeach; ?>
-									</div>
-									<?php if ( $dashboard_regular_speaker_overflow_count ) : ?>
-										<p class="wpfa-event-speaker-limit-note">
-											<?php
-											printf(
-												/* translators: 1: shown speaker count, 2: total speaker count. */
-												esc_html__( 'Showing the main %1$d of %2$d speakers. Open the full event speaker list to view everyone.', 'wpfaevent' ),
-												absint( count( $main_dashboard_regular_speakers ) ),
-												absint( count( $dashboard_regular_speakers ) )
-											);
-											?>
-										</p>
-									<?php endif; ?>
-								</div>
-							<?php endif; ?>
 						<?php else : ?>
 							<div class="wpfa-speakers-grid">
 								<?php foreach ( $main_dashboard_speakers as $speaker ) : ?>

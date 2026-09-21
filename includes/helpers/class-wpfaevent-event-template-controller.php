@@ -537,6 +537,14 @@ class Wpfaevent_Event_Template_Controller {
 		$featured_speaker_ids           = class_exists( 'Wpfaevent_Meta_Event' )
 			? Wpfaevent_Meta_Event::resolve_event_featured_speaker_ids( $event_id, $speaker_ids, $dashboard_speakers )
 			: array();
+		$featured_speaker_ids           = array_values(
+			array_filter(
+				$featured_speaker_ids,
+				static function ( $sid ) {
+					return 'wpfa_speaker' === get_post_type( $sid ) && 'publish' === get_post_status( $sid );
+				}
+			)
+		);
 		$regular_speaker_ids            = array_values( array_diff( $speaker_ids, $featured_speaker_ids ) );
 		$main_speaker_ids               = array_slice( $speaker_ids, 0, $main_speaker_limit );
 		$main_regular_speaker_ids       = array_slice( $regular_speaker_ids, 0, $main_speaker_limit );
