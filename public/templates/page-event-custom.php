@@ -97,6 +97,17 @@ if ( $is_plain_text ) {
 			</div>
 		</header>
 
+		<?php
+		$saved_event_nav      = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
+		$wpfa_event_nav_items = ( is_array( $saved_event_nav ) && ! empty( $saved_event_nav ) )
+			? $saved_event_nav
+			: ( class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items() : array() );
+
+		if ( ! empty( $wpfa_event_nav_items ) ) {
+			include WPFAEVENT_PATH . 'public/partials/event-section-nav.php';
+		}
+		?>
+
 		<div class="container" style="max-width: 860px; margin: 40px auto; padding: 0 20px;">
 			<article class="wpfa-event-rich-text" style="font-size: 1.05rem; line-height: 1.8; color: #334155;">
 				<?php if ( '' !== $formatted_content ) : ?>

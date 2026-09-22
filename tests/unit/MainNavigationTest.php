@@ -312,4 +312,119 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$this->assertSame( 'fund-info-3', $sanitized[2]['items'][0]['slug'] );
 		$this->assertSame( '?custom_page=fund-info-3', $sanitized[2]['items'][0]['href'] );
 	}
+
+	/**
+	 * Test that default event navigation items contain Overview, Speakers, Schedule, Sponsors, and Exhibitors.
+	 */
+	public function test_get_default_event_nav_items() {
+		$items = Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items();
+
+		$this->assertCount( 5, $items );
+		$this->assertSame( 'Overview', $items[0]['text'] );
+		$this->assertSame( '#about', $items[0]['href'] );
+		$this->assertSame( 'Speakers', $items[1]['text'] );
+		$this->assertSame( '#speakers', $items[1]['href'] );
+		$this->assertSame( 'Schedule', $items[2]['text'] );
+		$this->assertSame( '#schedule-overview', $items[2]['href'] );
+		$this->assertSame( 'Sponsors', $items[3]['text'] );
+		$this->assertSame( '#sponsors', $items[3]['href'] );
+		$this->assertSame( 'Exhibitors', $items[4]['text'] );
+		$this->assertSame( '#exhibitors', $items[4]['href'] );
+	}
+
+	/**
+	 * Test event section navigation partial renders items, dropdowns, and custom page links.
+	 */
+	public function test_event_section_nav_partial() {
+		$event_id             = $this->factory->post->create( array( 'post_type' => 'wpfa_event' ) );
+		$wpfa_event_nav_items = array(
+			array(
+				'text' => 'Overview',
+				'type' => 'link',
+				'href' => '#about',
+			),
+			array(
+				'text'  => 'More Info',
+				'type'  => 'dropdown',
+				'items' => array(
+					array(
+						'text' => 'Fund Info',
+						'type' => 'custom_page',
+						'slug' => 'fund-info',
+						'href' => '?custom_page=fund-info',
+					),
+				),
+			),
+		);
+
+		ob_start();
+		include WPFAEVENT_PATH . 'public/partials/event-section-nav.php';
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'wpfa-event-section-nav', $output );
+		$this->assertStringContainsString( 'Overview', $output );
+		$this->assertStringContainsString( '#about', $output );
+		$this->assertStringContainsString( 'More Info', $output );
+		$this->assertStringContainsString( 'Fund Info', $output );
+		$this->assertStringContainsString( 'custom_page=fund-info', $output );
+	}
+
+	/**
+	 * Test event section navigation qualifies anchors and activates current page on custom page.
+	 */
+	public function test_event_section_nav_on_custom_page() {
+		$event_id             = $this->factory->post->create(
+			array(
+				'post_type' => 'wpfa_event',
+				'post_name' => 'summit-2026',
+			)
+		);
+		$wpfa_event_nav_items = array(
+			array(
+				'text' => 'Overview',
+				'type' => 'link',
+				'href' => '#about',
+			),
+			array(
+				'text'  => 'More Info',
+				'type'  => 'dropdown',
+				'items' => array(
+					array(
+						'text' => 'Fund Info',
+						'type' => 'custom_page',
+						'slug' => 'fund-info',
+						'href' => '?custom_page=fund-info',
+					),
+				),
+			),
+		);
+
+		$_GET['custom_page'] = 'fund-info';
+
+		ob_start();
+		include WPFAEVENT_PATH . 'public/partials/event-section-nav.php';
+		$output = ob_get_clean();
+
+		unset( $_GET['custom_page'] );
+
+		// Anchors should be prefixed with the event permalink when on a custom page.
+		$permalink = get_permalink( $event_id );
+		$this->assertStringContainsString( esc_url( $permalink . '#about' ), $output );
+		// The dropdown and custom page item should be marked active.
+		$this->assertStringContainsString( 'nav-dropdown active', $output );
+		$this->assertStringContainsString( 'nav-dropdown-toggle active', $output );
+	}
+
+	/**
+	 * Test that header.php renders the 3 static uncustomizable navigation links.
+	 */
+	public function test_header_renders_static_navigation_links() {
+		ob_start();
+		include WPFAEVENT_PATH . 'public/partials/header.php';
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'Upcoming Events', $output );
+		$this->assertStringContainsString( 'Past Events', $output );
+		$this->assertStringContainsString( 'Code of Conduct', $output );
+	}
 }

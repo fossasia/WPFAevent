@@ -116,6 +116,43 @@ class Wpfaevent_Main_Navigation_Helper {
 	}
 
 	/**
+	 * Get the default event section navigation items.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<int, array<string, mixed>> Default event navigation items.
+	 */
+	public static function get_default_event_nav_items() {
+		return array(
+			array(
+				'text' => __( 'Overview', 'wpfaevent' ),
+				'type' => 'link',
+				'href' => '#about',
+			),
+			array(
+				'text' => __( 'Speakers', 'wpfaevent' ),
+				'type' => 'link',
+				'href' => '#speakers',
+			),
+			array(
+				'text' => __( 'Schedule', 'wpfaevent' ),
+				'type' => 'link',
+				'href' => '#schedule-overview',
+			),
+			array(
+				'text' => __( 'Sponsors', 'wpfaevent' ),
+				'type' => 'link',
+				'href' => '#sponsors',
+			),
+			array(
+				'text' => __( 'Exhibitors', 'wpfaevent' ),
+				'type' => 'link',
+				'href' => '#exhibitors',
+			),
+		);
+	}
+
+	/**
 	 * Render custom navigation items and dropdowns.
 	 *
 	 * @since 1.0.0

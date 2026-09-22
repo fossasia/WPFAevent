@@ -94,10 +94,10 @@ class Wpfaevent_Admin_Event_Metabox {
 			'default'
 		);
 
-		// Event header navigation meta box.
+		// Event navigation meta box.
 		add_meta_box(
 			'wpfa_event_navigation_box',
-			__( 'Event Header Navigation', 'wpfaevent' ),
+			__( 'Event Navigation', 'wpfaevent' ),
 			array( $this, 'render_event_navigation_meta_box' ),
 			'wpfa_event',
 			'normal',
@@ -824,12 +824,9 @@ class Wpfaevent_Admin_Event_Metabox {
 	 */
 	public function render_event_navigation_meta_box( $post ) {
 		$saved_items = get_post_meta( $post->ID, 'wpfa_event_custom_navigation', true );
-		if ( ( ! is_array( $saved_items ) || empty( $saved_items ) ) && class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ) {
-			$saved_items = Wpfaevent_Main_Navigation_Helper::get_latest_custom_navigation();
-		}
-		$items = is_array( $saved_items ) && ! empty( $saved_items )
+		$items       = is_array( $saved_items ) && ! empty( $saved_items )
 			? $saved_items
-			: ( class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_nav_items() : array() );
+			: ( class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items() : array() );
 
 		$wp_pages = get_pages(
 			array(
@@ -855,7 +852,7 @@ class Wpfaevent_Admin_Event_Metabox {
 		</p>
 		<template id="wpfaevent-nav-default-template">
 			<?php
-			$default_cards = class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_nav_items() : array();
+			$default_cards = class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items() : array();
 			foreach ( $default_cards as $di => $ditem ) {
 				$this->render_nav_item_card( $di, $ditem, $wp_pages );
 			}

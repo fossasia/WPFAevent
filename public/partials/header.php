@@ -68,19 +68,9 @@ $coc_url         = $coc_page_id ? get_permalink( $coc_page_id ) : home_url( '/co
 		</a>
 		<nav class="nav-links" role="navigation" aria-label="<?php esc_attr_e( 'Primary', 'wpfaevent' ); ?>">
 			<div class="nav-links-main">
-				<?php
-				Wpfaevent_Main_Navigation_Helper::render_navigation(
-					array(
-						'events_url'            => $events_url,
-						'past_events_url'       => $past_events_url,
-						'coc_url'               => $coc_url,
-						'is_events_active'      => $is_events_active,
-						'is_past_events_active' => $is_past_events_active,
-						'is_coc_active'         => $is_coc_active,
-					),
-					isset( $event_id ) ? (int) $event_id : 0
-				);
-				?>
+				<a href="<?php echo esc_url( $events_url ); ?>" class="<?php echo esc_attr( $is_events_active ); ?>"><?php esc_html_e( 'Upcoming Events', 'wpfaevent' ); ?></a>
+				<a href="<?php echo esc_url( $past_events_url ); ?>" class="<?php echo esc_attr( $is_past_events_active ); ?>"><?php esc_html_e( 'Past Events', 'wpfaevent' ); ?></a>
+				<a href="<?php echo esc_url( $coc_url ); ?>" class="<?php echo esc_attr( $is_coc_active ); ?>"><?php esc_html_e( 'Code of Conduct', 'wpfaevent' ); ?></a>
 			</div>
 			
 			<?php if ( $show_back_button || $show_register_button ) : ?>
