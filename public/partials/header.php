@@ -58,7 +58,6 @@ $is_coc_active         = ( 'code-of-conduct' === $current_path || ( $coc_page_id
 $events_url      = apply_filters( 'wpfaevent_events_url', home_url( '/events/' ) );
 $past_events_url = apply_filters( 'wpfaevent_past_events_url', home_url( '/events/?filter=past' ) );
 $coc_url         = $coc_page_id ? get_permalink( $coc_page_id ) : home_url( '/code-of-conduct/' );
-
 ?>
 
 <header class="nav" role="banner">

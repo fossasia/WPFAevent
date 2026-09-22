@@ -178,48 +178,16 @@ class MainNavigationTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test that render_navigation falls back to global option when event nav is not set.
+	 * Test that render_navigation renders default navigation links.
 	 */
-	public function test_render_navigation_uses_global_option() {
-		update_option(
-			'wpfaevent_header_navigation',
-			array(
-				array(
-					'text' => 'Custom Global Link',
-					'type' => 'link',
-					'href' => 'https://example.com/custom',
-				),
-			)
-		);
-
+	public function test_render_navigation() {
 		ob_start();
 		Wpfaevent_Main_Navigation_Helper::render_navigation();
 		$output = ob_get_clean();
 
-		delete_option( 'wpfaevent_header_navigation' );
-
-		$this->assertStringContainsString( 'Custom Global Link', $output );
-		$this->assertStringContainsString( 'https://example.com/custom', $output );
-	}
-
-	/**
-	 * Test that get_latest_custom_navigation retrieves the most recent custom event navigation.
-	 */
-	public function test_get_latest_custom_navigation() {
-		$event_id = $this->factory->post->create( array( 'post_type' => 'wpfa_event' ) );
-		$nav_data = array(
-			array(
-				'text' => 'Event Specific Link',
-				'type' => 'link',
-				'href' => 'https://example.com/event-link',
-			),
-		);
-
-		update_post_meta( $event_id, 'wpfa_event_custom_navigation', $nav_data );
-
-		$latest = Wpfaevent_Main_Navigation_Helper::get_latest_custom_navigation();
-		$this->assertIsArray( $latest );
-		$this->assertSame( 'Event Specific Link', $latest[0]['text'] );
+		$this->assertStringContainsString( 'Upcoming Events', $output );
+		$this->assertStringContainsString( 'Past Events', $output );
+		$this->assertStringContainsString( 'Code of Conduct', $output );
 	}
 
 	/**

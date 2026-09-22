@@ -1438,7 +1438,6 @@ class Wpfaevent_Admin_Event_Metabox {
 
 			if ( ! empty( $clean_nav ) ) {
 				update_post_meta( $post_id, 'wpfa_event_custom_navigation', $clean_nav );
-				update_option( 'wpfaevent_header_navigation', $clean_nav );
 			} else {
 				delete_post_meta( $post_id, 'wpfa_event_custom_navigation' );
 			}

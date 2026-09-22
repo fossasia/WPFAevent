@@ -25,54 +25,7 @@ class Wpfaevent_Main_Navigation_Helper {
 	 * @return void
 	 */
 	public static function render_navigation( $fallback_args = array(), $event_id = 0 ) {
-		if ( $event_id <= 0 ) {
-			if ( is_singular( 'wpfa_event' ) ) {
-				$event_id = (int) get_the_ID();
-			} elseif ( isset( $_GET['event_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				$event_id = absint( $_GET['event_id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			}
-		}
-
-		$items = null;
-		if ( $event_id > 0 ) {
-			$meta = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
-			if ( is_array( $meta ) && ! empty( $meta ) ) {
-				$items = $meta;
-			}
-		}
-
-		if ( null === $items ) {
-			$opt   = get_option( 'wpfaevent_header_navigation', null );
-			$items = ( is_array( $opt ) && ! empty( $opt ) ) ? $opt : self::get_latest_custom_navigation();
-		}
-
-		self::render_custom_nav_items( $items ? $items : self::get_default_nav_items( $fallback_args ), $event_id );
-	}
-
-	/**
-	 * Get the latest custom navigation configured across events.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return array<int, array<string, mixed>>|null
-	 */
-	public static function get_latest_custom_navigation() {
-		global $wpdb;
-
-		if ( ! $wpdb ) {
-			return null;
-		}
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$raw_meta = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s ORDER BY meta_id DESC LIMIT 1",
-				'wpfa_event_custom_navigation'
-			)
-		);
-
-		$items = $raw_meta ? maybe_unserialize( $raw_meta ) : null;
-		return ( is_array( $items ) && ! empty( $items ) ) ? $items : null;
+		self::render_custom_nav_items( self::get_default_nav_items( $fallback_args ), $event_id );
 	}
 
 	/**
