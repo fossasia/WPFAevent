@@ -98,6 +98,61 @@ class EventAdditionalInformationTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Updating the event when one field is cleared removes only that field while preserving others.
+	 */
+	public function test_event_editor_updates_and_clears_single_field_while_preserving_others() {
+		// All three fields have content and are saved.
+		$_POST = array(
+			'wpfa_event_meta_nonce'                 => wp_create_nonce( 'wpfa_event_meta_nonce' ),
+			'wpfa_event_venue_information'          => '<p>Main Hall, Level 2</p>',
+			'wpfa_event_transportation_information' => '<p>Take MRT to City Hall station.</p>',
+			'wpfa_event_hotel_information'          => '<p>Recommended Hotel: Grand Plaza.</p>',
+		);
+
+		( new Wpfaevent_Admin_Event_Metabox() )->save_event_meta( $this->event_id );
+
+		$this->assertSame( '<p>Main Hall, Level 2</p>', get_post_meta( $this->event_id, 'wpfa_event_venue_information', true ) );
+		$this->assertSame( '<p>Take MRT to City Hall station.</p>', get_post_meta( $this->event_id, 'wpfa_event_transportation_information', true ) );
+		$this->assertSame( '<p>Recommended Hotel: Grand Plaza.</p>', get_post_meta( $this->event_id, 'wpfa_event_hotel_information', true ) );
+
+		// One field is cleared while the other two still have content.
+		$_POST = array(
+			'wpfa_event_meta_nonce'                 => wp_create_nonce( 'wpfa_event_meta_nonce' ),
+			'wpfa_event_venue_information'          => '<p>Main Hall, Level 2</p>',
+			'wpfa_event_transportation_information' => '',
+			'wpfa_event_hotel_information'          => '<p>Recommended Hotel: Grand Plaza.</p>',
+		);
+
+		// The event is saved again.
+		( new Wpfaevent_Admin_Event_Metabox() )->save_event_meta( $this->event_id );
+
+		// Only the cleared field is removed while the other two remain unchanged.
+		$this->assertSame( '<p>Main Hall, Level 2</p>', get_post_meta( $this->event_id, 'wpfa_event_venue_information', true ) );
+		$this->assertSame( '', get_post_meta( $this->event_id, 'wpfa_event_transportation_information', true ) );
+		$this->assertSame( '<p>Recommended Hotel: Grand Plaza.</p>', get_post_meta( $this->event_id, 'wpfa_event_hotel_information', true ) );
+	}
+
+	/**
+	 * Meta box renders safely when additional information post meta contains non-string values.
+	 */
+	public function test_render_event_additional_information_meta_box_handles_non_string_values() {
+		update_post_meta( $this->event_id, 'wpfa_event_venue_information', array( 'unexpected' => 'array' ) );
+		update_post_meta( $this->event_id, 'wpfa_event_transportation_information', false );
+		update_post_meta( $this->event_id, 'wpfa_event_hotel_information', 12345 );
+
+		$post = get_post( $this->event_id );
+		$this->assertInstanceOf( WP_Post::class, $post );
+
+		ob_start();
+		( new Wpfaevent_Admin_Event_Metabox() )->render_event_additional_information_meta_box( $post );
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'wpfa_event_venue_information', $output );
+		$this->assertStringContainsString( 'wpfa_event_transportation_information', $output );
+		$this->assertStringContainsString( 'wpfa_event_hotel_information', $output );
+	}
+
+	/**
 	 * Additional information is shown on the event page and navigation when venue is populated.
 	 */
 	public function test_shows_additional_information_when_only_venue_is_populated() {

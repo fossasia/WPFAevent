@@ -825,6 +825,10 @@ class Wpfaevent_Admin_Event_Metabox {
 		$transportation_information = get_post_meta( $post->ID, 'wpfa_event_transportation_information', true );
 		$hotel_information          = get_post_meta( $post->ID, 'wpfa_event_hotel_information', true );
 
+		$venue_information          = is_string( $venue_information ) ? $venue_information : '';
+		$transportation_information = is_string( $transportation_information ) ? $transportation_information : '';
+		$hotel_information          = is_string( $hotel_information ) ? $hotel_information : '';
+
 		$editor_settings = array(
 			'textarea_rows' => 6,
 			'media_buttons' => false,
