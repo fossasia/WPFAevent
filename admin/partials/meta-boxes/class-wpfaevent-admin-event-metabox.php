@@ -835,7 +835,7 @@ class Wpfaevent_Admin_Event_Metabox {
 		);
 		?>
 		<p class="description"><?php esc_html_e( 'Manually curated attendee information shown on the event page and the Additional Information page.', 'wpfaevent' ); ?></p>
-		<p>
+		<p class="wpfaevent-additional-info-field-label">
 			<label for="wpfa_event_venue_information"><strong><?php esc_html_e( 'Venue Information', 'wpfaevent' ); ?></strong></label>
 		</p>
 		<?php wp_editor( $venue_information, 'wpfa_event_venue_information', $editor_settings ); ?>

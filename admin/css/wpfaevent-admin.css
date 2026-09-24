@@ -3,81 +3,117 @@
  * included in this file.
  */
 
- /**
+/**
  * Meta Box Styling
  */
 .wpfaevent-relationship-select {
-    width: 100%;
-    min-height: 150px;
-    padding: 4px;
+	width: 100%;
+	min-height: 150px;
+	padding: 4px;
 }
 
 /* Ensure proper spacing in meta boxes */
 .wpfaevent-relationship-select option {
-    padding: 2px 2px;
+	padding: 2px 2px;
 }
 
 .wpfaevent-attendee-info {
-    display: grid;
-    gap: 20px;
+	display: grid;
+	gap: 20px;
 }
 
 .wpfaevent-attendee-info-section {
-    border-top: 1px solid #dcdcde;
-    padding-top: 16px;
+	border-top: 1px solid #dcdcde;
+	padding-top: 16px;
 }
 
 .wpfaevent-attendee-info-section:first-child {
-    border-top: 0;
-    padding-top: 0;
+	border-top: 0;
+	padding-top: 0;
 }
 
 .wpfaevent-attendee-info-section h3 {
-    font-size: 14px;
-    margin: 0 0 6px;
+	font-size: 14px;
+	margin: 0 0 6px;
 }
 
 .wpfaevent-attendee-info-section .description {
-    margin-bottom: 12px;
+	margin-bottom: 12px;
 }
 
+#poststuff #wpfa_event_additional_information_box .wpfaevent-additional-info-field-label,
+#wpfa_event_additional_information_box .wpfaevent-additional-info-field-label,
+#poststuff .wpfaevent-additional-info-field-label,
 .wpfaevent-additional-info-field-label {
-    margin-top: 20px;
+	float: left;
+	clear: both;
+	margin-top: 18px;
+	margin-bottom: 0;
+	line-height: 28px;
 }
+
+#poststuff #wpfa_event_additional_information_box .wpfaevent-additional-info-field-label:first-of-type,
+#wpfa_event_additional_information_box .wpfaevent-additional-info-field-label:first-of-type,
+#poststuff .wpfaevent-additional-info-field-label:first-of-type,
+.wpfaevent-additional-info-field-label:first-of-type {
+	margin-top: 6px;
+}
+
+#wpfa_event_additional_information_box .wp-switch-editor,
+#wp-wpfa_event_venue_information-wrap .wp-switch-editor,
+#wp-wpfa_event_transportation_information-wrap .wp-switch-editor,
+#wp-wpfa_event_hotel_information-wrap .wp-switch-editor {
+	margin-top: 0;
+}
+
+#wpfa_event_additional_information_box .wp-editor-tools,
+#wp-wpfa_event_venue_information-wrap .wp-editor-tools,
+#wp-wpfa_event_transportation_information-wrap .wp-editor-tools,
+#wp-wpfa_event_hotel_information-wrap .wp-editor-tools {
+	margin-bottom: 0;
+}
+
+#wpfa_event_additional_information_box .wp-editor-wrap,
+#wp-wpfa_event_venue_information-wrap,
+#wp-wpfa_event_transportation_information-wrap,
+#wp-wpfa_event_hotel_information-wrap {
+	margin-bottom: 8px;
+}
+
 
 .wpfaevent-custom-tabs-list {
-    display: grid;
-    gap: 14px;
-    margin-top: 12px;
+	display: grid;
+	gap: 14px;
+	margin-top: 12px;
 }
 
 .wpfaevent-custom-tab-row {
-    background: #fff;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    padding: 12px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 12px;
 }
 
 .wpfaevent-custom-tab-row p {
-    margin-top: 0;
+	margin-top: 0;
 }
 
 .wpfaevent-custom-tab-row textarea {
-    font-family: inherit;
-    min-height: 120px;
+	font-family: inherit;
+	min-height: 120px;
 }
 
 .wpfaevent-custom-tab-row .button-link-delete {
-    margin-top: 2px;
+	margin-top: 2px;
 }
 
 .wpfaevent-custom-tabs-empty {
-    background: #f6f7f7;
-    border: 1px dashed #c3c4c7;
-    border-radius: 4px;
-    color: #646970;
-    margin: 12px 0;
-    padding: 12px;
+	background: #f6f7f7;
+	border: 1px dashed #c3c4c7;
+	border-radius: 4px;
+	color: #646970;
+	margin: 12px 0;
+	padding: 12px;
 }
 
 /**
@@ -98,7 +134,8 @@
 	align-items: center;
 	justify-content: center;
 	flex-direction: column;
-	display: none; /* Controlled by JS setting display: flex */
+	display: none;
+	/* Controlled by JS setting display: flex */
 }
 
 /* Card layout */
@@ -111,7 +148,7 @@
 	box-sizing: border-box;
 	text-align: center;
 	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
-				inset 0 1px 0 rgba(255, 255, 255, 0.1);
+		inset 0 1px 0 rgba(255, 255, 255, 0.1);
 	color: #f8fafc;
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 	transform: translateY(20px);
@@ -163,9 +200,17 @@
 }
 
 @keyframes wpfaevent-shimmer {
-	0% { background-position: 0% 50%; }
-	50% { background-position: 100% 50%; }
-	100% { background-position: 0% 50%; }
+	0% {
+		background-position: 0% 50%;
+	}
+
+	50% {
+		background-position: 100% 50%;
+	}
+
+	100% {
+		background-position: 0% 50%;
+	}
 }
 
 /* Spinner indicator */
@@ -187,8 +232,13 @@
 }
 
 @keyframes wpfaevent-spin {
-	0% { transform: rotate(0deg); }
-	100% { transform: rotate(360deg); }
+	0% {
+		transform: rotate(0deg);
+	}
+
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
 /* Status & Details styling */
@@ -292,7 +342,7 @@
 	padding: 15px;
 	margin-bottom: 15px;
 	position: relative;
-	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+	box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
 }
 
 .wpfaevent-meta-card-grid {
@@ -321,7 +371,7 @@
 	background-color: #fff;
 	border: 1px solid #7e8993;
 	border-radius: 4px;
-	box-shadow: inset 0 1px 2px rgba(0,0,0,.07);
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, .07);
 	width: 100%;
 	box-sizing: border-box;
 }
