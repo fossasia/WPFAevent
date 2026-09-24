@@ -380,7 +380,7 @@
 
 .wpfaevent .wpfa-social-link:hover {
 	background: var(--event-primary, #D51007);
-	color: #fff;
+	color: var(--event-primary-contrast, #fff);
 }
 
 /* ==========================================================================
