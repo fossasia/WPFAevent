@@ -2,9 +2,13 @@
    Schedule Template Styles
    ========================================================================== */
 
-.wpfaevent.wpfa-schedule-template {
+.wpfaevent.wpfa-schedule-template,
+.wpfaevent .wpfa-schedule,
+.wpfa-schedule-template {
 	--event-primary: var(--brand, #D51007);
+	--event-primary-contrast: #fff;
 	--event-primary-dark: #b20d06;
+	--event-primary-dark-contrast: #fff;
 	--event-ink: #243447;
 	--event-line: #dfe6ee;
 	--event-soft: #f4f7fb;
@@ -102,7 +106,7 @@
 
 .wpfaevent .wpfa-schedule-view-switch a.is-active {
 	background: var(--event-primary);
-	color: #fff;
+	color: var(--event-primary-contrast, #fff);
 }
 
 .wpfaevent .wpfa-schedule-filter-form {
@@ -159,7 +163,7 @@
 	background: var(--event-primary);
 	border: 1px solid var(--event-primary);
 	border-radius: var(--event-radius);
-	color: #fff;
+	color: var(--event-primary-contrast, #fff);
 	display: inline-flex;
 	font-weight: 800;
 	height: 40px;
@@ -181,7 +185,7 @@
 .wpfaevent .wpfa-schedule-filter-reset:hover,
 .wpfaevent .wpfa-schedule-filter-reset:focus {
 	background: var(--event-primary-dark);
-	color: #fff;
+	color: var(--event-primary-dark-contrast, #fff);
 }
 
 .wpfaevent .wpfa-schedule-filter-reset {
@@ -610,8 +614,8 @@
 }
 
 .wpfaevent .wpfa-schedule-view-switch a.is-active {
-	background: #17233a;
-	color: #fff;
+	background: var(--event-primary);
+	color: var(--event-primary-contrast, #fff);
 }
 
 .wpfaevent .wpfa-schedule-filter-form {
@@ -642,14 +646,16 @@
 }
 
 .wpfaevent .wpfa-schedule-filter-form button {
-	background: #17233a;
-	border-color: #17233a;
+	background: var(--event-primary);
+	border-color: var(--event-primary);
+	color: var(--event-primary-contrast, #fff);
 }
 
 .wpfaevent .wpfa-schedule-filter-form button:hover,
 .wpfaevent .wpfa-schedule-filter-form button:focus {
-	background: #0f172a;
-	border-color: #0f172a;
+	background: var(--event-primary-dark);
+	border-color: var(--event-primary-dark);
+	color: var(--event-primary-dark-contrast, #fff);
 }
 
 .wpfaevent .wpfa-schedule-filter-reset {

@@ -54,6 +54,16 @@ class Wpfaevent_Admin_Event_Metabox {
 			);
 		}
 
+		// Event colors meta box.
+		add_meta_box(
+			'wpfa_event_colors_box',
+			__( 'Event Colors', 'wpfaevent' ),
+			array( $this, 'render_event_colors_meta_box' ),
+			'wpfa_event',
+			'normal',
+			'default'
+		);
+
 		// Event schedule meta box.
 		add_meta_box(
 			'wpfa_event_schedule_box',
@@ -314,6 +324,88 @@ class Wpfaevent_Admin_Event_Metabox {
 			});
 		}());
 		</script>
+		<?php
+	}
+
+	/**
+	 * Render Event Colors meta box.
+	 *
+	 * @since 1.0.0
+	 * @param WP_Post $post The post object.
+	 * @return void
+	 */
+	public function render_event_colors_meta_box( $post ) {
+		$colors = class_exists( 'Wpfaevent_Meta_Event' )
+			? Wpfaevent_Meta_Event::get_event_colors( $post->ID )
+			: array();
+
+		$color_configs = array(
+			'wpfa_event_primary_color'          => array(
+				'label'       => __( 'Primary Color', 'wpfaevent' ),
+				'fallback'    => '#D51007',
+				'description' => __( 'Main theme color used for the hero section, primary buttons, links, and accents.', 'wpfaevent' ),
+			),
+			'wpfa_event_hover_button_color'     => array(
+				'label'       => __( 'Button Hover Color', 'wpfaevent' ),
+				'fallback'    => '#b20d06',
+				'description' => __( 'Color used for button hover states and darker accents.', 'wpfaevent' ),
+			),
+			'wpfa_event_theme_background_color' => array(
+				'label'       => __( 'Background Color', 'wpfaevent' ),
+				'fallback'    => '#f4f7fb',
+				'description' => __( 'Page background color used behind event content, schedule, and ticket sections.', 'wpfaevent' ),
+			),
+			'wpfa_event_theme_success_color'    => array(
+				'label'       => __( 'Success Color', 'wpfaevent' ),
+				'fallback'    => '#2f8f5b',
+				'description' => __( 'Accent color used for positive status badges, accepted submissions, and confirmed states (CSS: --event-success).', 'wpfaevent' ),
+			),
+			'wpfa_event_theme_danger_color'     => array(
+				'label'       => __( 'Danger Color', 'wpfaevent' ),
+				'fallback'    => '#D51007',
+				'description' => __( 'Accent color used for alerts, sold-out notices, remove tags, and critical indicators (CSS: --event-danger).', 'wpfaevent' ),
+			),
+		);
+		?>
+		<table class="form-table">
+			<?php foreach ( $color_configs as $meta_key => $config ) : ?>
+				<?php
+				$val         = isset( $colors[ $meta_key ] ) ? $colors[ $meta_key ] : '';
+				$preview_hex = class_exists( 'Wpfaevent_Meta_Event' )
+					? Wpfaevent_Meta_Event::normalize_color_to_hex( $val, $config['fallback'] )
+					: $config['fallback'];
+				?>
+				<tr>
+					<th scope="row">
+						<label for="<?php echo esc_attr( $meta_key ); ?>"><?php echo esc_html( $config['label'] ); ?></label>
+					</th>
+					<td>
+						<div class="wpfaevent-color-field-group">
+							<input type="color"
+								class="wpfaevent-color-picker-input"
+								data-target="<?php echo esc_attr( $meta_key ); ?>"
+								value="<?php echo esc_attr( $preview_hex ); ?>">
+							<input type="text"
+								id="<?php echo esc_attr( $meta_key ); ?>"
+								name="<?php echo esc_attr( $meta_key ); ?>"
+								value="<?php echo esc_attr( $val ); ?>"
+								class="regular-text wpfaevent-color-text-input"
+								placeholder="<?php echo esc_attr( $config['fallback'] ); ?>">
+						</div>
+						<p class="description">
+							<?php echo esc_html( $config['description'] ); ?>
+							<?php
+							printf(
+								/* translators: %s: fallback hex color */
+								esc_html__( 'Fallback: %s', 'wpfaevent' ),
+								'<code>' . esc_html( $config['fallback'] ) . '</code>'
+							);
+							?>
+						</p>
+					</td>
+				</tr>
+			<?php endforeach; ?>
+		</table>
 		<?php
 	}
 
@@ -809,6 +901,27 @@ class Wpfaevent_Admin_Event_Metabox {
 				}
 
 				update_post_meta( $post_id, $field, $value );
+			}
+		}
+
+		$color_fields = class_exists( 'Wpfaevent_Meta_Event' )
+			? array_keys( Wpfaevent_Meta_Event::get_event_color_meta_fields() )
+			: array(
+				'wpfa_event_primary_color',
+				'wpfa_event_hover_button_color',
+				'wpfa_event_theme_background_color',
+				'wpfa_event_theme_success_color',
+				'wpfa_event_theme_danger_color',
+			);
+
+		foreach ( $color_fields as $color_field ) {
+			if ( isset( $_POST[ $color_field ] ) ) {
+				$raw_color = sanitize_text_field( wp_unslash( $_POST[ $color_field ] ) );
+				$color     = class_exists( 'Wpfaevent_Meta_Event' )
+					? Wpfaevent_Meta_Event::sanitize_color_value( $raw_color )
+					: $raw_color;
+
+				$this->update_or_delete_post_meta( $post_id, $color_field, $color );
 			}
 		}
 

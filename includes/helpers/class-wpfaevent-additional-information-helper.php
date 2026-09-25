@@ -310,23 +310,9 @@ class Wpfaevent_Additional_Information_Helper {
 		$data['event_additional_url'] = add_query_arg( 'event', $data['selected_event_slug'], $additional_information_page_url );
 
 		// Style attributes.
-		$event_colors        = self::get_event_colors( $event_id );
-		$event_color_var_map = array(
-			'wpfa_event_primary_color'          => '--event-primary',
-			'wpfa_event_hover_button_color'     => '--event-primary-dark',
-			'wpfa_event_theme_background_color' => '--event-soft',
-			'wpfa_event_theme_success_color'    => '--event-success',
-			'wpfa_event_theme_danger_color'     => '--event-danger',
-		);
-		$event_style_vars    = array();
-
-		foreach ( $event_color_var_map as $meta_key => $css_var ) {
-			if ( ! empty( $event_colors[ $meta_key ] ) ) {
-				$event_style_vars[] = $css_var . ': ' . $event_colors[ $meta_key ];
-			}
-		}
-
-		$data['event_style_attr'] = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
+		$data['event_style_attr'] = class_exists( 'Wpfaevent_Meta_Event' )
+			? Wpfaevent_Meta_Event::build_event_style_attribute( $event_id )
+			: '';
 
 		// Header vars.
 		$data['header_vars']['event_page_url']   = $data['selected_event_url'];

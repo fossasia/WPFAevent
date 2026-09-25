@@ -55,24 +55,8 @@ if ( 'sponsor' === $partner_type ) {
 	$banner_url = ! empty( $partner['banner'] ) ? esc_url_raw( $partner['banner'] ) : '';
 }
 
-if ( $event_id && class_exists( 'Wpfaevent_Partner_Helper' ) ) {
-	$event_colors        = Wpfaevent_Partner_Helper::get_event_colors( $event_id );
-	$event_color_var_map = array(
-		'wpfa_event_primary_color'          => '--event-primary',
-		'wpfa_event_hover_button_color'     => '--event-primary-dark',
-		'wpfa_event_theme_background_color' => '--event-soft',
-		'wpfa_event_theme_success_color'    => '--event-success',
-		'wpfa_event_theme_danger_color'     => '--event-danger',
-	);
-	$event_style_vars    = array();
-
-	foreach ( $event_color_var_map as $meta_key => $css_var ) {
-		if ( ! empty( $event_colors[ $meta_key ] ) ) {
-			$event_style_vars[] = $css_var . ': ' . $event_colors[ $meta_key ];
-		}
-	}
-
-	$event_style_attr = $event_style_vars ? ' style="' . esc_attr( implode( '; ', $event_style_vars ) ) . '"' : '';
+if ( $event_id && class_exists( 'Wpfaevent_Meta_Event' ) ) {
+	$event_style_attr = Wpfaevent_Meta_Event::build_event_style_attribute( $event_id );
 }
 
 $site_logo_url = get_option( 'wpfa_site_logo_url', '' );

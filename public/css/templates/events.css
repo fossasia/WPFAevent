@@ -344,8 +344,9 @@
 	text-transform: capitalize;
 }
 
-.wpfaevent .event-badge--upcoming {
-	background: #1a7f3c;
+.wpfaevent .event-badge--upcoming,
+.wpfaevent .event-badge--success {
+	background: var(--event-success, #2f8f5b);
 	color: #fff;
 }
 
@@ -362,6 +363,11 @@
 .wpfaevent .event-badge--warning {
 	background: #ffc107;
 	color: #212529;
+}
+
+.wpfaevent .event-badge--danger {
+	background: var(--event-danger, #D51007);
+	color: #fff;
 }
 
 /* Title */
@@ -456,7 +462,7 @@
 .wpfaevent .modal {
 	display: none;
 	position: fixed;
-	z-index: 100;
+	z-index: 100000;
 	left: 0;
 	top: 0;
 	width: 100%;
@@ -470,13 +476,25 @@
 .wpfaevent .modal-content {
 	background-color: #fefefe;
 	margin: auto;
-	padding: 20px 30px 30px;
 	border: 1px solid #888;
 	width: 90%;
 	max-width: 500px;
+	max-height: 90%;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
 	border-radius: var(--card-radius);
 	position: relative;
 	box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+}
+
+.wpfaevent .modal-content > form {
+	padding: 20px 30px 30px;
+	overflow-y: auto;
+}
+
+.wpfaevent .modal-content > form > * {
+	flex-shrink: 0;
 }
 
 .wpfaevent .close-btn {
