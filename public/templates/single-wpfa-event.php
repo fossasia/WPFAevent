@@ -35,6 +35,7 @@ $event_language_label              = $event_data['event_language_label'];
 $event_url                         = $event_data['event_url'];
 $schedule_items                    = $event_data['schedule_items'];
 $about_content                     = $event_data['about_content'];
+$event_lead                        = $event_data['event_lead'];
 $register_url                      = $event_data['register_url'];
 $register_text                     = $event_data['register_text'];
 $event_google_url                  = $event_data['event_google_url'];
@@ -262,9 +263,12 @@ if ( $show_ticket_widget ) {
 							</span>
 						<?php endif; ?>
 					</div>
-					<?php if ( '' !== trim( $about_content ) ) : ?>
+					<?php
+					$hero_text = '' !== trim( (string) $event_lead ) ? $event_lead : $about_content;
+					?>
+					<?php if ( '' !== trim( (string) $hero_text ) ) : ?>
 						<div class="wpfa-event-hero-text">
-							<?php echo wp_kses_post( wpautop( wp_trim_words( wp_strip_all_tags( $about_content ), 34 ) ) ); ?>
+							<?php echo wp_kses_post( wpautop( wp_trim_words( wp_strip_all_tags( $hero_text ), 34 ) ) ); ?>
 						</div>
 					<?php endif; ?>
 				</div>
