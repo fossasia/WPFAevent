@@ -5,8 +5,8 @@ Requires at least: 5.8
 Tested up to: 6.6
 Requires PHP: 7.4
 Stable tag: 0.1.0
-License: Apache2
-License URI: https://www.apache.org/licenses/LICENSE-2.0.txt
+License: GPL-2.0-or-later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Eventyay event templates for WordPress pages, blocks, and shortcodes.
 
