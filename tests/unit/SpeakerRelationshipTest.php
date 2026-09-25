@@ -226,4 +226,29 @@ class SpeakerRelationshipTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'wpfa-talk-abstract', $compact_card_markup );
 		$this->assertStringContainsString( 'Open Hardware Keynote', $compact_card_markup );
 	}
+
+	/**
+	 * Speaker cards on event pages should hide the edit and delete actions from administrators.
+	 */
+	public function test_speaker_cards_hide_admin_actions_when_flagged() {
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
+
+		$sid = $this->create_speaker( array( 'post_title' => 'Mitch Altman' ) );
+
+		ob_start();
+		include dirname( __DIR__, 2 ) . '/public/partials/speakers/speaker-card.php';
+		$default_card_markup = ob_get_clean();
+
+		$wpfa_hide_speaker_card_admin_actions = true;
+
+		ob_start();
+		include dirname( __DIR__, 2 ) . '/public/partials/speakers/speaker-card.php';
+		$flagged_card_markup = ob_get_clean();
+
+		$this->assertStringContainsString( 'btn-edit-speaker', $default_card_markup );
+		$this->assertStringContainsString( 'btn-delete-speaker', $default_card_markup );
+		$this->assertStringNotContainsString( 'btn-edit-speaker', $flagged_card_markup );
+		$this->assertStringNotContainsString( 'btn-delete-speaker', $flagged_card_markup );
+		$this->assertStringContainsString( 'Mitch Altman', $flagged_card_markup );
+	}
 }
