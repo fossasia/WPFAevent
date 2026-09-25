@@ -395,4 +395,166 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Past Events', $output );
 		$this->assertStringContainsString( 'Code of Conduct', $output );
 	}
+
+	/**
+	 * Regression test for event isolation: verify that multiple events with different
+	 * custom navigations only return their own navigation and do not leak across events.
+	 */
+	public function test_event_navigation_isolation_between_events() {
+		$event_a_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event Alpha',
+			)
+		);
+		$event_b_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event Beta',
+			)
+		);
+		$event_c_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event Gamma',
+			)
+		);
+
+		$nav_items_a = array(
+			array(
+				'text' => 'Alpha Overview',
+				'type' => 'link',
+				'href' => '#alpha-about',
+			),
+			array(
+				'text'    => 'Alpha Venue',
+				'type'    => 'custom_page',
+				'title'   => 'Alpha Venue Information',
+				'slug'    => 'alpha-venue',
+				'content' => 'Venue details for Alpha.',
+			),
+			array(
+				'text'  => 'Alpha Dropdown',
+				'type'  => 'dropdown',
+				'items' => array(
+					array(
+						'text'    => 'Alpha Tracks',
+						'type'    => 'custom_page',
+						'title'   => 'Alpha Track Details',
+						'slug'    => 'alpha-tracks',
+						'content' => 'Tracks list for Alpha.',
+					),
+				),
+			),
+		);
+
+		$nav_items_b = array(
+			array(
+				'text' => 'Beta Overview',
+				'type' => 'link',
+				'href' => '#beta-about',
+			),
+			array(
+				'text'    => 'Beta Tickets',
+				'type'    => 'custom_page',
+				'title'   => 'Beta Ticket Information',
+				'slug'    => 'beta-tickets',
+				'content' => 'Ticket details for Beta.',
+			),
+			array(
+				'text'  => 'Beta Dropdown',
+				'type'  => 'dropdown',
+				'items' => array(
+					array(
+						'text'    => 'Beta Workshops',
+						'type'    => 'custom_page',
+						'title'   => 'Beta Workshop Details',
+						'slug'    => 'beta-workshops',
+						'content' => 'Workshops list for Beta.',
+					),
+				),
+			),
+		);
+
+		update_post_meta( $event_a_id, 'wpfa_event_custom_navigation', $nav_items_a );
+		update_post_meta( $event_b_id, 'wpfa_event_custom_navigation', $nav_items_b );
+
+		// 1. Verify stored meta isolation between events.
+		$stored_a = get_post_meta( $event_a_id, 'wpfa_event_custom_navigation', true );
+		$stored_b = get_post_meta( $event_b_id, 'wpfa_event_custom_navigation', true );
+		$stored_c = get_post_meta( $event_c_id, 'wpfa_event_custom_navigation', true );
+
+		$this->assertSame( $nav_items_a, $stored_a );
+		$this->assertSame( $nav_items_b, $stored_b );
+		$this->assertEmpty( $stored_c );
+		$this->assertNotSame( $stored_a, $stored_b );
+
+		// 2. Verify has_custom_page does not cross-contaminate between events.
+		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_a_id, 'alpha-venue' ) );
+		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_a_id, 'alpha-tracks' ) );
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_a_id, 'beta-tickets' ) );
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_a_id, 'beta-workshops' ) );
+
+		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_b_id, 'beta-tickets' ) );
+		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_b_id, 'beta-workshops' ) );
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_b_id, 'alpha-venue' ) );
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_b_id, 'alpha-tracks' ) );
+
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_c_id, 'alpha-venue' ) );
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_c_id, 'beta-tickets' ) );
+
+		// 3. Verify get_custom_page returns only the queried event's custom page data.
+		$page_a = Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_a_id, 'alpha-venue' );
+		$this->assertIsArray( $page_a );
+		$this->assertSame( 'Alpha Venue Information', $page_a['title'] );
+		$this->assertNull( Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_b_id, 'alpha-venue' ) );
+		$this->assertNull( Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_c_id, 'alpha-venue' ) );
+
+		$page_b = Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_b_id, 'beta-tickets' );
+		$this->assertIsArray( $page_b );
+		$this->assertSame( 'Beta Ticket Information', $page_b['title'] );
+		$this->assertNull( Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_a_id, 'beta-tickets' ) );
+		$this->assertNull( Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_c_id, 'beta-tickets' ) );
+
+		// 4. Verify get_current_custom_page isolates by event ID when query param is present.
+		$_GET['custom_page'] = 'alpha-venue';
+		$current_a           = Wpfaevent_Main_Navigation_Helper::get_current_custom_page( $event_a_id );
+		$current_b           = Wpfaevent_Main_Navigation_Helper::get_current_custom_page( $event_b_id );
+		$this->assertIsArray( $current_a );
+		$this->assertSame( 'Alpha Venue Information', $current_a['title'] );
+		$this->assertNull( $current_b );
+
+		$_GET['custom_page'] = 'beta-tickets';
+		$current_a           = Wpfaevent_Main_Navigation_Helper::get_current_custom_page( $event_a_id );
+		$current_b           = Wpfaevent_Main_Navigation_Helper::get_current_custom_page( $event_b_id );
+		$this->assertNull( $current_a );
+		$this->assertIsArray( $current_b );
+		$this->assertSame( 'Beta Ticket Information', $current_b['title'] );
+		unset( $_GET['custom_page'] );
+
+		// 5. Verify partial rendering isolates navigation items for each event.
+		$wpfa_event_nav_items = $stored_a;
+		$event_id             = $event_a_id;
+		ob_start();
+		include WPFAEVENT_PATH . 'public/partials/event-section-nav.php';
+		$rendered_a = ob_get_clean();
+
+		$this->assertStringContainsString( 'Alpha Overview', $rendered_a );
+		$this->assertStringContainsString( 'Alpha Venue', $rendered_a );
+		$this->assertStringContainsString( 'Alpha Tracks', $rendered_a );
+		$this->assertStringNotContainsString( 'Beta Overview', $rendered_a );
+		$this->assertStringNotContainsString( 'Beta Tickets', $rendered_a );
+
+		$wpfa_event_nav_items = $stored_b;
+		$event_id             = $event_b_id;
+		ob_start();
+		include WPFAEVENT_PATH . 'public/partials/event-section-nav.php';
+		$rendered_b = ob_get_clean();
+
+		$this->assertStringContainsString( 'Beta Overview', $rendered_b );
+		$this->assertStringContainsString( 'Beta Tickets', $rendered_b );
+		$this->assertStringContainsString( 'Beta Workshops', $rendered_b );
+		$this->assertStringNotContainsString( 'Alpha Overview', $rendered_b );
+		$this->assertStringNotContainsString( 'Alpha Venue', $rendered_b );
+	}
 }
