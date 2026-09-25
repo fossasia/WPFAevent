@@ -86,12 +86,12 @@ if ( $is_plain_text ) {
 	?>
 
 	<main class="wpfa-event-custom-page" role="main">
-		<header class="page-hero" style="text-align: center; padding: 48px 20px 32px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+		<header class="page-hero">
 			<div class="container">
-				<p class="wpfa-event-kicker" style="font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--event-primary, #d95700); margin-bottom: 8px;">
-					<a href="<?php echo esc_url( $event_url ); ?>" style="color: inherit; text-decoration: none;">&larr; <?php echo esc_html( $event_title ); ?></a>
+				<p class="wpfa-event-kicker">
+					<a href="<?php echo esc_url( $event_url ); ?>">&larr; <?php echo esc_html( $event_title ); ?></a>
 				</p>
-				<h1 style="font-size: clamp(2rem, 3.5vw, 2.75rem); font-weight: 800; color: var(--event-ink, #0f172a); margin: 0;">
+				<h1>
 					<?php echo esc_html( $page_title ); ?>
 				</h1>
 			</div>
@@ -108,12 +108,12 @@ if ( $is_plain_text ) {
 		}
 		?>
 
-		<div class="container" style="max-width: 860px; margin: 40px auto; padding: 0 20px;">
-			<article class="wpfa-event-rich-text" style="font-size: 1.05rem; line-height: 1.8; color: #334155;">
+		<div class="container wpfa-event-custom-content-wrap">
+			<article class="wpfa-event-rich-text">
 				<?php if ( '' !== $formatted_content ) : ?>
 					<?php echo wp_kses_post( wpautop( $formatted_content ) ); ?>
 				<?php else : ?>
-					<p class="wpfa-empty-state" style="color: #64748b; font-style: italic;">
+					<p class="wpfa-empty-state">
 						<?php esc_html_e( 'No information has been added for this page yet.', 'wpfaevent' ); ?>
 					</p>
 				<?php endif; ?>
