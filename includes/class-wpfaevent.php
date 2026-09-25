@@ -145,7 +145,7 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-speaker-repository.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-api-client.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-post-manager.php';
-		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-admin-settings-renderer.php';
+		
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-ajax-controller.php';
 
 		// Admin and Public classes.
@@ -318,10 +318,7 @@ class Wpfaevent {
 
 		// Register AJAX handler for Eventyay sync and chunked imports.
 		$eventyay_ajax_controller = new Wpfaevent_AJAX_Controller();
-		$this->loader->add_action( 'wp_ajax_wpfaevent_import_get_events', $eventyay_ajax_controller, 'ajax_import_get_events' );
-		$this->loader->add_action( 'wp_ajax_wpfaevent_import_single_event', $eventyay_ajax_controller, 'ajax_import_single_event' );
-		$this->loader->add_action( 'wp_ajax_wpfaevent_import_save_summary', $eventyay_ajax_controller, 'ajax_import_save_summary' );
-
+		
 		// Register AJAX handler for dashboard JSON:API sync.
 		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $this->plugin_admin, 'ajax_sync_eventyay' );
 		$this->loader->add_action( 'admin_post_wpfaevent_import_eventyay_events', $this->plugin_admin, 'handle_eventyay_events_import' );
