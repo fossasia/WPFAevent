@@ -557,4 +557,159 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'Alpha Overview', $rendered_b );
 		$this->assertStringNotContainsString( 'Alpha Venue', $rendered_b );
 	}
+
+	/**
+	 * Test that clearing an event's custom navigation deletes its post meta, falls back to default navigation,
+	 * and does not retain or use navigation from another event.
+	 */
+	public function test_clearing_custom_navigation_falls_back_to_default_navigation() {
+		$event_a_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event Alpha',
+			)
+		);
+		$event_b_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event Beta',
+			)
+		);
+
+		$nav_items_a = array(
+			array(
+				'text' => 'Alpha Custom Link',
+				'type' => 'link',
+				'href' => '#alpha-custom',
+			),
+			array(
+				'text'    => 'Alpha Info',
+				'type'    => 'custom_page',
+				'title'   => 'Alpha Information',
+				'slug'    => 'alpha-info',
+				'content' => 'Alpha content.',
+			),
+		);
+
+		$nav_items_b = array(
+			array(
+				'text' => 'Beta Custom Link',
+				'type' => 'link',
+				'href' => '#beta-custom',
+			),
+			array(
+				'text'    => 'Beta Info',
+				'type'    => 'custom_page',
+				'title'   => 'Beta Information',
+				'slug'    => 'beta-info',
+				'content' => 'Beta content.',
+			),
+		);
+
+		update_post_meta( $event_a_id, 'wpfa_event_custom_navigation', $nav_items_a );
+		update_post_meta( $event_b_id, 'wpfa_event_custom_navigation', $nav_items_b );
+
+		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_a_id, 'alpha-info' ) );
+		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_b_id, 'beta-info' ) );
+
+		// Clear Event Alpha's custom navigation (as done on save when no custom nav items are posted).
+		delete_post_meta( $event_a_id, 'wpfa_event_custom_navigation' );
+
+		// 1. Verify Event Alpha's post meta is completely removed.
+		$stored_a = get_post_meta( $event_a_id, 'wpfa_event_custom_navigation', true );
+		$this->assertEmpty( $stored_a );
+
+		// 2. Verify Event Alpha falls back to default navigation items.
+		$default_items = Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items();
+		$event_a_nav   = ( is_array( $stored_a ) && ! empty( $stored_a ) )
+			? $stored_a
+			: $default_items;
+
+		$this->assertSame( $default_items, $event_a_nav );
+		$this->assertSame( 'Overview', $event_a_nav[0]['text'] );
+		$this->assertSame( 'Speakers', $event_a_nav[1]['text'] );
+		$this->assertSame( 'Schedule', $event_a_nav[2]['text'] );
+		$this->assertSame( 'Sponsors', $event_a_nav[3]['text'] );
+		$this->assertSame( 'Exhibitors', $event_a_nav[4]['text'] );
+
+		// 3. Verify Event Alpha does not have its old custom pages or Event Beta's custom pages.
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_a_id, 'alpha-info' ) );
+		$this->assertNull( Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_a_id, 'alpha-info' ) );
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_a_id, 'beta-info' ) );
+		$this->assertNull( Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_a_id, 'beta-info' ) );
+
+		// 4. Verify Event Beta is completely unaffected and retains its own navigation.
+		$stored_b = get_post_meta( $event_b_id, 'wpfa_event_custom_navigation', true );
+		$this->assertSame( $nav_items_b, $stored_b );
+		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_b_id, 'beta-info' ) );
+		$this->assertIsArray( Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_b_id, 'beta-info' ) );
+
+		// 5. Verify partial rendering of Event Alpha uses default links and does not leak Event Beta's links.
+		$wpfa_event_nav_items = $event_a_nav;
+		$event_id             = $event_a_id;
+		ob_start();
+		include WPFAEVENT_PATH . 'public/partials/event-section-nav.php';
+		$rendered_a = ob_get_clean();
+
+		$this->assertStringContainsString( 'Overview', $rendered_a );
+		$this->assertStringContainsString( 'Speakers', $rendered_a );
+		$this->assertStringContainsString( 'Schedule', $rendered_a );
+		$this->assertStringContainsString( 'Sponsors', $rendered_a );
+		$this->assertStringContainsString( 'Exhibitors', $rendered_a );
+		$this->assertStringNotContainsString( 'Alpha Custom Link', $rendered_a );
+		$this->assertStringNotContainsString( 'Alpha Info', $rendered_a );
+		$this->assertStringNotContainsString( 'Beta Custom Link', $rendered_a );
+		$this->assertStringNotContainsString( 'Beta Info', $rendered_a );
+	}
+
+	/**
+	 * Test custom page ownership: ensure that a custom_page belonging to one event
+	 * cannot be resolved as a custom page for another event during template loading.
+	 */
+	public function test_custom_page_ownership_cannot_be_resolved_by_another_event() {
+		if ( ! class_exists( 'Wpfaevent_Templates' ) ) {
+			$this->markTestSkipped( 'Wpfaevent_Templates class not available.' );
+		}
+
+		$event_a_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event Alpha',
+			)
+		);
+		$event_b_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event Beta',
+			)
+		);
+
+		update_post_meta(
+			$event_a_id,
+			'wpfa_event_custom_navigation',
+			array(
+				array(
+					'text'    => 'Alpha Guide',
+					'type'    => 'custom_page',
+					'title'   => 'Alpha Guide Title',
+					'slug'    => 'alpha-guide',
+					'content' => 'Alpha guide content.',
+				),
+			)
+		);
+
+		// 1. Requesting Event B with Event A's custom page slug must NOT resolve to page-event-custom.php.
+		$this->go_to( add_query_arg( 'custom_page', 'alpha-guide', get_permalink( $event_b_id ) ) );
+		$_GET['custom_page'] = 'alpha-guide';
+		$resolved_template   = Wpfaevent_Templates::load( 'single.php' );
+		$this->assertSame( WPFAEVENT_PATH . 'public/templates/single-wpfa-event.php', $resolved_template );
+
+		// 2. Requesting Event A with its own custom page slug MUST resolve to page-event-custom.php.
+		$this->go_to( add_query_arg( 'custom_page', 'alpha-guide', get_permalink( $event_a_id ) ) );
+		$_GET['custom_page'] = 'alpha-guide';
+		$resolved_template   = Wpfaevent_Templates::load( 'single.php' );
+		$this->assertSame( WPFAEVENT_PATH . 'public/templates/page-event-custom.php', $resolved_template );
+
+		unset( $_GET['custom_page'] );
+	}
 }
