@@ -432,6 +432,7 @@ class MainNavigationTest extends WP_UnitTestCase {
 				'title'   => 'Alpha Venue Information',
 				'slug'    => 'alpha-venue',
 				'content' => 'Venue details for Alpha.',
+				'href'    => '?custom_page=alpha-venue',
 			),
 			array(
 				'text'  => 'Alpha Dropdown',
@@ -443,6 +444,7 @@ class MainNavigationTest extends WP_UnitTestCase {
 						'title'   => 'Alpha Track Details',
 						'slug'    => 'alpha-tracks',
 						'content' => 'Tracks list for Alpha.',
+						'href'    => '?custom_page=alpha-tracks',
 					),
 				),
 			),
@@ -460,6 +462,7 @@ class MainNavigationTest extends WP_UnitTestCase {
 				'title'   => 'Beta Ticket Information',
 				'slug'    => 'beta-tickets',
 				'content' => 'Ticket details for Beta.',
+				'href'    => '?custom_page=beta-tickets',
 			),
 			array(
 				'text'  => 'Beta Dropdown',
@@ -471,6 +474,7 @@ class MainNavigationTest extends WP_UnitTestCase {
 						'title'   => 'Beta Workshop Details',
 						'slug'    => 'beta-workshops',
 						'content' => 'Workshops list for Beta.',
+						'href'    => '?custom_page=beta-workshops',
 					),
 				),
 			),
@@ -588,6 +592,7 @@ class MainNavigationTest extends WP_UnitTestCase {
 				'title'   => 'Alpha Information',
 				'slug'    => 'alpha-info',
 				'content' => 'Alpha content.',
+				'href'    => '?custom_page=alpha-info',
 			),
 		);
 
@@ -603,6 +608,7 @@ class MainNavigationTest extends WP_UnitTestCase {
 				'title'   => 'Beta Information',
 				'slug'    => 'beta-info',
 				'content' => 'Beta content.',
+				'href'    => '?custom_page=beta-info',
 			),
 		);
 
