@@ -93,8 +93,8 @@ class Wpfaevent_Event_Navigation_Helper {
 				return ! empty( $context['show_sponsors'] ) && ! empty( $context['has_sponsors'] );
 			case '#exhibitors':
 				return ! empty( $context['show_exhibitors'] ) && ! empty( $context['has_exhibitors'] );
-			case '#venue':
-				return ! empty( $context['has_venue'] );
+			case '#additional-information':
+				return ! empty( $context['has_additional_information'] );
 		}
 
 		if ( 0 === strpos( $href, '#custom-section-' ) ) {
@@ -200,7 +200,7 @@ class Wpfaevent_Event_Navigation_Helper {
 				'text' => __( 'Schedule', 'wpfaevent' ),
 			),
 			array(
-				'href' => '#venue',
+				'href' => '#additional-information',
 				'text' => __( 'Additional Info', 'wpfaevent' ),
 			),
 		);
