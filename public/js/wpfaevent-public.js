@@ -746,5 +746,53 @@
 				},
 			});
 		});
+
+		// Header navigation dropdown click/touch and accessibility support.
+		$('.wpfaevent .nav-dropdown-toggle').on('click', function (e) {
+			e.preventDefault();
+			const $toggle = $(this);
+			const $dropdown = $toggle.closest('.nav-dropdown');
+			const isOpen = $dropdown.hasClass('is-open');
+
+			$('.wpfaevent .nav-dropdown').removeClass('is-open');
+			$('.wpfaevent .nav-dropdown-toggle').attr('aria-expanded', 'false');
+
+			if (!isOpen) {
+				$dropdown.addClass('is-open');
+				$toggle.attr('aria-expanded', 'true');
+			}
+		});
+
+		$(document).on('click', function (e) {
+			if (!$(e.target).closest('.wpfaevent .nav-dropdown').length) {
+				$('.wpfaevent .nav-dropdown').removeClass('is-open');
+				$('.wpfaevent .nav-dropdown-toggle').attr(
+					'aria-expanded',
+					'false'
+				);
+			}
+		});
+
+		$('.wpfaevent .nav-dropdown')
+			.on('focusin', function () {
+				$(this)
+					.find('.nav-dropdown-toggle')
+					.attr('aria-expanded', 'true');
+			})
+			.on('focusout', function () {
+				const $dropdown = $(this);
+				setTimeout(function () {
+					const activeEl = $dropdown[0].ownerDocument?.activeElement;
+					if (
+						activeEl &&
+						!$dropdown[0].contains(activeEl) &&
+						!$dropdown.hasClass('is-open')
+					) {
+						$dropdown
+							.find('.nav-dropdown-toggle')
+							.attr('aria-expanded', 'false');
+					}
+				}, 10);
+			});
 	});
 })(jQuery);
