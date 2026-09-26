@@ -49,7 +49,7 @@ $position           = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_po
 $speaker_title_meta = sanitize_text_field( get_post_meta( $sid, 'wpfa_speaker_title', true ) );
 $photo_url          = get_post_meta( $sid, 'wpfa_speaker_headshot_url', true );
 $speaker_link       = get_permalink( $sid );
-$is_admin           = current_user_can( 'manage_options' );
+$is_admin           = current_user_can( 'manage_options' ) && empty( $wpfa_hide_speaker_card_admin_actions );
 
 // Get session details.
 $talk_title            = get_post_meta( $sid, 'wpfa_speaker_talk_title', true );
