@@ -226,7 +226,7 @@ $header_vars = array(
 						<?php
 						// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 						$initial_filter = isset( $_GET['filter'] ) ? sanitize_text_field( wp_unslash( $_GET['filter'] ) ) : 'all';
-						if ( ! in_array( $initial_filter, array( 'all', 'upcoming', 'past', 'bookmarked' ), true ) ) {
+						if ( ! in_array( $initial_filter, array( 'all', 'upcoming', 'past', 'bookmarked' ), true ) || ( 'bookmarked' === $initial_filter && ! is_user_logged_in() ) ) {
 							$initial_filter = 'all';
 						}
 						?>

@@ -70,9 +70,9 @@ $coc_url            = $coc_page_id ? get_permalink( $coc_page_id ) : home_url( '
 		</a>
 		<nav class="nav-links" role="navigation" aria-label="<?php esc_attr_e( 'Primary', 'wpfaevent' ); ?>">
 			<div class="nav-links-main">
-				<a href="<?php echo esc_url( $events_url ); ?>" class="<?php echo esc_attr( $is_events_active ); ?>"><?php esc_html_e( 'Upcoming Events', 'wpfaevent' ); ?></a>
-				<a href="<?php echo esc_url( $past_events_url ); ?>" class="<?php echo esc_attr( $is_past_events_active ); ?>"><?php esc_html_e( 'Past Events', 'wpfaevent' ); ?></a>
-				<a href="<?php echo esc_url( $coc_url ); ?>" class="<?php echo esc_attr( $is_coc_active ); ?>"><?php esc_html_e( 'Code of Conduct', 'wpfaevent' ); ?></a>
+				<a href="<?php echo esc_url( $events_url ); ?>" class="<?php echo esc_attr( trim( 'nav-link-upcoming ' . $is_events_active ) ); ?>" data-nav="upcoming"><?php esc_html_e( 'Upcoming Events', 'wpfaevent' ); ?></a>
+				<a href="<?php echo esc_url( $past_events_url ); ?>" class="<?php echo esc_attr( trim( 'nav-link-past ' . $is_past_events_active ) ); ?>" data-nav="past"><?php esc_html_e( 'Past Events', 'wpfaevent' ); ?></a>
+				<a href="<?php echo esc_url( $coc_url ); ?>" class="<?php echo esc_attr( trim( 'nav-link-coc ' . $is_coc_active ) ); ?>" data-nav="coc"><?php esc_html_e( 'Code of Conduct', 'wpfaevent' ); ?></a>
 			</div>
 			
 			<?php if ( $show_back_button || $show_register_button ) : ?>
