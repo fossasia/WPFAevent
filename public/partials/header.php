@@ -46,8 +46,8 @@ if ( '' !== $home_path ) {
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 $raw_filter     = isset( $_GET['filter'] ) ? sanitize_text_field( wp_unslash( $_GET['filter'] ) ) : '';
 $current_filter = '';
-if ( 'past' === $raw_filter ) {
-	$current_filter = 'past';
+if ( in_array( $raw_filter, array( 'past', 'upcoming' ), true ) ) {
+	$current_filter = $raw_filter;
 }
 
 $is_past_events_active = ( 'past-events' === $current_path || is_page_template( 'page-past-events.php' ) || 'past' === $current_filter ) ? 'active' : '';
@@ -55,14 +55,17 @@ $is_events_active      = ( ( 'events' === $current_path || is_post_type_archive(
 $is_coc_active         = ( 'code-of-conduct' === $current_path || ( $coc_page_id && is_page( $coc_page_id ) ) || is_page_template( 'page-code-of-conduct.php' ) ) ? 'active' : '';
 
 // Allow customization of events URLs via filters while keeping current behavior as default.
-$events_url      = apply_filters( 'wpfaevent_events_url', home_url( '/events/' ) );
-$past_events_url = apply_filters( 'wpfaevent_past_events_url', home_url( '/events/?filter=past' ) );
-$coc_url         = $coc_page_id ? get_permalink( $coc_page_id ) : home_url( '/code-of-conduct/' );
+$hub_url            = apply_filters( 'wpfaevent_hub_url', home_url( '/events/' ) );
+$default_events_url = home_url( '/events/?filter=upcoming' );
+$events_url         = apply_filters( 'wpfaevent_upcoming_events_url', $default_events_url );
+$events_url         = apply_filters( 'wpfaevent_events_url', $events_url );
+$past_events_url    = apply_filters( 'wpfaevent_past_events_url', home_url( '/events/?filter=past' ) );
+$coc_url            = $coc_page_id ? get_permalink( $coc_page_id ) : home_url( '/code-of-conduct/' );
 ?>
 
 <header class="nav" role="banner">
 	<div class="container nav-inner">
-		<a href="<?php echo esc_url( $events_url ); ?>">
+		<a href="<?php echo esc_url( $hub_url ); ?>">
 			<img src="<?php echo esc_url( $site_logo_url ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" class="site-logo">
 		</a>
 		<nav class="nav-links" role="navigation" aria-label="<?php esc_attr_e( 'Primary', 'wpfaevent' ); ?>">
