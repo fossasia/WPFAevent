@@ -824,9 +824,7 @@ class Wpfaevent_Admin_Event_Metabox {
 	 */
 	public function render_event_navigation_meta_box( $post ) {
 		$saved_items = get_post_meta( $post->ID, 'wpfa_event_custom_navigation', true );
-		$items       = is_array( $saved_items ) && ! empty( $saved_items )
-			? $saved_items
-			: ( class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items() : array() );
+		$items       = is_array( $saved_items ) && ! empty( $saved_items ) ? $saved_items : array();
 
 		$wp_pages = get_pages(
 			array(
@@ -835,6 +833,9 @@ class Wpfaevent_Admin_Event_Metabox {
 			)
 		);
 		?>
+		<p class="description" style="margin-bottom: 10px;">
+			<?php esc_html_e( 'Customize navigation links for this event. Leave empty to use dynamically generated default navigation. Click "Reset to Default" to load standard items for customization.', 'wpfaevent' ); ?>
+		</p>
 		<div class="wpfaevent-meta-cards-container" id="wpfaevent-nav-items-container">
 			<?php
 			foreach ( $items as $i => $item ) {
@@ -848,6 +849,9 @@ class Wpfaevent_Admin_Event_Metabox {
 			</button>
 			<button type="button" class="button button-secondary" id="wpfaevent-reset-nav-default" style="margin-left: 8px;">
 				<?php esc_html_e( 'Reset to Default', 'wpfaevent' ); ?>
+			</button>
+			<button type="button" class="button button-secondary" id="wpfaevent-clear-nav" style="margin-left: 8px;">
+				<?php esc_html_e( 'Clear All', 'wpfaevent' ); ?>
 			</button>
 		</p>
 		<template id="wpfaevent-nav-default-template">
@@ -875,6 +879,14 @@ class Wpfaevent_Admin_Event_Metabox {
 					var defaultHtml = $('#wpfaevent-nav-default-template').html();
 					$('#wpfaevent-nav-items-container').html(defaultHtml);
 					navIndex = $('#wpfaevent-nav-items-container .wpfaevent-meta-card').length;
+				});
+				$('#wpfaevent-clear-nav').on('click', function(e) {
+					e.preventDefault();
+					if (!confirm('<?php echo esc_js( __( 'Clear all custom navigation items and use default navigation?', 'wpfaevent' ) ); ?>')) {
+						return;
+					}
+					$('#wpfaevent-nav-items-container').empty();
+					navIndex = 0;
 				});
 				$('#wpfaevent-nav-items-container').on('change', '.wpfaevent-nav-type-select', function() {
 					var val = $(this).val();

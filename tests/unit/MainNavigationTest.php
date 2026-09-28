@@ -569,14 +569,47 @@ class MainNavigationTest extends WP_UnitTestCase {
 	public function test_clearing_custom_navigation_falls_back_to_default_navigation() {
 		$event_a_id = $this->factory->post->create(
 			array(
-				'post_type'  => 'wpfa_event',
-				'post_title' => 'Event Alpha',
+				'post_type'    => 'wpfa_event',
+				'post_title'   => 'Event Alpha',
+				'post_content' => 'Overview content for Event Alpha.',
 			)
 		);
 		$event_b_id = $this->factory->post->create(
 			array(
-				'post_type'  => 'wpfa_event',
-				'post_title' => 'Event Beta',
+				'post_type'    => 'wpfa_event',
+				'post_title'   => 'Event Beta',
+				'post_content' => 'Overview content for Event Beta.',
+			)
+		);
+
+		update_post_meta( $event_a_id, 'wpfa_event_speakers', array( 9999 ) );
+		update_post_meta(
+			$event_a_id,
+			'wpfa_event_schedule_table',
+			array(
+				'data' => array(
+					array( 'Time', 'Session' ),
+					array( '09:00', 'Keynote' ),
+				),
+			)
+		);
+		update_post_meta(
+			$event_a_id,
+			'wpfa_sponsors',
+			array(
+				array(
+					'name'  => 'Sponsor Alpha',
+					'image' => 'https://example.com/sponsor.png',
+				),
+			)
+		);
+		update_post_meta(
+			$event_a_id,
+			'wpfa_exhibitors',
+			array(
+				array(
+					'name' => 'Exhibitor Alpha',
+				),
 			)
 		);
 
@@ -625,18 +658,20 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$stored_a = get_post_meta( $event_a_id, 'wpfa_event_custom_navigation', true );
 		$this->assertEmpty( $stored_a );
 
-		// 2. Verify Event Alpha falls back to default navigation items.
-		$default_items = Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items();
-		$event_a_nav   = ( is_array( $stored_a ) && ! empty( $stored_a ) )
-			? $stored_a
-			: $default_items;
+		// 2. Verify Event Alpha falls back to default navigation items via the event template controller.
+		$event_a_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_a_id );
+		$this->assertArrayHasKey( 'wpfa_event_nav_items', $event_a_data );
+		$this->assertNotEmpty( $event_a_data['wpfa_event_nav_items'] );
+		$event_a_nav = $event_a_data['wpfa_event_nav_items'];
 
-		$this->assertSame( $default_items, $event_a_nav );
-		$this->assertSame( 'Overview', $event_a_nav[0]['text'] );
-		$this->assertSame( 'Speakers', $event_a_nav[1]['text'] );
-		$this->assertSame( 'Schedule', $event_a_nav[2]['text'] );
-		$this->assertSame( 'Sponsors', $event_a_nav[3]['text'] );
-		$this->assertSame( 'Exhibitors', $event_a_nav[4]['text'] );
+		$nav_texts = array_column( $event_a_nav, 'text' );
+		$this->assertContains( 'Overview', $nav_texts );
+		$this->assertContains( 'Speakers', $nav_texts );
+		$this->assertContains( 'Schedule', $nav_texts );
+		$this->assertContains( 'Sponsors', $nav_texts );
+		$this->assertContains( 'Exhibitors', $nav_texts );
+		$this->assertNotContains( 'Alpha Custom Link', $nav_texts );
+		$this->assertNotContains( 'Alpha Info', $nav_texts );
 
 		// 3. Verify Event Alpha does not have its old custom pages or Event Beta's custom pages.
 		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_a_id, 'alpha-info' ) );
@@ -644,9 +679,12 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_a_id, 'beta-info' ) );
 		$this->assertNull( Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_a_id, 'beta-info' ) );
 
-		// 4. Verify Event Beta is completely unaffected and retains its own navigation.
+		// 4. Verify Event Beta is completely unaffected and retains its own custom navigation via the controller.
 		$stored_b = get_post_meta( $event_b_id, 'wpfa_event_custom_navigation', true );
 		$this->assertSame( $nav_items_b, $stored_b );
+		$event_b_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_b_id );
+		$this->assertArrayHasKey( 'wpfa_event_nav_items', $event_b_data );
+		$this->assertSame( $nav_items_b, $event_b_data['wpfa_event_nav_items'] );
 		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::has_custom_page( $event_b_id, 'beta-info' ) );
 		$this->assertIsArray( Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_b_id, 'beta-info' ) );
 
@@ -666,6 +704,39 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'Alpha Info', $rendered_a );
 		$this->assertStringNotContainsString( 'Beta Custom Link', $rendered_a );
 		$this->assertStringNotContainsString( 'Beta Info', $rendered_a );
+	}
+
+	/**
+	 * Test that the navigation meta box editor is empty when no custom navigation has been saved,
+	 * ensuring default navigation is not unintentionally saved as custom navigation.
+	 */
+	public function test_navigation_meta_box_is_empty_when_no_custom_navigation_saved() {
+		if ( ! class_exists( 'Wpfaevent_Admin_Event_Metabox' ) ) {
+			$this->markTestSkipped( 'Wpfaevent_Admin_Event_Metabox class not available.' );
+		}
+
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event Without Custom Nav',
+			)
+		);
+
+		$metabox = new Wpfaevent_Admin_Event_Metabox();
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'id="wpfaevent-nav-items-container"', $output );
+		$container_start = strpos( $output, 'id="wpfaevent-nav-items-container"' );
+		$this->assertNotFalse( $container_start );
+		$container_end = strpos( $output, '</div>', $container_start );
+		$this->assertNotFalse( $container_end );
+		$container_html = substr( $output, $container_start, $container_end - $container_start );
+		$this->assertStringNotContainsString( 'wpfaevent-meta-card', $container_html );
+
+		$this->assertStringContainsString( 'id="wpfaevent-nav-default-template"', $output );
+		$this->assertStringContainsString( 'id="wpfaevent-reset-nav-default"', $output );
 	}
 
 	/**
