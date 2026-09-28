@@ -21,6 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @author     FOSSASIA <contact@fossasia.org>
  */
 class Wpfaevent_Eventyay_Importer {
+	const IMPORT_IN_PROGRESS_TTL = 15 * MINUTE_IN_SECONDS;
+
 	/**
 	 * API client.
 	 *
@@ -266,11 +268,11 @@ class Wpfaevent_Eventyay_Importer {
 					<?php esc_html_e( 'Use this to import the configured Eventyay event. Use the Update Event menu item when that event changes after the initial import.', 'wpfaevent' ); ?>
 				</p>
 
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<form class="wpfaevent-eventyay-import-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="wpfaevent_import_eventyay_events">
 					<input type="hidden" name="wpfaevent_eventyay_return_page" value="wpfaevent-import-events">
 					<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
-					<?php submit_button( __( 'Import Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, ( empty( $settings['organizer_slug'] ) || empty( $settings['event_slug'] ) ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
+					<?php submit_button( __( 'Import Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, ( empty( $settings['organizer_slug'] ) || empty( $settings['event_slug'] ) || self::is_import_in_progress() ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
 				</form>
 			</div>
 
@@ -285,6 +287,8 @@ class Wpfaevent_Eventyay_Importer {
 					</ul>
 				</div>
 		</div>
+
+		<?php $this->render_import_progress_overlay(); ?>
 		<?php
 	}
 
@@ -338,7 +342,7 @@ class Wpfaevent_Eventyay_Importer {
 					<p><?php esc_html_e( 'Enter an Eventyay event URL below before updating.', 'wpfaevent' ); ?></p>
 				<?php endif; ?>
 
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<form class="wpfaevent-eventyay-import-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="wpfaevent_import_eventyay_events">
 					<input type="hidden" name="wpfaevent_eventyay_return_page" value="wpfaevent-update-events">
 					<input type="hidden" name="wpfaevent_eventyay_import_settings[base_url]" value="<?php echo esc_attr( $settings['base_url'] ); ?>">
@@ -355,7 +359,7 @@ class Wpfaevent_Eventyay_Importer {
 						</tr>
 					</table>
 					<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
-					<?php submit_button( __( 'Update Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false ); ?>
+					<?php submit_button( __( 'Update Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, self::is_import_in_progress() ? array( 'disabled' => 'disabled' ) : array() ); ?>
 				</form>
 
 				<p>
@@ -363,6 +367,107 @@ class Wpfaevent_Eventyay_Importer {
 						<?php esc_html_e( 'Edit Eventyay import settings', 'wpfaevent' ); ?>
 					</a>
 				</p>
+			</div>
+		</div>
+
+		<?php $this->render_import_progress_overlay(); ?>
+		<?php
+	}
+
+	/**
+	 * Option key holding the import lock for a user.
+	 *
+	 * @since 1.0.0
+	 * @param int $user_id User to build the key for, 0 for the current user.
+	 * @return string
+	 */
+	public static function get_import_in_progress_key( $user_id = 0 ) {
+		$user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+		return 'wpfaevent_eventyay_import_in_progress_' . $user_id;
+	}
+
+	/**
+	 * Whether an import is currently running for the current user.
+	 *
+	 * @since 1.0.0
+	 * @return bool
+	 */
+	public static function is_import_in_progress() {
+		$started = (int) get_option( self::get_import_in_progress_key(), 0 );
+
+		return $started > time() - self::IMPORT_IN_PROGRESS_TTL;
+	}
+
+	/**
+	 * Claim the import lock for the current user.
+	 *
+	 * @since 1.0.0
+	 * @return int|false Lock token, or false when an import already holds the lock.
+	 */
+	public static function acquire_import_lock() {
+		global $wpdb;
+
+		$key     = self::get_import_in_progress_key();
+		$started = time();
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Atomic insert-if-absent lock; caches cleared below.
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} WHERE option_name = %s AND option_value < %d",
+				$key,
+				$started - self::IMPORT_IN_PROGRESS_TTL
+			)
+		);
+		$claimed = (bool) $wpdb->query(
+			$wpdb->prepare(
+				"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+				$key,
+				$started
+			)
+		);
+		// phpcs:enable
+
+		wp_cache_delete( $key, 'options' );
+		wp_cache_delete( 'notoptions', 'options' );
+
+		return $claimed ? $started : false;
+	}
+
+	/**
+	 * Release the import lock, if this request still holds it.
+	 *
+	 * @since 1.0.0
+	 * @param int $started Token returned by acquire_import_lock().
+	 * @return void
+	 */
+	public static function release_import_lock( $started ) {
+		global $wpdb;
+
+		$key = self::get_import_in_progress_key();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Owner-only delete; cache cleared below.
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name = %s AND option_value = %s", $key, $started ) );
+
+		wp_cache_delete( $key, 'options' );
+	}
+
+	/**
+	 * Render the overlay shown while an Eventyay import runs.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	private function render_import_progress_overlay() {
+		$running = self::is_import_in_progress();
+		?>
+		<div id="wpfaevent-import-progress-overlay" class="<?php echo $running ? 'is-visible' : ''; ?>" role="status" aria-live="polite">
+			<div class="wpfaevent-progress-card">
+				<div class="wpfaevent-spinner-container">
+					<div class="wpfaevent-spinner"></div>
+				</div>
+				<h3 id="wpfaevent-progress-title"><?php esc_html_e( 'Importing from Eventyay', 'wpfaevent' ); ?></h3>
+				<p id="wpfaevent-progress-status"><?php esc_html_e( 'Import working in the background. You can navigate away and come back.', 'wpfaevent' ); ?></p>
 			</div>
 		</div>
 		<?php
@@ -390,6 +495,25 @@ class Wpfaevent_Eventyay_Importer {
 			$return_page = 'wpfaevent-import-events';
 		}
 
+		$notice_key = 'wpfaevent_eventyay_import_notice_' . get_current_user_id();
+
+		$lock = self::acquire_import_lock();
+		if ( false === $lock ) {
+			set_transient(
+				$notice_key,
+				array(
+					'type'    => 'warning',
+					'message' => __( 'An Eventyay import is already running. Wait for it to finish before starting another.', 'wpfaevent' ),
+				),
+				MINUTE_IN_SECONDS * 5
+			);
+			wp_safe_redirect( admin_url( 'edit.php?post_type=wpfa_event&page=' . $return_page ) );
+			exit;
+		}
+
+		ignore_user_abort( true );
+		register_shutdown_function( array( __CLASS__, 'release_import_lock' ), $lock );
+
 		if ( isset( $_POST['wpfaevent_eventyay_import_settings'] ) && is_array( $_POST['wpfaevent_eventyay_import_settings'] ) ) {
 			$raw_settings = wp_unslash( $_POST['wpfaevent_eventyay_import_settings'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Array values are sanitized immediately by sanitize_eventyay_import_settings().
 			$raw_settings = wp_parse_args( $raw_settings, $this->get_eventyay_import_settings() );
@@ -398,8 +522,7 @@ class Wpfaevent_Eventyay_Importer {
 			update_option( 'wpfaevent_eventyay_import_settings', $sanitized, false );
 		}
 
-		$result     = $this->import_eventyay_events_from_settings();
-		$notice_key = 'wpfaevent_eventyay_import_notice_' . get_current_user_id();
+		$result = $this->import_eventyay_events_from_settings();
 
 		if ( is_wp_error( $result ) ) {
 			set_transient(
@@ -408,7 +531,7 @@ class Wpfaevent_Eventyay_Importer {
 					'type'    => 'error',
 					'message' => $result->get_error_message(),
 				),
-				MINUTE_IN_SECONDS
+				MINUTE_IN_SECONDS * 5
 			);
 		} else {
 			set_transient(
@@ -432,7 +555,7 @@ class Wpfaevent_Eventyay_Importer {
 						absint( $result['partner_skipped'] )
 					),
 				),
-				MINUTE_IN_SECONDS
+				MINUTE_IN_SECONDS * 5
 			);
 		}
 
