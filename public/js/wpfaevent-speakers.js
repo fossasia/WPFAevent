@@ -577,6 +577,9 @@ const wpfaSpeakers = (function () {
 	 * @param {string} speakerId Speaker post ID.
 	 */
 	function openEditModal(speakerId) {
+		// Clear the previous speaker's values before loading this one
+		resetSpeakerForm();
+
 		// Open the modal immediately
 		openModal();
 
@@ -767,9 +770,7 @@ const wpfaSpeakers = (function () {
 		openModal();
 
 		// Reset form
-		if (elements.speakerForm) {
-			elements.speakerForm.reset();
-		}
+		resetSpeakerForm();
 
 		// Update modal title
 		const modalTitle = document.getElementById('wpfa-modal-title');
@@ -789,20 +790,34 @@ const wpfaSpeakers = (function () {
 			speakerIdInput.value = '';
 		}
 
-		// Set image source to URL by default
-		if (elements.speakerForm) {
-			const urlRadio =
-				elements.speakerForm?.querySelector('input[value="url"]');
-			if (urlRadio) {
-				urlRadio.checked = true;
-				handleImageSourceChange({ target: urlRadio });
-			}
-		}
-
 		// Update submit button text
 		const submitText = document.getElementById('wpfa-submit-text');
 		if (submitText) {
 			submitText.textContent = 'Add Speaker';
+		}
+	}
+
+	/**
+	 * Reset the speaker form, including the custom category input
+	 */
+	function resetSpeakerForm() {
+		if (!elements.speakerForm) {
+			return;
+		}
+
+		elements.speakerForm.reset();
+
+		// reset() fires no change event, so re-sync the custom category input
+		document
+			.getElementById('wpfa-speaker-category')
+			?.dispatchEvent(new Event('change'));
+
+		// Set image source to URL by default
+		const urlRadio =
+			elements.speakerForm.querySelector('input[value="url"]');
+		if (urlRadio) {
+			urlRadio.checked = true;
+			handleImageSourceChange({ target: urlRadio });
 		}
 	}
 
