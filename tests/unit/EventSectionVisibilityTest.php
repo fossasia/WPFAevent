@@ -218,6 +218,28 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Dashboard managers get the speaker edit modal their card edit buttons open.
+	 */
+	public function test_event_page_renders_speaker_modal_for_dashboard_managers() {
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
+
+		$output = $this->render_event_template();
+
+		$this->assertStringContainsString( 'id="wpfa-speaker-modal"', $output );
+	}
+
+	/**
+	 * Visitors never receive the speaker edit modal.
+	 */
+	public function test_event_page_omits_speaker_modal_for_visitors() {
+		wp_set_current_user( 0 );
+
+		$output = $this->render_event_template();
+
+		$this->assertStringNotContainsString( 'id="wpfa-speaker-modal"', $output );
+	}
+
+	/**
 	 * Store a single-session dashboard schedule for the event fixture.
 	 */
 	private function write_schedule_fixture() {
