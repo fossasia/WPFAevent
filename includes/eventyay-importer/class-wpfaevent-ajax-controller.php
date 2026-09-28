@@ -321,6 +321,38 @@ class Wpfaevent_AJAX_Controller {
 	}
 
 	/**
+	 * Report whether an Eventyay import is still running for the current user.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public function ajax_import_status() {
+		if ( ! check_ajax_referer( 'wpfaevent_import_eventyay_events', 'nonce', false ) ) {
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'Invalid nonce', 'wpfaevent' ),
+				),
+				403
+			);
+		}
+
+		if ( ! Wpfaevent_Roles::current_user_can_import_eventyay() ) {
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'Unauthorized', 'wpfaevent' ),
+				),
+				403
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'running' => Wpfaevent_Eventyay_Importer::is_import_in_progress(),
+			)
+		);
+	}
+
+	/**
 	 * Send a structured Eventyay sync failure response.
 	 *
 	 * @since 1.0.0

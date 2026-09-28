@@ -321,6 +321,7 @@ class Wpfaevent {
 		$this->loader->add_action( 'wp_ajax_wpfaevent_import_get_events', $eventyay_ajax_controller, 'ajax_import_get_events' );
 		$this->loader->add_action( 'wp_ajax_wpfaevent_import_single_event', $eventyay_ajax_controller, 'ajax_import_single_event' );
 		$this->loader->add_action( 'wp_ajax_wpfaevent_import_save_summary', $eventyay_ajax_controller, 'ajax_import_save_summary' );
+		$this->loader->add_action( 'wp_ajax_wpfaevent_import_status', $eventyay_ajax_controller, 'ajax_import_status' );
 
 		// Register AJAX handler for dashboard JSON:API sync.
 		$this->loader->add_action( 'wp_ajax_fossasia_sync_eventyay', $this->plugin_admin, 'ajax_sync_eventyay' );
