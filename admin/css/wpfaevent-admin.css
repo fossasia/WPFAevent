@@ -41,6 +41,45 @@
     margin-bottom: 12px;
 }
 
+#poststuff #wpfa_event_additional_information_box .wpfaevent-additional-info-field-label,
+#wpfa_event_additional_information_box .wpfaevent-additional-info-field-label,
+#poststuff .wpfaevent-additional-info-field-label,
+.wpfaevent-additional-info-field-label {
+    float: left;
+    clear: both;
+    margin-top: 18px;
+    margin-bottom: 0;
+    line-height: 28px;
+}
+
+#poststuff #wpfa_event_additional_information_box .wpfaevent-additional-info-field-label:first-of-type,
+#wpfa_event_additional_information_box .wpfaevent-additional-info-field-label:first-of-type,
+#poststuff .wpfaevent-additional-info-field-label:first-of-type,
+.wpfaevent-additional-info-field-label:first-of-type {
+    margin-top: 6px;
+}
+
+#wpfa_event_additional_information_box .wp-switch-editor,
+#wp-wpfa_event_venue_information-wrap .wp-switch-editor,
+#wp-wpfa_event_transportation_information-wrap .wp-switch-editor,
+#wp-wpfa_event_hotel_information-wrap .wp-switch-editor {
+    margin-top: 0;
+}
+
+#wpfa_event_additional_information_box .wp-editor-tools,
+#wp-wpfa_event_venue_information-wrap .wp-editor-tools,
+#wp-wpfa_event_transportation_information-wrap .wp-editor-tools,
+#wp-wpfa_event_hotel_information-wrap .wp-editor-tools {
+    margin-bottom: 0;
+}
+
+#wpfa_event_additional_information_box .wp-editor-wrap,
+#wp-wpfa_event_venue_information-wrap,
+#wp-wpfa_event_transportation_information-wrap,
+#wp-wpfa_event_hotel_information-wrap {
+    margin-bottom: 8px;
+}
+
 .wpfaevent-custom-tabs-list {
     display: grid;
     gap: 14px;

@@ -52,6 +52,8 @@ $show_exhibitors                   = $event_data['show_exhibitors'];
 $has_speakers                      = $event_data['has_speakers'];
 $has_schedule                      = $event_data['has_schedule'];
 $venue_information                 = $event_data['venue_information'];
+$transportation_information        = $event_data['transportation_information'];
+$hotel_information                 = $event_data['hotel_information'];
 $event_additional_url              = $event_data['event_additional_url'];
 $custom_tabs                       = $event_data['custom_tabs'];
 $featured_speaker_ids              = $event_data['featured_speaker_ids'];
@@ -889,18 +891,35 @@ if ( $show_ticket_widget ) {
 			</section>
 		<?php endif; ?>
 
-		<?php if ( '' !== trim( wp_strip_all_tags( $venue_information ) ) ) : ?>
-			<section id="venue" class="wpfa-event-section wpfa-event-venue" aria-labelledby="wpfa-event-venue-title">
+		<?php if ( '' !== trim( wp_strip_all_tags( $venue_information . $transportation_information . $hotel_information ) ) ) : ?>
+			<section id="additional-information" class="wpfa-event-section wpfa-event-additional-information" aria-labelledby="wpfa-event-additional-information-title">
 				<div class="container">
 					<div class="wpfa-event-section-head">
 						<div>
-							<h2 id="wpfa-event-venue-title"><?php esc_html_e( 'Additional information', 'wpfaevent' ); ?></h2>
+							<h2 id="wpfa-event-additional-information-title"><?php esc_html_e( 'Additional information', 'wpfaevent' ); ?></h2>
 							<p><?php esc_html_e( 'Nearby hotels, transportation, parking, directions, and venue notes.', 'wpfaevent' ); ?></p>
 						</div>
 						<a href="<?php echo esc_url( $event_additional_url ); ?>"><?php esc_html_e( 'View Additional Information', 'wpfaevent' ); ?></a>
 					</div>
-					<div class="wpfa-event-rich-text wpfa-event-additional-preview">
-						<?php echo wp_kses_post( wpautop( $venue_information ) ); ?>
+					<div class="wpfa-event-additional-preview">
+						<?php if ( '' !== trim( wp_strip_all_tags( $venue_information ) ) ) : ?>
+							<div class="wpfa-additional-information-block">
+								<h3><?php esc_html_e( 'Venue', 'wpfaevent' ); ?></h3>
+								<div class="wpfa-event-rich-text"><?php echo wp_kses_post( wpautop( $venue_information ) ); ?></div>
+							</div>
+						<?php endif; ?>
+						<?php if ( '' !== trim( wp_strip_all_tags( $transportation_information ) ) ) : ?>
+							<div class="wpfa-additional-information-block">
+								<h3><?php esc_html_e( 'Transportation', 'wpfaevent' ); ?></h3>
+								<div class="wpfa-event-rich-text"><?php echo wp_kses_post( wpautop( $transportation_information ) ); ?></div>
+							</div>
+						<?php endif; ?>
+						<?php if ( '' !== trim( wp_strip_all_tags( $hotel_information ) ) ) : ?>
+							<div class="wpfa-additional-information-block">
+								<h3><?php esc_html_e( 'Hotel & Accommodation', 'wpfaevent' ); ?></h3>
+								<div class="wpfa-event-rich-text"><?php echo wp_kses_post( wpautop( $hotel_information ) ); ?></div>
+							</div>
+						<?php endif; ?>
 					</div>
 				</div>
 			</section>
