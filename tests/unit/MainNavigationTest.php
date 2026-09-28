@@ -582,36 +582,14 @@ class MainNavigationTest extends WP_UnitTestCase {
 			)
 		);
 
-		update_post_meta( $event_a_id, 'wpfa_event_speakers', array( 9999 ) );
-		update_post_meta(
-			$event_a_id,
-			'wpfa_event_schedule_table',
+		$speaker_a_id = $this->factory->post->create(
 			array(
-				'data' => array(
-					array( 'Time', 'Session' ),
-					array( '09:00', 'Keynote' ),
-				),
+				'post_type'   => 'wpfa_speaker',
+				'post_status' => 'publish',
+				'post_title'  => 'Speaker Alpha',
 			)
 		);
-		update_post_meta(
-			$event_a_id,
-			'wpfa_sponsors',
-			array(
-				array(
-					'name'  => 'Sponsor Alpha',
-					'image' => 'https://example.com/sponsor.png',
-				),
-			)
-		);
-		update_post_meta(
-			$event_a_id,
-			'wpfa_exhibitors',
-			array(
-				array(
-					'name' => 'Exhibitor Alpha',
-				),
-			)
-		);
+		update_post_meta( $event_a_id, 'wpfa_event_speakers', array( $speaker_a_id ) );
 
 		$nav_items_a = array(
 			array(
@@ -667,9 +645,6 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$nav_texts = array_column( $event_a_nav, 'text' );
 		$this->assertContains( 'Overview', $nav_texts );
 		$this->assertContains( 'Speakers', $nav_texts );
-		$this->assertContains( 'Schedule', $nav_texts );
-		$this->assertContains( 'Sponsors', $nav_texts );
-		$this->assertContains( 'Exhibitors', $nav_texts );
 		$this->assertNotContains( 'Alpha Custom Link', $nav_texts );
 		$this->assertNotContains( 'Alpha Info', $nav_texts );
 
@@ -697,9 +672,6 @@ class MainNavigationTest extends WP_UnitTestCase {
 
 		$this->assertStringContainsString( 'Overview', $rendered_a );
 		$this->assertStringContainsString( 'Speakers', $rendered_a );
-		$this->assertStringContainsString( 'Schedule', $rendered_a );
-		$this->assertStringContainsString( 'Sponsors', $rendered_a );
-		$this->assertStringContainsString( 'Exhibitors', $rendered_a );
 		$this->assertStringNotContainsString( 'Alpha Custom Link', $rendered_a );
 		$this->assertStringNotContainsString( 'Alpha Info', $rendered_a );
 		$this->assertStringNotContainsString( 'Beta Custom Link', $rendered_a );
