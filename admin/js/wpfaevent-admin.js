@@ -170,6 +170,62 @@
 			$container.prepend($notice);
 		}
 
+		const $eventyayImportForm = $('.wpfaevent-eventyay-import-form');
+
+		if ($eventyayImportForm.length) {
+			const $overlay = $('#wpfaevent-import-progress-overlay');
+			let importRunning = false;
+
+			$eventyayImportForm.on('submit', function (e) {
+				if (importRunning) {
+					e.preventDefault();
+					return;
+				}
+
+				importRunning = true;
+
+				$(this)
+					.find('[type="submit"]')
+					.addClass('disabled')
+					.attr('aria-disabled', 'true');
+
+				$overlay.addClass('is-visible');
+			});
+
+			if ($overlay.hasClass('is-visible')) {
+				const nonce = $eventyayImportForm
+					.find('input[name="_wpnonce"]')
+					.val();
+
+				const poll = function () {
+					$.ajax({
+						url: ajaxurl,
+						type: 'POST',
+						data: {
+							action: 'wpfaevent_import_status',
+							nonce,
+						},
+						success(response) {
+							if (
+								response.success &&
+								response.data &&
+								!response.data.running
+							) {
+								window.location.reload();
+								return;
+							}
+							setTimeout(poll, 3000);
+						},
+						error() {
+							setTimeout(poll, 3000);
+						},
+					});
+				};
+
+				setTimeout(poll, 3000);
+			}
+		}
+
 		if ($importForm.length || $updateForm.length) {
 			const $form = $importForm.length ? $importForm : $updateForm;
 			const rawReturnPage = $form
