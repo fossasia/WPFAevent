@@ -218,9 +218,9 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Dashboard managers get the speaker edit modal their card edit buttons open.
+	 * Administrators get the speaker edit modal their card edit buttons open.
 	 */
-	public function test_event_page_renders_speaker_modal_for_dashboard_managers() {
+	public function test_event_page_renders_speaker_modal_for_administrators() {
 		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
 
 		$output = $this->render_event_template();
