@@ -134,6 +134,26 @@ class EventyaySponsorGroupsTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Exhibitor logos nested under the original image key are normalized.
+	 */
+	public function test_eventyay_exhibitor_logo_supports_nested_original_image() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$method   = new ReflectionMethod( $importer, 'normalize_eventyay_exhibitor_resource' );
+		$method->setAccessible( true );
+
+		$exhibitor = $method->invoke(
+			$importer,
+			array(
+				'name' => 'Example Exhibitor',
+				'logo' => array( 'original' => '/media/example-logo.png' ),
+			),
+			array( 'base_url' => 'https://eventyay.com' )
+		);
+
+		$this->assertSame( 'https://eventyay.com/media/example-logo.png', $exhibitor['logo'] );
+	}
+
+	/**
 	 * Verify generic JSON:API resource type values are ignored when no tier field exists.
 	 */
 	public function test_normalize_eventyay_sponsor_resource_ignores_generic_sponsor_resource_type() {

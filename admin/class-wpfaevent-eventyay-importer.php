@@ -2307,7 +2307,13 @@ class Wpfaevent_Eventyay_Importer {
 		$position           = $this->eventyay_first_present_raw( $exhibitor_resource, array( 'position', 'order', 'sort_order', 'sort-order' ) );
 
 		$desc = $this->eventyay_first_present_rich_text( $exhibitor_resource, array( 'description', 'subtitle', 'summary' ) );
-		$logo = $this->eventyay_url_value( $this->eventyay_first_present_raw( $exhibitor_resource, array( 'logo-url', 'logo_url', 'logo', 'image', 'image-url', 'image_url' ) ), $settings['base_url'] );
+		$logo = $this->eventyay_url_value(
+			$this->eventyay_first_present_raw(
+				$exhibitor_resource,
+				array( 'logo_image_url', 'logo-image-url', 'logo_image', 'logo-image', 'logo-url', 'logo_url', 'logo', 'image', 'image-url', 'image_url' )
+			),
+			$settings['base_url']
+		);
 
 		if ( empty( $logo ) ) {
 			$logo = WPFAEVENT_URL . 'assets/images/logo.png';
@@ -3416,6 +3422,7 @@ class Wpfaevent_Eventyay_Importer {
 		$title             = $this->eventyay_event_title( $event );
 		$title             = $title ? $title : $event_slug;
 		$description       = $this->eventyay_event_description( $event );
+		$lead_text         = $this->parser->eventyay_event_lead_text( $event );
 		$preferred_post_id = absint( $preferred_post_id );
 		$existing_id       = $preferred_post_id && 'wpfa_event' === get_post_type( $preferred_post_id ) ? $preferred_post_id : $this->find_eventyay_event_post( $organizer_slug, $event_slug );
 		$post_status       = in_array( $settings['post_status'], array( 'draft', 'publish', 'pending', 'private' ), true ) ? $settings['post_status'] : 'draft';
@@ -3487,7 +3494,7 @@ class Wpfaevent_Eventyay_Importer {
 		$this->update_or_delete_post_meta( $saved_id, '_event_end_date', $end_date );
 		$this->update_or_delete_post_meta( $saved_id, '_event_place', $location );
 		$this->update_or_delete_post_meta( $saved_id, '_event_registration_link', $event_url );
-		$this->update_or_delete_post_meta( $saved_id, '_event_lead_text', wp_strip_all_tags( $description ) );
+		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_lead_text', $lead_text );
 
 		update_post_meta( $saved_id, '_wpfa_eventyay_organizer_slug', sanitize_text_field( $organizer_slug ) );
 		update_post_meta( $saved_id, '_wpfa_eventyay_event_slug', sanitize_text_field( $event_slug ) );
@@ -4384,7 +4391,7 @@ class Wpfaevent_Eventyay_Importer {
 	 */
 	private function eventyay_url_value( $value, $base_url ) {
 		if ( is_array( $value ) ) {
-			foreach ( array( 'url', 'href', 'download', 'thumbnail', 'image', 'en', 'default' ) as $key ) {
+			foreach ( array( 'url', 'href', 'download', 'full', 'original', 'large', 'medium', 'small', 'thumbnail', 'image', 'banner', 'logo', 'file', 'src', 'path', 'uri', 'en', 'default' ) as $key ) {
 				if ( ! empty( $value[ $key ] ) ) {
 					return $this->eventyay_url_value( $value[ $key ], $base_url );
 				}

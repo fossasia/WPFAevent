@@ -111,4 +111,110 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 		$this->assertSame( 'Italo Vignoli', $merged[1]['name'] );
 		$this->assertTrue( $merged[1]['featured'] );
 	}
+
+	/**
+	 * The importer uses a dedicated Eventyay headline when one is available.
+	 */
+	public function test_event_lead_text_prefers_headline() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$lead_text = $parser->eventyay_event_lead_text(
+			array(
+				'headline'    => 'A concise event headline',
+				'description' => 'The longer event description. More details follow.',
+			)
+		);
+
+		$this->assertSame( 'A concise event headline', $lead_text );
+	}
+
+	/**
+	 * A description supplies its first sentence when no dedicated lead exists.
+	 */
+	public function test_event_lead_text_falls_back_to_first_description_sentence() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$lead_text = $parser->eventyay_event_lead_text(
+			array(
+				'description' => '<p>First sentence for the hero.</p> More event details follow.',
+			)
+		);
+
+		$this->assertSame( 'First sentence for the hero.', $lead_text );
+	}
+
+	/**
+	 * A full description is reduced to a sentence instead of becoming the lead.
+	 */
+	public function test_event_lead_text_does_not_store_full_description() {
+		$parser      = new Wpfaevent_JSONAPI_Parser();
+		$description = 'First sentence. The remaining event description is much longer.';
+
+		$this->assertSame(
+			'First sentence.',
+			$parser->eventyay_event_lead_text(
+				array(
+					'summary'     => $description,
+					'description' => $description,
+				)
+			)
+		);
+	}
+
+	/**
+	 * A description without a sentence boundary does not become the full lead.
+	 */
+	public function test_event_lead_text_is_empty_without_sentence_boundary() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame( '', $parser->eventyay_event_lead_text( array( 'description' => 'A description without a sentence boundary' ) ) );
+	}
+
+	/**
+	 * Imported lead text is stored in the canonical event meta field.
+	 */
+	public function test_event_import_stores_lead_text_in_canonical_meta() {
+		$event_id = ( new Wpfaevent_Event_Repository() )->upsert_eventyay_event_post(
+			array(
+				'slug'        => 'lead-text-event',
+				'name'        => 'Lead Text Event',
+				'description' => 'The first sentence is the hero lead. The rest is event detail.',
+			),
+			array(
+				'base_url'       => 'https://eventyay.example',
+				'organizer_slug' => 'fossasia',
+				'post_status'    => 'draft',
+			)
+		);
+
+		$this->assertIsArray( $event_id );
+		$this->assertSame( 'The first sentence is the hero lead.', get_post_meta( $event_id['id'], 'wpfa_event_lead_text', true ) );
+		$this->assertSame( '', get_post_meta( $event_id['id'], '_event_lead_text', true ) );
+	}
+
+	/**
+	 * The active importer delegates lead extraction to its parser.
+	 */
+	public function test_active_event_importer_stores_lead_text() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$method   = new ReflectionMethod( $importer, 'upsert_eventyay_event_post' );
+		$method->setAccessible( true );
+
+		$result = $method->invoke(
+			$importer,
+			array(
+				'slug'        => 'active-lead-text-event',
+				'name'        => 'Active Lead Text Event',
+				'description' => 'The active importer uses the parser. More details follow.',
+			),
+			array(
+				'base_url'       => 'https://eventyay.example',
+				'organizer_slug' => 'fossasia',
+				'post_status'    => 'draft',
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 'The active importer uses the parser.', get_post_meta( $result['id'], 'wpfa_event_lead_text', true ) );
+	}
 }

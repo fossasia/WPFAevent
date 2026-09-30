@@ -1555,6 +1555,48 @@ class Wpfaevent_JSONAPI_Parser {
 	}
 
 	/**
+	 * Extract the short lead text for an Eventyay event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event Eventyay event resource.
+	 * @return string
+	 * @phpstan-param array<array-key, mixed> $event
+	 */
+	public function eventyay_event_lead_text( $event ) {
+		$value       = $this->eventyay_event_first_present_raw(
+			$event,
+			array(
+				'headline',
+				'lead_text',
+				'lead-text',
+				'subtitle',
+				'frontpage_text',
+				'frontpage-text',
+				'short_description',
+				'short-description',
+				'summary',
+			),
+			true
+		);
+		$lead_text   = wp_strip_all_tags( $this->eventyay_rich_text_value( $value ) );
+		$lead_text   = trim( preg_replace( '/\s+/', ' ', $lead_text ) );
+		$description = wp_strip_all_tags( $this->eventyay_event_description( $event ) );
+		$description = preg_replace( '/\s+/', ' ', $description );
+		$description = is_string( $description ) ? trim( $description ) : '';
+
+		if ( '' !== $lead_text && $lead_text !== $description ) {
+			return sanitize_text_field( $lead_text );
+		}
+
+		if ( preg_match( '/^(.+?[.!?])(?:\s|$)/u', $description, $matches ) ) {
+			return sanitize_text_field( $matches[1] );
+		}
+
+		return '';
+	}
+
+	/**
 	 * Build the public Eventyay URL for an imported event.
 	 *
 	 * @since 1.0.0
