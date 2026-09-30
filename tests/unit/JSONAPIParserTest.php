@@ -217,11 +217,41 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 			)
 		);
 		update_post_meta( $event_id, 'wpfa_event_lead_text', 'A short event lead.' );
+		update_post_meta( $event_id, '_event_lead_text', 'A legacy event lead.' );
 
 		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
 
 		$this->assertSame( 'A short event lead.', $template_data['event_lead_text'] );
 		$this->assertStringContainsString( 'complete event description', $template_data['about_content'] );
+	}
+
+	/**
+	 * Older imported events still expose their legacy lead text in the template data.
+	 */
+	public function test_event_template_falls_back_to_legacy_lead_text() {
+		$event_id = $this->factory->post->create( array( 'post_type' => 'wpfa_event' ) );
+		update_post_meta( $event_id, '_event_lead_text', 'A legacy event lead.' );
+
+		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+
+		$this->assertSame( 'A legacy event lead.', $template_data['event_lead_text'] );
+	}
+
+	/**
+	 * Events without lead metadata retain the existing post-content fallback.
+	 */
+	public function test_event_template_keeps_existing_fallback_without_lead_meta() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_content' => 'The existing event description fallback.',
+			)
+		);
+
+		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+
+		$this->assertSame( '', $template_data['event_lead_text'] );
+		$this->assertStringContainsString( 'existing event description fallback', $template_data['about_content'] );
 	}
 
 	/**
