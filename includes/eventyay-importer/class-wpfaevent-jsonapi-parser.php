@@ -1534,6 +1534,8 @@ class Wpfaevent_JSONAPI_Parser {
 			$event,
 			array(
 				'description',
+				'description_html',
+				'description-html',
 				'frontpage_text',
 				'frontpage-text',
 				'event_info_text',
@@ -1564,30 +1566,40 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @phpstan-param array<array-key, mixed> $event
 	 */
 	public function eventyay_event_lead_text( $event ) {
-		$value       = $this->eventyay_event_first_present_raw(
+		$dedicated_value   = $this->eventyay_event_first_present_raw(
 			$event,
 			array(
 				'headline',
 				'lead_text',
 				'lead-text',
 				'subtitle',
-				'frontpage_text',
-				'frontpage-text',
 				'short_description',
 				'short-description',
 				'summary',
 			),
 			true
 		);
-		$lead_text   = wp_strip_all_tags( $this->eventyay_rich_text_value( $value ) );
-		$lead_text   = trim( preg_replace( '/\s+/', ' ', $lead_text ) );
-		$description = wp_strip_all_tags( $this->eventyay_event_description( $event ) );
-		$description = preg_replace( '/\s+/', ' ', $description );
-		$description = is_string( $description ) ? trim( $description ) : '';
+		$description_value = $this->eventyay_event_first_present_raw(
+			$event,
+			array( 'description', 'description_html', 'description-html' ),
+			true
+		);
+		$to_plain_text     = static function ( $value ) {
+			$value = is_scalar( $value ) ? (string) $value : '';
+			$value = preg_replace( '/<\s*(?:br\s*\/?>|\/(?:p|div|li|h[1-6]|blockquote|tr|table)\s*)>/i', ' ', $value );
+			$value = is_string( $value ) ? wp_strip_all_tags( $value ) : '';
+			$value = preg_replace( '/\s+/', ' ', $value );
 
-		if ( '' !== $lead_text && $lead_text !== $description ) {
+			return is_string( $value ) ? trim( $value ) : '';
+		};
+		$lead_text         = $to_plain_text( $this->eventyay_rich_text_value( $dedicated_value ) );
+		$description       = $to_plain_text( $this->eventyay_rich_text_value( $description_value ) );
+
+		if ( '' !== $lead_text && ( '' === $description || $lead_text !== $description ) ) {
 			return sanitize_text_field( $lead_text );
 		}
+
+		$description = $to_plain_text( $this->eventyay_event_description( $event ) );
 
 		if ( preg_match( '/^(.+?[.!?])(?:\s|$)/u', $description, $matches ) ) {
 			return sanitize_text_field( $matches[1] );

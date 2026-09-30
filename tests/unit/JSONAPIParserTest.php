@@ -129,6 +129,23 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Dedicated lead fields take precedence over frontpage description content.
+	 */
+	public function test_event_lead_text_prefers_short_field_over_frontpage_text() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame(
+			'Meet the open-source community',
+			$parser->eventyay_event_lead_text(
+				array(
+					'short_description' => 'Meet the open-source community',
+					'frontpage_text'    => 'A longer frontpage description. More details follow.',
+				)
+			)
+		);
+	}
+
+	/**
 	 * A description supplies its first sentence when no dedicated lead exists.
 	 */
 	public function test_event_lead_text_falls_back_to_first_description_sentence() {
@@ -141,6 +158,70 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 		);
 
 		$this->assertSame( 'First sentence for the hero.', $lead_text );
+	}
+
+	/**
+	 * HTML descriptions are converted to text before the first sentence is extracted.
+	 */
+	public function test_event_lead_text_uses_description_html() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame(
+			'First HTML sentence.',
+			$parser->eventyay_event_lead_text(
+				array( 'description_html' => '<p>First HTML sentence.</p><p>Second sentence.</p>' )
+			)
+		);
+	}
+
+	/**
+	 * Adjacent HTML paragraphs retain a whitespace boundary when stripped.
+	 */
+	public function test_event_lead_text_preserves_adjacent_html_boundaries() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame(
+			'First sentence.',
+			$parser->eventyay_event_lead_text(
+				array( 'description_html' => '<p>First sentence.</p><p>Second sentence.</p>' )
+			)
+		);
+	}
+
+	/**
+	 * A dedicated short description remains the lead when no description exists.
+	 */
+	public function test_event_lead_text_uses_short_description_without_description() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame( 'Meet the open-source community', $parser->eventyay_event_lead_text( array( 'short_description' => 'Meet the open-source community' ) ) );
+	}
+
+	/**
+	 * No usable source leaves the lead empty.
+	 */
+	public function test_event_lead_text_is_empty_without_sources() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame( '', $parser->eventyay_event_lead_text( array( 'name' => 'Event without description' ) ) );
+	}
+
+	/**
+	 * The event template keeps the canonical lead separate from the full about content.
+	 */
+	public function test_event_template_uses_canonical_lead_text() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_content' => 'The complete event description remains available here.',
+			)
+		);
+		update_post_meta( $event_id, 'wpfa_event_lead_text', 'A short event lead.' );
+
+		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+
+		$this->assertSame( 'A short event lead.', $template_data['event_lead_text'] );
+		$this->assertStringContainsString( 'complete event description', $template_data['about_content'] );
 	}
 
 	/**

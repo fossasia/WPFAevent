@@ -2307,13 +2307,7 @@ class Wpfaevent_Eventyay_Importer {
 		$position           = $this->eventyay_first_present_raw( $exhibitor_resource, array( 'position', 'order', 'sort_order', 'sort-order' ) );
 
 		$desc = $this->eventyay_first_present_rich_text( $exhibitor_resource, array( 'description', 'subtitle', 'summary' ) );
-		$logo = $this->eventyay_url_value(
-			$this->eventyay_first_present_raw(
-				$exhibitor_resource,
-				array( 'logo_image_url', 'logo-image-url', 'logo_image', 'logo-image', 'logo-url', 'logo_url', 'logo', 'image', 'image-url', 'image_url' )
-			),
-			$settings['base_url']
-		);
+		$logo = $this->eventyay_url_value( $this->eventyay_first_present_raw( $exhibitor_resource, array( 'logo-url', 'logo_url', 'logo', 'image', 'image-url', 'image_url' ) ), $settings['base_url'] );
 
 		if ( empty( $logo ) ) {
 			$logo = WPFAEVENT_URL . 'assets/images/logo.png';
@@ -4391,7 +4385,7 @@ class Wpfaevent_Eventyay_Importer {
 	 */
 	private function eventyay_url_value( $value, $base_url ) {
 		if ( is_array( $value ) ) {
-			foreach ( array( 'url', 'href', 'download', 'full', 'original', 'large', 'medium', 'small', 'thumbnail', 'image', 'banner', 'logo', 'file', 'src', 'path', 'uri', 'en', 'default' ) as $key ) {
+			foreach ( array( 'url', 'href', 'download', 'thumbnail', 'image', 'en', 'default' ) as $key ) {
 				if ( ! empty( $value[ $key ] ) ) {
 					return $this->eventyay_url_value( $value[ $key ], $base_url );
 				}
