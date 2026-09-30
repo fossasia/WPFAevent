@@ -34,6 +34,7 @@
 .wpfaevent-sync-feedback.is-active { display:block; }
 .wpfaevent-sync-feedback.is-loading { background:#eef5fb; border-color:#cfe0f2; color:#184b73; }
 .wpfaevent-sync-feedback.is-success { background:#edf9f0; border-color:#bad8c2; color:#1f5f33; }
+.wpfaevent-sync-feedback.is-warning { background:#fcf9e8; border-color:#ecd9a0; color:#6e4e00; }
 .wpfaevent-sync-feedback.is-error { background:#fdf0f0; border-color:#efc4c4; color:#8a1f1f; }
 .wpfaevent-sync-form button[disabled] { opacity:0.7; cursor:not-allowed; }
 .wpfaevent-dashboard-shell .notice { margin: 0 0 20px; }

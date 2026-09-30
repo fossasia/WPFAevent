@@ -807,6 +807,12 @@ document.addEventListener('DOMContentLoaded', function () {
 				}
 
 				const message = payload.data && payload.data.message ? payload.data.message : <?php echo wp_json_encode( __( 'Synchronization completed.', 'wpfaevent' ) ); ?>;
+
+				if (payload.data && payload.data.result && payload.data.result.program_empty) {
+					setFeedback('warning', message);
+					return;
+				}
+
 				setFeedback('success', message);
 
 				window.setTimeout(function () {

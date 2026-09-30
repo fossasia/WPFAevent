@@ -1193,6 +1193,14 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			return $import;
 		}
 
+		if ( empty( $import['speakers'] ) && empty( $import['sessions'] ) ) {
+			return new WP_Error(
+				'wpfaevent_eventyay_empty_program',
+				Wpfaevent_Eventyay_Importer::get_empty_program_hint(),
+				array( 'status' => 404 )
+			);
+		}
+
 		return $import;
 	}
 

@@ -171,7 +171,7 @@ class Wpfaevent_Event_Dashboard_Page {
 		} else {
 			$this->store_notice(
 				array(
-					'type'    => 'success',
+					'type'    => empty( $result['program_empty'] ) ? 'success' : 'warning',
 					'message' => $this->build_sync_success_message( $result ),
 				)
 			);
@@ -439,6 +439,10 @@ class Wpfaevent_Event_Dashboard_Page {
 
 		if ( ! empty( $result['logo_overwritten'] ) ) {
 			$message .= ' ' . esc_html__( 'The event logo was updated from Eventyay.', 'wpfaevent' );
+		}
+
+		if ( ! empty( $result['program_empty'] ) ) {
+			$message .= ' ' . Wpfaevent_Eventyay_Importer::get_empty_program_hint();
 		}
 
 		return $message;
