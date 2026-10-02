@@ -198,6 +198,45 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * A standalone summary remains a lead when no separate description exists.
+	 */
+	public function test_event_lead_text_uses_standalone_summary() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame( 'Meet the open-source community', $parser->eventyay_event_lead_text( array( 'summary' => 'Meet the open-source community' ) ) );
+	}
+
+	/**
+	 * A summary duplicated from frontpage content is reduced to its first sentence.
+	 */
+	public function test_event_lead_text_reduces_duplicate_summary() {
+		$parser      = new Wpfaevent_JSONAPI_Parser();
+		$description = 'First sentence. The remaining event description is much longer.';
+
+		$this->assertSame(
+			'First sentence.',
+			$parser->eventyay_event_lead_text(
+				array(
+					'summary'        => $description,
+					'frontpage_text' => $description,
+				)
+			)
+		);
+	}
+
+	/**
+	 * Frontpage content aliases can supply the description fallback.
+	 */
+	public function test_event_lead_text_uses_frontpage_content_alias() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame(
+			'First frontpage sentence.',
+			$parser->eventyay_event_lead_text( array( 'frontpage-content' => 'First frontpage sentence. More details follow.' ) )
+		);
+	}
+
+	/**
 	 * No usable source leaves the lead empty.
 	 */
 	public function test_event_lead_text_is_empty_without_sources() {
@@ -214,6 +253,7 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 			array(
 				'post_type'    => 'wpfa_event',
 				'post_content' => 'The complete event description remains available here.',
+				'post_excerpt' => '',
 			)
 		);
 		update_post_meta( $event_id, 'wpfa_event_lead_text', 'A short event lead.' );
@@ -245,6 +285,7 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 			array(
 				'post_type'    => 'wpfa_event',
 				'post_content' => 'The existing event description fallback.',
+				'post_excerpt' => '',
 			)
 		);
 
@@ -252,6 +293,23 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 
 		$this->assertSame( '', $template_data['event_lead_text'] );
 		$this->assertStringContainsString( 'existing event description fallback', $template_data['about_content'] );
+	}
+
+	/**
+	 * Frontend-edited descriptions use the post excerpt on the event page.
+	 */
+	public function test_event_template_uses_post_excerpt_before_post_content() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_content' => 'The old event description.',
+				'post_excerpt' => 'The updated event description.',
+			)
+		);
+
+		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+
+		$this->assertSame( 'The updated event description.', $template_data['about_content'] );
 	}
 
 	/**
@@ -301,6 +359,35 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 		$this->assertIsArray( $event_id );
 		$this->assertSame( 'The first sentence is the hero lead.', get_post_meta( $event_id['id'], 'wpfa_event_lead_text', true ) );
 		$this->assertSame( '', get_post_meta( $event_id['id'], '_event_lead_text', true ) );
+		$this->assertSame( 'The first sentence is the hero lead. The rest is event detail.', get_post_field( 'post_content', $event_id['id'] ) );
+		$this->assertSame( 'The first sentence is the hero lead. The rest is event detail.', get_post_field( 'post_excerpt', $event_id['id'] ) );
+	}
+
+	/**
+	 * Reimports do not leave stale legacy lead text behind.
+	 */
+	public function test_event_import_clears_legacy_lead_text_when_new_lead_is_empty() {
+		$repository = new Wpfaevent_Event_Repository();
+		$settings   = array(
+			'base_url'       => 'https://eventyay.example',
+			'organizer_slug' => 'fossasia',
+			'post_status'    => 'draft',
+		);
+		$event      = array(
+			'slug'        => 'legacy-lead-event',
+			'name'        => 'Legacy Lead Event',
+			'description' => 'The initial event description.',
+		);
+		$event_id   = $repository->upsert_eventyay_event_post( $event, $settings );
+
+		$this->assertIsArray( $event_id );
+		update_post_meta( $event_id['id'], '_event_lead_text', 'Stale legacy lead.' );
+
+		$event['description'] = 'Updated description without a sentence boundary';
+		$repository->upsert_eventyay_event_post( $event, $settings );
+
+		$this->assertSame( '', get_post_meta( $event_id['id'], 'wpfa_event_lead_text', true ) );
+		$this->assertSame( '', get_post_meta( $event_id['id'], '_event_lead_text', true ) );
 	}
 
 	/**
@@ -327,5 +414,7 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 
 		$this->assertIsArray( $result );
 		$this->assertSame( 'The active importer uses the parser.', get_post_meta( $result['id'], 'wpfa_event_lead_text', true ) );
+		$this->assertSame( 'The active importer uses the parser. More details follow.', get_post_field( 'post_content', $result['id'] ) );
+		$this->assertSame( 'The active importer uses the parser. More details follow.', get_post_field( 'post_excerpt', $result['id'] ) );
 	}
 }

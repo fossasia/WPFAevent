@@ -1581,7 +1581,15 @@ class Wpfaevent_JSONAPI_Parser {
 		);
 		$description_value = $this->eventyay_event_first_present_raw(
 			$event,
-			array( 'description', 'description_html', 'description-html' ),
+			array(
+				'description',
+				'description_html',
+				'description-html',
+				'frontpage_content',
+				'frontpage-content',
+				'frontpage_text',
+				'frontpage-text',
+			),
 			true
 		);
 		$to_plain_text     = static function ( $value ) {
@@ -1595,11 +1603,29 @@ class Wpfaevent_JSONAPI_Parser {
 		$lead_text         = $to_plain_text( $this->eventyay_rich_text_value( $dedicated_value ) );
 		$description       = $to_plain_text( $this->eventyay_rich_text_value( $description_value ) );
 
-		if ( '' !== $lead_text && ( '' === $description || $lead_text !== $description ) ) {
+		$has_separate_description = '' !== $to_plain_text(
+			$this->eventyay_rich_text_value(
+				$this->eventyay_event_first_present_raw(
+					$event,
+					array(
+						'description',
+						'description_html',
+						'description-html',
+						'frontpage_content',
+						'frontpage-content',
+						'frontpage_text',
+						'frontpage-text',
+					),
+					true
+				)
+			)
+		);
+
+		if ( '' !== $lead_text && ( ! $has_separate_description || $lead_text !== $description ) ) {
 			return sanitize_text_field( $lead_text );
 		}
 
-		$description = $to_plain_text( $this->eventyay_event_description( $event ) );
+		$description = $to_plain_text( $this->eventyay_rich_text_value( $description_value ) );
 
 		if ( preg_match( '/^(.+?[.!?])(?:\s|$)/u', $description, $matches ) ) {
 			return sanitize_text_field( $matches[1] );
