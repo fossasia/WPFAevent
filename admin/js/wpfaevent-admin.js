@@ -746,17 +746,18 @@
 			if (!window.confirm(confirmMsg)) {
 				return;
 			}
+			const container = document.getElementById(
+				'wpfaevent-nav-items-container'
+			);
+			if (!container) {
+				return;
+			}
 			const defaultTmpl = document.getElementById(
 				'wpfaevent-nav-default-template'
 			);
-			const defaultHtml = defaultTmpl ? defaultTmpl.innerHTML.trim() : '';
-			const $container = $('#wpfaevent-nav-items-container');
-			$container.empty();
-			if (defaultHtml) {
-				const parsed = $.parseHTML(defaultHtml, document, true);
-				if (parsed) {
-					$container.append(parsed);
-				}
+			$(container).empty();
+			if (defaultTmpl && 'content' in defaultTmpl) {
+				container.appendChild(defaultTmpl.content.cloneNode(true));
 			}
 		});
 
@@ -776,30 +777,44 @@
 
 		$(document).on('click', '#wpfaevent-add-nav-item', function (e) {
 			e.preventDefault();
-			const $container = $('#wpfaevent-nav-items-container');
-			if (!$container.length) {
+			const container = document.getElementById(
+				'wpfaevent-nav-items-container'
+			);
+			if (!container) {
 				return;
 			}
 			const itemTmpl = document.getElementById(
 				'wpfaevent-nav-item-template'
 			);
-			const itemHtml = itemTmpl ? itemTmpl.innerHTML : '';
-			if (!itemHtml) {
+			if (!itemTmpl || !('content' in itemTmpl)) {
 				return;
 			}
 			let maxIdx = -1;
-			$container.find('.wpfaevent-meta-card').each(function () {
-				const idx = parseInt($(this).attr('data-index'), 10);
-				if (!isNaN(idx) && idx > maxIdx) {
-					maxIdx = idx;
+			$(container)
+				.find('.wpfaevent-meta-card')
+				.each(function () {
+					const idx = parseInt($(this).attr('data-index'), 10);
+					if (!isNaN(idx) && idx > maxIdx) {
+						maxIdx = idx;
+					}
+				});
+			const nextIdx = Math.max(0, maxIdx + 1);
+			const clone = itemTmpl.content.cloneNode(true);
+			const card = clone.querySelector('.wpfaevent-meta-card');
+			if (card) {
+				card.setAttribute('data-index', String(nextIdx));
+			}
+			const fields = clone.querySelectorAll('input, select, textarea');
+			fields.forEach(function (field) {
+				const name = field.getAttribute('name');
+				if (name) {
+					field.setAttribute(
+						'name',
+						name.replace(/\$\{navIndex\}/g, String(nextIdx))
+					);
 				}
 			});
-			const nextIdx = Math.max(0, maxIdx + 1);
-			const tmpl = itemHtml.replace(/\$\{navIndex\}/g, String(nextIdx));
-			const parsed = $.parseHTML(tmpl, document, true);
-			if (parsed) {
-				$container.append(parsed);
-			}
+			container.appendChild(clone);
 		});
 
 		$(document).on('change', '.wpfaevent-nav-type-select', function () {
@@ -866,8 +881,7 @@
 			const subTmpl = document.getElementById(
 				'wpfaevent-nav-subitem-template'
 			);
-			const subHtml = subTmpl ? subTmpl.innerHTML : '';
-			if (!subHtml) {
+			if (!subTmpl || !('content' in subTmpl)) {
 				return;
 			}
 			const $card = $(this).closest('.wpfaevent-meta-card');
@@ -891,14 +905,24 @@
 				}
 			});
 			const nextSubIdx = Math.max(0, maxSubIdx + 1);
-			const tmpl = subHtml
-				.replace(/__PIDX__/g, String(pIdx))
-				.replace(/__SIDX__/g, String(nextSubIdx));
-			const parsed = $.parseHTML(tmpl, document, true);
-			if (parsed) {
-				$card.find('.wpfaevent-nav-subitems-list').append(parsed);
+			const clone = subTmpl.content.cloneNode(true);
+			const fields = clone.querySelectorAll('input, select, textarea');
+			fields.forEach(function (field) {
+				const name = field.getAttribute('name');
+				if (name) {
+					field.setAttribute(
+						'name',
+						name
+							.replace(/__PIDX__/g, String(pIdx))
+							.replace(/__SIDX__/g, String(nextSubIdx))
+					);
+				}
+			});
+			const subitemsList = $card.find('.wpfaevent-nav-subitems-list')[0];
+			if (subitemsList) {
+				subitemsList.appendChild(clone);
 			}
-			$card.attr('data-next-sub-index', nextSubIdx + 1);
+			$card.attr('data-next-sub-index', String(nextSubIdx + 1));
 		});
 	});
 
