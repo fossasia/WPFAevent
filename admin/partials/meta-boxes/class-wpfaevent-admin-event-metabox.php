@@ -881,7 +881,8 @@ class Wpfaevent_Admin_Event_Metabox {
 			)
 		);
 		?>
-		<p class="description" style="margin-bottom: 10px;">
+		<input type="hidden" name="wpfa_custom_nav_items_present" value="1">
+		<p class="description wpfaevent-nav-description">
 			<?php esc_html_e( 'Customize navigation links for this event. Leave empty to use dynamically generated default navigation. Click "Reset to Default" to load standard items for customization.', 'wpfaevent' ); ?>
 		</p>
 		<div class="wpfaevent-meta-cards-container" id="wpfaevent-nav-items-container">
@@ -891,20 +892,22 @@ class Wpfaevent_Admin_Event_Metabox {
 			}
 			?>
 		</div>
-		<p style="margin-top: 10px;">
+		<p class="wpfaevent-nav-actions">
 			<button type="button" class="button button-primary" id="wpfaevent-add-nav-item">
 				<?php esc_html_e( '+ Add Navigation Item', 'wpfaevent' ); ?>
 			</button>
-			<button type="button" class="button button-secondary" id="wpfaevent-reset-nav-default" style="margin-left: 8px;">
+			<button type="button" class="button button-secondary" id="wpfaevent-reset-nav-default">
 				<?php esc_html_e( 'Reset to Default', 'wpfaevent' ); ?>
 			</button>
-			<button type="button" class="button button-secondary" id="wpfaevent-clear-nav" style="margin-left: 8px;">
+			<button type="button" class="button button-secondary" id="wpfaevent-clear-nav">
 				<?php esc_html_e( 'Clear All', 'wpfaevent' ); ?>
 			</button>
 		</p>
 		<template id="wpfaevent-nav-default-template">
 			<?php
-			$default_cards = class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items() : array();
+			$default_cards = class_exists( 'Wpfaevent_Main_Navigation_Helper' )
+				? Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items( $post->ID )
+				: array();
 			foreach ( $default_cards as $di => $ditem ) {
 				$this->render_nav_item_card( $di, $ditem, $wp_pages );
 			}
@@ -916,87 +919,6 @@ class Wpfaevent_Admin_Event_Metabox {
 		<template id="wpfaevent-nav-subitem-template">
 			<?php $this->render_nav_subitem_row( '__PIDX__', '__SIDX__', array(), $wp_pages ); ?>
 		</template>
-		<script>
-			jQuery(document).ready(function($) {
-				var navIndex = $('#wpfaevent-nav-items-container .wpfaevent-meta-card').length;
-				$('#wpfaevent-reset-nav-default').on('click', function(e) {
-					e.preventDefault();
-					if (!confirm('<?php echo esc_js( __( 'Reset navigation to default items?', 'wpfaevent' ) ); ?>')) {
-						return;
-					}
-					var defaultHtml = $('#wpfaevent-nav-default-template').html();
-					$('#wpfaevent-nav-items-container').html(defaultHtml);
-					navIndex = $('#wpfaevent-nav-items-container .wpfaevent-meta-card').length;
-				});
-				$('#wpfaevent-clear-nav').on('click', function(e) {
-					e.preventDefault();
-					if (!confirm('<?php echo esc_js( __( 'Clear all custom navigation items and use default navigation?', 'wpfaevent' ) ); ?>')) {
-						return;
-					}
-					$('#wpfaevent-nav-items-container').empty();
-					navIndex = 0;
-				});
-				$('#wpfaevent-nav-items-container').on('change', '.wpfaevent-nav-type-select', function() {
-					var val = $(this).val();
-					var $card = $(this).closest('.wpfaevent-meta-card');
-					$card.find('.wpfaevent-nav-link-row').toggle(val === 'link');
-					$card.find('.wpfaevent-nav-page-row').toggle(val === 'page');
-					$card.find('.wpfaevent-nav-custom-page-row').toggle(val === 'custom_page');
-					$card.find('.wpfaevent-nav-dropdown-row').toggle(val === 'dropdown');
-				});
-				$('#wpfaevent-nav-items-container').on('change', '.wpfaevent-subitem-type-select', function() {
-					var val = $(this).val();
-					var $block = $(this).closest('.wpfaevent-nav-subitem-block');
-					$block.find('.wpfaevent-sub-link-row').toggle(val === 'link');
-					$block.find('.wpfaevent-sub-page-row').toggle(val === 'page');
-					$block.find('.wpfaevent-sub-custom-row').toggle(val === 'custom_page');
-				});
-				$('#wpfaevent-nav-items-container').on('change', '.wpfaevent-nav-page-select', function() {
-					var $opt = $(this).find('option:selected');
-					var $card = $(this).closest('.wpfaevent-meta-card');
-					var $txt = $card.find('input[name*="[text]"]').first();
-					if (!$txt.val() && $opt.data('title')) {
-						$txt.val($opt.data('title'));
-					}
-				});
-				$('#wpfaevent-nav-items-container').on('change', '.wpfaevent-sub-page-select', function() {
-					var $opt = $(this).find('option:selected');
-					var $block = $(this).closest('.wpfaevent-nav-subitem-block');
-					var $txt = $block.find('input[name*="[text]"]').first();
-					if (!$txt.val() && $opt.data('title')) {
-						$txt.val($opt.data('title'));
-					}
-				});
-				$('#wpfaevent-nav-items-container').on('click', '.wpfaevent-remove-card-btn', function(e) {
-					e.preventDefault();
-					$(this).closest('.wpfaevent-meta-card').remove();
-				});
-				$('#wpfaevent-nav-items-container').on('click', '.wpfaevent-remove-subitem-btn', function(e) {
-					e.preventDefault();
-					$(this).closest('.wpfaevent-nav-subitem-block').remove();
-				});
-				$('#wpfaevent-nav-items-container').on('click', '.wpfaevent-add-subitem-btn', function(e) {
-					e.preventDefault();
-					var $card = $(this).closest('.wpfaevent-meta-card');
-					var pIdx = $card.data('index');
-					var nextSubIdx = parseInt($card.attr('data-next-sub-index'), 10);
-					if (isNaN(nextSubIdx)) {
-						nextSubIdx = $card.find('.wpfaevent-nav-subitem-block').length;
-					}
-					var tmpl = $('#wpfaevent-nav-subitem-template').html()
-						.replace(/__PIDX__/g, pIdx)
-						.replace(/__SIDX__/g, nextSubIdx);
-					$card.find('.wpfaevent-nav-subitems-list').append(tmpl);
-					$card.attr('data-next-sub-index', nextSubIdx + 1);
-				});
-				$('#wpfaevent-add-nav-item').on('click', function(e) {
-					e.preventDefault();
-					var tmpl = $('#wpfaevent-nav-item-template').html().replace(/\$\{navIndex\}/g, navIndex);
-					$('#wpfaevent-nav-items-container').append(tmpl);
-					navIndex++;
-				});
-			});
-		</script>
 		<?php
 	}
 
@@ -1018,6 +940,11 @@ class Wpfaevent_Admin_Event_Metabox {
 		$title     = isset( $item['title'] ) ? (string) $item['title'] : '';
 		$content   = isset( $item['content'] ) ? (string) $item['content'] : '';
 		$sub_items = isset( $item['items'] ) && is_array( $item['items'] ) ? $item['items'] : array();
+
+		$link_row_class        = 'wpfaevent-meta-card-field wpfaevent-nav-link-row span-2' . ( 'link' === $type ? '' : ' wpfaevent-nav-row-hidden' );
+		$page_row_class        = 'wpfaevent-meta-card-field wpfaevent-nav-page-row span-2' . ( 'page' === $type ? '' : ' wpfaevent-nav-row-hidden' );
+		$custom_page_row_class = 'wpfaevent-meta-card-field wpfaevent-nav-custom-page-row span-2' . ( 'custom_page' === $type ? '' : ' wpfaevent-nav-row-hidden' );
+		$dropdown_row_class    = 'wpfaevent-meta-card-field wpfaevent-nav-dropdown-row span-2' . ( 'dropdown' === $type ? '' : ' wpfaevent-nav-row-hidden' );
 		?>
 		<div class="wpfaevent-meta-card" data-index="<?php echo esc_attr( (string) $i ); ?>" data-next-sub-index="<?php echo esc_attr( (string) count( $sub_items ) ); ?>">
 			<a href="#" class="wpfaevent-remove-card-btn"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a>
@@ -1035,13 +962,13 @@ class Wpfaevent_Admin_Event_Metabox {
 						<option value="dropdown" <?php selected( $type, 'dropdown' ); ?>><?php esc_html_e( 'Dropdown Submenu', 'wpfaevent' ); ?></option>
 					</select>
 				</div>
-				<div class="wpfaevent-meta-card-field wpfaevent-nav-link-row span-2" style="<?php echo 'link' === $type ? '' : 'display: none;'; ?>">
+				<div class="<?php echo esc_attr( $link_row_class ); ?>">
 					<label><?php esc_html_e( 'Link URL', 'wpfaevent' ); ?></label>
 					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][href]" value="<?php echo esc_attr( $href ); ?>" placeholder="<?php esc_attr_e( 'https://... or /events/ or #about', 'wpfaevent' ); ?>">
 				</div>
-				<div class="wpfaevent-meta-card-field wpfaevent-nav-page-row span-2" style="<?php echo 'page' === $type ? '' : 'display: none;'; ?>">
+				<div class="<?php echo esc_attr( $page_row_class ); ?>">
 					<label><?php esc_html_e( 'Select Existing Page', 'wpfaevent' ); ?></label>
-					<select name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][page_id]" class="wpfaevent-nav-page-select" style="width: 100%;">
+					<select name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][page_id]" class="wpfaevent-nav-page-select">
 						<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
 						<?php foreach ( $wp_pages as $p ) : ?>
 							<option value="<?php echo absint( $p->ID ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>" <?php selected( $page_id, $p->ID ); ?>>
@@ -1050,13 +977,13 @@ class Wpfaevent_Admin_Event_Metabox {
 						<?php endforeach; ?>
 					</select>
 				</div>
-				<div class="wpfaevent-meta-card-field wpfaevent-nav-custom-page-row span-2" style="<?php echo 'custom_page' === $type ? '' : 'display: none;'; ?>">
+				<div class="<?php echo esc_attr( $custom_page_row_class ); ?>">
 					<label><?php esc_html_e( 'Page Heading', 'wpfaevent' ); ?></label>
 					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>">
-					<label style="margin-top: 8px;"><?php esc_html_e( 'Page Content & Bullets', 'wpfaevent' ); ?></label>
-					<textarea name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][content]" rows="4" style="width: 100%;" placeholder="<?php esc_attr_e( "Enter page details, paragraphs, or bullet points:\n- Travel grant details\n- Application requirements\n- Deadline: Oct 30", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
+					<label class="wpfaevent-nav-content-label"><?php esc_html_e( 'Page Content & Bullets', 'wpfaevent' ); ?></label>
+					<textarea name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][content]" rows="4" placeholder="<?php esc_attr_e( "Enter page details, paragraphs, or bullet points:\n- Travel grant details\n- Application requirements\n- Deadline: Oct 30", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
 				</div>
-				<div class="wpfaevent-meta-card-field wpfaevent-nav-dropdown-row span-2" style="<?php echo 'dropdown' === $type ? '' : 'display: none;'; ?>">
+				<div class="<?php echo esc_attr( $dropdown_row_class ); ?>">
 					<label><strong><?php esc_html_e( 'Dropdown Sub-Items', 'wpfaevent' ); ?></strong></label>
 					<div class="wpfaevent-nav-subitems-list">
 						<?php
@@ -1065,7 +992,7 @@ class Wpfaevent_Admin_Event_Metabox {
 						}
 						?>
 					</div>
-					<button type="button" class="button button-secondary wpfaevent-add-subitem-btn" style="margin-top: 8px;">
+					<button type="button" class="button button-secondary wpfaevent-add-subitem-btn">
 						<?php esc_html_e( '+ Add Sub-Item', 'wpfaevent' ); ?>
 					</button>
 				</div>
@@ -1093,22 +1020,26 @@ class Wpfaevent_Admin_Event_Metabox {
 		$title   = isset( $sub['title'] ) ? (string) $sub['title'] : '';
 		$content = isset( $sub['content'] ) ? (string) $sub['content'] : '';
 		$prefix  = 'wpfa_custom_nav_items[' . esc_attr( (string) $i ) . '][items][' . esc_attr( (string) $si ) . ']';
+
+		$sub_link_class   = 'wpfaevent-sub-field wpfaevent-sub-link-row' . ( 'link' === $type ? '' : ' wpfaevent-nav-row-hidden' );
+		$sub_page_class   = 'wpfaevent-sub-field wpfaevent-sub-page-row' . ( 'page' === $type ? '' : ' wpfaevent-nav-row-hidden' );
+		$sub_custom_class = 'wpfaevent-sub-field wpfaevent-sub-custom-row' . ( 'custom_page' === $type ? '' : ' wpfaevent-nav-row-hidden' );
 		?>
-		<div class="wpfaevent-nav-subitem-block" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px;">
-			<div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
-				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[text]" value="<?php echo esc_attr( $text ); ?>" placeholder="<?php esc_attr_e( 'Sub-Item Label (e.g. Fund Info)', 'wpfaevent' ); ?>" required style="flex: 2;">
-				<select name="<?php echo esc_attr( $prefix ); ?>[type]" class="wpfaevent-subitem-type-select" style="flex: 1;">
+		<div class="wpfaevent-nav-subitem-block">
+			<div class="wpfaevent-nav-subitem-header">
+				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[text]" value="<?php echo esc_attr( $text ); ?>" class="wpfaevent-nav-subitem-label-input" placeholder="<?php esc_attr_e( 'Sub-Item Label (e.g. Fund Info)', 'wpfaevent' ); ?>" required>
+				<select name="<?php echo esc_attr( $prefix ); ?>[type]" class="wpfaevent-subitem-type-select">
 					<option value="link" <?php selected( $type, 'link' ); ?>><?php esc_html_e( 'Direct Link', 'wpfaevent' ); ?></option>
 					<option value="page" <?php selected( $type, 'page' ); ?>><?php esc_html_e( 'Existing Page', 'wpfaevent' ); ?></option>
 					<option value="custom_page" <?php selected( $type, 'custom_page' ); ?>><?php esc_html_e( 'Custom Page', 'wpfaevent' ); ?></option>
 				</select>
-				<button type="button" class="button button-link-delete wpfaevent-remove-subitem-btn" style="color: #a00; font-size: 18px; line-height: 1; padding: 0 4px;" title="<?php esc_attr_e( 'Remove Sub-Item', 'wpfaevent' ); ?>">&times;</button>
+				<button type="button" class="button button-link-delete wpfaevent-remove-subitem-btn" title="<?php esc_attr_e( 'Remove Sub-Item', 'wpfaevent' ); ?>">&times;</button>
 			</div>
-			<div class="wpfaevent-sub-field wpfaevent-sub-link-row" style="<?php echo 'link' === $type ? '' : 'display: none;'; ?>">
-				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[href]" value="<?php echo esc_attr( $href ); ?>" placeholder="<?php esc_attr_e( 'Sub-Item URL (e.g. /events/ or https://...)', 'wpfaevent' ); ?>" style="width: 100%;">
+			<div class="<?php echo esc_attr( $sub_link_class ); ?>">
+				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[href]" value="<?php echo esc_attr( $href ); ?>" placeholder="<?php esc_attr_e( 'Sub-Item URL (e.g. /events/ or https://...)', 'wpfaevent' ); ?>">
 			</div>
-			<div class="wpfaevent-sub-field wpfaevent-sub-page-row" style="<?php echo 'page' === $type ? '' : 'display: none;'; ?>">
-				<select name="<?php echo esc_attr( $prefix ); ?>[page_id]" class="wpfaevent-sub-page-select" style="width: 100%;">
+			<div class="<?php echo esc_attr( $sub_page_class ); ?>">
+				<select name="<?php echo esc_attr( $prefix ); ?>[page_id]" class="wpfaevent-sub-page-select">
 					<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
 					<?php foreach ( $wp_pages as $p ) : ?>
 						<option value="<?php echo absint( $p->ID ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>" <?php selected( $page_id, $p->ID ); ?>>
@@ -1117,9 +1048,9 @@ class Wpfaevent_Admin_Event_Metabox {
 					<?php endforeach; ?>
 				</select>
 			</div>
-			<div class="wpfaevent-sub-field wpfaevent-sub-custom-row" style="<?php echo 'custom_page' === $type ? '' : 'display: none;'; ?>">
-				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>" style="width: 100%; margin-bottom: 6px;">
-				<textarea name="<?php echo esc_attr( $prefix ); ?>[content]" rows="3" placeholder="<?php esc_attr_e( "Page details, text, or bullet points:\n- Travel grant details\n- Application requirements", 'wpfaevent' ); ?>" style="width: 100%;"><?php echo esc_textarea( $content ); ?></textarea>
+			<div class="<?php echo esc_attr( $sub_custom_class ); ?>">
+				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>">
+				<textarea name="<?php echo esc_attr( $prefix ); ?>[content]" rows="3" placeholder="<?php esc_attr_e( "Page details, text, or bullet points:\n- Travel grant details\n- Application requirements", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
 			</div>
 		</div>
 
@@ -1502,21 +1433,23 @@ class Wpfaevent_Admin_Event_Metabox {
 			);
 		}
 
-		// Handle custom event navigation saving.
-		if ( isset( $_POST['wpfa_custom_nav_items'] ) && is_array( $_POST['wpfa_custom_nav_items'] ) ) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by Wpfaevent_Meta_Event::sanitize_custom_navigation().
-			$raw_nav   = wp_unslash( $_POST['wpfa_custom_nav_items'] );
-			$clean_nav = class_exists( 'Wpfaevent_Meta_Event' )
-				? Wpfaevent_Meta_Event::sanitize_custom_navigation( $raw_nav )
-				: array();
+		// Handle custom event navigation saving only when the navigation metabox was submitted.
+		if ( isset( $_POST['wpfa_custom_nav_items_present'] ) ) {
+			if ( isset( $_POST['wpfa_custom_nav_items'] ) && is_array( $_POST['wpfa_custom_nav_items'] ) ) {
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by Wpfaevent_Meta_Event::sanitize_custom_navigation().
+				$raw_nav   = wp_unslash( $_POST['wpfa_custom_nav_items'] );
+				$clean_nav = class_exists( 'Wpfaevent_Meta_Event' )
+					? Wpfaevent_Meta_Event::sanitize_custom_navigation( $raw_nav )
+					: array();
 
-			if ( ! empty( $clean_nav ) ) {
-				update_post_meta( $post_id, 'wpfa_event_custom_navigation', $clean_nav );
+				if ( ! empty( $clean_nav ) ) {
+					update_post_meta( $post_id, 'wpfa_event_custom_navigation', $clean_nav );
+				} else {
+					delete_post_meta( $post_id, 'wpfa_event_custom_navigation' );
+				}
 			} else {
 				delete_post_meta( $post_id, 'wpfa_event_custom_navigation' );
 			}
-		} else {
-			delete_post_meta( $post_id, 'wpfa_event_custom_navigation' );
 		}
 	}
 

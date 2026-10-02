@@ -731,6 +731,159 @@
 				notice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 			}
 		}
+
+		/* -------------------------------------------------------------
+		 * Event Custom Navigation Metabox
+		 * ----------------------------------------------------------- */
+		$(document).on('click', '#wpfaevent-reset-nav-default', function (e) {
+			e.preventDefault();
+			const confirmMsg =
+				typeof window.wpfaeventAdminL10n !== 'undefined' &&
+				window.wpfaeventAdminL10n.confirmResetNav
+					? window.wpfaeventAdminL10n.confirmResetNav
+					: 'Reset navigation to default items?';
+			// eslint-disable-next-line no-alert
+			if (!window.confirm(confirmMsg)) {
+				return;
+			}
+			const defaultTmpl = document.getElementById(
+				'wpfaevent-nav-default-template'
+			);
+			const defaultHtml = defaultTmpl ? defaultTmpl.innerHTML : '';
+			$('#wpfaevent-nav-items-container').html(defaultHtml);
+		});
+
+		$(document).on('click', '#wpfaevent-clear-nav', function (e) {
+			e.preventDefault();
+			const confirmMsg =
+				typeof window.wpfaeventAdminL10n !== 'undefined' &&
+				window.wpfaeventAdminL10n.confirmClearNav
+					? window.wpfaeventAdminL10n.confirmClearNav
+					: 'Clear all custom navigation items and use default navigation?';
+			// eslint-disable-next-line no-alert
+			if (!window.confirm(confirmMsg)) {
+				return;
+			}
+			$('#wpfaevent-nav-items-container').empty();
+		});
+
+		$(document).on('click', '#wpfaevent-add-nav-item', function (e) {
+			e.preventDefault();
+			const $container = $('#wpfaevent-nav-items-container');
+			if (!$container.length) {
+				return;
+			}
+			const itemTmpl = document.getElementById(
+				'wpfaevent-nav-item-template'
+			);
+			const itemHtml = itemTmpl ? itemTmpl.innerHTML : '';
+			if (!itemHtml) {
+				return;
+			}
+			let maxIdx = -1;
+			$container.find('.wpfaevent-meta-card').each(function () {
+				const idx = parseInt($(this).attr('data-index'), 10);
+				if (!isNaN(idx) && idx > maxIdx) {
+					maxIdx = idx;
+				}
+			});
+			const nextIdx = maxIdx + 1;
+			const tmpl = itemHtml.replace(/\$\{navIndex\}/g, nextIdx);
+			$container.append(tmpl);
+		});
+
+		$(document).on('change', '.wpfaevent-nav-type-select', function () {
+			const val = $(this).val();
+			const $card = $(this).closest('.wpfaevent-meta-card');
+			$card
+				.find('.wpfaevent-nav-link-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'link');
+			$card
+				.find('.wpfaevent-nav-page-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'page');
+			$card
+				.find('.wpfaevent-nav-custom-page-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'custom_page');
+			$card
+				.find('.wpfaevent-nav-dropdown-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'dropdown');
+		});
+
+		$(document).on('change', '.wpfaevent-subitem-type-select', function () {
+			const val = $(this).val();
+			const $block = $(this).closest('.wpfaevent-nav-subitem-block');
+			$block
+				.find('.wpfaevent-sub-link-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'link');
+			$block
+				.find('.wpfaevent-sub-page-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'page');
+			$block
+				.find('.wpfaevent-sub-custom-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'custom_page');
+		});
+
+		$(document).on('change', '.wpfaevent-nav-page-select', function () {
+			const $opt = $(this).find('option:selected');
+			const $card = $(this).closest('.wpfaevent-meta-card');
+			const $txt = $card.find('input[name*="[text]"]').first();
+			if (!$txt.val() && $opt.data('title')) {
+				$txt.val($opt.data('title'));
+			}
+		});
+
+		$(document).on('change', '.wpfaevent-sub-page-select', function () {
+			const $opt = $(this).find('option:selected');
+			const $block = $(this).closest('.wpfaevent-nav-subitem-block');
+			const $txt = $block.find('input[name*="[text]"]').first();
+			if (!$txt.val() && $opt.data('title')) {
+				$txt.val($opt.data('title'));
+			}
+		});
+
+		$(document).on('click', '.wpfaevent-remove-card-btn', function (e) {
+			e.preventDefault();
+			$(this).closest('.wpfaevent-meta-card').remove();
+		});
+
+		$(document).on('click', '.wpfaevent-remove-subitem-btn', function (e) {
+			e.preventDefault();
+			$(this).closest('.wpfaevent-nav-subitem-block').remove();
+		});
+
+		$(document).on('click', '.wpfaevent-add-subitem-btn', function (e) {
+			e.preventDefault();
+			const $card = $(this).closest('.wpfaevent-meta-card');
+			const pIdx = $card.attr('data-index') || 0;
+			let maxSubIdx = -1;
+			$card.find('.wpfaevent-nav-subitem-block').each(function () {
+				const nameAttr =
+					$(this)
+						.find('input, select, textarea')
+						.first()
+						.attr('name') || '';
+				const match = nameAttr.match(/\[items\]\[(\d+)\]/);
+				if (match) {
+					const sIdx = parseInt(match[1], 10);
+					if (!isNaN(sIdx) && sIdx > maxSubIdx) {
+						maxSubIdx = sIdx;
+					}
+				}
+			});
+			const nextSubIdx = maxSubIdx + 1;
+			const subTmpl = document.getElementById(
+				'wpfaevent-nav-subitem-template'
+			);
+			const subHtml = subTmpl ? subTmpl.innerHTML : '';
+			if (!subHtml) {
+				return;
+			}
+			const tmpl = subHtml
+				.replace(/__PIDX__/g, pIdx)
+				.replace(/__SIDX__/g, nextSubIdx);
+			$card.find('.wpfaevent-nav-subitems-list').append(tmpl);
+			$card.attr('data-next-sub-index', nextSubIdx + 1);
+		});
 	});
 
 	function getEventTitle(event) {

@@ -17,7 +17,7 @@ if ( empty( $wpfa_event_nav_items ) || ! is_array( $wpfa_event_nav_items ) ) {
 
 $event_id        = isset( $event_id ) ? (int) $event_id : (int) get_the_ID();
 $event_permalink = ( $event_id > 0 ) ? get_permalink( $event_id ) : '';
-$raw_custom_page = isset( $_GET['custom_page'] ) ? sanitize_title( wp_unslash( $_GET['custom_page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$raw_custom_page = ( isset( $_GET['custom_page'] ) && is_scalar( $_GET['custom_page'] ) ) ? sanitize_title( wp_unslash( $_GET['custom_page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 $is_custom_page  = ( '' !== $raw_custom_page );
 $current_slug    = $raw_custom_page;
 ?>

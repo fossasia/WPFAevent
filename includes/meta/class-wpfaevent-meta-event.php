@@ -370,11 +370,13 @@ class Wpfaevent_Meta_Event {
 						}
 					}
 				}
-				$clean[] = array(
-					'text'  => $text,
-					'type'  => 'dropdown',
-					'items' => $sub_items,
-				);
+				if ( ! empty( $sub_items ) ) {
+					$clean[] = array(
+						'text'  => $text,
+						'type'  => 'dropdown',
+						'items' => $sub_items,
+					);
+				}
 			} else {
 				$clean_item = self::sanitize_nav_single_item( $item, $used_slugs );
 				if ( $clean_item ) {
@@ -402,6 +404,10 @@ class Wpfaevent_Meta_Event {
 
 		$text = sanitize_text_field( (string) $item['text'] );
 		$type = isset( $item['type'] ) ? (string) $item['type'] : 'link';
+
+		if ( 'dropdown' === $type ) {
+			return null;
+		}
 
 		if ( 'custom_page' === $type ) {
 			$title     = ! empty( $item['title'] ) ? sanitize_text_field( (string) $item['title'] ) : $text;

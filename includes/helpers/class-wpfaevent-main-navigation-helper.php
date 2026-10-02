@@ -42,40 +42,57 @@ class Wpfaevent_Main_Navigation_Helper {
 		$past_url    = isset( $args['past_events_url'] ) ? (string) $args['past_events_url'] : apply_filters( 'wpfaevent_past_events_url', home_url( '/events/?filter=past' ) );
 		$coc_url     = isset( $args['coc_url'] ) ? (string) $args['coc_url'] : ( $coc_page_id ? get_permalink( $coc_page_id ) : home_url( '/code-of-conduct/' ) );
 
-		$is_events_active = ! empty( $args['is_events_active'] ) && ( 'active' === $args['is_events_active'] || true === $args['is_events_active'] );
-		$is_past_active   = ! empty( $args['is_past_events_active'] ) && ( 'active' === $args['is_past_events_active'] || true === $args['is_past_events_active'] );
-		$is_coc_active    = ! empty( $args['is_coc_active'] ) && ( 'active' === $args['is_coc_active'] || true === $args['is_coc_active'] );
-
-		return array(
+		$items = array(
 			array(
-				'text'      => __( 'Upcoming Events', 'wpfaevent' ),
-				'type'      => 'link',
-				'href'      => $events_url,
-				'is_active' => $is_events_active,
+				'text' => __( 'Upcoming Events', 'wpfaevent' ),
+				'type' => 'link',
+				'href' => $events_url,
 			),
 			array(
-				'text'      => __( 'Past Events', 'wpfaevent' ),
-				'type'      => 'link',
-				'href'      => $past_url,
-				'is_active' => $is_past_active,
+				'text' => __( 'Past Events', 'wpfaevent' ),
+				'type' => 'link',
+				'href' => $past_url,
 			),
 			array(
-				'text'      => __( 'Code of Conduct', 'wpfaevent' ),
-				'type'      => 'link',
-				'href'      => $coc_url ? $coc_url : home_url( '/code-of-conduct/' ),
-				'is_active' => $is_coc_active,
+				'text' => __( 'Code of Conduct', 'wpfaevent' ),
+				'type' => 'link',
+				'href' => $coc_url ? $coc_url : home_url( '/code-of-conduct/' ),
 			),
 		);
+
+		if ( isset( $args['is_events_active'] ) ) {
+			$items[0]['is_active'] = ! empty( $args['is_events_active'] ) && ( 'active' === $args['is_events_active'] || true === $args['is_events_active'] );
+		}
+		if ( isset( $args['is_past_events_active'] ) ) {
+			$items[1]['is_active'] = ! empty( $args['is_past_events_active'] ) && ( 'active' === $args['is_past_events_active'] || true === $args['is_past_events_active'] );
+		}
+		if ( isset( $args['is_coc_active'] ) ) {
+			$items[2]['is_active'] = ! empty( $args['is_coc_active'] ) && ( 'active' === $args['is_coc_active'] || true === $args['is_coc_active'] );
+		}
+
+		return apply_filters( 'wpfaevent_main_navigation_items', $items, $args );
 	}
 
 	/**
 	 * Get the default event section navigation items.
 	 *
+	 * When an event ID is provided, dynamically resolves navigation items matching what
+	 * the event actually displays (Overview, Tickets, Speakers, Schedule, Additional Info,
+	 * custom tabs, Sponsors, Exhibitors), automatically hiding empty sections.
+	 *
 	 * @since 1.0.0
 	 *
+	 * @param int $event_id Optional event post ID.
 	 * @return array<int, array<string, mixed>> Default event navigation items.
 	 */
-	public static function get_default_event_nav_items() {
+	public static function get_default_event_nav_items( $event_id = 0 ) {
+		if ( $event_id > 0 && class_exists( 'Wpfaevent_Event_Template_Controller' ) ) {
+			$dynamic = Wpfaevent_Event_Template_Controller::get_default_event_nav_items( $event_id );
+			if ( ! empty( $dynamic ) ) {
+				return $dynamic;
+			}
+		}
+
 		return array(
 			array(
 				'text' => __( 'Overview', 'wpfaevent' ),
@@ -139,7 +156,7 @@ class Wpfaevent_Main_Navigation_Helper {
 								$sub_href = add_query_arg( 'custom_page', $slug, $event_permalink );
 							}
 						}
-						$active = ( ! empty( $sub['is_active'] ) || self::is_url_active( $sub_href, $current_uri ) );
+						$active = isset( $sub['is_active'] ) ? ! empty( $sub['is_active'] ) : self::is_url_active( $sub_href, $current_uri );
 						if ( $active ) {
 							$is_active = true;
 						}
@@ -178,7 +195,7 @@ class Wpfaevent_Main_Navigation_Helper {
 						$href = add_query_arg( 'custom_page', $slug, $event_permalink );
 					}
 				}
-				$is_active = ( ! empty( $item['is_active'] ) || self::is_url_active( $href, $current_uri ) );
+				$is_active = isset( $item['is_active'] ) ? ! empty( $item['is_active'] ) : self::is_url_active( $href, $current_uri );
 				$active    = $is_active ? 'active' : '';
 				printf(
 					'<a href="%s" class="%s">%s</a>',
@@ -282,7 +299,7 @@ class Wpfaevent_Main_Navigation_Helper {
 			$event_id = (int) get_queried_object_id();
 		}
 
-		if ( empty( $_GET['custom_page'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( empty( $_GET['custom_page'] ) || ! is_scalar( $_GET['custom_page'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			return null;
 		}
 

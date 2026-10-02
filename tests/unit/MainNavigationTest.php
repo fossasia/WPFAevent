@@ -707,8 +707,11 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$container_html = substr( $output, $container_start, $container_end - $container_start );
 		$this->assertStringNotContainsString( 'wpfaevent-meta-card', $container_html );
 
+		$this->assertStringContainsString( 'name="wpfa_custom_nav_items_present"', $output );
 		$this->assertStringContainsString( 'id="wpfaevent-nav-default-template"', $output );
 		$this->assertStringContainsString( 'id="wpfaevent-reset-nav-default"', $output );
+		$this->assertStringNotContainsString( '<script>', $output );
+		$this->assertStringNotContainsString( 'style=', $output );
 	}
 
 	/**
@@ -760,5 +763,207 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$this->assertSame( WPFAEVENT_PATH . 'public/templates/page-event-custom.php', $resolved_template );
 
 		unset( $_GET['custom_page'] );
+	}
+
+	/**
+	 * Test that sanitize_custom_navigation discards dropdowns that have no valid sub-items.
+	 */
+	public function test_sanitize_custom_navigation_discards_empty_dropdowns() {
+		$raw_items = array(
+			array(
+				'text'  => 'Empty Dropdown 1',
+				'type'  => 'dropdown',
+				'items' => array(),
+			),
+			array(
+				'text'  => 'Empty Dropdown 2',
+				'type'  => 'dropdown',
+				'items' => array(
+					array(
+						'text' => '',
+						'href' => 'https://example.com',
+					),
+				),
+			),
+			array(
+				'text' => 'Valid Link',
+				'type' => 'link',
+				'href' => 'https://example.com',
+			),
+			array(
+				'text'  => 'Valid Dropdown',
+				'type'  => 'dropdown',
+				'items' => array(
+					array(
+						'text' => 'Sub item',
+						'href' => 'https://example.com/sub',
+					),
+				),
+			),
+		);
+
+		$sanitized = Wpfaevent_Meta_Event::sanitize_custom_navigation( $raw_items );
+
+		$this->assertCount( 2, $sanitized );
+		$this->assertSame( 'Valid Link', $sanitized[0]['text'] );
+		$this->assertSame( 'Valid Dropdown', $sanitized[1]['text'] );
+	}
+
+	/**
+	 * Test that unsubmitted navigation metabox does not delete existing custom navigation.
+	 */
+	public function test_save_event_meta_unsubmitted_navigation_preserves_meta() {
+		if ( ! class_exists( 'Wpfaevent_Admin_Event_Metabox' ) ) {
+			$this->markTestSkipped( 'Wpfaevent_Admin_Event_Metabox class not available.' );
+		}
+
+		$user_id = $this->factory->user->create( array( 'role' => 'administrator' ) );
+		wp_set_current_user( $user_id );
+
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event With Nav',
+			)
+		);
+
+		$initial_nav = array(
+			array(
+				'text' => 'Speakers',
+				'type' => 'link',
+				'href' => '#speakers',
+			),
+		);
+		update_post_meta( $event_id, 'wpfa_event_custom_navigation', $initial_nav );
+
+		// Simulate an event save where wpfa_custom_nav_items_present is NOT sent (e.g. metabox hidden).
+		$_POST['wpfa_event_meta_nonce'] = wp_create_nonce( 'wpfa_event_meta_nonce' );
+		unset( $_POST['wpfa_custom_nav_items_present'], $_POST['wpfa_custom_nav_items'] );
+
+		$metabox = new Wpfaevent_Admin_Event_Metabox();
+		$metabox->save_event_meta( $event_id );
+
+		// Navigation meta must be preserved.
+		$stored_nav = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
+		$this->assertSame( $initial_nav, $stored_nav );
+
+		// Now simulate explicit submission with the presence flag set and empty nav items.
+		$_POST['wpfa_custom_nav_items_present'] = '1';
+		$_POST['wpfa_custom_nav_items']         = array();
+		$metabox->save_event_meta( $event_id );
+
+		// Navigation meta must now be deleted.
+		$this->assertEmpty( get_post_meta( $event_id, 'wpfa_event_custom_navigation', true ) );
+
+		unset( $_POST['wpfa_event_meta_nonce'], $_POST['wpfa_custom_nav_items_present'], $_POST['wpfa_custom_nav_items'] );
+	}
+
+	/**
+	 * Test that non-scalar custom_page query parameter does not trigger errors.
+	 */
+	public function test_custom_page_non_scalar_query_param_does_not_error() {
+		if ( ! class_exists( 'Wpfaevent_Templates' ) ) {
+			$this->markTestSkipped( 'Wpfaevent_Templates class not available.' );
+		}
+
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event Non Scalar Test',
+			)
+		);
+
+		$this->go_to( get_permalink( $event_id ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$_GET['custom_page'] = array( 'malicious_array' );
+
+		// Template loader must not crash and must select single-wpfa-event.php.
+		$resolved_template = Wpfaevent_Templates::load( 'single.php' );
+		$this->assertSame( WPFAEVENT_PATH . 'public/templates/single-wpfa-event.php', $resolved_template );
+
+		// Main navigation helper get_current_custom_page must safely return null.
+		$current_custom = Wpfaevent_Main_Navigation_Helper::get_current_custom_page( $event_id );
+		$this->assertNull( $current_custom );
+
+		// event-section-nav.php partial must render cleanly without type error.
+		$wpfa_event_nav_items = Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items();
+		ob_start();
+		include WPFAEVENT_PATH . 'public/partials/event-section-nav.php';
+		$output = ob_get_clean();
+		$this->assertStringContainsString( 'wpfa-event-section-nav', $output );
+
+		unset( $_GET['custom_page'] );
+	}
+
+	/**
+	 * Test that header.php renders navigation links via Wpfaevent_Main_Navigation_Helper::render_navigation.
+	 */
+	public function test_header_renders_navigation_links() {
+		ob_start();
+		include WPFAEVENT_PATH . 'public/partials/header.php';
+		$header_output = ob_get_clean();
+
+		$this->assertStringContainsString( 'Upcoming Events', $header_output );
+		$this->assertStringContainsString( 'Past Events', $header_output );
+		$this->assertStringContainsString( 'Code of Conduct', $header_output );
+	}
+
+	/**
+	 * Test that Reset to Default loads the dynamically built event navigation items,
+	 * including tickets and custom tabs, while hiding empty sections.
+	 */
+	public function test_get_default_event_nav_items_matches_automatic_page_menu() {
+		if ( ! class_exists( 'Wpfaevent_Admin_Event_Metabox' ) ) {
+			$this->markTestSkipped( 'Wpfaevent_Admin_Event_Metabox class not available.' );
+		}
+
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_title'   => 'Dynamic Event Nav Test',
+				'post_content' => 'About content for the event.',
+			)
+		);
+
+		// Enable tickets and add a custom tab.
+		update_post_meta( $event_id, 'wpfa_event_show_ticket_section', '1' );
+		update_post_meta( $event_id, 'wpfa_event_ticket_widget_id', 'widget-123' );
+		update_post_meta(
+			$event_id,
+			'wpfa_event_custom_tabs',
+			array(
+				array(
+					'slug'    => 'venue-guide',
+					'title'   => 'Venue Guide',
+					'content' => 'Venue details',
+				),
+			)
+		);
+
+		// No speakers, schedule, sponsors, or exhibitors meta are added.
+		$default_nav = Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items( $event_id );
+		$hrefs       = array_column( $default_nav, 'href' );
+
+		// Overview, Tickets, and custom tab must be present.
+		$this->assertContains( '#about', $hrefs );
+		$this->assertContains( '#tickets', $hrefs );
+		$this->assertContains( '#custom-section-venue-guide', $hrefs );
+
+		// Empty sections (Speakers, Schedule, Sponsors, Exhibitors) must be hidden.
+		$this->assertNotContains( '#speakers', $hrefs );
+		$this->assertNotContains( '#schedule-overview', $hrefs );
+		$this->assertNotContains( '#sponsors', $hrefs );
+		$this->assertNotContains( '#exhibitors', $hrefs );
+
+		// In the metabox default template, the dynamic default items must be rendered.
+		$metabox = new Wpfaevent_Admin_Event_Metabox();
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'id="wpfaevent-nav-default-template"', $output );
+		$this->assertStringContainsString( '#tickets', $output );
+		$this->assertStringContainsString( '#custom-section-venue-guide', $output );
+		$this->assertStringNotContainsString( '#sponsors', $output );
 	}
 }

@@ -30,9 +30,27 @@ if ( $page_data ) {
 	$page_body  = '';
 }
 
-$event_style_attr = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::build_event_style_attribute( $event_id ) : '';
-$event_title      = get_the_title( $event_id );
-$event_url        = get_permalink( $event_id );
+$event_data = class_exists( 'Wpfaevent_Event_Template_Controller' )
+	? Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id )
+	: array();
+
+$header_vars = ! empty( $event_data['header_vars'] ) && is_array( $event_data['header_vars'] )
+	? $event_data['header_vars']
+	: array();
+
+$site_logo_url        = isset( $header_vars['site_logo_url'] ) ? $header_vars['site_logo_url'] : ( defined( 'WPFAEVENT_URL' ) ? WPFAEVENT_URL . 'assets/images/logo.png' : '' );
+$event_page_url       = isset( $header_vars['event_page_url'] ) ? $header_vars['event_page_url'] : home_url( '/events/' );
+$show_back_button     = isset( $header_vars['show_back_button'] ) ? $header_vars['show_back_button'] : true;
+$show_register_button = isset( $header_vars['show_register_button'] ) ? $header_vars['show_register_button'] : false;
+$back_button_text     = isset( $header_vars['back_button_text'] ) ? $header_vars['back_button_text'] : __( 'All Events', 'wpfaevent' );
+$register_button_url  = isset( $header_vars['register_button_url'] ) ? $header_vars['register_button_url'] : '';
+$register_button_text = isset( $header_vars['register_button_text'] ) ? $header_vars['register_button_text'] : __( 'Register', 'wpfaevent' );
+
+$event_style_attr = ! empty( $event_data['event_style_attr'] )
+	? (string) $event_data['event_style_attr']
+	: ( class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::build_event_style_attribute( $event_id ) : '' );
+$event_title      = ! empty( $event_data['event_title'] ) ? (string) $event_data['event_title'] : get_the_title( $event_id );
+$event_url        = ! empty( $event_data['event_url'] ) ? (string) $event_data['event_url'] : get_permalink( $event_id );
 
 // Convert markdown-style bullet lines (- item or * item) into <ul><li> only if plain text was entered.
 $formatted_content = $page_body;
@@ -98,9 +116,8 @@ if ( $is_plain_text ) {
 		</header>
 
 		<?php
-		$saved_event_nav      = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
-		$wpfa_event_nav_items = ( is_array( $saved_event_nav ) && ! empty( $saved_event_nav ) )
-			? $saved_event_nav
+		$wpfa_event_nav_items = ! empty( $event_data['wpfa_event_nav_items'] ) && is_array( $event_data['wpfa_event_nav_items'] )
+			? $event_data['wpfa_event_nav_items']
 			: ( class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items() : array() );
 
 		if ( ! empty( $wpfa_event_nav_items ) ) {
