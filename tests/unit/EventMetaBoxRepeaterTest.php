@@ -45,6 +45,7 @@ class EventMetaBoxRepeaterTest extends WP_UnitTestCase {
 			'sessions'   => array( 'render_event_schedule_meta_box', 'wpfa_schedule_sessions', 'sessionIndex' ),
 			'sponsors'   => array( 'render_event_sponsors_meta_box', 'wpfa_sponsors', 'sponsorIndex' ),
 			'exhibitors' => array( 'render_event_exhibitors_meta_box', 'wpfa_exhibitors', 'exhibitorIndex' ),
+			'navigation' => array( 'render_event_navigation_meta_box', 'wpfa_custom_nav_items', 'navIndex' ),
 		);
 	}
 
