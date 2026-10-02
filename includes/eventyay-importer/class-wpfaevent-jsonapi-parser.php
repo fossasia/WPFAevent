@@ -1534,6 +1534,10 @@ class Wpfaevent_JSONAPI_Parser {
 			$event,
 			array(
 				'description',
+				'description_html',
+				'description-html',
+				'frontpage_content',
+				'frontpage-content',
 				'frontpage_text',
 				'frontpage-text',
 				'event_info_text',
@@ -1552,6 +1556,84 @@ class Wpfaevent_JSONAPI_Parser {
 		);
 
 		return $this->eventyay_rich_text_value( $value );
+	}
+
+	/**
+	 * Extract the short lead text for an Eventyay event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event Eventyay event resource.
+	 * @return string
+	 * @phpstan-param array<array-key, mixed> $event
+	 */
+	public function eventyay_event_lead_text( $event ) {
+		$dedicated_value   = $this->eventyay_event_first_present_raw(
+			$event,
+			array(
+				'headline',
+				'lead_text',
+				'lead-text',
+				'subtitle',
+				'short_description',
+				'short-description',
+				'summary',
+			),
+			true
+		);
+		$description_value = $this->eventyay_event_first_present_raw(
+			$event,
+			array(
+				'description',
+				'description_html',
+				'description-html',
+				'frontpage_content',
+				'frontpage-content',
+				'frontpage_text',
+				'frontpage-text',
+			),
+			true
+		);
+		$to_plain_text     = static function ( $value ) {
+			$value = is_scalar( $value ) ? (string) $value : '';
+			$value = preg_replace( '/<\s*(?:br\s*\/?>|\/(?:p|div|li|h[1-6]|blockquote|tr|table)\s*)>/i', ' ', $value );
+			$value = is_string( $value ) ? wp_strip_all_tags( $value ) : '';
+			$value = preg_replace( '/\s+/', ' ', $value );
+
+			return is_string( $value ) ? trim( $value ) : '';
+		};
+		$lead_text         = $to_plain_text( $this->eventyay_rich_text_value( $dedicated_value ) );
+		$description       = $to_plain_text( $this->eventyay_rich_text_value( $description_value ) );
+
+		$has_separate_description = '' !== $to_plain_text(
+			$this->eventyay_rich_text_value(
+				$this->eventyay_event_first_present_raw(
+					$event,
+					array(
+						'description',
+						'description_html',
+						'description-html',
+						'frontpage_content',
+						'frontpage-content',
+						'frontpage_text',
+						'frontpage-text',
+					),
+					true
+				)
+			)
+		);
+
+		if ( '' !== $lead_text && ( ! $has_separate_description || $lead_text !== $description ) ) {
+			return sanitize_text_field( $lead_text );
+		}
+
+		$description = $to_plain_text( $this->eventyay_rich_text_value( $description_value ) );
+
+		if ( preg_match( '/^(.+?[.!?])(?:\s|$)/u', $description, $matches ) ) {
+			return sanitize_text_field( $matches[1] );
+		}
+
+		return '';
 	}
 
 	/**

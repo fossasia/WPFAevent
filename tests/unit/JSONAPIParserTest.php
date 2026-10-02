@@ -111,4 +111,358 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 		$this->assertSame( 'Italo Vignoli', $merged[1]['name'] );
 		$this->assertTrue( $merged[1]['featured'] );
 	}
+
+	/**
+	 * The importer uses a dedicated Eventyay headline when one is available.
+	 */
+	public function test_event_lead_text_prefers_headline() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$lead_text = $parser->eventyay_event_lead_text(
+			array(
+				'headline'    => 'A concise event headline',
+				'description' => 'The longer event description. More details follow.',
+			)
+		);
+
+		$this->assertSame( 'A concise event headline', $lead_text );
+	}
+
+	/**
+	 * Dedicated lead fields take precedence over frontpage description content.
+	 */
+	public function test_event_lead_text_prefers_short_field_over_frontpage_text() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame(
+			'Meet the open-source community',
+			$parser->eventyay_event_lead_text(
+				array(
+					'short_description' => 'Meet the open-source community',
+					'frontpage_text'    => 'A longer frontpage description. More details follow.',
+				)
+			)
+		);
+	}
+
+	/**
+	 * A description supplies its first sentence when no dedicated lead exists.
+	 */
+	public function test_event_lead_text_falls_back_to_first_description_sentence() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$lead_text = $parser->eventyay_event_lead_text(
+			array(
+				'description' => '<p>First sentence for the hero.</p> More event details follow.',
+			)
+		);
+
+		$this->assertSame( 'First sentence for the hero.', $lead_text );
+	}
+
+	/**
+	 * HTML descriptions are converted to text before the first sentence is extracted.
+	 */
+	public function test_event_lead_text_uses_description_html() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame(
+			'First HTML sentence.',
+			$parser->eventyay_event_lead_text(
+				array( 'description_html' => '<p>First HTML sentence.</p><p>Second sentence.</p>' )
+			)
+		);
+	}
+
+	/**
+	 * Adjacent HTML paragraphs retain a whitespace boundary when stripped.
+	 */
+	public function test_event_lead_text_preserves_adjacent_html_boundaries() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame(
+			'First sentence.',
+			$parser->eventyay_event_lead_text(
+				array( 'description_html' => '<p>First sentence.</p><p>Second sentence.</p>' )
+			)
+		);
+	}
+
+	/**
+	 * A dedicated short description remains the lead when no description exists.
+	 */
+	public function test_event_lead_text_uses_short_description_without_description() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame( 'Meet the open-source community', $parser->eventyay_event_lead_text( array( 'short_description' => 'Meet the open-source community' ) ) );
+	}
+
+	/**
+	 * A standalone summary remains a lead when no separate description exists.
+	 */
+	public function test_event_lead_text_uses_standalone_summary() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame( 'Meet the open-source community', $parser->eventyay_event_lead_text( array( 'summary' => 'Meet the open-source community' ) ) );
+	}
+
+	/**
+	 * A summary duplicated from frontpage content is reduced to its first sentence.
+	 */
+	public function test_event_lead_text_reduces_duplicate_summary() {
+		$parser      = new Wpfaevent_JSONAPI_Parser();
+		$description = 'First sentence. The remaining event description is much longer.';
+
+		$this->assertSame(
+			'First sentence.',
+			$parser->eventyay_event_lead_text(
+				array(
+					'summary'        => $description,
+					'frontpage_text' => $description,
+				)
+			)
+		);
+	}
+
+	/**
+	 * Frontpage content aliases can supply the description fallback.
+	 */
+	public function test_event_lead_text_uses_frontpage_content_alias() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame(
+			'First frontpage sentence.',
+			$parser->eventyay_event_lead_text( array( 'frontpage-content' => 'First frontpage sentence. More details follow.' ) )
+		);
+	}
+
+	/**
+	 * Frontpage content aliases supply the full imported event description.
+	 */
+	public function test_event_description_uses_frontpage_content_alias() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame(
+			'Full frontpage description.',
+			$parser->eventyay_event_description( array( 'frontpage_content' => 'Full frontpage description.' ) )
+		);
+		$this->assertSame(
+			'Full hyphenated frontpage description.',
+			$parser->eventyay_event_description( array( 'frontpage-content' => 'Full hyphenated frontpage description.' ) )
+		);
+	}
+
+	/**
+	 * No usable source leaves the lead empty.
+	 */
+	public function test_event_lead_text_is_empty_without_sources() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame( '', $parser->eventyay_event_lead_text( array( 'name' => 'Event without description' ) ) );
+	}
+
+	/**
+	 * The event template keeps the canonical lead separate from the full about content.
+	 */
+	public function test_event_template_uses_canonical_lead_text() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_content' => 'The complete event description remains available here.',
+				'post_excerpt' => '',
+			)
+		);
+		update_post_meta( $event_id, 'wpfa_event_lead_text', 'A short event lead.' );
+		update_post_meta( $event_id, '_event_lead_text', 'A legacy event lead.' );
+
+		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+
+		$this->assertSame( 'A short event lead.', $template_data['event_lead_text'] );
+		$this->assertStringContainsString( 'complete event description', $template_data['about_content'] );
+	}
+
+	/**
+	 * Older imported events still expose their legacy lead text in the template data.
+	 */
+	public function test_event_template_falls_back_to_legacy_lead_text() {
+		$event_id = $this->factory->post->create( array( 'post_type' => 'wpfa_event' ) );
+		update_post_meta( $event_id, '_event_lead_text', 'A legacy event lead.' );
+
+		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+
+		$this->assertSame( 'A legacy event lead.', $template_data['event_lead_text'] );
+	}
+
+	/**
+	 * Events without lead metadata retain the existing post-content fallback.
+	 */
+	public function test_event_template_keeps_existing_fallback_without_lead_meta() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_content' => 'The existing event description fallback.',
+				'post_excerpt' => '',
+			)
+		);
+
+		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+
+		$this->assertSame( '', $template_data['event_lead_text'] );
+		$this->assertStringContainsString( 'existing event description fallback', $template_data['about_content'] );
+	}
+
+	/**
+	 * Frontend-edited descriptions use the post excerpt on the event page.
+	 */
+	public function test_event_template_uses_post_excerpt_before_post_content() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_content' => 'The old event description.',
+				'post_excerpt' => 'The updated event description.',
+			)
+		);
+
+		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+
+		$this->assertSame( 'The updated event description.', $template_data['about_content'] );
+	}
+
+	/**
+	 * A frontend-edited description takes precedence over stale dashboard content.
+	 */
+	public function test_event_template_uses_edited_excerpt_before_stale_about_content() {
+		$event_id   = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_content' => 'The newly edited full description.',
+				'post_excerpt' => 'The newly edited full description.',
+			)
+		);
+		$upload_dir = wp_upload_dir();
+		$data_dir   = trailingslashit( $upload_dir['basedir'] ) . 'fossasia-data';
+		$file_path  = trailingslashit( $data_dir ) . 'site-settings-' . $event_id . '.json';
+
+		wp_mkdir_p( $data_dir );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		file_put_contents(
+			$file_path,
+			wp_json_encode( array( 'about_section_content' => 'The stale imported description.' ) )
+		);
+
+		try {
+			$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+		} finally {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
+			unlink( $file_path );
+		}
+
+		$this->assertSame( 'The newly edited full description.', $template_data['about_content'] );
+	}
+
+	/**
+	 * A full description is reduced to a sentence instead of becoming the lead.
+	 */
+	public function test_event_lead_text_does_not_store_full_description() {
+		$parser      = new Wpfaevent_JSONAPI_Parser();
+		$description = 'First sentence. The remaining event description is much longer.';
+
+		$this->assertSame(
+			'First sentence.',
+			$parser->eventyay_event_lead_text(
+				array(
+					'summary'     => $description,
+					'description' => $description,
+				)
+			)
+		);
+	}
+
+	/**
+	 * A description without a sentence boundary does not become the full lead.
+	 */
+	public function test_event_lead_text_is_empty_without_sentence_boundary() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame( '', $parser->eventyay_event_lead_text( array( 'description' => 'A description without a sentence boundary' ) ) );
+	}
+
+	/**
+	 * Imported lead text is stored in the canonical event meta field.
+	 */
+	public function test_event_import_stores_lead_text_in_canonical_meta() {
+		$event_id = ( new Wpfaevent_Event_Repository() )->upsert_eventyay_event_post(
+			array(
+				'slug'        => 'lead-text-event',
+				'name'        => 'Lead Text Event',
+				'description' => 'The first sentence is the hero lead. The rest is event detail.',
+			),
+			array(
+				'base_url'       => 'https://eventyay.example',
+				'organizer_slug' => 'fossasia',
+				'post_status'    => 'draft',
+			)
+		);
+
+		$this->assertIsArray( $event_id );
+		$this->assertSame( 'The first sentence is the hero lead.', get_post_meta( $event_id['id'], 'wpfa_event_lead_text', true ) );
+		$this->assertSame( '', get_post_meta( $event_id['id'], '_event_lead_text', true ) );
+		$this->assertSame( 'The first sentence is the hero lead. The rest is event detail.', get_post_field( 'post_content', $event_id['id'] ) );
+		$this->assertSame( 'The first sentence is the hero lead. The rest is event detail.', get_post_field( 'post_excerpt', $event_id['id'] ) );
+	}
+
+	/**
+	 * Reimports do not leave stale legacy lead text behind.
+	 */
+	public function test_event_import_clears_legacy_lead_text_when_new_lead_is_empty() {
+		$repository = new Wpfaevent_Event_Repository();
+		$settings   = array(
+			'base_url'       => 'https://eventyay.example',
+			'organizer_slug' => 'fossasia',
+			'post_status'    => 'draft',
+		);
+		$event      = array(
+			'slug'        => 'legacy-lead-event',
+			'name'        => 'Legacy Lead Event',
+			'description' => 'The initial event description.',
+		);
+		$event_id   = $repository->upsert_eventyay_event_post( $event, $settings );
+
+		$this->assertIsArray( $event_id );
+		update_post_meta( $event_id['id'], '_event_lead_text', 'Stale legacy lead.' );
+
+		$event['description'] = 'Updated description without a sentence boundary';
+		$repository->upsert_eventyay_event_post( $event, $settings );
+
+		$this->assertSame( '', get_post_meta( $event_id['id'], 'wpfa_event_lead_text', true ) );
+		$this->assertSame( '', get_post_meta( $event_id['id'], '_event_lead_text', true ) );
+	}
+
+	/**
+	 * The active importer delegates lead extraction to its parser.
+	 */
+	public function test_active_event_importer_stores_lead_text() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$method   = new ReflectionMethod( $importer, 'upsert_eventyay_event_post' );
+		$method->setAccessible( true );
+
+		$result = $method->invoke(
+			$importer,
+			array(
+				'slug'        => 'active-lead-text-event',
+				'name'        => 'Active Lead Text Event',
+				'description' => 'The active importer uses the parser. More details follow.',
+			),
+			array(
+				'base_url'       => 'https://eventyay.example',
+				'organizer_slug' => 'fossasia',
+				'post_status'    => 'draft',
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 'The active importer uses the parser.', get_post_meta( $result['id'], 'wpfa_event_lead_text', true ) );
+		$this->assertSame( 'The active importer uses the parser. More details follow.', get_post_field( 'post_content', $result['id'] ) );
+		$this->assertSame( 'The active importer uses the parser. More details follow.', get_post_field( 'post_excerpt', $result['id'] ) );
+	}
 }

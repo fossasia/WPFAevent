@@ -60,8 +60,8 @@ $wpfaevent_default_timezone = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent
 			<input type="text" id="eventPlace" name="location" required>
 
 			<label for="eventDescription"><?php esc_html_e( 'Description:', 'wpfaevent' ); ?></label>
-			<textarea id="eventDescription" name="excerpt" rows="3" required maxlength="300"></textarea>
-			<small class="wpfaevent-char-counter">0 / 300</small>
+			<textarea id="eventDescription" name="excerpt" rows="6" required></textarea>
+			<small class="wpfaevent-char-counter">0</small>
 
 			<label for="eventLeadText"><?php esc_html_e( 'Hero Lead Text:', 'wpfaevent' ); ?></label>
 			<textarea id="eventLeadText" name="lead_text" rows="2" required maxlength="160"></textarea>
@@ -123,8 +123,8 @@ $wpfaevent_default_timezone = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent
 			<input type="text" id="editEventPlace" name="location" required>
 
 			<label for="editEventDescription"><?php esc_html_e( 'Description:', 'wpfaevent' ); ?></label>
-			<textarea id="editEventDescription" name="excerpt" rows="3" required maxlength="300"></textarea>
-			<small class="wpfaevent-char-counter">0 / 300</small>
+			<textarea id="editEventDescription" name="excerpt" rows="6" required></textarea>
+			<small class="wpfaevent-char-counter">0</small>
 
 			<label for="editEventLeadText"><?php esc_html_e( 'Hero Lead Text:', 'wpfaevent' ); ?></label>
 			<textarea id="editEventLeadText" name="lead_text" rows="2" required maxlength="160"></textarea>
