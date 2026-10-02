@@ -1536,6 +1536,8 @@ class Wpfaevent_JSONAPI_Parser {
 				'description',
 				'description_html',
 				'description-html',
+				'frontpage_content',
+				'frontpage-content',
 				'frontpage_text',
 				'frontpage-text',
 				'event_info_text',

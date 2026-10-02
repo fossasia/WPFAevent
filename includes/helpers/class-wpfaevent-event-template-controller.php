@@ -788,12 +788,10 @@ class Wpfaevent_Event_Template_Controller {
 			);
 		}
 
-		if ( '' === $about_content ) {
-			if ( '' !== $post_excerpt ) {
-				$about_content = $post_excerpt;
-			} else {
-				$about_content = $post_content;
-			}
+		if ( '' !== $post_excerpt ) {
+			$about_content = $post_excerpt;
+		} elseif ( '' === $about_content ) {
+			$about_content = $post_content;
 		}
 
 		$date_label           = ! empty( $event_calendar_data['date_label'] ) ? sanitize_text_field( $event_calendar_data['date_label'] ) : $format_event_date( $start_date );

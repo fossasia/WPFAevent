@@ -237,6 +237,22 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Frontpage content aliases supply the full imported event description.
+	 */
+	public function test_event_description_uses_frontpage_content_alias() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame(
+			'Full frontpage description.',
+			$parser->eventyay_event_description( array( 'frontpage_content' => 'Full frontpage description.' ) )
+		);
+		$this->assertSame(
+			'Full hyphenated frontpage description.',
+			$parser->eventyay_event_description( array( 'frontpage-content' => 'Full hyphenated frontpage description.' ) )
+		);
+	}
+
+	/**
 	 * No usable source leaves the lead empty.
 	 */
 	public function test_event_lead_text_is_empty_without_sources() {
@@ -310,6 +326,38 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
 
 		$this->assertSame( 'The updated event description.', $template_data['about_content'] );
+	}
+
+	/**
+	 * A frontend-edited description takes precedence over stale dashboard content.
+	 */
+	public function test_event_template_uses_edited_excerpt_before_stale_about_content() {
+		$event_id   = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_content' => 'The newly edited full description.',
+				'post_excerpt' => 'The newly edited full description.',
+			)
+		);
+		$upload_dir = wp_upload_dir();
+		$data_dir   = trailingslashit( $upload_dir['basedir'] ) . 'fossasia-data';
+		$file_path  = trailingslashit( $data_dir ) . 'site-settings-' . $event_id . '.json';
+
+		wp_mkdir_p( $data_dir );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		file_put_contents(
+			$file_path,
+			wp_json_encode( array( 'about_section_content' => 'The stale imported description.' ) )
+		);
+
+		try {
+			$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+		} finally {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
+			unlink( $file_path );
+		}
+
+		$this->assertSame( 'The newly edited full description.', $template_data['about_content'] );
 	}
 
 	/**
