@@ -243,9 +243,12 @@ const wpfaEvents = (function () {
 			if (counter?.classList.contains('wpfaevent-char-counter')) {
 				const update = () => {
 					const currentLength = textarea.value.length;
-				counter.textContent = `${currentLength}`;
+					counter.textContent = `${currentLength}`;
 
-					if (textarea.maxLength > 0 && currentLength >= textarea.maxLength) {
+					if (
+						textarea.maxLength > 0 &&
+						currentLength >= textarea.maxLength
+					) {
 						counter.classList.add('limit-reached');
 					} else {
 						counter.classList.remove('limit-reached');
