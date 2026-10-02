@@ -534,10 +534,12 @@ class Wpfaevent_Eventyay_Importer {
 				MINUTE_IN_SECONDS * 5
 			);
 		} else {
+			$program_empty = ! empty( $result['program_empty'] );
+
 			set_transient(
 				$notice_key,
 				array(
-					'type'    => 'success',
+					'type'    => $program_empty ? 'warning' : 'success',
 					'message' => sprintf(
 						/* translators: 1: fetched events, 2: created events, 3: updated events, 4: skipped events, 5: sessions, 6: speakers, 7: sponsors, 8: exhibitors, 9: schedule rows, 10: about updates, 11: skipped program imports, 12: skipped sponsor/exhibitor imports. */
 						esc_html__( 'Fetched %1$d Eventyay event(s). Created %2$d, updated %3$d, skipped %4$d. Imported %5$d session(s), %6$d speaker(s), %7$d sponsor(s), %8$d exhibitor(s), %9$d schedule row(s), and updated %10$d about section(s); skipped program import for %11$d event(s) and sponsor/exhibitor import for %12$d event(s).', 'wpfaevent' ),
@@ -553,7 +555,7 @@ class Wpfaevent_Eventyay_Importer {
 						absint( $result['about_updates'] ),
 						absint( $result['program_skipped'] ),
 						absint( $result['partner_skipped'] )
-					),
+					) . ( $program_empty ? "\n\n" . self::get_empty_program_hint() : '' ),
 				),
 				MINUTE_IN_SECONDS * 5
 			);
@@ -719,6 +721,7 @@ class Wpfaevent_Eventyay_Importer {
 			'about_updates'    => 0,
 			'schedule_rows'    => 0,
 			'program_skipped'  => 0,
+			'program_empty'    => 0,
 			'partner_skipped'  => 0,
 		);
 
@@ -770,8 +773,20 @@ class Wpfaevent_Eventyay_Importer {
 		$result['created_speakers'] += absint( $program['created_speakers'] );
 		$result['updated_speakers'] += absint( $program['updated_speakers'] );
 		$result['schedule_rows']    += absint( $program['schedule_rows'] );
+		$result['program_empty']    += empty( $program['empty'] ) ? 0 : 1;
 
 		return $result;
+	}
+
+	/**
+	 * Explain an import that found no sessions and no speakers in Eventyay.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string
+	 */
+	public static function get_empty_program_hint() {
+		return esc_html__( 'Eventyay returned no sessions and no speakers, so the schedule and speakers saved in WordPress were left unchanged. Eventyay only shares them through its API after the schedule is released, unless the API token is a personal token of a user who can see them. Release the schedule in Eventyay or save a personal API token, then run the import again.', 'wpfaevent' );
 	}
 
 	/**
@@ -933,6 +948,7 @@ class Wpfaevent_Eventyay_Importer {
 			$result['updated_speakers'] = isset( $program['updated_speakers'] ) ? absint( $program['updated_speakers'] ) : 0;
 			$result['schedule_rows']    = isset( $program['schedule_rows'] ) ? absint( $program['schedule_rows'] ) : 0;
 			$result['tracks']           = isset( $program['track_count'] ) ? absint( $program['track_count'] ) : 0;
+			$result['program_empty']    = ! empty( $program['empty'] );
 		}
 
 		return $result;
@@ -2417,6 +2433,18 @@ class Wpfaevent_Eventyay_Importer {
 
 		if ( $error && empty( $program['speakers'] ) && empty( $program['sessions'] ) ) {
 			return $error;
+		}
+
+		if ( empty( $program['speakers'] ) && empty( $program['sessions'] ) ) {
+			return array(
+				'speaker_count'    => 0,
+				'session_count'    => 0,
+				'created_speakers' => 0,
+				'updated_speakers' => 0,
+				'schedule_rows'    => 0,
+				'track_count'      => 0,
+				'empty'            => true,
+			);
 		}
 
 		$cpt_result = array(
