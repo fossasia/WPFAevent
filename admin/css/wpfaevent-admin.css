@@ -73,7 +73,11 @@
     margin-bottom: 0;
 }
 
-/* The block editor's meta boxes pane traps TinyMCE fullscreen under its header. */
+/*
+ * The block editor's meta boxes pane traps TinyMCE fullscreen under its header.
+ * These selectors were verified against WordPress 7.1.
+ * Reference: GitHub issue #325 ("Fullscreen mode breaks formatting options in Additional Information editor").
+ */
 .post-type-wpfa_event.mce-fullscreen .edit-post-meta-boxes-main,
 .post-type-wpfa_speaker.mce-fullscreen .edit-post-meta-boxes-main {
     filter: none;
