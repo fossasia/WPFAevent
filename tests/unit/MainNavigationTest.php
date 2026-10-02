@@ -926,8 +926,7 @@ class MainNavigationTest extends WP_UnitTestCase {
 		);
 
 		// Enable tickets and add a custom tab.
-		update_post_meta( $event_id, 'wpfa_event_show_ticket_section', '1' );
-		update_post_meta( $event_id, 'wpfa_event_ticket_widget_id', 'widget-123' );
+		update_post_meta( $event_id, 'wpfa_event_ticket_widget_url', 'https://eventyay.com/e/test-event' );
 		update_post_meta(
 			$event_id,
 			'wpfa_event_custom_tabs',
