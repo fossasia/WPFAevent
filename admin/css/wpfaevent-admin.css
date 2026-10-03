@@ -73,6 +73,26 @@
     margin-bottom: 0;
 }
 
+/* The block editor's meta boxes pane traps TinyMCE fullscreen under its header. */
+.post-type-wpfa_event.mce-fullscreen .edit-post-meta-boxes-main,
+.post-type-wpfa_speaker.mce-fullscreen .edit-post-meta-boxes-main {
+    filter: none;
+}
+
+.post-type-wpfa_event.mce-fullscreen .edit-post-meta-boxes-main__liner,
+.post-type-wpfa_event.mce-fullscreen .interface-interface-skeleton__content,
+.post-type-wpfa_speaker.mce-fullscreen .edit-post-meta-boxes-main__liner,
+.post-type-wpfa_speaker.mce-fullscreen .interface-interface-skeleton__content {
+    isolation: auto;
+}
+
+.post-type-wpfa_event.mce-fullscreen #wpadminbar,
+.post-type-wpfa_event.mce-fullscreen #adminmenumain,
+.post-type-wpfa_speaker.mce-fullscreen #wpadminbar,
+.post-type-wpfa_speaker.mce-fullscreen #adminmenumain {
+    display: none;
+}
+
 #wpfa_event_additional_information_box .wp-editor-wrap,
 #wp-wpfa_event_venue_information-wrap,
 #wp-wpfa_event_transportation_information-wrap,
