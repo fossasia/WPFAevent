@@ -11,6 +11,8 @@ const wpfaSpeakers = (function () {
 	let speakers = [];
 	let currentFilter = 'all';
 	let searchTerm = '';
+	let speakerRequestId = 0;
+	let speakerSaveInFlight = false;
 
 	// DOM Elements cache
 	let elements = {};
@@ -583,6 +585,9 @@ const wpfaSpeakers = (function () {
 		// Block submitting until this speaker's data is in the form
 		setSpeakerFormSubmitDisabled(true);
 
+		// Responses for an earlier modal must not touch this one
+		const requestId = ++speakerRequestId;
+
 		// Open the modal immediately
 		openModal();
 
@@ -595,6 +600,10 @@ const wpfaSpeakers = (function () {
 		// Fetch speaker data via AJAX
 		fetchSpeakerData(speakerId)
 			.then((speaker) => {
+				if (requestId !== speakerRequestId) {
+					return;
+				}
+
 				if (!speaker) {
 					closeModal();
 					const errorMsg =
@@ -636,6 +645,10 @@ const wpfaSpeakers = (function () {
 				setSpeakerFormSubmitDisabled(false);
 			})
 			.catch(() => {
+				if (requestId !== speakerRequestId) {
+					return;
+				}
+
 				closeModal();
 				showNotice('Error loading speaker data');
 			});
@@ -838,7 +851,7 @@ const wpfaSpeakers = (function () {
 			'button[type="submit"]'
 		);
 		if (submitBtn) {
-			submitBtn.disabled = disabled;
+			submitBtn.disabled = disabled || speakerSaveInFlight;
 		}
 	}
 
@@ -859,6 +872,9 @@ const wpfaSpeakers = (function () {
 	 * Close modal
 	 */
 	function closeModal() {
+		// Invalidate any speaker data still loading for this modal
+		speakerRequestId++;
+
 		if (elements.modal) {
 			// Remove CSS class
 			elements.modal.classList.remove('show');
@@ -944,6 +960,7 @@ const wpfaSpeakers = (function () {
 		);
 
 		// Disable button during submission
+		speakerSaveInFlight = true;
 		if (submitBtn) {
 			submitBtn.disabled = true;
 			submitBtn.innerHTML = action === 'add' ? 'Adding...' : 'Saving...';
@@ -980,6 +997,7 @@ const wpfaSpeakers = (function () {
 							? config.i18n.addError + ': ' + data.data
 							: 'Error adding speaker: ' + data.data;
 					showNotice(errorMsg);
+					speakerSaveInFlight = false;
 					const submitBtn = elements.speakerForm?.querySelector(
 						'button[type="submit"]'
 					);
@@ -995,6 +1013,7 @@ const wpfaSpeakers = (function () {
 						? config.i18n.addErrorGeneric
 						: 'Error adding speaker. Please try again.';
 				showNotice(errorMsg);
+				speakerSaveInFlight = false;
 				const submitBtn = elements.speakerForm?.querySelector(
 					'button[type="submit"]'
 				);
@@ -1029,6 +1048,7 @@ const wpfaSpeakers = (function () {
 							? config.i18n.updateError + ': ' + data.data
 							: 'Error updating speaker: ' + data.data;
 					showNotice(errorMsg);
+					speakerSaveInFlight = false;
 					const submitBtn = elements.speakerForm?.querySelector(
 						'button[type="submit"]'
 					);
@@ -1044,6 +1064,7 @@ const wpfaSpeakers = (function () {
 						? config.i18n.updateErrorGeneric
 						: 'Error updating speaker. Please try again.';
 				showNotice(errorMsg);
+				speakerSaveInFlight = false;
 				const submitBtn = elements.speakerForm?.querySelector(
 					'button[type="submit"]'
 				);
