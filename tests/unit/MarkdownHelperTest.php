@@ -606,6 +606,8 @@ class MarkdownHelperTest extends WP_UnitTestCase {
 	/**
 	 * Hostile input must finish quickly, stay bounded and leave no placeholder behind.
 	 *
+	 * The time limit is skipped under a coverage tool, which slows every run down.
+	 *
 	 * @dataProvider hostile_provider
 	 *
 	 * @param string $input Hostile Markdown.
@@ -613,7 +615,10 @@ class MarkdownHelperTest extends WP_UnitTestCase {
 	public function test_hostile_input_is_linear_and_bounded( $input ) {
 		list( $output, $seconds ) = $this->timed( $input );
 
-		$this->assertLessThan( 1.5, $seconds );
+		if ( ! extension_loaded( 'xdebug' ) && ! extension_loaded( 'pcov' ) ) {
+			$this->assertLessThan( 1.5, $seconds );
+		}
+
 		$this->assertLessThanOrEqual( 4 * strlen( $input ), strlen( $output ) );
 		$this->assertStringNotContainsString( "\x02", $output );
 		$this->assertStringNotContainsString( "\x03", $output );
