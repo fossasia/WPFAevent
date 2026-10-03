@@ -13,6 +13,7 @@ const wpfaSpeakers = (function () {
 	let searchTerm = '';
 	let speakerRequestId = 0;
 	let speakerSaveInFlight = false;
+	let speakerLoadPending = false;
 
 	// DOM Elements cache
 	let elements = {};
@@ -587,6 +588,7 @@ const wpfaSpeakers = (function () {
 
 		// Responses for an earlier modal must not touch this one
 		const requestId = ++speakerRequestId;
+		speakerLoadPending = true;
 
 		// Open the modal immediately
 		openModal();
@@ -603,6 +605,8 @@ const wpfaSpeakers = (function () {
 				if (requestId !== speakerRequestId) {
 					return;
 				}
+
+				speakerLoadPending = false;
 
 				if (!speaker) {
 					closeModal();
@@ -649,6 +653,7 @@ const wpfaSpeakers = (function () {
 					return;
 				}
 
+				speakerLoadPending = false;
 				closeModal();
 				showNotice('Error loading speaker data');
 			});
@@ -851,7 +856,8 @@ const wpfaSpeakers = (function () {
 			'button[type="submit"]'
 		);
 		if (submitBtn) {
-			submitBtn.disabled = disabled || speakerSaveInFlight;
+			submitBtn.disabled =
+				disabled || speakerSaveInFlight || speakerLoadPending;
 		}
 	}
 
@@ -874,6 +880,7 @@ const wpfaSpeakers = (function () {
 	function closeModal() {
 		// Invalidate any speaker data still loading for this modal
 		speakerRequestId++;
+		speakerLoadPending = false;
 
 		if (elements.modal) {
 			// Remove CSS class
@@ -1002,7 +1009,7 @@ const wpfaSpeakers = (function () {
 						'button[type="submit"]'
 					);
 					if (submitBtn) {
-						submitBtn.disabled = false;
+						setSpeakerFormSubmitDisabled(false);
 						submitBtn.innerHTML = 'Add Speaker';
 					}
 				}
@@ -1018,7 +1025,7 @@ const wpfaSpeakers = (function () {
 					'button[type="submit"]'
 				);
 				if (submitBtn) {
-					submitBtn.disabled = false;
+					setSpeakerFormSubmitDisabled(false);
 					submitBtn.innerHTML = 'Add Speaker';
 				}
 			});
@@ -1053,7 +1060,7 @@ const wpfaSpeakers = (function () {
 						'button[type="submit"]'
 					);
 					if (submitBtn) {
-						submitBtn.disabled = false;
+						setSpeakerFormSubmitDisabled(false);
 						submitBtn.innerHTML = 'Save Changes';
 					}
 				}
@@ -1069,7 +1076,7 @@ const wpfaSpeakers = (function () {
 					'button[type="submit"]'
 				);
 				if (submitBtn) {
-					submitBtn.disabled = false;
+					setSpeakerFormSubmitDisabled(false);
 					submitBtn.innerHTML = 'Save Changes';
 				}
 			});
