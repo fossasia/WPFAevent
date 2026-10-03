@@ -580,6 +580,9 @@ const wpfaSpeakers = (function () {
 		// Clear the previous speaker's values before loading this one
 		resetSpeakerForm();
 
+		// Block submitting until this speaker's data is in the form
+		setSpeakerFormSubmitDisabled(true);
+
 		// Open the modal immediately
 		openModal();
 
@@ -629,6 +632,8 @@ const wpfaSpeakers = (function () {
 				if (submitText) {
 					submitText.textContent = 'Save Changes';
 				}
+
+				setSpeakerFormSubmitDisabled(false);
 			})
 			.catch(() => {
 				closeModal();
@@ -818,6 +823,22 @@ const wpfaSpeakers = (function () {
 		if (urlRadio) {
 			urlRadio.checked = true;
 			handleImageSourceChange({ target: urlRadio });
+		}
+
+		setSpeakerFormSubmitDisabled(false);
+	}
+
+	/**
+	 * Enable or disable the speaker form's submit button
+	 *
+	 * @param {boolean} disabled Whether submitting is blocked.
+	 */
+	function setSpeakerFormSubmitDisabled(disabled) {
+		const submitBtn = elements.speakerForm?.querySelector(
+			'button[type="submit"]'
+		);
+		if (submitBtn) {
+			submitBtn.disabled = disabled;
 		}
 	}
 
