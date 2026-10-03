@@ -4598,7 +4598,7 @@ class Wpfaevent_Eventyay_Importer {
 	 */
 	private function eventyay_rich_text_value( $value ) {
 		if ( is_scalar( $value ) ) {
-			return wp_kses_post( trim( (string) $value ) );
+			return wp_kses_post( Wpfaevent_Markdown_Helper::to_html( trim( (string) $value ) ) );
 		}
 
 		if ( ! is_array( $value ) ) {

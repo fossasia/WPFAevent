@@ -1460,7 +1460,7 @@ class Wpfaevent_JSONAPI_Parser {
 	 */
 	public function eventyay_rich_text_value( $value ) {
 		if ( is_scalar( $value ) ) {
-			return wp_kses_post( (string) $value );
+			return wp_kses_post( Wpfaevent_Markdown_Helper::to_html( (string) $value ) );
 		}
 
 		if ( ! is_array( $value ) ) {
@@ -1469,13 +1469,13 @@ class Wpfaevent_JSONAPI_Parser {
 
 		foreach ( array( 'en', 'default', 'description', 'text' ) as $preferred_key ) {
 			if ( isset( $value[ $preferred_key ] ) && is_scalar( $value[ $preferred_key ] ) && '' !== trim( (string) $value[ $preferred_key ] ) ) {
-				return wp_kses_post( (string) $value[ $preferred_key ] );
+				return wp_kses_post( Wpfaevent_Markdown_Helper::to_html( (string) $value[ $preferred_key ] ) );
 			}
 		}
 
 		foreach ( $value as $candidate ) {
 			if ( is_scalar( $candidate ) && '' !== trim( (string) $candidate ) ) {
-				return wp_kses_post( (string) $candidate );
+				return wp_kses_post( Wpfaevent_Markdown_Helper::to_html( (string) $candidate ) );
 			}
 		}
 
