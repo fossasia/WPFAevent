@@ -240,6 +240,62 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Capability sets for logged-in users without full dashboard access.
+	 *
+	 * @return array<string, array<int, array<int, string>>>
+	 */
+	public function partial_dashboard_capabilities_provider() {
+		return array(
+			'no plugin capabilities' => array( array() ),
+			'edit_events only'       => array( array( 'edit_events' ) ),
+			'edit_speakers only'     => array( array( 'edit_speakers' ) ),
+		);
+	}
+
+	/**
+	 * Logged-in users need both edit_events and edit_speakers to receive the speaker edit modal.
+	 *
+	 * @dataProvider partial_dashboard_capabilities_provider
+	 *
+	 * @param array<int, string> $capabilities Capabilities granted to the subscriber.
+	 */
+	public function test_event_page_omits_speaker_modal_without_dashboard_capabilities( $capabilities ) {
+		$this->set_subscriber_with_capabilities( $capabilities );
+
+		$output = $this->render_event_template();
+
+		$this->assertStringNotContainsString( 'id="wpfa-speaker-modal"', $output );
+	}
+
+	/**
+	 * Non-administrators with both dashboard capabilities receive the speaker edit modal.
+	 */
+	public function test_event_page_renders_speaker_modal_for_dashboard_capabilities_without_admin() {
+		$this->set_subscriber_with_capabilities( array( 'edit_events', 'edit_speakers' ) );
+
+		$this->assertFalse( current_user_can( 'manage_options' ) );
+
+		$output = $this->render_event_template();
+
+		$this->assertStringContainsString( 'id="wpfa-speaker-modal"', $output );
+	}
+
+	/**
+	 * Log in a new subscriber that holds only the given extra capabilities.
+	 *
+	 * @param array<int, string> $capabilities Capabilities to grant.
+	 */
+	private function set_subscriber_with_capabilities( $capabilities ) {
+		$user = new WP_User( $this->factory->user->create( array( 'role' => 'subscriber' ) ) );
+
+		foreach ( $capabilities as $capability ) {
+			$user->add_cap( $capability );
+		}
+
+		wp_set_current_user( $user->ID );
+	}
+
+	/**
 	 * Store a single-session dashboard schedule for the event fixture.
 	 */
 	private function write_schedule_fixture() {
