@@ -138,4 +138,19 @@ class EventyayImportSettingsTest extends WP_UnitTestCase {
 		$this->assertSame( '', $settings['organizer_slug'] );
 		$this->assertSame( '', $settings['event_slug'] );
 	}
+
+	/**
+	 * Public event URLs must belong to an official supported Eventyay host.
+	 */
+	public function test_event_url_rejects_untrusted_hosts() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$settings = $importer->sanitize_eventyay_import_settings(
+			array(
+				'event_url' => 'https://attacker.example/organizer/event/',
+			)
+		);
+
+		$this->assertSame( '', $settings['organizer_slug'] );
+		$this->assertSame( '', $settings['event_slug'] );
+	}
 }

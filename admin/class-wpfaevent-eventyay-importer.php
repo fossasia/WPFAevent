@@ -641,6 +641,12 @@ class Wpfaevent_Eventyay_Importer {
 			return array();
 		}
 
+		$scheme = strtolower( $parts['scheme'] );
+		$host   = strtolower( $parts['host'] );
+		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) || ! in_array( $host, array( 'eventyay.com', 'dev.eventyay.com' ), true ) ) {
+			return array();
+		}
+
 		$path = trim( $parts['path'], '/' );
 		if ( '' === $path || 0 === strpos( $path, 'api/' ) || 0 === strpos( $path, 'v1/' ) ) {
 			return array();
@@ -662,7 +668,7 @@ class Wpfaevent_Eventyay_Importer {
 			return array();
 		}
 
-		$base_url = $parts['scheme'] . '://' . $parts['host'];
+		$base_url = $scheme . '://' . $host;
 		if ( ! empty( $parts['port'] ) ) {
 			$base_url .= ':' . absint( $parts['port'] );
 		}
