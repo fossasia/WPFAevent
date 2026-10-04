@@ -484,12 +484,12 @@ class Wpfaevent_Eventyay_Importer {
 		if ( isset( $_POST['wpfaevent_eventyay_import_settings'] ) && is_array( $_POST['wpfaevent_eventyay_import_settings'] ) ) {
 			$raw_event_url = isset( $_POST['wpfaevent_eventyay_import_settings']['event_url'] ) ? trim( (string) wp_unslash( $_POST['wpfaevent_eventyay_import_settings']['event_url'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- URL is validated by parse_eventyay_public_event_url() before use.
 
-			if ( '' !== $raw_event_url && empty( $this->parse_eventyay_public_event_url( $raw_event_url ) ) ) {
+			if ( '' === $raw_event_url || empty( $this->parse_eventyay_public_event_url( $raw_event_url ) ) ) {
 				set_transient(
 					$notice_key,
 					array(
 						'type'    => 'error',
-						'message' => __( 'Please enter a valid public Eventyay event URL with both organizer and event slugs.', 'wpfaevent' ),
+						'message' => __( 'Please enter a valid public Eventyay event URL with both organizer and event slugs before importing.', 'wpfaevent' ),
 					),
 					MINUTE_IN_SECONDS * 5
 				);
@@ -646,7 +646,11 @@ class Wpfaevent_Eventyay_Importer {
 			return array();
 		}
 
-		$segments = array_values( array_filter( explode( '/', $path ) ) );
+		$segments = explode( '/', $path );
+		if ( in_array( '', $segments, true ) ) {
+			return array();
+		}
+
 		if ( 2 !== count( $segments ) ) {
 			return array();
 		}

@@ -123,4 +123,19 @@ class EventyayImportSettingsTest extends WP_UnitTestCase {
 		$this->assertSame( '', $settings['organizer_slug'] );
 		$this->assertSame( '', $settings['event_slug'] );
 	}
+
+	/**
+	 * An internal empty path component is not a valid public event URL.
+	 */
+	public function test_event_url_rejects_empty_internal_path_components() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$settings = $importer->sanitize_eventyay_import_settings(
+			array(
+				'event_url' => 'https://eventyay.com/fossasia//ots2026/',
+			)
+		);
+
+		$this->assertSame( '', $settings['organizer_slug'] );
+		$this->assertSame( '', $settings['event_slug'] );
+	}
 }
