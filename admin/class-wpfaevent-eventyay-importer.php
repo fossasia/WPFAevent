@@ -573,11 +573,12 @@ class Wpfaevent_Eventyay_Importer {
 	 */
 	public function get_eventyay_import_default_settings() {
 		return array(
-			'base_url'       => 'https://eventyay.com',
-			'organizer_slug' => '',
-			'event_slug'     => '',
-			'api_token'      => '',
-			'post_status'    => 'draft',
+			'base_url'           => 'https://eventyay.com',
+			'organizer_slug'     => '',
+			'event_slug'         => '',
+			'api_token'          => '',
+			'post_status'        => 'draft',
+			'auto_sync_interval' => 'daily',
 		);
 	}
 
@@ -646,7 +647,7 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		$segments = array_values( array_filter( explode( '/', $path ) ) );
-		if ( count( $segments ) < 2 ) {
+		if ( 2 !== count( $segments ) ) {
 			return array();
 		}
 

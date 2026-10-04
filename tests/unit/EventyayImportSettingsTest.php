@@ -67,4 +67,35 @@ class EventyayImportSettingsTest extends WP_UnitTestCase {
 		$this->assertSame( '', $settings['organizer_slug'] );
 		$this->assertSame( 'legacy-event', $settings['event_slug'] );
 	}
+
+	/**
+	 * Query strings and fragments do not change the public event identity.
+	 */
+	public function test_event_url_ignores_query_string_and_fragment() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$settings = $importer->sanitize_eventyay_import_settings(
+			array(
+				'event_url' => 'https://dev.eventyay.com/fossasia/ots2026/?old=1#tickets',
+			)
+		);
+
+		$this->assertSame( 'https://dev.eventyay.com', $settings['base_url'] );
+		$this->assertSame( 'fossasia', $settings['organizer_slug'] );
+		$this->assertSame( 'ots2026', $settings['event_slug'] );
+	}
+
+	/**
+	 * A URL with extra path components is not a canonical Eventyay event URL.
+	 */
+	public function test_event_url_rejects_extra_path_components() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$settings = $importer->sanitize_eventyay_import_settings(
+			array(
+				'event_url' => 'https://eventyay.com/fossasia/ots2026/tickets/',
+			)
+		);
+
+		$this->assertSame( '', $settings['organizer_slug'] );
+		$this->assertSame( '', $settings['event_slug'] );
+	}
 }
