@@ -98,4 +98,29 @@ class EventyayImportSettingsTest extends WP_UnitTestCase {
 		$this->assertSame( '', $settings['organizer_slug'] );
 		$this->assertSame( '', $settings['event_slug'] );
 	}
+
+	/**
+	 * An invalid submitted URL cannot retain slugs from the saved event.
+	 */
+	public function test_invalid_event_url_clears_saved_event_identity() {
+		update_option(
+			'wpfaevent_eventyay_import_settings',
+			array(
+				'base_url'       => 'https://eventyay.com',
+				'organizer_slug' => 'saved-organizer',
+				'event_slug'     => 'saved-event',
+			)
+		);
+
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$settings = $importer->sanitize_eventyay_import_settings(
+			array_merge(
+				$importer->get_eventyay_import_settings(),
+				array( 'event_url' => 'https://eventyay.com/saved-organizer/saved-event/tickets/' )
+			)
+		);
+
+		$this->assertSame( '', $settings['organizer_slug'] );
+		$this->assertSame( '', $settings['event_slug'] );
+	}
 }

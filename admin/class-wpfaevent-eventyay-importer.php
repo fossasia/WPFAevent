@@ -80,11 +80,15 @@ class Wpfaevent_Eventyay_Importer {
 		$settings['organizer_slug'] = isset( $input['organizer_slug'] ) ? $this->sanitize_eventyay_path_segment( $input['organizer_slug'] ) : '';
 		$settings['event_slug']     = isset( $input['event_slug'] ) ? $this->sanitize_eventyay_path_segment( $input['event_slug'] ) : '';
 		$parsed_event_url           = array();
+		$invalid_event_url          = false;
 
 		if ( '' !== $event_url ) {
 			$parsed_event_url = $this->parse_eventyay_public_event_url( $event_url );
 
 			if ( empty( $parsed_event_url ) ) {
+				$invalid_event_url          = true;
+				$settings['organizer_slug'] = '';
+				$settings['event_slug']     = '';
 				add_settings_error(
 					'wpfaevent_eventyay_import',
 					'wpfaevent_eventyay_invalid_event_url',
@@ -97,7 +101,7 @@ class Wpfaevent_Eventyay_Importer {
 			}
 		}
 
-		if ( empty( $parsed_event_url ) ) {
+		if ( ! $invalid_event_url && empty( $parsed_event_url ) ) {
 			$parsed_event_url = $this->parse_eventyay_public_event_url( $base_url );
 		}
 
@@ -140,9 +144,9 @@ class Wpfaevent_Eventyay_Importer {
 
 		$settings['auto_sync_enabled'] = ! empty( $input['auto_sync_enabled'] );
 
-		$auto_sync_interval = isset( $input['auto_sync_interval'] ) ? sanitize_key( wp_unslash( $input['auto_sync_interval'] ) ) : $defaults['auto_sync_interval'];
+		$auto_sync_interval = isset( $input['auto_sync_interval'] ) ? sanitize_key( wp_unslash( $input['auto_sync_interval'] ) ) : ( isset( $current['auto_sync_interval'] ) ? $current['auto_sync_interval'] : 'daily' );
 		if ( ! in_array( $auto_sync_interval, array( 'hourly', 'twicedaily', 'daily' ), true ) ) {
-			$auto_sync_interval = $defaults['auto_sync_interval'];
+			$auto_sync_interval = 'daily';
 		}
 		$settings['auto_sync_interval'] = $auto_sync_interval;
 
@@ -477,6 +481,23 @@ class Wpfaevent_Eventyay_Importer {
 
 		$notice_key = 'wpfaevent_eventyay_import_notice_' . get_current_user_id();
 
+		if ( isset( $_POST['wpfaevent_eventyay_import_settings'] ) && is_array( $_POST['wpfaevent_eventyay_import_settings'] ) ) {
+			$raw_event_url = isset( $_POST['wpfaevent_eventyay_import_settings']['event_url'] ) ? trim( (string) wp_unslash( $_POST['wpfaevent_eventyay_import_settings']['event_url'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- URL is validated by parse_eventyay_public_event_url() before use.
+
+			if ( '' !== $raw_event_url && empty( $this->parse_eventyay_public_event_url( $raw_event_url ) ) ) {
+				set_transient(
+					$notice_key,
+					array(
+						'type'    => 'error',
+						'message' => __( 'Please enter a valid public Eventyay event URL with both organizer and event slugs.', 'wpfaevent' ),
+					),
+					MINUTE_IN_SECONDS * 5
+				);
+				wp_safe_redirect( admin_url( 'edit.php?post_type=wpfa_event&page=' . $return_page ) );
+				exit;
+			}
+		}
+
 		$lock = self::acquire_import_lock();
 		if ( false === $lock ) {
 			set_transient(
@@ -553,12 +574,11 @@ class Wpfaevent_Eventyay_Importer {
 	 */
 	public function get_eventyay_import_default_settings() {
 		return array(
-			'base_url'           => 'https://eventyay.com',
-			'organizer_slug'     => '',
-			'event_slug'         => '',
-			'api_token'          => '',
-			'post_status'        => 'draft',
-			'auto_sync_interval' => 'daily',
+			'base_url'       => 'https://eventyay.com',
+			'organizer_slug' => '',
+			'event_slug'     => '',
+			'api_token'      => '',
+			'post_status'    => 'draft',
 		);
 	}
 
