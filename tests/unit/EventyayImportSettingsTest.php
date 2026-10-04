@@ -153,4 +153,19 @@ class EventyayImportSettingsTest extends WP_UnitTestCase {
 		$this->assertSame( '', $settings['organizer_slug'] );
 		$this->assertSame( '', $settings['event_slug'] );
 	}
+
+	/**
+	 * Public event URLs must use HTTPS when API credentials may be sent.
+	 */
+	public function test_event_url_rejects_plain_http() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$settings = $importer->sanitize_eventyay_import_settings(
+			array(
+				'event_url' => 'http://eventyay.com/organizer/event/',
+			)
+		);
+
+		$this->assertSame( '', $settings['organizer_slug'] );
+		$this->assertSame( '', $settings['event_slug'] );
+	}
 }

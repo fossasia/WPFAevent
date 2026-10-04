@@ -643,7 +643,7 @@ class Wpfaevent_Eventyay_Importer {
 
 		$scheme = strtolower( $parts['scheme'] );
 		$host   = strtolower( $parts['host'] );
-		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) || ! in_array( $host, array( 'eventyay.com', 'dev.eventyay.com' ), true ) ) {
+		if ( 'https' !== $scheme || ! in_array( $host, array( 'eventyay.com', 'dev.eventyay.com' ), true ) ) {
 			return array();
 		}
 
