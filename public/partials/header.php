@@ -55,7 +55,10 @@ $is_events_active      = ( ( 'events' === $current_path || is_post_type_archive(
 $is_coc_active         = ( 'code-of-conduct' === $current_path || ( $coc_page_id && is_page( $coc_page_id ) ) || is_page_template( 'page-code-of-conduct.php' ) ) ? 'active' : '';
 
 // Allow customization of events URLs via filters while keeping current behavior as default.
-$hub_url            = apply_filters( 'wpfaevent_hub_url', home_url( '/events/' ) );
+$hub_url            = apply_filters(
+	'wpfaevent_hub_url',
+	apply_filters( 'wpfaevent_events_url', home_url( '/events/' ) )
+);
 $default_events_url = home_url( '/events/?filter=upcoming' );
 $events_url         = apply_filters( 'wpfaevent_upcoming_events_url', $default_events_url );
 $events_url         = apply_filters( 'wpfaevent_events_url', $events_url );
