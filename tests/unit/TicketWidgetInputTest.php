@@ -197,6 +197,6 @@ class TicketWidgetInputTest extends WP_UnitTestCase {
 
 		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $post_id );
 		$this->assertFalse( $template_data['show_ticket_widget'] );
-		$this->assertEmpty( $template_data['ticket_widget_assets']['event_url'] );
+		$this->assertEmpty( $template_data['ticket_widget_assets'] );
 	}
 }
