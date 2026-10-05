@@ -434,10 +434,6 @@ class Wpfaevent_Event_Template_Controller {
 		$event_header_image_url     = $event_header_image_url ? esc_url_raw( $event_header_image_url ) : '';
 		$event_logo_url             = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
 		$event_logo_url             = $event_logo_url ? esc_url_raw( $event_logo_url ) : '';
-		$ticket_widget_url          = class_exists( 'Wpfaevent_Meta_Event' )
-			? Wpfaevent_Meta_Event::sanitize_ticket_widget_input( get_post_meta( $event_id, 'wpfa_event_ticket_widget_url', true ) )
-			: esc_url_raw( (string) get_post_meta( $event_id, 'wpfa_event_ticket_widget_url', true ) );
-
 		if ( ! $event_header_image_url && ! empty( $site_settings['event_header_image_url'] ) ) {
 			$event_header_image_url = esc_url_raw( $site_settings['event_header_image_url'] );
 		}
@@ -446,13 +442,21 @@ class Wpfaevent_Event_Template_Controller {
 			$event_logo_url = esc_url_raw( $site_settings['event_logo_url'] );
 		}
 
-		if ( ! $ticket_widget_url && ! empty( $site_settings['ticket_widget_url'] ) ) {
+		$has_ticket_widget_meta = metadata_exists( 'post', $event_id, 'wpfa_event_ticket_widget_url' );
+		if ( $has_ticket_widget_meta ) {
+			$raw_ticket_widget_meta = get_post_meta( $event_id, 'wpfa_event_ticket_widget_url', true );
+			$ticket_widget_url      = class_exists( 'Wpfaevent_Meta_Event' )
+				? Wpfaevent_Meta_Event::sanitize_ticket_widget_input( $raw_ticket_widget_meta )
+				: esc_url_raw( (string) $raw_ticket_widget_meta );
+		} elseif ( ! empty( $site_settings['ticket_widget_url'] ) ) {
 			$ticket_widget_url = class_exists( 'Wpfaevent_Meta_Event' )
 				? Wpfaevent_Meta_Event::sanitize_ticket_widget_input( $site_settings['ticket_widget_url'] )
 				: esc_url_raw( (string) $site_settings['ticket_widget_url'] );
+		} else {
+			$ticket_widget_url = '';
 		}
 
-		if ( ! $ticket_widget_url && $event_url && get_post_meta( $event_id, '_wpfa_eventyay_event_slug', true ) ) {
+		if ( ! $ticket_widget_url && ! $has_ticket_widget_meta && $event_url && get_post_meta( $event_id, '_wpfa_eventyay_event_slug', true ) ) {
 			$ticket_widget_url = $event_url;
 		}
 
@@ -516,7 +520,7 @@ class Wpfaevent_Event_Template_Controller {
 		$show_ticket_section    = ! empty( $ticket_widget_assets['event_url'] );
 		$show_ticket_widget     = (bool) apply_filters( 'wpfaevent_enable_embedded_ticket_widget', $show_ticket_section, $event_id, $ticket_widget_assets );
 		$ticket_widget_id       = 'wpfa-event-ticket-widget-' . absint( $event_id );
-		$ticket_widget_redirect = (bool) apply_filters( 'wpfaevent_ticket_widget_redirect', false, $event_id );
+		$ticket_widget_redirect = (bool) apply_filters( 'wpfaevent_ticket_widget_redirect', true, $event_id );
 		$ticket_widget_skip_ssl = ! is_ssl();
 		$ticket_widget_message  = '';
 

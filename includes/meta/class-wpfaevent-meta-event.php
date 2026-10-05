@@ -1169,8 +1169,10 @@ class Wpfaevent_Meta_Event {
 			$url = $matches[1];
 		}
 
-		// 2. Look for Markdown link syntax: [anchor](https://...) or image link [![alt](img)](https://...).
-		if ( ! $url && preg_match( '/\[(?:[^\]]*)\]\(\s*<?(https?:\/\/[^\s\)\'"]+)>?(?:\s+["\'][^"\']*["\'])?\s*\)/i', $input, $matches ) ) {
+		// 2. Look for Markdown image link syntax first, then standard Markdown link syntax.
+		if ( ! $url && preg_match( '/\[\s*!\[.*?\]\(.*?\)\]\(\s*<?(https?:\/\/[^\s\)\'"]+)>?(?:\s+["\'][^"\']*["\'])?\s*\)/is', $input, $matches ) ) {
+			$url = $matches[1];
+		} elseif ( ! $url && preg_match( '/\[(?:[^\]]*)\]\(\s*<?(https?:\/\/[^\s\)\'"]+)>?(?:\s+["\'][^"\']*["\'])?\s*\)/i', $input, $matches ) ) {
 			$url = $matches[1];
 		}
 
@@ -1206,6 +1208,11 @@ class Wpfaevent_Meta_Event {
 		// Strip trailing punctuation often found in text or markdown (such as periods or semicolons).
 		$url = rtrim( $url, '.,;:)' );
 
+		// Reject script-only widget asset URLs when no event URL was extracted.
+		if ( preg_match( '#/widget/v1(?:\.[a-z]{2})?\.js$#i', $url ) ) {
+			return '';
+		}
+
 		// If URL points to a widget asset (.../widget/v1.css or .../widget/v1.en.js), strip asset suffix.
 		$url = (string) preg_replace( '#/widget/v1(?:\.[a-z]{2})?\.(?:css|js)$#i', '', $url );
 
@@ -1220,16 +1227,44 @@ class Wpfaevent_Meta_Event {
 		}
 
 		$scheme = strtolower( (string) $parts['scheme'] );
-		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
+		if ( 'https' !== $scheme ) {
 			return '';
 		}
 
-		$origin = $scheme . '://' . strtolower( (string) $parts['host'] );
+		$host          = strtolower( (string) $parts['host'] );
+		$allowed_hosts = apply_filters(
+			'wpfaevent_ticket_widget_allowed_hosts',
+			array( 'eventyay.com', 'pretix.eu' )
+		);
+
+		$host_allowed = false;
+		if ( is_array( $allowed_hosts ) ) {
+			foreach ( $allowed_hosts as $allowed_host ) {
+				$allowed_host = strtolower( trim( (string) $allowed_host ) );
+				if ( '' === $allowed_host ) {
+					continue;
+				}
+				if ( $host === $allowed_host || substr( $host, -( strlen( $allowed_host ) + 1 ) ) === '.' . $allowed_host ) {
+					$host_allowed = true;
+					break;
+				}
+			}
+		}
+
+		if ( ! $host_allowed ) {
+			return '';
+		}
+
+		$path = ! empty( $parts['path'] ) ? trailingslashit( (string) $parts['path'] ) : '/';
+		if ( '/' === $path || '' === trim( $path, '/' ) ) {
+			return '';
+		}
+
+		$origin = $scheme . '://' . $host;
 		if ( isset( $parts['port'] ) ) {
 			$origin .= ':' . absint( $parts['port'] );
 		}
 
-		$path      = ! empty( $parts['path'] ) ? trailingslashit( (string) $parts['path'] ) : '/';
 		$final_url = $origin . $path;
 
 		if ( ! empty( $parts['query'] ) ) {

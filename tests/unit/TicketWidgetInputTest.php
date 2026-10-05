@@ -125,6 +125,15 @@ class TicketWidgetInputTest extends WP_UnitTestCase {
 		$this->assertSame( '', Wpfaevent_Meta_Event::sanitize_ticket_widget_input( '   ' ) );
 		$this->assertSame( '', Wpfaevent_Meta_Event::sanitize_ticket_widget_input( 'plain text with no link' ) );
 		$this->assertSame( '', Wpfaevent_Meta_Event::sanitize_ticket_widget_input( array( 'not-a-string' ) ) );
+		// Insecure HTTP should be rejected.
+		$this->assertSame( '', Wpfaevent_Meta_Event::sanitize_ticket_widget_input( 'http://dev.eventyay.com/fossasia/7xrpkx/' ) );
+		// Unapproved origins should be rejected.
+		$this->assertSame( '', Wpfaevent_Meta_Event::sanitize_ticket_widget_input( 'https://malicious.example.com/fossasia/7xrpkx/' ) );
+		// Script-only embed without an event URL should be rejected.
+		// phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript -- Test fixture string for widget HTML snippet.
+		$this->assertSame( '', Wpfaevent_Meta_Event::sanitize_ticket_widget_input( '<script type="text/javascript" src="https://dev.eventyay.com/widget/v1.en.js" async></script>' ) );
+		// Root domain without an event path should be rejected.
+		$this->assertSame( '', Wpfaevent_Meta_Event::sanitize_ticket_widget_input( 'https://dev.eventyay.com/' ) );
 	}
 
 	/**
@@ -171,5 +180,23 @@ class TicketWidgetInputTest extends WP_UnitTestCase {
 		$this->assertSame( 'https://dev.eventyay.com/fossasia/7xrpkx/', $template_data['ticket_widget_assets']['event_url'] );
 		$this->assertSame( 'https://dev.eventyay.com/fossasia/7xrpkx/widget/v1.css', $template_data['ticket_widget_assets']['css_url'] );
 		$this->assertSame( 'https://dev.eventyay.com/widget/v1.en.js', $template_data['ticket_widget_assets']['script_url'] );
+	}
+
+	/**
+	 * Test that clearing ticket widget meta does not restore stale site-settings JSON.
+	 */
+	public function test_template_controller_does_not_restore_stale_site_settings_when_meta_cleared() {
+		$post_id = $this->factory->post->create(
+			array(
+				'post_title' => 'Test Cleared Widget Event',
+				'post_type'  => 'wpfa_event',
+			)
+		);
+
+		update_post_meta( $post_id, 'wpfa_event_ticket_widget_url', '' );
+
+		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $post_id );
+		$this->assertFalse( $template_data['show_ticket_widget'] );
+		$this->assertEmpty( $template_data['ticket_widget_assets']['event_url'] );
 	}
 }

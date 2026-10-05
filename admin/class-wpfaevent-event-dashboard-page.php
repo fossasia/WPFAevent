@@ -610,8 +610,12 @@ class Wpfaevent_Event_Dashboard_Page {
 			$settings['reg_button_link'] = $formatted_value;
 			$json_updated                = true;
 		} elseif ( 'wpfa_event_ticket_widget_url' === $field ) {
-			$settings['ticket_widget_url'] = $formatted_value;
-			$json_updated                  = true;
+			if ( '' !== $formatted_value ) {
+				$settings['ticket_widget_url'] = $formatted_value;
+			} else {
+				unset( $settings['ticket_widget_url'] );
+			}
+			$json_updated = true;
 		}
 
 		if ( $json_updated ) {

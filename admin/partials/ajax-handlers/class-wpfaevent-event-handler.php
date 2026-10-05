@@ -375,7 +375,21 @@ class Wpfaevent_Event_Handler {
 				? Wpfaevent_Meta_Event::sanitize_ticket_widget_input( $raw_widget_input )
 				: esc_url_raw( trim( $raw_widget_input ) );
 
-			$this->update_or_delete_post_meta( $event_id, 'wpfa_event_ticket_widget_url', $widget_url );
+			update_post_meta( $event_id, 'wpfa_event_ticket_widget_url', $widget_url );
+
+			if ( class_exists( 'Wpfaevent_Eventyay_Dashboard_Store' ) ) {
+				$store         = new Wpfaevent_Eventyay_Dashboard_Store();
+				$settings_file = 'site-settings-' . absint( $event_id ) . '.json';
+				$settings      = $store->read_dashboard_json_file( $settings_file, null );
+				if ( is_array( $settings ) ) {
+					if ( '' !== $widget_url ) {
+						$settings['ticket_widget_url'] = $widget_url;
+					} else {
+						unset( $settings['ticket_widget_url'] );
+					}
+					$store->write_dashboard_json_file( $settings_file, $settings );
+				}
+			}
 		}
 
 		$this->save_event_timing_meta( $event_id, $_POST );
