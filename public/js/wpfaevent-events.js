@@ -599,6 +599,12 @@ const wpfaEvents = (function () {
 				eventDateInput.min = today;
 			}
 
+			const ticketWidgetInput =
+				document.getElementById('eventTicketWidget');
+			if (ticketWidgetInput) {
+				ticketWidgetInput.value = '';
+			}
+
 			// Use the smart function to reset all counters to "0 / max"
 			setupCharacterCounters();
 			syncTimeFields(elements.createEventForm);
@@ -637,6 +643,13 @@ const wpfaEvents = (function () {
 			card.dataset.registrationLink || '';
 		document.getElementById('editCfsLink').value =
 			card.dataset.cfsLink || '';
+
+		const editTicketWidget = document.getElementById(
+			'editEventTicketWidget'
+		);
+		if (editTicketWidget) {
+			editTicketWidget.value = card.dataset.ticketWidgetUrl || '';
+		}
 
 		const editStartTime = document.getElementById('editEventStartTime');
 		const editEndTime = document.getElementById('editEventEndTime');

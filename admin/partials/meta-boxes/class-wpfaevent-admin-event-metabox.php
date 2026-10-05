@@ -204,10 +204,10 @@ class Wpfaevent_Admin_Event_Metabox {
 				</td>
 			</tr>
 			<tr>
-				<th><label for="wpfa_event_ticket_widget_url"><?php esc_html_e( 'Ticket Widget URL', 'wpfaevent' ); ?></label></th>
+				<th><label for="wpfa_event_ticket_widget_url"><?php esc_html_e( 'Ticket Widget (Code or URL)', 'wpfaevent' ); ?></label></th>
 				<td>
-					<input type="url" id="wpfa_event_ticket_widget_url" name="wpfa_event_ticket_widget_url" value="<?php echo esc_attr( $widget_url ); ?>" class="regular-text" placeholder="https://eventyay.com/organizer/event/">
-					<p class="description"><?php esc_html_e( 'Used to embed the Eventyay ticket purchasing widget on the event page.', 'wpfaevent' ); ?></p>
+					<textarea id="wpfa_event_ticket_widget_url" name="wpfa_event_ticket_widget_url" rows="3" class="large-text" placeholder="<?php esc_attr_e( 'Paste Eventyay HTML/Markdown widget embed code or event URL (e.g. https://eventyay.com/organizer/event/)', 'wpfaevent' ); ?>"><?php echo esc_textarea( $widget_url ); ?></textarea>
+					<p class="description"><?php esc_html_e( 'Paste the HTML or Markdown embed code copied from Eventyay Widget settings, or enter the direct ticket shop URL. This allows attendees to purchase tickets directly on your site without leaving.', 'wpfaevent' ); ?></p>
 				</td>
 			</tr>
 			<tr>
@@ -935,14 +935,13 @@ class Wpfaevent_Admin_Event_Metabox {
 			'wpfa_event_cfs_link',
 			'wpfa_event_header_image_url',
 			'wpfa_event_logo_url',
-			'wpfa_event_ticket_widget_url',
 		);
 
 		foreach ( $meta_fields as $field ) {
 			if ( isset( $_POST[ $field ] ) ) {
 				$raw_value = sanitize_text_field( wp_unslash( $_POST[ $field ] ) );
 
-				if ( in_array( $field, array( 'wpfa_event_url', 'wpfa_event_registration_link', 'wpfa_event_cfs_link', 'wpfa_event_header_image_url', 'wpfa_event_logo_url', 'wpfa_event_ticket_widget_url' ), true ) ) {
+				if ( in_array( $field, array( 'wpfa_event_url', 'wpfa_event_registration_link', 'wpfa_event_cfs_link', 'wpfa_event_header_image_url', 'wpfa_event_logo_url' ), true ) ) {
 					$value = esc_url_raw( $raw_value );
 				} else {
 					$value = $raw_value;
@@ -950,6 +949,15 @@ class Wpfaevent_Admin_Event_Metabox {
 
 				update_post_meta( $post_id, $field, $value );
 			}
+		}
+
+		if ( isset( $_POST['wpfa_event_ticket_widget_url'] ) ) {
+			$raw_widget_input = (string) wp_unslash( $_POST['wpfa_event_ticket_widget_url'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by sanitize_ticket_widget_input below.
+			$widget_url       = class_exists( 'Wpfaevent_Meta_Event' )
+				? Wpfaevent_Meta_Event::sanitize_ticket_widget_input( $raw_widget_input )
+				: esc_url_raw( trim( $raw_widget_input ) );
+
+			$this->update_or_delete_post_meta( $post_id, 'wpfa_event_ticket_widget_url', $widget_url );
 		}
 
 		$color_fields = class_exists( 'Wpfaevent_Meta_Event' )

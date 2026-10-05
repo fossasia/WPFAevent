@@ -85,6 +85,7 @@ class Wpfaevent_Event_Handler {
 			'event_url'         => get_post_meta( $event_id, 'wpfa_event_url', true ),
 			'registration_link' => get_post_meta( $event_id, 'wpfa_event_registration_link', true ),
 			'cfs_link'          => get_post_meta( $event_id, 'wpfa_event_cfs_link', true ),
+			'ticket_widget_url' => get_post_meta( $event_id, 'wpfa_event_ticket_widget_url', true ),
 			'featured_image'    => get_post_thumbnail_id( $event_id ),
 		);
 
@@ -203,6 +204,20 @@ class Wpfaevent_Event_Handler {
 				if ( strlen( $value ) > 0 ) {
 					update_post_meta( $event_id, $meta_key, $value );
 				}
+			}
+		}
+
+		if ( isset( $_POST['ticket_widget'] ) || isset( $_POST['ticket_widget_url'] ) ) {
+			$raw_widget_input = isset( $_POST['ticket_widget'] )
+				? (string) wp_unslash( $_POST['ticket_widget'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by sanitize_ticket_widget_input below.
+				: (string) wp_unslash( $_POST['ticket_widget_url'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by sanitize_ticket_widget_input below.
+
+			$widget_url = class_exists( 'Wpfaevent_Meta_Event' )
+				? Wpfaevent_Meta_Event::sanitize_ticket_widget_input( $raw_widget_input )
+				: esc_url_raw( trim( $raw_widget_input ) );
+
+			if ( '' !== $widget_url ) {
+				update_post_meta( $event_id, 'wpfa_event_ticket_widget_url', $widget_url );
 			}
 		}
 
@@ -349,6 +364,18 @@ class Wpfaevent_Event_Handler {
 					update_post_meta( $event_id, $meta_key, $value );
 				}
 			}
+		}
+
+		if ( isset( $_POST['ticket_widget'] ) || isset( $_POST['ticket_widget_url'] ) ) {
+			$raw_widget_input = isset( $_POST['ticket_widget'] )
+				? (string) wp_unslash( $_POST['ticket_widget'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by sanitize_ticket_widget_input below.
+				: (string) wp_unslash( $_POST['ticket_widget_url'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by sanitize_ticket_widget_input below.
+
+			$widget_url = class_exists( 'Wpfaevent_Meta_Event' )
+				? Wpfaevent_Meta_Event::sanitize_ticket_widget_input( $raw_widget_input )
+				: esc_url_raw( trim( $raw_widget_input ) );
+
+			$this->update_or_delete_post_meta( $event_id, 'wpfa_event_ticket_widget_url', $widget_url );
 		}
 
 		$this->save_event_timing_meta( $event_id, $_POST );

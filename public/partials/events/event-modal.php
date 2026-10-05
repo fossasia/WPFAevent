@@ -73,6 +73,10 @@ $wpfaevent_default_timezone = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent
 			<label for="eventCfsLink"><?php esc_html_e( 'Call for Speakers Link (optional):', 'wpfaevent' ); ?></label>
 			<input type="url" id="eventCfsLink" name="cfs_link" placeholder="https://eventyay.com/e/.../cfs">
 
+			<label for="eventTicketWidget"><?php esc_html_e( 'Ticket Widget Embed Code or URL (optional):', 'wpfaevent' ); ?></label>
+			<textarea id="eventTicketWidget" name="ticket_widget" rows="3" placeholder="<?php esc_attr_e( 'Paste Eventyay HTML or Markdown widget embed code, or ticket shop URL...', 'wpfaevent' ); ?>"></textarea>
+			<small class="wpfaevent-field-hint"><?php esc_html_e( 'Embeds ticket checkout directly on the event page so attendees don\'t have to leave the website. Supports Eventyay HTML widget code, Markdown, or direct ticket URL.', 'wpfaevent' ); ?></small>
+
 			<label for="eventPicture"><?php esc_html_e( 'Event Picture (Required):', 'wpfaevent' ); ?></label>
 			<input type="file" id="eventPicture" name="featured_image" accept="image/*" required>
 
@@ -135,6 +139,10 @@ $wpfaevent_default_timezone = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent
 
 			<label for="editCfsLink"><?php esc_html_e( 'Call for Speakers Link (optional):', 'wpfaevent' ); ?></label>
 			<input type="url" id="editCfsLink" name="cfs_link" placeholder="https://eventyay.com/e/.../cfs">
+
+			<label for="editEventTicketWidget"><?php esc_html_e( 'Ticket Widget Embed Code or URL (optional):', 'wpfaevent' ); ?></label>
+			<textarea id="editEventTicketWidget" name="ticket_widget" rows="3" placeholder="<?php esc_attr_e( 'Paste Eventyay HTML or Markdown widget embed code, or ticket shop URL...', 'wpfaevent' ); ?>"></textarea>
+			<small class="wpfaevent-field-hint"><?php esc_html_e( 'Embeds ticket checkout directly on the event page so attendees don\'t have to leave the website. Supports Eventyay HTML widget code, Markdown, or direct ticket URL.', 'wpfaevent' ); ?></small>
 
 			<label for="editEventPicture"><?php esc_html_e( 'Event Picture (optional, only if updating):', 'wpfaevent' ); ?></label>
 			<input type="file" id="editEventPicture" name="featured_image" accept="image/*">

@@ -602,6 +602,14 @@
 	margin-top: -10px;
 }
 
+.wpfaevent .wpfaevent-field-hint {
+	font-size: 0.82rem;
+	color: var(--muted);
+	margin-top: -8px;
+	margin-bottom: 2px;
+	line-height: 1.4;
+}
+
 .wpfaevent #createEventForm button,
 .wpfaevent #editEventForm button,
 .wpfaevent #edit-footer-form button {

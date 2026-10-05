@@ -129,6 +129,7 @@ if ( $show_ticket_widget ) {
 				'var container=document.getElementById(' . wp_json_encode( $ticket_widget_id ) . ');',
 				'if(!container||typeof MutationObserver==="undefined"){return;}',
 				'var expected=' . wp_json_encode( __( 'The ticket shop could not be loaded.', 'wpfaevent' ) ) . ';',
+				'var redirectCheckout=' . wp_json_encode( $ticket_widget_redirect ) . ';',
 				'var redirectUrl=' . wp_json_encode( $ticket_widget_assets['event_url'] ) . ';',
 				'var markFailed=function(){',
 				'var error=container.querySelector(".pretix-widget-error-message");',
@@ -170,8 +171,10 @@ if ( $show_ticket_widget ) {
 				'};',
 				'var observer=new MutationObserver(markFailed);',
 				'observer.observe(container,{childList:true,subtree:true});',
+				'if(redirectCheckout){',
 				'container.addEventListener("click",sendToEventyay,true);',
 				'container.addEventListener("submit",interceptSubmit,true);',
+				'}',
 				'markFailed();',
 				'})();',
 			)
@@ -192,13 +195,10 @@ if ( $show_ticket_widget ) {
 
 <div id="page" class="site">
 	<?php
-	$site_logo_url        = $header_vars['site_logo_url'];
-	$event_page_url       = $header_vars['event_page_url'];
-	$show_back_button     = $header_vars['show_back_button'];
-	$show_register_button = $header_vars['show_register_button'];
-	$back_button_text     = $header_vars['back_button_text'];
-	$register_button_url  = $header_vars['register_button_url'];
-	$register_button_text = $header_vars['register_button_text'];
+	$site_logo_url    = $header_vars['site_logo_url'];
+	$event_page_url   = $header_vars['event_page_url'];
+	$show_back_button = $header_vars['show_back_button'];
+	$back_button_text = $header_vars['back_button_text'];
 
 	$nav_partial = WPFAEVENT_PATH . 'public/partials/header.php';
 	if ( file_exists( $nav_partial ) ) {
@@ -395,21 +395,22 @@ if ( $show_ticket_widget ) {
 							</a>
 						</div>
 						<?php if ( $show_ticket_widget ) : ?>
-							<?php // Eventyay docs: use div.pretix-widget-compat when custom elements are unavailable. ?>
-							<div
+							<eventyay-widget
 								class="pretix-widget-compat"
 								event="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>"
 								<?php if ( $ticket_widget_skip_ssl ) : ?>
 									skip-ssl-check
 								<?php endif; ?>
-							></div>
+							></eventyay-widget>
 							<noscript>
-								<p class="wpfa-event-ticket-fallback">
-									<?php esc_html_e( 'JavaScript is required to show Eventyay tickets here.', 'wpfaevent' ); ?>
-									<a href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>" target="_blank" rel="noopener">
-										<?php esc_html_e( 'Buy tickets on Eventyay', 'wpfaevent' ); ?>
-									</a>
-								</p>
+								<div class="pretix-widget">
+									<div class="pretix-widget-info-message">
+										<?php esc_html_e( 'JavaScript is disabled in your browser. To access our ticket shop without JavaScript, please ', 'wpfaevent' ); ?>
+										<a target="_blank" rel="noopener" href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>">
+											<?php esc_html_e( 'click here', 'wpfaevent' ); ?>
+										</a>.
+									</div>
+								</div>
 							</noscript>
 						<?php else : ?>
 							<p class="wpfa-event-ticket-fallback">
