@@ -965,4 +965,127 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '#custom-section-venue-guide', $output );
 		$this->assertStringNotContainsString( '#sponsors', $output );
 	}
+
+	/**
+	 * Test that a custom page belonging to an event resolves and renders navigation
+	 * associated with that specific event, avoiding leakage from other events or generic fallbacks.
+	 */
+	public function test_custom_page_navigation_is_associated_with_correct_event() {
+		if ( ! class_exists( 'Wpfaevent_Templates' ) ) {
+			$this->markTestSkipped( 'Wpfaevent_Templates class not available.' );
+		}
+
+		// 1. Create two distinct events.
+		$event_a_id = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_title'   => 'Event Alpha',
+				'post_content' => 'Content for Event Alpha.',
+			)
+		);
+		$event_b_id = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_title'   => 'Event Beta',
+				'post_content' => 'Content for Event Beta.',
+			)
+		);
+
+		// 2. Configure event-specific custom pages and navigation for each event.
+		$nav_a = array(
+			array(
+				'text' => 'Alpha Section',
+				'type' => 'link',
+				'href' => '#alpha-section',
+			),
+			array(
+				'text'    => 'Alpha Custom Page',
+				'type'    => 'custom_page',
+				'title'   => 'Alpha Details',
+				'slug'    => 'alpha-details',
+				'content' => 'Alpha custom page content.',
+				'href'    => '?custom_page=alpha-details',
+			),
+		);
+		$nav_b = array(
+			array(
+				'text' => 'Beta Section',
+				'type' => 'link',
+				'href' => '#beta-section',
+			),
+			array(
+				'text'    => 'Beta Custom Page',
+				'type'    => 'custom_page',
+				'title'   => 'Beta Details',
+				'slug'    => 'beta-details',
+				'content' => 'Beta custom page content.',
+				'href'    => '?custom_page=beta-details',
+			),
+		);
+
+		update_post_meta( $event_a_id, 'wpfa_event_custom_navigation', $nav_a );
+		update_post_meta( $event_b_id, 'wpfa_event_custom_navigation', $nav_b );
+
+		// 3. Set query context to Event Alpha's custom page.
+		$this->go_to( add_query_arg( 'custom_page', 'alpha-details', get_permalink( $event_a_id ) ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$_GET['custom_page'] = 'alpha-details';
+
+		// Verify template loader selects page-event-custom.php for Event Alpha.
+		$resolved_template = Wpfaevent_Templates::load( 'single.php' );
+		$this->assertSame( WPFAEVENT_PATH . 'public/templates/page-event-custom.php', $resolved_template );
+
+		// Verify template controller resolves navigation belonging to Event Alpha.
+		$event_a_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_a_id );
+		$this->assertSame( $nav_a, $event_a_data['wpfa_event_nav_items'] );
+
+		// Render the custom page template into an output buffer.
+		ob_start();
+		include WPFAEVENT_PATH . 'public/templates/page-event-custom.php';
+		$rendered_a_custom = ob_get_clean();
+
+		// Verify navigation rendered belongs to Event Alpha and contains its items.
+		$this->assertStringContainsString( 'Alpha Section', $rendered_a_custom );
+		$this->assertStringContainsString( 'Alpha Custom Page', $rendered_a_custom );
+
+		// Ensure Event Beta's navigation items do not leak into Event Alpha's custom page.
+		$this->assertStringNotContainsString( 'Beta Section', $rendered_a_custom );
+		$this->assertStringNotContainsString( 'Beta Custom Page', $rendered_a_custom );
+
+		// 4. Test the fallback navigation path when custom navigation is not configured.
+		delete_post_meta( $event_a_id, 'wpfa_event_custom_navigation' );
+		delete_post_meta( $event_b_id, 'wpfa_event_custom_navigation' );
+
+		// Configure distinct dynamic features for each event.
+		update_post_meta( $event_a_id, 'wpfa_event_ticket_widget_url', 'https://eventyay.com/e/alpha-tickets' );
+		update_post_meta(
+			$event_b_id,
+			'wpfa_event_custom_tabs',
+			array(
+				array(
+					'slug'    => 'beta-tab',
+					'title'   => 'Beta Tab',
+					'content' => 'Beta content',
+				),
+			)
+		);
+
+		// Fallback navigation resolved via get_default_event_nav_items( $event_id ) must be event-specific.
+		$fallback_a = Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items( $event_a_id );
+		$fallback_b = Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items( $event_b_id );
+
+		$fallback_a_hrefs = array_column( $fallback_a, 'href' );
+		$fallback_b_hrefs = array_column( $fallback_b, 'href' );
+
+		// Event Alpha's fallback must include tickets and not Event Beta's custom tab.
+		$this->assertContains( '#tickets', $fallback_a_hrefs );
+		$this->assertNotContains( '#custom-section-beta-tab', $fallback_a_hrefs );
+
+		// Event Beta's fallback must include its custom tab and not tickets.
+		$this->assertContains( '#custom-section-beta-tab', $fallback_b_hrefs );
+		$this->assertNotContains( '#tickets', $fallback_b_hrefs );
+
+		// Clean up global query state.
+		unset( $_GET['custom_page'] );
+	}
 }

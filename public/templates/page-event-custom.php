@@ -118,7 +118,7 @@ if ( $is_plain_text ) {
 		<?php
 		$wpfa_event_nav_items = ! empty( $event_data['wpfa_event_nav_items'] ) && is_array( $event_data['wpfa_event_nav_items'] )
 			? $event_data['wpfa_event_nav_items']
-			: ( class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items() : array() );
+			: ( class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items( $event_id ) : array() );
 
 		if ( ! empty( $wpfa_event_nav_items ) ) {
 			include WPFAEVENT_PATH . 'public/partials/event-section-nav.php';
