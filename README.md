@@ -1,7 +1,5 @@
 # WordPress FOSSASIA Event Plugin (WPFAevent)
 
-![Node version](https://img.shields.io/badge/node-%3E%3D24-brightgreen)
-
 The **FOSSASIA Event Plugin** provides WordPress integrations for [Eventyay](https://eventyay.com)-based events. It lets you display event landing pages, speakers, events, past events, schedules, and code of conduct content using classic page templates, Gutenberg blocks, or shortcodes. Shortcodes and blocks use embedded template rendering so WPFA content can live inside existing theme pages without the standalone template header/footer.
 
 This plugin is maintained by [FOSSASIA](https://fossasia.org) and is compatible with the **eventyay** platform.
