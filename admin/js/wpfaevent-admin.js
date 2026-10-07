@@ -802,16 +802,18 @@
 			const $target = movingUp
 				? $item.prev(selector)
 				: $item.next(selector);
-			if ($target.length) {
-				if (movingUp) {
-					$item.insertBefore($target);
-				} else {
-					$item.insertAfter($target);
-				}
-				// Moving the node in the DOM drops focus; keep it on the button
-				// so the item can be moved several steps from the keyboard.
-				this.focus();
+			// Already first or last in its list: nothing moved, so nothing to announce.
+			if (!$target.length) {
+				return;
 			}
+			if (movingUp) {
+				$item.insertBefore($target);
+			} else {
+				$item.insertAfter($target);
+			}
+			// Moving the node in the DOM drops focus; keep it on the button
+			// so the item can be moved several steps from the keyboard.
+			this.focus();
 			const $siblings = $item.parent().children(selector);
 			announceNavPosition($siblings.index($item) + 1, $siblings.length);
 		});
