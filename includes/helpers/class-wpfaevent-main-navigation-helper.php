@@ -263,7 +263,8 @@ class Wpfaevent_Main_Navigation_Helper {
 	 *
 	 * The address stored when the event was saved goes stale when the page's slug
 	 * changes, so it is replaced by the page's current permalink on every render.
-	 * Items whose page is no longer published are dropped, as are dropdowns left empty.
+	 * Items with no page selected or whose page is no longer published are dropped,
+	 * as are dropdowns left empty.
 	 *
 	 * @since 1.0.0
 	 *
@@ -289,8 +290,8 @@ class Wpfaevent_Main_Navigation_Helper {
 				continue;
 			}
 
-			if ( isset( $item['type'] ) && 'page' === $item['type'] && ! empty( $item['page_id'] ) ) {
-				if ( ! self::is_nav_page_available( (int) $item['page_id'] ) ) {
+			if ( isset( $item['type'] ) && 'page' === $item['type'] ) {
+				if ( empty( $item['page_id'] ) || ! self::is_nav_page_available( (int) $item['page_id'] ) ) {
 					continue;
 				}
 

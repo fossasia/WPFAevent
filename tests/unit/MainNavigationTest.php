@@ -1347,6 +1347,29 @@ class MainNavigationTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test that an "Existing Page" item saved without a page is dropped instead of rendering its stored URL.
+	 */
+	public function test_existing_page_item_without_page_id_is_dropped() {
+		$resolved = Wpfaevent_Main_Navigation_Helper::resolve_page_nav_items(
+			array(
+				array(
+					'text' => 'Register',
+					'type' => 'link',
+					'href' => 'https://eventyay.com/e/register',
+				),
+				array(
+					'text'    => 'Venue',
+					'type'    => 'page',
+					'page_id' => 0,
+					'href'    => 'https://example.com/stale-venue/',
+				),
+			)
+		);
+
+		$this->assertSame( array( 'Register' ), array_column( $resolved, 'text' ) );
+	}
+
+	/**
 	 * Test that a custom menu whose only items are unavailable pages is not replaced by the default menu.
 	 */
 	public function test_custom_navigation_with_only_unavailable_pages_does_not_fall_back_to_defaults() {
