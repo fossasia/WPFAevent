@@ -477,6 +477,86 @@
 }
 
 /**
+ * Event Navigation Metabox Styling
+ */
+.wpfaevent-nav-description {
+	margin-bottom: 10px;
+}
+
+.wpfaevent-nav-actions {
+	margin-top: 10px;
+}
+
+.wpfaevent-nav-actions button + button {
+	margin-left: 8px;
+}
+
+.wpfaevent-meta-card-field.wpfaevent-nav-page-row select,
+.wpfaevent-meta-card-field.wpfaevent-nav-custom-page-row textarea {
+	width: 100%;
+}
+
+.wpfaevent-meta-card-field.wpfaevent-nav-custom-page-row .wpfaevent-nav-content-label {
+	margin-top: 8px;
+}
+
+.wpfaevent-add-subitem-btn {
+	margin-top: 8px;
+}
+
+.wpfaevent-nav-subitem-block {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	padding: 10px;
+	margin-bottom: 8px;
+}
+
+.wpfaevent-nav-subitem-header {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 6px;
+}
+
+.wpfaevent-nav-subitem-label-input {
+	flex: 2;
+}
+
+.wpfaevent-subitem-type-select {
+	flex: 1;
+}
+
+.wpfaevent-remove-subitem-btn {
+	color: #a00;
+	font-size: 18px;
+	line-height: 1;
+	padding: 0 4px;
+	border: none;
+	background: none;
+	cursor: pointer;
+}
+
+.wpfaevent-remove-subitem-btn:hover {
+	color: #dc3232;
+}
+
+.wpfaevent-sub-field input,
+.wpfaevent-sub-field select,
+.wpfaevent-sub-field textarea {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.wpfaevent-sub-custom-row input {
+	margin-bottom: 6px;
+}
+
+.wpfaevent-nav-row-hidden {
+	display: none !important;
+}
+
+/**
  * Event Dashboard Layout
  */
 .wpfaevent-dashboard-shell .wpfaevent-notice-message {
