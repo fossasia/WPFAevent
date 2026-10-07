@@ -1050,6 +1050,9 @@ class Wpfaevent_Event_Template_Controller {
 
 		$default_nav_items    = class_exists( 'Wpfaevent_Event_Navigation_Helper' ) ? Wpfaevent_Event_Navigation_Helper::build_nav_items( $wpfa_event_nav_context ) : array();
 		$custom_nav           = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
+		$custom_nav           = ( is_array( $custom_nav ) && class_exists( 'Wpfaevent_Main_Navigation_Helper' ) )
+			? Wpfaevent_Main_Navigation_Helper::resolve_page_nav_items( $custom_nav )
+			: $custom_nav;
 		$wpfa_event_nav_items = ( is_array( $custom_nav ) && ! empty( $custom_nav ) )
 			? $custom_nav
 			: $default_nav_items;

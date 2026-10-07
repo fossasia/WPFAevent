@@ -500,6 +500,15 @@
 	margin-top: 8px;
 }
 
+.wpfaevent-nav-page-warning {
+	margin: 6px 0 0;
+	padding: 6px 10px;
+	border-left: 4px solid #dba617;
+	background: #fcf9e8;
+	color: #50575e;
+	font-size: 12px;
+}
+
 .wpfaevent-add-subitem-btn {
 	margin-top: 8px;
 }

@@ -1198,4 +1198,194 @@ class MainNavigationTest extends WP_UnitTestCase {
 		// Clean up global query state.
 		unset( $_GET['custom_page'] );
 	}
+
+	/**
+	 * Create an event whose custom navigation links to a WordPress page, top level and in a dropdown.
+	 *
+	 * @param int $page_id Linked page ID.
+	 * @return int Event post ID.
+	 */
+	private function create_event_with_existing_page_nav( $page_id ) {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event With Page Link',
+			)
+		);
+
+		$nav = Wpfaevent_Meta_Event::sanitize_custom_navigation(
+			array(
+				array(
+					'text' => 'Register',
+					'type' => 'link',
+					'href' => 'https://eventyay.com/e/register',
+				),
+				array(
+					'text'    => 'Venue',
+					'type'    => 'page',
+					'page_id' => $page_id,
+				),
+				array(
+					'text'  => 'More',
+					'type'  => 'dropdown',
+					'items' => array(
+						array(
+							'text'    => 'Venue Details',
+							'type'    => 'page',
+							'page_id' => $page_id,
+						),
+					),
+				),
+			)
+		);
+		update_post_meta( $event_id, 'wpfa_event_custom_navigation', $nav );
+
+		return $event_id;
+	}
+
+	/**
+	 * Render the public event section navigation for an event.
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return string Rendered HTML.
+	 */
+	private function render_event_section_nav( $event_id ) {
+		$event_data           = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+		$wpfa_event_nav_items = $event_data['wpfa_event_nav_items'];
+
+		ob_start();
+		include WPFAEVENT_PATH . 'public/partials/event-section-nav.php';
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * Test that an "Existing Page" item follows the page's current URL without re-saving the event.
+	 */
+	public function test_existing_page_item_follows_page_url_changes() {
+		$this->set_permalink_structure( '/%postname%/' );
+
+		$page_id  = $this->factory->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_status' => 'publish',
+				'post_title'  => 'Venue',
+				'post_name'   => 'venue',
+			)
+		);
+		$event_id = $this->create_event_with_existing_page_nav( $page_id );
+
+		$output = $this->render_event_section_nav( $event_id );
+		$this->assertStringContainsString( 'href="' . home_url( '/venue/' ) . '"', $output );
+
+		wp_update_post(
+			array(
+				'ID'        => $page_id,
+				'post_name' => 'venue-and-travel',
+			)
+		);
+
+		$output = $this->render_event_section_nav( $event_id );
+		$this->assertStringContainsString( 'href="' . home_url( '/venue-and-travel/' ) . '"', $output );
+		$this->assertStringNotContainsString( home_url( '/venue/' ), $output );
+	}
+
+	/**
+	 * Test that "Existing Page" items are hidden while their page is unavailable and come back when it returns.
+	 */
+	public function test_existing_page_item_is_hidden_while_page_is_unavailable() {
+		$page_id  = $this->factory->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_status' => 'publish',
+				'post_title'  => 'Venue',
+			)
+		);
+		$event_id = $this->create_event_with_existing_page_nav( $page_id );
+
+		$this->assertStringContainsString( '>Venue</a>', $this->render_event_section_nav( $event_id ) );
+
+		foreach ( array( 'draft', 'private' ) as $status ) {
+			wp_update_post(
+				array(
+					'ID'          => $page_id,
+					'post_status' => $status,
+				)
+			);
+			$output = $this->render_event_section_nav( $event_id );
+			$this->assertStringContainsString( 'Register</a>', $output, "Other items stay visible when the page is {$status}." );
+			$this->assertStringNotContainsString( '>Venue</a>', $output, "Item is hidden when the page is {$status}." );
+			$this->assertStringNotContainsString( 'Venue Details', $output, "Sub-item is hidden when the page is {$status}." );
+			$this->assertStringNotContainsString( 'nav-dropdown', $output, "A dropdown left empty is hidden when the page is {$status}." );
+		}
+
+		wp_update_post(
+			array(
+				'ID'          => $page_id,
+				'post_status' => 'publish',
+			)
+		);
+		wp_trash_post( $page_id );
+		$output = $this->render_event_section_nav( $event_id );
+		$this->assertStringContainsString( 'Register</a>', $output );
+		$this->assertStringNotContainsString( '>Venue</a>', $output );
+
+		wp_untrash_post( $page_id );
+		wp_update_post(
+			array(
+				'ID'          => $page_id,
+				'post_status' => 'publish',
+			)
+		);
+		$output = $this->render_event_section_nav( $event_id );
+		$this->assertStringContainsString( '>Venue</a>', $output, 'Item reappears once the page is restored.' );
+		$this->assertStringContainsString( 'Venue Details', $output );
+
+		wp_delete_post( $page_id, true );
+		$output = $this->render_event_section_nav( $event_id );
+		$this->assertStringContainsString( 'Register</a>', $output );
+		$this->assertStringNotContainsString( '>Venue</a>', $output );
+	}
+
+	/**
+	 * Test that the navigation editor keeps an unavailable page selected and warns about it.
+	 */
+	public function test_navigation_meta_box_flags_unavailable_existing_page() {
+		if ( ! class_exists( 'Wpfaevent_Admin_Event_Metabox' ) ) {
+			$this->markTestSkipped( 'Wpfaevent_Admin_Event_Metabox class not available.' );
+		}
+
+		$page_id  = $this->factory->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_status' => 'publish',
+				'post_title'  => 'Venue',
+			)
+		);
+		$event_id = $this->create_event_with_existing_page_nav( $page_id );
+		$metabox  = new Wpfaevent_Admin_Event_Metabox();
+
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$output = (string) ob_get_clean();
+		$this->assertStringNotContainsString( 'wpfaevent-nav-page-warning', $output );
+
+		wp_trash_post( $page_id );
+
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$output = (string) ob_get_clean();
+
+		$this->assertSame( 2, substr_count( $output, 'class="wpfaevent-nav-page-warning"' ) );
+		$this->assertStringContainsString( 'The selected page is in the trash', $output );
+		$this->assertMatchesRegularExpression( '/<option value="' . $page_id . '" data-unavailable="1" selected>\s*Venue \(in trash\)/', $output );
+
+		wp_delete_post( $page_id, true );
+
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$output = (string) ob_get_clean();
+
+		$this->assertStringContainsString( 'The selected page has been deleted', $output );
+		$this->assertStringContainsString( 'Deleted page (#' . $page_id . ')', $output );
+	}
 }

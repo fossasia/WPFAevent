@@ -969,14 +969,7 @@ class Wpfaevent_Admin_Event_Metabox {
 				</div>
 				<div class="<?php echo esc_attr( $page_row_class ); ?>">
 					<label><?php esc_html_e( 'Select Existing Page', 'wpfaevent' ); ?></label>
-					<select name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][page_id]" class="wpfaevent-nav-page-select">
-						<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
-						<?php foreach ( $wp_pages as $p ) : ?>
-							<option value="<?php echo absint( $p->ID ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>" <?php selected( $page_id, $p->ID ); ?>>
-								<?php echo esc_html( $p->post_title ); ?>
-							</option>
-						<?php endforeach; ?>
-					</select>
+					<?php $this->render_nav_page_select( 'wpfa_custom_nav_items[' . (string) $i . '][page_id]', 'wpfaevent-nav-page-select', $page_id, $wp_pages ); ?>
 				</div>
 				<div class="<?php echo esc_attr( $custom_page_row_class ); ?>">
 					<input type="hidden" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][slug]" value="<?php echo esc_attr( $slug ); ?>">
@@ -1042,14 +1035,7 @@ class Wpfaevent_Admin_Event_Metabox {
 				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[href]" value="<?php echo esc_attr( $href ); ?>" placeholder="<?php esc_attr_e( 'Sub-Item URL (e.g. /events/ or https://...)', 'wpfaevent' ); ?>">
 			</div>
 			<div class="<?php echo esc_attr( $sub_page_class ); ?>">
-				<select name="<?php echo esc_attr( $prefix ); ?>[page_id]" class="wpfaevent-sub-page-select">
-					<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
-					<?php foreach ( $wp_pages as $p ) : ?>
-						<option value="<?php echo absint( $p->ID ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>" <?php selected( $page_id, $p->ID ); ?>>
-							<?php echo esc_html( $p->post_title ); ?>
-						</option>
-					<?php endforeach; ?>
-				</select>
+				<?php $this->render_nav_page_select( $prefix . '[page_id]', 'wpfaevent-sub-page-select', $page_id, $wp_pages ); ?>
 			</div>
 			<div class="<?php echo esc_attr( $sub_custom_class ); ?>">
 				<input type="hidden" name="<?php echo esc_attr( $prefix ); ?>[slug]" value="<?php echo esc_attr( $slug ); ?>">
@@ -1058,6 +1044,62 @@ class Wpfaevent_Admin_Event_Metabox {
 			</div>
 		</div>
 
+		<?php
+	}
+
+	/**
+	 * Render the page picker for an "Existing Page" nav item or sub-item.
+	 *
+	 * A saved page that is no longer published is kept as the selected option, so saving
+	 * the event does not lose it, and a warning tells the organizer it is hidden from the
+	 * public menu until the page is published again.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string         $name     Field name.
+	 * @param string         $class    Select CSS class.
+	 * @param int            $page_id  Saved page ID.
+	 * @param array<WP_Post> $wp_pages Published pages.
+	 * @return void
+	 */
+	private function render_nav_page_select( $name, $class, $page_id, $wp_pages = array() ) {
+		$unavailable_label   = '';
+		$unavailable_message = '';
+
+		if ( $page_id > 0 && ! Wpfaevent_Main_Navigation_Helper::is_nav_page_available( $page_id ) ) {
+			$page = get_post( $page_id );
+
+			if ( ! $page || 'page' !== $page->post_type ) {
+				/* translators: %d: page ID. */
+				$unavailable_label   = sprintf( __( 'Deleted page (#%d)', 'wpfaevent' ), $page_id );
+				$unavailable_message = __( 'The selected page has been deleted, so this item is hidden from the public menu. Choose another page or remove this item.', 'wpfaevent' );
+			} elseif ( 'trash' === $page->post_status ) {
+				/* translators: %s: page title. */
+				$unavailable_label   = sprintf( __( '%s (in trash)', 'wpfaevent' ), $page->post_title );
+				$unavailable_message = __( 'The selected page is in the trash, so this item is hidden from the public menu. Restore the page, choose another page, or remove this item.', 'wpfaevent' );
+			} else {
+				/* translators: %s: page title. */
+				$unavailable_label   = sprintf( __( '%s (not published)', 'wpfaevent' ), $page->post_title );
+				$unavailable_message = __( 'The selected page is no longer published, so this item is hidden from the public menu. Publish the page again, choose another page, or remove this item.', 'wpfaevent' );
+			}
+		}
+		?>
+		<select name="<?php echo esc_attr( $name ); ?>" class="<?php echo esc_attr( $class ); ?>">
+			<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
+			<?php if ( '' !== $unavailable_label ) : ?>
+				<option value="<?php echo absint( $page_id ); ?>" data-unavailable="1" selected>
+					<?php echo esc_html( $unavailable_label ); ?>
+				</option>
+			<?php endif; ?>
+			<?php foreach ( $wp_pages as $p ) : ?>
+				<option value="<?php echo absint( $p->ID ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>" <?php selected( $page_id, $p->ID ); ?>>
+					<?php echo esc_html( $p->post_title ); ?>
+				</option>
+			<?php endforeach; ?>
+		</select>
+		<?php if ( '' !== $unavailable_message ) : ?>
+			<p class="wpfaevent-nav-page-warning" role="alert"><?php echo esc_html( $unavailable_message ); ?></p>
+		<?php endif; ?>
 		<?php
 	}
 
