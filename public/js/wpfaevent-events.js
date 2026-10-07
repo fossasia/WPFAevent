@@ -648,7 +648,7 @@ const wpfaEvents = (function () {
 		document.getElementById('editEventPlace').value =
 			card.dataset.place || '';
 		document.getElementById('editEventDescription').value =
-			card.dataset.description || '';
+			card.dataset.editDescription || '';
 		document.getElementById('editEventLeadText').value =
 			card.dataset.leadText || '';
 		document.getElementById('editRegistrationLink').value =
