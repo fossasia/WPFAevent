@@ -44,19 +44,22 @@ class Wpfaevent_Main_Navigation_Helper {
 
 		$items = array(
 			array(
-				'text' => __( 'Upcoming Events', 'wpfaevent' ),
-				'type' => 'link',
-				'href' => $events_url,
+				'text'     => __( 'Upcoming Events', 'wpfaevent' ),
+				'type'     => 'link',
+				'href'     => $events_url,
+				'data_nav' => 'upcoming',
 			),
 			array(
-				'text' => __( 'Past Events', 'wpfaevent' ),
-				'type' => 'link',
-				'href' => $past_url,
+				'text'     => __( 'Past Events', 'wpfaevent' ),
+				'type'     => 'link',
+				'href'     => $past_url,
+				'data_nav' => 'past',
 			),
 			array(
-				'text' => __( 'Code of Conduct', 'wpfaevent' ),
-				'type' => 'link',
-				'href' => $coc_url ? $coc_url : home_url( '/code-of-conduct/' ),
+				'text'     => __( 'Code of Conduct', 'wpfaevent' ),
+				'type'     => 'link',
+				'href'     => $coc_url ? $coc_url : home_url( '/code-of-conduct/' ),
+				'data_nav' => 'coc',
 			),
 		);
 
@@ -197,10 +200,12 @@ class Wpfaevent_Main_Navigation_Helper {
 				}
 				$is_active = isset( $item['is_active'] ) ? ! empty( $item['is_active'] ) : self::is_url_active( $href, $current_uri );
 				$active    = $is_active ? 'active' : '';
+				$data_attr = ! empty( $item['data_nav'] ) ? ' data-nav="' . esc_attr( (string) $item['data_nav'] ) . '"' : '';
 				printf(
-					'<a href="%s" class="%s">%s</a>',
+					'<a href="%s" class="%s"%s>%s</a>',
 					esc_url( $href ),
 					esc_attr( $active ),
+					$data_attr, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					esc_html( $text )
 				);
 			}
