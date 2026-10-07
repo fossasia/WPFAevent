@@ -1347,6 +1347,46 @@ class MainNavigationTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test that a custom menu whose only items are unavailable pages is not replaced by the default menu.
+	 */
+	public function test_custom_navigation_with_only_unavailable_pages_does_not_fall_back_to_defaults() {
+		$page_id  = $this->factory->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_status' => 'draft',
+				'post_title'  => 'Venue',
+			)
+		);
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_title'   => 'Event With Only Page Links',
+				'post_content' => 'Overview content.',
+			)
+		);
+		update_post_meta(
+			$event_id,
+			'wpfa_event_custom_navigation',
+			array(
+				array(
+					'text'    => 'Venue',
+					'type'    => 'page',
+					'page_id' => $page_id,
+				),
+			)
+		);
+
+		$event_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+		$this->assertSame( array(), $event_data['wpfa_event_nav_items'] );
+		$this->assertNotEmpty( $event_data['default_nav_items'] );
+
+		wp_publish_post( $page_id );
+
+		$event_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+		$this->assertSame( array( 'Venue' ), array_column( $event_data['wpfa_event_nav_items'], 'text' ) );
+	}
+
+	/**
 	 * Test that the navigation editor keeps an unavailable page selected and warns about it.
 	 */
 	public function test_navigation_meta_box_flags_unavailable_existing_page() {

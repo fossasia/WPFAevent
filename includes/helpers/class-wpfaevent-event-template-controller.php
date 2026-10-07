@@ -1048,14 +1048,17 @@ class Wpfaevent_Event_Template_Controller {
 			'custom_sections'            => $custom_sections,
 		);
 
-		$default_nav_items    = class_exists( 'Wpfaevent_Event_Navigation_Helper' ) ? Wpfaevent_Event_Navigation_Helper::build_nav_items( $wpfa_event_nav_context ) : array();
-		$custom_nav           = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
-		$custom_nav           = ( is_array( $custom_nav ) && class_exists( 'Wpfaevent_Main_Navigation_Helper' ) )
-			? Wpfaevent_Main_Navigation_Helper::resolve_page_nav_items( $custom_nav )
-			: $custom_nav;
-		$wpfa_event_nav_items = ( is_array( $custom_nav ) && ! empty( $custom_nav ) )
-			? $custom_nav
-			: $default_nav_items;
+		$default_nav_items = class_exists( 'Wpfaevent_Event_Navigation_Helper' ) ? Wpfaevent_Event_Navigation_Helper::build_nav_items( $wpfa_event_nav_context ) : array();
+		$custom_nav        = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
+		if ( is_array( $custom_nav ) && ! empty( $custom_nav ) ) {
+			// A configured custom menu is never swapped for the defaults, even if hiding
+			// unavailable pages leaves it empty.
+			$wpfa_event_nav_items = class_exists( 'Wpfaevent_Main_Navigation_Helper' )
+				? Wpfaevent_Main_Navigation_Helper::resolve_page_nav_items( $custom_nav )
+				: $custom_nav;
+		} else {
+			$wpfa_event_nav_items = $default_nav_items;
+		}
 
 		$site_logo_url = get_option( 'wpfa_site_logo_url', '' );
 		if ( empty( $site_logo_url ) ) {
