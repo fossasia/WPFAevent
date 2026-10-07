@@ -1056,13 +1056,13 @@ class Wpfaevent_Admin_Event_Metabox {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string         $name     Field name.
-	 * @param string         $class    Select CSS class.
-	 * @param int            $page_id  Saved page ID.
-	 * @param array<WP_Post> $wp_pages Published pages.
+	 * @param string         $name         Field name.
+	 * @param string         $select_class Select CSS class.
+	 * @param int            $page_id      Saved page ID.
+	 * @param array<WP_Post> $wp_pages     Published pages.
 	 * @return void
 	 */
-	private function render_nav_page_select( $name, $class, $page_id, $wp_pages = array() ) {
+	private function render_nav_page_select( $name, $select_class, $page_id, $wp_pages = array() ) {
 		$unavailable_label   = '';
 		$unavailable_message = '';
 
@@ -1084,7 +1084,7 @@ class Wpfaevent_Admin_Event_Metabox {
 			}
 		}
 		?>
-		<select name="<?php echo esc_attr( $name ); ?>" class="<?php echo esc_attr( $class ); ?>">
+		<select name="<?php echo esc_attr( $name ); ?>" class="<?php echo esc_attr( $select_class ); ?>">
 			<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
 			<?php if ( '' !== $unavailable_label ) : ?>
 				<option value="<?php echo absint( $page_id ); ?>" data-unavailable="1" selected>
