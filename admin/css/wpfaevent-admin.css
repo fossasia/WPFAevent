@@ -556,6 +556,55 @@
 	display: none !important;
 }
 
+.wpfaevent-nav-order-controls {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-bottom: 10px;
+}
+
+.wpfaevent-nav-card-handle,
+.wpfaevent-nav-subitem-handle {
+	color: #646970;
+	cursor: move;
+}
+
+.wpfaevent-nav-card-handle:hover,
+.wpfaevent-nav-subitem-handle:hover {
+	color: #1d2327;
+}
+
+.button.wpfaevent-nav-move-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	padding: 0 4px;
+}
+
+.wpfaevent-nav-move-btn .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+
+.wpfaevent-nav-sortable-placeholder {
+	border: 2px dashed #c3c4c7;
+	border-radius: 4px;
+	background: #f6f7f7;
+	margin-bottom: 15px;
+	visibility: visible !important;
+}
+
+.wpfaevent-nav-subitems-list .wpfaevent-nav-sortable-placeholder {
+	margin-bottom: 8px;
+}
+
+.wpfaevent-meta-card.ui-sortable-helper,
+.wpfaevent-nav-subitem-block.ui-sortable-helper {
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 /**
  * Event Dashboard Layout
  */
