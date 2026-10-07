@@ -859,6 +859,109 @@ class MainNavigationTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test that custom-page slugs are preserved when the heading/title is edited in the navigation metabox.
+	 */
+	public function test_custom_page_slug_is_preserved_when_heading_is_edited() {
+		if ( ! class_exists( 'Wpfaevent_Admin_Event_Metabox' ) ) {
+			$this->markTestSkipped( 'Wpfaevent_Admin_Event_Metabox class not available.' );
+		}
+
+		$user_id = $this->factory->user->create( array( 'role' => 'administrator' ) );
+		wp_set_current_user( $user_id );
+
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event With Custom Page',
+			)
+		);
+
+		// 1. Initial save of a new custom page without a pre-existing slug.
+		$_POST['wpfa_event_meta_nonce']         = wp_create_nonce( 'wpfa_event_meta_nonce' );
+		$_POST['wpfa_custom_nav_items_present'] = '1';
+		$_POST['wpfa_custom_nav_items']         = array(
+			array(
+				'text'    => 'Travel Grants',
+				'type'    => 'custom_page',
+				'title'   => 'Travel Grants',
+				'slug'    => '',
+				'content' => 'Travel grant details.',
+			),
+			array(
+				'text'  => 'Resources',
+				'type'  => 'dropdown',
+				'items' => array(
+					array(
+						'text'    => 'Visa Info',
+						'type'    => 'custom_page',
+						'title'   => 'Visa Info',
+						'slug'    => '',
+						'content' => 'Visa details.',
+					),
+				),
+			),
+		);
+
+		$metabox = new Wpfaevent_Admin_Event_Metabox();
+		$metabox->save_event_meta( $event_id );
+
+		$saved_nav = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
+		$this->assertIsArray( $saved_nav );
+		$this->assertSame( 'travel-grants', $saved_nav[0]['slug'] );
+		$this->assertSame( '?custom_page=travel-grants', $saved_nav[0]['href'] );
+		$this->assertSame( 'visa-info', $saved_nav[1]['items'][0]['slug'] );
+		$this->assertSame( '?custom_page=visa-info', $saved_nav[1]['items'][0]['href'] );
+
+		// 2. Verify that the metabox markup renders the hidden slug inputs.
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$metabox_output = ob_get_clean();
+
+		$this->assertStringContainsString( 'name="wpfa_custom_nav_items[0][slug]" value="travel-grants"', $metabox_output );
+		$this->assertStringContainsString( 'name="wpfa_custom_nav_items[1][items][0][slug]" value="visa-info"', $metabox_output );
+
+		// 3. Edit the headings to something different, while the hidden slug input keeps the existing slug.
+		$_POST['wpfa_custom_nav_items'] = array(
+			array(
+				'text'    => 'Travel Grant Info',
+				'type'    => 'custom_page',
+				'title'   => 'Travel Grant Information & Guidelines',
+				'slug'    => 'travel-grants', // hidden input value from the form.
+				'content' => 'Updated content.',
+			),
+			array(
+				'text'  => 'Resources',
+				'type'  => 'dropdown',
+				'items' => array(
+					array(
+						'text'    => 'Visa Assistance',
+						'type'    => 'custom_page',
+						'title'   => 'Comprehensive Visa Guidance',
+						'slug'    => 'visa-info', // hidden input value from the form.
+						'content' => 'Updated visa content.',
+					),
+				),
+			),
+		);
+
+		$metabox->save_event_meta( $event_id );
+
+		$updated_nav = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
+		$this->assertIsArray( $updated_nav );
+
+		// The headings are updated, but the slugs and hrefs MUST stay the same as the original.
+		$this->assertSame( 'Travel Grant Information & Guidelines', $updated_nav[0]['title'] );
+		$this->assertSame( 'travel-grants', $updated_nav[0]['slug'] );
+		$this->assertSame( '?custom_page=travel-grants', $updated_nav[0]['href'] );
+
+		$this->assertSame( 'Comprehensive Visa Guidance', $updated_nav[1]['items'][0]['title'] );
+		$this->assertSame( 'visa-info', $updated_nav[1]['items'][0]['slug'] );
+		$this->assertSame( '?custom_page=visa-info', $updated_nav[1]['items'][0]['href'] );
+
+		unset( $_POST['wpfa_event_meta_nonce'], $_POST['wpfa_custom_nav_items_present'], $_POST['wpfa_custom_nav_items'] );
+	}
+
+	/**
 	 * Test that non-scalar custom_page query parameter does not trigger errors.
 	 */
 	public function test_custom_page_non_scalar_query_param_does_not_error() {
@@ -1051,6 +1154,13 @@ class MainNavigationTest extends WP_UnitTestCase {
 		// Ensure Event Beta's navigation items do not leak into Event Alpha's custom page.
 		$this->assertStringNotContainsString( 'Beta Section', $rendered_a_custom );
 		$this->assertStringNotContainsString( 'Beta Custom Page', $rendered_a_custom );
+
+		// Verify no duplicate hard-coded <title> tag is rendered in page-event-custom.php.
+		$this->assertStringNotContainsString( '<title>', $rendered_a_custom );
+
+		// Verify document_title_parts filter sets the page title.
+		$title_parts = apply_filters( 'document_title_parts', array( 'title' => 'Default' ) );
+		$this->assertSame( 'Alpha Details - Event Alpha', $title_parts['title'] );
 
 		// 4. Test the fallback navigation path when custom navigation is not configured.
 		delete_post_meta( $event_a_id, 'wpfa_event_custom_navigation' );

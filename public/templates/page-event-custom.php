@@ -83,13 +83,21 @@ if ( $is_plain_text ) {
 	$formatted_content = implode( "\n", $out_lines );
 }
 
+add_filter(
+	'document_title_parts',
+	static function ( $parts ) use ( $page_title, $event_title ) {
+		if ( is_array( $parts ) ) {
+			$parts['title'] = $page_title . ' - ' . $event_title;
+		}
+		return $parts;
+	}
+);
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
 	<meta charset="<?php bloginfo( 'charset' ); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title><?php echo esc_html( $page_title . ' - ' . $event_title ); ?></title>
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class( 'wpfaevent wpfa-event-template wpfa-custom-page-template' ); ?><?php echo $event_style_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built. ?>>

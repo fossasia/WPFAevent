@@ -938,6 +938,7 @@ class Wpfaevent_Admin_Event_Metabox {
 		$href      = isset( $item['href'] ) ? (string) $item['href'] : '';
 		$page_id   = isset( $item['page_id'] ) ? absint( $item['page_id'] ) : 0;
 		$title     = isset( $item['title'] ) ? (string) $item['title'] : '';
+		$slug      = isset( $item['slug'] ) ? (string) $item['slug'] : '';
 		$content   = isset( $item['content'] ) ? (string) $item['content'] : '';
 		$sub_items = isset( $item['items'] ) && is_array( $item['items'] ) ? $item['items'] : array();
 
@@ -978,6 +979,7 @@ class Wpfaevent_Admin_Event_Metabox {
 					</select>
 				</div>
 				<div class="<?php echo esc_attr( $custom_page_row_class ); ?>">
+					<input type="hidden" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][slug]" value="<?php echo esc_attr( $slug ); ?>">
 					<label><?php esc_html_e( 'Page Heading', 'wpfaevent' ); ?></label>
 					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>">
 					<label class="wpfaevent-nav-content-label"><?php esc_html_e( 'Page Content & Bullets', 'wpfaevent' ); ?></label>
@@ -1018,6 +1020,7 @@ class Wpfaevent_Admin_Event_Metabox {
 		$href    = isset( $sub['href'] ) ? (string) $sub['href'] : '';
 		$page_id = isset( $sub['page_id'] ) ? absint( $sub['page_id'] ) : 0;
 		$title   = isset( $sub['title'] ) ? (string) $sub['title'] : '';
+		$slug    = isset( $sub['slug'] ) ? (string) $sub['slug'] : '';
 		$content = isset( $sub['content'] ) ? (string) $sub['content'] : '';
 		$prefix  = 'wpfa_custom_nav_items[' . esc_attr( (string) $i ) . '][items][' . esc_attr( (string) $si ) . ']';
 
@@ -1049,6 +1052,7 @@ class Wpfaevent_Admin_Event_Metabox {
 				</select>
 			</div>
 			<div class="<?php echo esc_attr( $sub_custom_class ); ?>">
+				<input type="hidden" name="<?php echo esc_attr( $prefix ); ?>[slug]" value="<?php echo esc_attr( $slug ); ?>">
 				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>">
 				<textarea name="<?php echo esc_attr( $prefix ); ?>[content]" rows="3" placeholder="<?php esc_attr_e( "Page details, text, or bullet points:\n- Travel grant details\n- Application requirements", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
 			</div>
