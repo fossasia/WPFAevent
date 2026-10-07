@@ -240,4 +240,29 @@ class Wpfaevent_Event_Navigation_Helper {
 
 		return $items;
 	}
+
+	/**
+	 * Get the validated initial event filter for events hub and listings.
+	 *
+	 * Core logic in includes/, presentation in public/partials/ and public/templates/.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string|null $filter_param Optional raw filter parameter to validate. Defaults to $_GET['filter'].
+	 * @return string Validated filter slug: 'all', 'upcoming', 'past', or 'bookmarked'.
+	 */
+	public static function get_initial_events_filter( $filter_param = null ) {
+		if ( null === $filter_param ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$filter_param = isset( $_GET['filter'] ) ? sanitize_text_field( wp_unslash( $_GET['filter'] ) ) : 'all';
+		} else {
+			$filter_param = sanitize_text_field( wp_unslash( (string) $filter_param ) );
+		}
+
+		if ( ! in_array( $filter_param, array( 'all', 'upcoming', 'past', 'bookmarked' ), true ) || ( 'bookmarked' === $filter_param && ! is_user_logged_in() ) ) {
+			return 'all';
+		}
+
+		return $filter_param;
+	}
 }
