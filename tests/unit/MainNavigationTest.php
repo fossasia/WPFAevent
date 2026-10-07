@@ -1432,6 +1432,29 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$output = (string) ob_get_clean();
 		$this->assertStringNotContainsString( 'wpfaevent-nav-page-warning', $output );
 
+		foreach ( array( 'draft', 'private' ) as $status ) {
+			wp_update_post(
+				array(
+					'ID'          => $page_id,
+					'post_status' => $status,
+				)
+			);
+
+			ob_start();
+			$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+			$output = (string) ob_get_clean();
+
+			$this->assertSame( 2, substr_count( $output, 'class="wpfaevent-nav-page-warning"' ), "Warning shown when the page is {$status}." );
+			$this->assertStringContainsString( 'The selected page is no longer published', $output );
+			$this->assertMatchesRegularExpression( '/<option value="' . $page_id . '" data-unavailable="1" selected>\s*Venue \(not published\)/', $output );
+		}
+
+		wp_update_post(
+			array(
+				'ID'          => $page_id,
+				'post_status' => 'publish',
+			)
+		);
 		wp_trash_post( $page_id );
 
 		ob_start();
