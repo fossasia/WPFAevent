@@ -1155,8 +1155,8 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'Beta Section', $rendered_a_custom );
 		$this->assertStringNotContainsString( 'Beta Custom Page', $rendered_a_custom );
 
-		// Verify no duplicate hard-coded <title> tag is rendered in page-event-custom.php.
-		$this->assertStringNotContainsString( '<title>', $rendered_a_custom );
+		// Verify no duplicate <title> tag is rendered (at most one from wp_head).
+		$this->assertLessThanOrEqual( 1, substr_count( $rendered_a_custom, '<title>' ) );
 
 		// Verify document_title_parts filter sets the page title.
 		$title_parts = apply_filters( 'document_title_parts', array( 'title' => 'Default' ) );
