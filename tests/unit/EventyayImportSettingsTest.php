@@ -67,4 +67,105 @@ class EventyayImportSettingsTest extends WP_UnitTestCase {
 		$this->assertSame( '', $settings['organizer_slug'] );
 		$this->assertSame( 'legacy-event', $settings['event_slug'] );
 	}
+
+	/**
+	 * Query strings and fragments do not change the public event identity.
+	 */
+	public function test_event_url_ignores_query_string_and_fragment() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$settings = $importer->sanitize_eventyay_import_settings(
+			array(
+				'event_url' => 'https://dev.eventyay.com/fossasia/ots2026/?old=1#tickets',
+			)
+		);
+
+		$this->assertSame( 'https://dev.eventyay.com', $settings['base_url'] );
+		$this->assertSame( 'fossasia', $settings['organizer_slug'] );
+		$this->assertSame( 'ots2026', $settings['event_slug'] );
+	}
+
+	/**
+	 * A URL with extra path components is not a canonical Eventyay event URL.
+	 */
+	public function test_event_url_rejects_extra_path_components() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$settings = $importer->sanitize_eventyay_import_settings(
+			array(
+				'event_url' => 'https://eventyay.com/fossasia/ots2026/tickets/',
+			)
+		);
+
+		$this->assertSame( '', $settings['organizer_slug'] );
+		$this->assertSame( '', $settings['event_slug'] );
+	}
+
+	/**
+	 * An invalid submitted URL cannot retain slugs from the saved event.
+	 */
+	public function test_invalid_event_url_clears_saved_event_identity() {
+		update_option(
+			'wpfaevent_eventyay_import_settings',
+			array(
+				'base_url'       => 'https://eventyay.com',
+				'organizer_slug' => 'saved-organizer',
+				'event_slug'     => 'saved-event',
+			)
+		);
+
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$settings = $importer->sanitize_eventyay_import_settings(
+			array_merge(
+				$importer->get_eventyay_import_settings(),
+				array( 'event_url' => 'https://eventyay.com/saved-organizer/saved-event/tickets/' )
+			)
+		);
+
+		$this->assertSame( '', $settings['organizer_slug'] );
+		$this->assertSame( '', $settings['event_slug'] );
+	}
+
+	/**
+	 * An internal empty path component is not a valid public event URL.
+	 */
+	public function test_event_url_rejects_empty_internal_path_components() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$settings = $importer->sanitize_eventyay_import_settings(
+			array(
+				'event_url' => 'https://eventyay.com/fossasia//ots2026/',
+			)
+		);
+
+		$this->assertSame( '', $settings['organizer_slug'] );
+		$this->assertSame( '', $settings['event_slug'] );
+	}
+
+	/**
+	 * Public event URLs must belong to an official supported Eventyay host.
+	 */
+	public function test_event_url_rejects_untrusted_hosts() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$settings = $importer->sanitize_eventyay_import_settings(
+			array(
+				'event_url' => 'https://attacker.example/organizer/event/',
+			)
+		);
+
+		$this->assertSame( '', $settings['organizer_slug'] );
+		$this->assertSame( '', $settings['event_slug'] );
+	}
+
+	/**
+	 * Public event URLs must use HTTPS when API credentials may be sent.
+	 */
+	public function test_event_url_rejects_plain_http() {
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$settings = $importer->sanitize_eventyay_import_settings(
+			array(
+				'event_url' => 'http://eventyay.com/organizer/event/',
+			)
+		);
+
+		$this->assertSame( '', $settings['organizer_slug'] );
+		$this->assertSame( '', $settings['event_slug'] );
+	}
 }

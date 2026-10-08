@@ -54,33 +54,12 @@ if ( ! empty( $settings['base_url'] ) && ! empty( $settings['organizer_slug'] ) 
 			<?php settings_fields( 'wpfaevent_eventyay_import' ); ?>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><label for="wpfaevent_eventyay_base_url"><?php esc_html_e( 'Eventyay base URL', 'wpfaevent' ); ?></label></th>
-					<td>
-						<input type="url" class="regular-text" id="wpfaevent_eventyay_base_url" name="wpfaevent_eventyay_import_settings[base_url]" value="<?php echo esc_attr( $settings['base_url'] ); ?>" placeholder="https://eventyay.com">
-						<p class="description"><?php esc_html_e( 'Use the site root, not the API path. Self-hosted Eventyay installs are supported.', 'wpfaevent' ); ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><label for="wpfaevent_eventyay_organizer_slug"><?php esc_html_e( 'Organizer slug', 'wpfaevent' ); ?></label></th>
-					<td>
-						<input type="text" class="regular-text" id="wpfaevent_eventyay_organizer_slug" name="wpfaevent_eventyay_import_settings[organizer_slug]" value="<?php echo esc_attr( $settings['organizer_slug'] ); ?>" placeholder="bigevents">
-					</td>
-				</tr>
-				<tr>
 					<th scope="row"><label for="wpfaevent_eventyay_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
 					<td>
 						<input type="url" class="regular-text" id="wpfaevent_eventyay_event_url" name="wpfaevent_eventyay_import_settings[event_url]" value="<?php echo esc_attr( $event_url ); ?>" placeholder="https://eventyay.com/bigevents/sampleconf/">
 						<p class="description"><?php esc_html_e( 'Imports and updates now run one event at a time. Paste the full public Eventyay event URL here.', 'wpfaevent' ); ?></p>
 					</td>
 				</tr>
-				<tr>
-					<th scope="row"><label for="wpfaevent_eventyay_event_slug"><?php esc_html_e( 'Event slug', 'wpfaevent' ); ?></label></th>
-					<td>
-						<input type="text" class="regular-text" id="wpfaevent_eventyay_event_slug" name="wpfaevent_eventyay_import_settings[event_slug]" value="<?php echo esc_attr( $settings['event_slug'] ); ?>" placeholder="sampleconf">
-						<p class="description"><?php esc_html_e( 'This is filled from the Event URL above and is required for single-event imports.', 'wpfaevent' ); ?></p>
-					</td>
-				</tr>
-
 				<tr>
 					<th scope="row"><label for="wpfaevent_eventyay_api_token"><?php esc_html_e( 'API token', 'wpfaevent' ); ?></label></th>
 					<td>
@@ -151,7 +130,7 @@ if ( ! empty( $settings['base_url'] ) && ! empty( $settings['organizer_slug'] ) 
 			<input type="hidden" name="action" value="wpfaevent_import_eventyay_events">
 			<input type="hidden" name="wpfaevent_eventyay_return_page" value="wpfaevent-import-events">
 			<?php wp_nonce_field( 'wpfaevent_import_eventyay_events' ); ?>
-			<?php submit_button( __( 'Import Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, ( empty( $settings['organizer_slug'] ) || empty( $settings['event_slug'] ) ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
+			<?php submit_button( __( 'Import Event from Eventyay', 'wpfaevent' ), 'primary', 'submit', false, empty( $event_url ) ? array( 'disabled' => 'disabled' ) : array() ); ?>
 		</form>
 	</div>
 
