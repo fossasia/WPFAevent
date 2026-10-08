@@ -3500,8 +3500,11 @@ class Wpfaevent_Eventyay_Importer {
 		$this->update_or_delete_post_meta( $saved_id, '_event_end_date', $end_date );
 		$this->update_or_delete_post_meta( $saved_id, '_event_place', $location );
 		$this->update_or_delete_post_meta( $saved_id, '_event_registration_link', $event_url );
-		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_lead_text', $lead_text );
-		$this->update_or_delete_post_meta( $saved_id, '_event_lead_text', '' );
+		$existing_lead_text = trim( (string) get_post_meta( $saved_id, 'wpfa_event_lead_text', true ) );
+		if ( '' === $existing_lead_text && '' !== $lead_text ) {
+			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_lead_text', $lead_text );
+			$this->update_or_delete_post_meta( $saved_id, '_event_lead_text', '' );
+		}
 
 		update_post_meta( $saved_id, '_wpfa_eventyay_organizer_slug', sanitize_text_field( $organizer_slug ) );
 		update_post_meta( $saved_id, '_wpfa_eventyay_event_slug', sanitize_text_field( $event_slug ) );

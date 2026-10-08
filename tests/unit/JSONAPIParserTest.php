@@ -307,7 +307,7 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 
 		$template_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
 
-		$this->assertSame( '', $template_data['event_lead_text'] );
+		$this->assertSame( 'The existing event description fallback.', $template_data['event_lead_text'] );
 		$this->assertStringContainsString( 'existing event description fallback', $template_data['about_content'] );
 	}
 
@@ -388,6 +388,33 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Derived hero leads are limited without cutting a word in half.
+	 */
+	public function test_event_lead_text_is_limited_to_a_word_boundary() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+		$lead   = $parser->eventyay_event_lead_text(
+			array(
+				'headline' => str_repeat( 'A long headline ', 20 ),
+			)
+		);
+
+		$this->assertLessThanOrEqual( 160, strlen( $lead ) );
+		$this->assertNotSame( ' ', substr( $lead, -1 ) );
+	}
+
+	/**
+	 * Sentence extraction does not stop at an abbreviation before a number.
+	 */
+	public function test_event_lead_text_ignores_abbreviation_sentence_boundary() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertSame(
+			'Join us on Mar. 14 for the event.',
+			$parser->eventyay_event_lead_text( array( 'description' => 'Join us on Mar. 14 for the event. More details follow.' ) )
+		);
+	}
+
+	/**
 	 * Imported lead text is stored in the canonical event meta field.
 	 */
 	public function test_event_import_stores_lead_text_in_canonical_meta() {
@@ -412,9 +439,9 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Reimports do not leave stale legacy lead text behind.
+	 * Reimports do not overwrite an existing canonical lead with an empty lead.
 	 */
-	public function test_event_import_clears_legacy_lead_text_when_new_lead_is_empty() {
+	public function test_event_import_preserves_existing_lead_when_new_lead_is_empty() {
 		$repository = new Wpfaevent_Event_Repository();
 		$settings   = array(
 			'base_url'       => 'https://eventyay.example',
@@ -434,8 +461,34 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 		$event['description'] = 'Updated description without a sentence boundary';
 		$repository->upsert_eventyay_event_post( $event, $settings );
 
-		$this->assertSame( '', get_post_meta( $event_id['id'], 'wpfa_event_lead_text', true ) );
-		$this->assertSame( '', get_post_meta( $event_id['id'], '_event_lead_text', true ) );
+		$this->assertSame( 'The initial event description.', get_post_meta( $event_id['id'], 'wpfa_event_lead_text', true ) );
+		$this->assertSame( 'Stale legacy lead.', get_post_meta( $event_id['id'], '_event_lead_text', true ) );
+	}
+
+	/**
+	 * Reimports do not overwrite a manually edited canonical lead.
+	 */
+	public function test_event_import_preserves_manually_edited_lead() {
+		$repository = new Wpfaevent_Event_Repository();
+		$settings   = array(
+			'base_url'       => 'https://eventyay.example',
+			'organizer_slug' => 'fossasia',
+			'post_status'    => 'draft',
+		);
+		$event      = array(
+			'slug'        => 'manual-lead-event',
+			'name'        => 'Manual Lead Event',
+			'description' => 'The imported lead. More event details follow.',
+		);
+		$event_id   = $repository->upsert_eventyay_event_post( $event, $settings );
+
+		$this->assertIsArray( $event_id );
+		update_post_meta( $event_id['id'], 'wpfa_event_lead_text', 'The organizer written lead.' );
+
+		$event['description'] = 'A changed imported lead. More event details follow.';
+		$repository->upsert_eventyay_event_post( $event, $settings );
+
+		$this->assertSame( 'The organizer written lead.', get_post_meta( $event_id['id'], 'wpfa_event_lead_text', true ) );
 	}
 
 	/**

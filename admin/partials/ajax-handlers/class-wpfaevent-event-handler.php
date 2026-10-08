@@ -309,9 +309,11 @@ class Wpfaevent_Event_Handler {
 		$event_data = array(
 			'ID'           => $event_id,
 			'post_title'   => $title,
-			'post_content' => $content,
 			'post_excerpt' => $excerpt,
 		);
+		if ( isset( $_POST['content'] ) ) {
+			$event_data['post_content'] = $content;
+		}
 
 		$update_result = wp_update_post( $event_data, true );
 

@@ -794,6 +794,10 @@ class Wpfaevent_Event_Template_Controller {
 			$about_content = $post_content;
 		}
 
+		if ( '' === $event_lead && '' !== $about_content ) {
+			$event_lead = wp_trim_words( wp_strip_all_tags( $about_content ), 20, '…' );
+		}
+
 		$date_label           = ! empty( $event_calendar_data['date_label'] ) ? sanitize_text_field( $event_calendar_data['date_label'] ) : $format_event_date( $start_date );
 		$event_time_label     = ! empty( $event_calendar_data['time_label'] ) ? sanitize_text_field( $event_calendar_data['time_label'] ) : '';
 		$event_timezone_label = ! empty( $event_calendar_data['timezone_label'] ) ? sanitize_text_field( $event_calendar_data['timezone_label'] ) : str_replace( '_', ' ', $event_timezone_string );

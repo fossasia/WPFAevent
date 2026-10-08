@@ -1604,6 +1604,24 @@ class Wpfaevent_JSONAPI_Parser {
 		};
 		$lead_text         = $to_plain_text( $this->eventyay_rich_text_value( $dedicated_value ) );
 		$description       = $to_plain_text( $this->eventyay_rich_text_value( $description_value ) );
+		$limit_lead_text   = static function ( $value ) {
+			$value = sanitize_text_field( $value );
+			if ( function_exists( 'mb_strlen' ) && mb_strlen( $value ) > 160 ) {
+				$value = mb_substr( $value, 0, 160 );
+				$space = mb_strrpos( $value, ' ' );
+				if ( false !== $space ) {
+					$value = mb_substr( $value, 0, $space );
+				}
+			} elseif ( strlen( $value ) > 160 ) {
+				$value = substr( $value, 0, 160 );
+				$space = strrpos( $value, ' ' );
+				if ( false !== $space ) {
+					$value = substr( $value, 0, $space );
+				}
+			}
+
+			return trim( $value );
+		};
 
 		$has_separate_description = '' !== $to_plain_text(
 			$this->eventyay_rich_text_value(
@@ -1624,13 +1642,13 @@ class Wpfaevent_JSONAPI_Parser {
 		);
 
 		if ( '' !== $lead_text && ( ! $has_separate_description || $lead_text !== $description ) ) {
-			return sanitize_text_field( $lead_text );
+			return $limit_lead_text( $lead_text );
 		}
 
 		$description = $to_plain_text( $this->eventyay_rich_text_value( $description_value ) );
 
-		if ( preg_match( '/^(.+?[.!?])(?:\s|$)/u', $description, $matches ) ) {
-			return sanitize_text_field( $matches[1] );
+		if ( preg_match( '/^(.+?(?:[!?](?=\s|$)|\.(?=\s+[A-Z]|$)))/u', $description, $matches ) ) {
+			return $limit_lead_text( $matches[1] );
 		}
 
 		return '';
