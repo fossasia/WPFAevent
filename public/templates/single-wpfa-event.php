@@ -92,10 +92,8 @@ $event_header_image_url    = $event_data['event_header_image_url'];
 $event_logo_url            = $event_data['event_logo_url'];
 $show_ticket_widget        = $event_data['show_ticket_widget'];
 $show_ticket_section       = $event_data['show_ticket_section'];
-$ticket_widget_redirect    = $event_data['ticket_widget_redirect'];
 $ticket_widget_assets      = $event_data['ticket_widget_assets'];
 $ticket_widget_id          = $event_data['ticket_widget_id'];
-$ticket_widget_message     = $event_data['ticket_widget_message'];
 $ticket_widget_skip_ssl    = $event_data['ticket_widget_skip_ssl'];
 $registration_status_label = $event_data['registration_status_label'];
 
@@ -119,68 +117,6 @@ if ( $show_ticket_widget ) {
 
 	wp_script_add_data( $eventyay_widget_handle, 'strategy', 'async' );
 	wp_script_add_data( $eventyay_widget_handle, 'async', true );
-
-	wp_add_inline_script(
-		$eventyay_widget_handle,
-		implode(
-			'',
-			array(
-				'(function(){',
-				'var container=document.getElementById(' . wp_json_encode( $ticket_widget_id ) . ');',
-				'if(!container||typeof MutationObserver==="undefined"){return;}',
-				'var expected=' . wp_json_encode( __( 'The ticket shop could not be loaded.', 'wpfaevent' ) ) . ';',
-				'var redirectCheckout=' . wp_json_encode( $ticket_widget_redirect ) . ';',
-				'var redirectUrl=' . wp_json_encode( $ticket_widget_assets['event_url'] ) . ';',
-				'var markFailed=function(){',
-				'var error=container.querySelector(".pretix-widget-error-message");',
-				'if(!error){return;}',
-				'if(expected&&error.textContent.trim()!==expected){return;}',
-				'container.classList.add("wpfa-event-ticket-widget-failed");',
-				'};',
-				'var sendToEventyay=function(event){',
-				'if(!redirectUrl){return;}',
-				'var trigger=null;',
-				'if(event.composedPath){',
-				'var path=event.composedPath();',
-				'for(var i=0;i<path.length;i++){',
-				'var el=path[i];',
-				'if(el.tagName){',
-				'var tag=el.tagName.toLowerCase();',
-				'if(tag==="button"||tag==="a"||(tag==="input"&&el.type==="submit")||(el.classList&&el.classList.contains("btn"))){',
-				'trigger=el;',
-				'break;',
-				'}',
-				'}',
-				'}',
-				'}',
-				'if(!trigger&&event.target&&event.target.closest){',
-				'trigger=event.target.closest("button,input[type=submit],a,.btn,.pretix-widget button,.pretix-widget input[type=submit]");',
-				'}',
-				'if(!trigger){return;}',
-				'var label=((trigger.textContent||trigger.value||"")+"").toLowerCase();',
-				'if(label.indexOf("register")===-1&&label.indexOf("checkout")===-1&&label.indexOf("buy")===-1&&label.indexOf("ticket")===-1&&label.indexOf("cart")===-1&&label.indexOf("add")===-1){return;}',
-				'event.preventDefault();',
-				'event.stopPropagation();',
-				'window.location.href=redirectUrl;',
-				'};',
-				'var interceptSubmit=function(event){',
-				'if(!redirectUrl){return;}',
-				'event.preventDefault();',
-				'event.stopPropagation();',
-				'window.location.href=redirectUrl;',
-				'};',
-				'var observer=new MutationObserver(markFailed);',
-				'observer.observe(container,{childList:true,subtree:true});',
-				'if(redirectCheckout){',
-				'container.addEventListener("click",sendToEventyay,true);',
-				'container.addEventListener("submit",interceptSubmit,true);',
-				'}',
-				'markFailed();',
-				'})();',
-			)
-		),
-		'after'
-	);
 }
 ?>
 <!DOCTYPE html>
@@ -369,9 +305,6 @@ if ( $show_ticket_widget ) {
 					<div class="wpfa-event-section-head">
 						<div>
 							<h2 id="wpfa-event-tickets-title"><?php esc_html_e( 'Tickets', 'wpfaevent' ); ?></h2>
-							<?php if ( $ticket_widget_redirect ) : ?>
-								<p><?php echo esc_html( $ticket_widget_message ); ?></p>
-							<?php endif; ?>
 						</div>
 						<a href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>" target="_blank" rel="noopener">
 							<?php esc_html_e( 'Open on Eventyay', 'wpfaevent' ); ?>
@@ -381,19 +314,8 @@ if ( $show_ticket_widget ) {
 						<?php if ( $show_ticket_widget ) : ?>
 							id="<?php echo esc_attr( $ticket_widget_id ); ?>"
 						<?php endif; ?>
-						class="wpfa-event-ticket-widget<?php echo $show_ticket_widget ? '' : ' wpfa-event-ticket-widget-failed'; ?>"
+						class="wpfa-event-ticket-widget"
 					>
-						<div class="wpfa-event-ticket-backup" role="note">
-							<strong><?php esc_html_e( 'Tickets are handled by Eventyay.', 'wpfaevent' ); ?></strong>
-							<?php if ( $ticket_widget_redirect ) : ?>
-								<p><?php echo esc_html( $ticket_widget_message ); ?></p>
-							<?php else : ?>
-								<p><?php esc_html_e( 'If ticket options do not appear here, open the Eventyay ticket shop directly.', 'wpfaevent' ); ?></p>
-							<?php endif; ?>
-							<a class="wpfa-event-ticket-backup-button" href="<?php echo esc_url( $ticket_widget_assets['event_url'] ); ?>" target="_blank" rel="noopener">
-								<?php esc_html_e( 'Buy tickets on Eventyay', 'wpfaevent' ); ?>
-							</a>
-						</div>
 						<?php if ( $show_ticket_widget ) : ?>
 							<eventyay-widget
 								class="pretix-widget-compat"

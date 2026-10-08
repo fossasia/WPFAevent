@@ -520,16 +520,9 @@ class Wpfaevent_Event_Template_Controller {
 		$show_ticket_section    = ! empty( $ticket_widget_assets['event_url'] );
 		$show_ticket_widget     = (bool) apply_filters( 'wpfaevent_enable_embedded_ticket_widget', $show_ticket_section, $event_id, $ticket_widget_assets );
 		$ticket_widget_id       = 'wpfa-event-ticket-widget-' . absint( $event_id );
-		$ticket_widget_redirect = (bool) apply_filters( 'wpfaevent_ticket_widget_redirect', true, $event_id );
+		$ticket_widget_redirect = (bool) apply_filters( 'wpfaevent_ticket_widget_redirect', false, $event_id );
 		$ticket_widget_skip_ssl = ! is_ssl();
 		$ticket_widget_message  = '';
-
-		if ( $ticket_widget_redirect ) {
-			$ticket_widget_message = __(
-				'Ticket selection is shown here, but checkout will open on Eventyay because embedded checkout is unavailable on this site.',
-				'wpfaevent'
-			);
-		}
 
 		$about_content = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
 		$post_content  = trim( (string) get_post_field( 'post_content', $event_id ) );
