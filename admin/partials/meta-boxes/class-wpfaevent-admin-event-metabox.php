@@ -836,7 +836,9 @@ class Wpfaevent_Admin_Event_Metabox {
 		<input type="hidden" name="wpfa_custom_nav_items_present" value="1">
 		<p class="description wpfaevent-nav-description">
 			<?php esc_html_e( 'Customize navigation links for this event. Leave empty to use dynamically generated default navigation. Click "Reset to Default" to load standard items for customization.', 'wpfaevent' ); ?>
+			<?php esc_html_e( 'Drag items by their handle or use the move up and move down buttons to change the order. The new order is applied when the event is saved.', 'wpfaevent' ); ?>
 		</p>
+		<div id="wpfaevent-nav-order-status" class="screen-reader-text" aria-live="polite"></div>
 		<div class="wpfaevent-meta-cards-container" id="wpfaevent-nav-items-container">
 			<?php
 			foreach ( $items as $i => $item ) {
@@ -901,6 +903,10 @@ class Wpfaevent_Admin_Event_Metabox {
 		?>
 		<div class="wpfaevent-meta-card" data-index="<?php echo esc_attr( (string) $i ); ?>" data-next-sub-index="<?php echo esc_attr( (string) count( $sub_items ) ); ?>">
 			<a href="#" class="wpfaevent-remove-card-btn"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a>
+			<div class="wpfaevent-nav-order-controls">
+				<span class="dashicons dashicons-menu wpfaevent-nav-card-handle" title="<?php esc_attr_e( 'Drag to reorder', 'wpfaevent' ); ?>" aria-hidden="true"></span>
+				<?php $this->render_nav_move_buttons( __( 'Move item up', 'wpfaevent' ), __( 'Move item down', 'wpfaevent' ) ); ?>
+			</div>
 			<div class="wpfaevent-meta-card-grid">
 				<div class="wpfaevent-meta-card-field">
 					<label><?php esc_html_e( 'Menu Label', 'wpfaevent' ); ?></label>
@@ -956,6 +962,28 @@ class Wpfaevent_Admin_Event_Metabox {
 	}
 
 	/**
+	 * Render the keyboard-accessible move up / move down buttons for a nav item or sub-item.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $up_label   Accessible label for the move up button.
+	 * @param string $down_label Accessible label for the move down button.
+	 * @return void
+	 */
+	private function render_nav_move_buttons( $up_label, $down_label ) {
+		?>
+		<button type="button" class="button button-small wpfaevent-nav-move-btn" data-direction="up" title="<?php echo esc_attr( $up_label ); ?>">
+			<span class="dashicons dashicons-arrow-up-alt2" aria-hidden="true"></span>
+			<span class="screen-reader-text"><?php echo esc_html( $up_label ); ?></span>
+		</button>
+		<button type="button" class="button button-small wpfaevent-nav-move-btn" data-direction="down" title="<?php echo esc_attr( $down_label ); ?>">
+			<span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span>
+			<span class="screen-reader-text"><?php echo esc_html( $down_label ); ?></span>
+		</button>
+		<?php
+	}
+
+	/**
 	 * Render a single custom nav sub-item row.
 	 *
 	 * @since 1.0.0
@@ -982,6 +1010,8 @@ class Wpfaevent_Admin_Event_Metabox {
 		?>
 		<div class="wpfaevent-nav-subitem-block">
 			<div class="wpfaevent-nav-subitem-header">
+				<span class="dashicons dashicons-menu wpfaevent-nav-subitem-handle" title="<?php esc_attr_e( 'Drag to reorder', 'wpfaevent' ); ?>" aria-hidden="true"></span>
+				<?php $this->render_nav_move_buttons( __( 'Move sub-item up', 'wpfaevent' ), __( 'Move sub-item down', 'wpfaevent' ) ); ?>
 				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[text]" value="<?php echo esc_attr( $text ); ?>" class="wpfaevent-nav-subitem-label-input" placeholder="<?php esc_attr_e( 'Sub-Item Label (e.g. Fund Info)', 'wpfaevent' ); ?>" required>
 				<select name="<?php echo esc_attr( $prefix ); ?>[type]" class="wpfaevent-subitem-type-select">
 					<option value="link" <?php selected( $type, 'link' ); ?>><?php esc_html_e( 'Direct Link', 'wpfaevent' ); ?></option>
