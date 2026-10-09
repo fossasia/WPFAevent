@@ -525,8 +525,13 @@ class Wpfaevent_Event_Template_Controller {
 		}
 
 		$about_content = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
+		$post_excerpt  = trim( (string) get_post_field( 'post_excerpt', $event_id ) );
 		$post_content  = trim( (string) get_post_field( 'post_content', $event_id ) );
-		$event_lead    = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
+		$event_lead    = trim( (string) get_post_meta( $event_id, 'wpfa_event_lead_text', true ) );
+
+		if ( '' === $event_lead ) {
+			$event_lead = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
+		}
 
 		$main_speaker_limit             = absint( apply_filters( 'wpfa_event_main_speaker_limit', 20, $event_id ) );
 		$main_speaker_limit             = $main_speaker_limit ? $main_speaker_limit : 20;
@@ -783,8 +788,14 @@ class Wpfaevent_Event_Template_Controller {
 			);
 		}
 
-		if ( '' === $about_content ) {
-			$about_content = '' !== $post_content ? $post_content : $event_lead;
+		if ( '' !== $post_excerpt ) {
+			$about_content = $post_excerpt;
+		} elseif ( '' === $about_content ) {
+			$about_content = $post_content;
+		}
+
+		if ( '' === $event_lead && '' !== $about_content ) {
+			$event_lead = wp_trim_words( wp_strip_all_tags( $about_content ), 20, '…' );
 		}
 
 		$date_label           = ! empty( $event_calendar_data['date_label'] ) ? sanitize_text_field( $event_calendar_data['date_label'] ) : $format_event_date( $start_date );
@@ -1093,6 +1104,7 @@ class Wpfaevent_Event_Template_Controller {
 			'location'                                 => $location,
 			'event_language_label'                     => $event_language_label,
 			'schedule_items'                           => $schedule_items,
+			'event_lead_text'                          => $event_lead,
 			'about_content'                            => $about_content,
 			'register_url'                             => $register_url,
 			'register_text'                            => $register_text,
@@ -1191,6 +1203,7 @@ class Wpfaevent_Event_Template_Controller {
 			'location'                                 => '',
 			'event_language_label'                     => '',
 			'schedule_items'                           => array(),
+			'event_lead_text'                          => '',
 			'about_content'                            => '',
 			'register_url'                             => '',
 			'register_text'                            => '',

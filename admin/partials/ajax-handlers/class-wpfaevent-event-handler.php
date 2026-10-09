@@ -119,7 +119,7 @@ class Wpfaevent_Event_Handler {
 		}
 
 		$title             = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
-		$excerpt           = isset( $_POST['excerpt'] ) ? sanitize_text_field( wp_unslash( $_POST['excerpt'] ) ) : '';
+		$excerpt           = isset( $_POST['excerpt'] ) ? wp_kses_post( wp_unslash( $_POST['excerpt'] ) ) : '';
 		$start_date        = isset( $_POST['start_date'] ) ? sanitize_text_field( wp_unslash( $_POST['start_date'] ) ) : '';
 		$location          = isset( $_POST['location'] ) ? sanitize_text_field( wp_unslash( $_POST['location'] ) ) : '';
 		$lead_text         = isset( $_POST['lead_text'] ) ? sanitize_text_field( wp_unslash( $_POST['lead_text'] ) ) : '';
@@ -302,16 +302,18 @@ class Wpfaevent_Event_Handler {
 
 		// Check and sanitize input fields.
 		$title   = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
-		$excerpt = isset( $_POST['excerpt'] ) ? sanitize_text_field( wp_unslash( $_POST['excerpt'] ) ) : '';
+		$excerpt = isset( $_POST['excerpt'] ) ? wp_kses_post( wp_unslash( $_POST['excerpt'] ) ) : '';
 		$content = isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '';
 
 		// Update post - only after image validation passes.
 		$event_data = array(
 			'ID'           => $event_id,
 			'post_title'   => $title,
-			'post_content' => $content,
 			'post_excerpt' => $excerpt,
 		);
+		if ( isset( $_POST['content'] ) ) {
+			$event_data['post_content'] = $content;
+		}
 
 		$update_result = wp_update_post( $event_data, true );
 

@@ -237,16 +237,18 @@ const wpfaEvents = (function () {
 	 * Setup character counters
 	 */
 	function setupCharacterCounters() {
-		document.querySelectorAll('textarea[maxlength]').forEach((textarea) => {
+		document.querySelectorAll('textarea').forEach((textarea) => {
 			const counter = textarea.nextElementSibling;
 
 			if (counter?.classList.contains('wpfaevent-char-counter')) {
 				const update = () => {
 					const currentLength = textarea.value.length;
-					const maxLength = textarea.maxLength;
-					counter.textContent = `${currentLength} / ${maxLength}`;
+					counter.textContent = `${currentLength}`;
 
-					if (currentLength >= maxLength) {
+					if (
+						textarea.maxLength > 0 &&
+						currentLength >= textarea.maxLength
+					) {
 						counter.classList.add('limit-reached');
 					} else {
 						counter.classList.remove('limit-reached');
