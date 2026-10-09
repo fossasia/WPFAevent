@@ -520,9 +520,7 @@ class Wpfaevent_Event_Template_Controller {
 		$show_ticket_section    = ! empty( $ticket_widget_assets['event_url'] );
 		$show_ticket_widget     = (bool) apply_filters( 'wpfaevent_enable_embedded_ticket_widget', $show_ticket_section, $event_id, $ticket_widget_assets );
 		$ticket_widget_id       = 'wpfa-event-ticket-widget-' . absint( $event_id );
-		$ticket_widget_redirect = (bool) apply_filters( 'wpfaevent_ticket_widget_redirect', false, $event_id );
 		$ticket_widget_skip_ssl = ! is_ssl();
-		$ticket_widget_message  = '';
 
 		$about_content = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
 		$post_content  = trim( (string) get_post_field( 'post_content', $event_id ) );
@@ -629,7 +627,6 @@ class Wpfaevent_Event_Template_Controller {
 					$registration_status_label = __( 'Closed', 'wpfaevent' );
 					$show_ticket_widget        = false;
 					$show_ticket_section       = false;
-					$ticket_widget_redirect    = false;
 					$register_url              = '';
 				}
 			} catch ( Exception $exception ) {
@@ -1084,10 +1081,8 @@ class Wpfaevent_Event_Template_Controller {
 			'event_logo_url'                           => $event_logo_url,
 			'show_ticket_widget'                       => $show_ticket_widget,
 			'show_ticket_section'                      => $show_ticket_section,
-			'ticket_widget_redirect'                   => $ticket_widget_redirect,
 			'ticket_widget_assets'                     => $ticket_widget_assets,
 			'ticket_widget_id'                         => $ticket_widget_id,
-			'ticket_widget_message'                    => $ticket_widget_message,
 			'ticket_widget_skip_ssl'                   => $ticket_widget_skip_ssl,
 			'registration_status_label'                => $registration_status_label,
 			'location'                                 => $location,
@@ -1177,10 +1172,8 @@ class Wpfaevent_Event_Template_Controller {
 			'event_logo_url'                           => '',
 			'show_ticket_widget'                       => false,
 			'show_ticket_section'                      => false,
-			'ticket_widget_redirect'                   => false,
 			'ticket_widget_assets'                     => array(),
 			'ticket_widget_id'                         => '',
-			'ticket_widget_message'                    => '',
 			'ticket_widget_skip_ssl'                   => false,
 			'registration_status_label'                => __( 'Open', 'wpfaevent' ),
 			'event_start_content'                      => '',
