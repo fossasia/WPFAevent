@@ -865,7 +865,7 @@ class Wpfaevent_JSONAPI_Parser {
 			':',
 			array_filter(
 				array(
-					$settings['organizer_slug'],
+					isset( $settings['organizer_slug'] ) ? $settings['organizer_slug'] : '',
 					$event_slug,
 					$source_id ? $source_id : sanitize_title( $name ),
 				)

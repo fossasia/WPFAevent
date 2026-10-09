@@ -600,7 +600,13 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 			),
 		);
 
-		$result = $parser->normalize_eventyay_submissions_payload( $submissions, array(), 'test-event' );
+		$result = $parser->normalize_eventyay_submissions_payload(
+			$submissions,
+			array(
+				'organizer_slug' => 'test-organizer',
+			),
+			'test-event'
+		);
 
 		$this->assertSame( 1, $result['session_count'] );
 		$this->assertCount( 1, $result['sessions'] );
