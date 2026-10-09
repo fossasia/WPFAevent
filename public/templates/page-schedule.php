@@ -374,12 +374,17 @@ if ( empty( $site_logo_url ) ) {
 }
 $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 
+$selected_event_permalink = $selected_event_id ? get_permalink( $selected_event_id ) : home_url( '/events/' );
+if ( empty( $selected_event_permalink ) ) {
+	$selected_event_permalink = home_url( '/events/' );
+}
+
 $header_vars = array(
 	'site_logo_url'        => $site_logo_url,
-	'event_page_url'       => home_url( '/events/' ),
-	'show_back_button'     => false,
+	'event_page_url'       => $selected_event_permalink,
+	'show_back_button'     => true,
 	'show_register_button' => false,
-	'back_button_text'     => __( 'Back to Events', 'wpfaevent' ),
+	'back_button_text'     => $selected_event_id ? __( 'Back to Event', 'wpfaevent' ) : __( 'Back to Events', 'wpfaevent' ),
 	'register_button_url'  => '',
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
 );
