@@ -180,21 +180,19 @@ class Wpfaevent_Schedule_Controller {
 		}
 		$site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 
-		$events_url               = apply_filters( 'wpfaevent_events_url', home_url( '/events/' ) );
-		$is_published_event       = $selected_event_id && 'publish' === get_post_status( $selected_event_id );
-		$selected_event_permalink = $is_published_event ? get_permalink( $selected_event_id ) : '';
-		$has_event_link           = ! empty( $selected_event_permalink );
-
-		if ( ! $has_event_link ) {
-			$selected_event_permalink = $events_url;
-		}
+		$back_navigation = class_exists( 'Wpfaevent_Schedule_Helper' )
+			? Wpfaevent_Schedule_Helper::get_back_navigation( $selected_event_id )
+			: array(
+				'url'  => (string) apply_filters( 'wpfaevent_events_url', home_url( '/events/' ) ),
+				'text' => __( 'Back to Events', 'wpfaevent' ),
+			);
 
 		$header_vars = array(
 			'site_logo_url'        => $site_logo_url,
-			'event_page_url'       => $selected_event_permalink,
+			'event_page_url'       => $back_navigation['url'],
 			'show_back_button'     => true,
 			'show_register_button' => false,
-			'back_button_text'     => $has_event_link ? __( 'Back to Event', 'wpfaevent' ) : __( 'Back to Events', 'wpfaevent' ),
+			'back_button_text'     => $back_navigation['text'],
 			'register_button_url'  => '',
 			'register_button_text' => __( 'Register', 'wpfaevent' ),
 		);

@@ -256,6 +256,34 @@ class Wpfaevent_Schedule_Helper {
 	}
 
 	/**
+	 * Resolve back navigation details for the schedule header.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $selected_event_id Optional. Selected event ID. Default 0.
+	 * @return array{url: string, text: string, event_page_url: string, back_button_text: string} Back navigation target URL and button text.
+	 */
+	public static function get_back_navigation( $selected_event_id = 0 ) {
+		$selected_event_id        = absint( $selected_event_id );
+		$events_url               = (string) apply_filters( 'wpfaevent_events_url', home_url( '/events/' ) );
+		$is_published_event       = $selected_event_id
+			&& 'wpfa_event' === get_post_type( $selected_event_id )
+			&& 'publish' === get_post_status( $selected_event_id );
+		$selected_event_permalink = $is_published_event ? (string) get_permalink( $selected_event_id ) : '';
+		$has_event_link           = '' !== $selected_event_permalink;
+
+		$url  = $has_event_link ? $selected_event_permalink : $events_url;
+		$text = $has_event_link ? __( 'Back to Event', 'wpfaevent' ) : __( 'Back to Events', 'wpfaevent' );
+
+		return array(
+			'url'              => $url,
+			'text'             => $text,
+			'event_page_url'   => $url,
+			'back_button_text' => $text,
+		);
+	}
+
+	/**
 	 * Ensure the public full schedule page exists.
 	 *
 	 * @since 1.0.0
