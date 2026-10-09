@@ -1298,7 +1298,7 @@ class Wpfaevent_Meta_Event {
 		$url = '';
 
 		// 1. Look for event="..." attribute on widget elements (eventyay-widget, pretix-widget, or div).
-		if ( preg_match( '/<(?:eventyay-widget|pretix-widget|div)[^>]+event=[\'"]([^\'"]+)[\'"]/i', $input, $matches ) ) {
+		if ( preg_match( '/<(?:eventyay-widget|pretix-widget|div)\b[^>]*\sevent\s*=\s*[\'"]([^\'"]+)[\'"]/i', $input, $matches ) ) {
 			$url = $matches[1];
 		}
 

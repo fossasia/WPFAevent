@@ -570,30 +570,7 @@ class Wpfaevent_Event_Dashboard_Page {
 				break;
 		}
 
-		// 2. Persist in underlying post table or post meta
-		if ( 'post_content' === $field ) {
-			wp_update_post(
-				array(
-					'ID'           => $event_id,
-					'post_content' => $formatted_value,
-				)
-			);
-		} else {
-			update_post_meta( $event_id, $field, $formatted_value );
-		}
-
-		// Mirror post meta keys to their alias/legacy counterparts.
-		if ( 'wpfa_event_location' === $field ) {
-			update_post_meta( $event_id, '_event_place', $formatted_value );
-		} elseif ( 'wpfa_event_start_date' === $field ) {
-			update_post_meta( $event_id, '_event_date', $formatted_value );
-		} elseif ( 'wpfa_event_end_date' === $field ) {
-			update_post_meta( $event_id, '_event_end_date', $formatted_value );
-		} elseif ( 'wpfa_event_registration_link' === $field ) {
-			update_post_meta( $event_id, '_event_registration_link', $formatted_value );
-		}
-
-		// 3. Update dashboard JSON settings file (site-settings-$event_id.json) if applicable.
+		// 2. Update dashboard JSON settings file (site-settings-$event_id.json) if applicable.
 		$store         = new Wpfaevent_Eventyay_Dashboard_Store();
 		$settings_file = 'site-settings-' . absint( $event_id ) . '.json';
 		$settings      = $store->read_dashboard_json_file( $settings_file, array() );
@@ -623,6 +600,29 @@ class Wpfaevent_Event_Dashboard_Page {
 			if ( is_wp_error( $write_result ) ) {
 				return $write_result;
 			}
+		}
+
+		// 3. Persist in underlying post table or post meta
+		if ( 'post_content' === $field ) {
+			wp_update_post(
+				array(
+					'ID'           => $event_id,
+					'post_content' => $formatted_value,
+				)
+			);
+		} else {
+			update_post_meta( $event_id, $field, $formatted_value );
+		}
+
+		// Mirror post meta keys to their alias/legacy counterparts.
+		if ( 'wpfa_event_location' === $field ) {
+			update_post_meta( $event_id, '_event_place', $formatted_value );
+		} elseif ( 'wpfa_event_start_date' === $field ) {
+			update_post_meta( $event_id, '_event_date', $formatted_value );
+		} elseif ( 'wpfa_event_end_date' === $field ) {
+			update_post_meta( $event_id, '_event_end_date', $formatted_value );
+		} elseif ( 'wpfa_event_registration_link' === $field ) {
+			update_post_meta( $event_id, '_event_registration_link', $formatted_value );
 		}
 
 		return array(

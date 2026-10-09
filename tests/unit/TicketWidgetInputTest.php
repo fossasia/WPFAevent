@@ -199,4 +199,13 @@ class TicketWidgetInputTest extends WP_UnitTestCase {
 		$this->assertFalse( $template_data['show_ticket_widget'] );
 		$this->assertEmpty( $template_data['ticket_widget_assets'] );
 	}
+
+	/**
+	 * Test that data-event attribute is not matched as the event attribute.
+	 */
+	public function test_sanitize_ignores_data_event_attribute() {
+		$snippet   = '<div data-event="https://other.eventyay.com/wrong/"><eventyay-widget event="https://dev.eventyay.com/fossasia/7xrpkx/"></eventyay-widget></div>';
+		$sanitized = Wpfaevent_Meta_Event::sanitize_ticket_widget_input( $snippet );
+		$this->assertSame( 'https://dev.eventyay.com/fossasia/7xrpkx/', $sanitized );
+	}
 }
