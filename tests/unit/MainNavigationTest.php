@@ -1370,9 +1370,43 @@ class MainNavigationTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test that the navigation editor does not reveal the title of a private page the user cannot read.
+	 */
+	public function test_navigation_meta_box_hides_title_of_unreadable_private_page() {
+		$owner_id = $this->factory->user->create( array( 'role' => 'administrator' ) );
+		$page_id  = $this->factory->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_status' => 'private',
+				'post_title'  => 'Secret Board Minutes',
+				'post_author' => $owner_id,
+			)
+		);
+		$event_id = $this->create_event_with_existing_page_nav( $page_id );
+		$metabox  = new Wpfaevent_Admin_Event_Metabox();
+
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'author' ) ) );
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$output = (string) ob_get_clean();
+
+		$this->assertStringNotContainsString( 'Secret Board Minutes', $output );
+		$this->assertMatchesRegularExpression( '/<option value="' . $page_id . '" data-unavailable="1" selected>\s*Unavailable page #' . $page_id . ' \(not published\)/', $output );
+
+		wp_set_current_user( $owner_id );
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$output = (string) ob_get_clean();
+
+		$this->assertStringContainsString( 'Secret Board Minutes (not published)', $output );
+	}
+
+	/**
 	 * Test that an unavailable page without a title gets a readable label in the navigation editor.
 	 */
 	public function test_navigation_meta_box_labels_untitled_unavailable_page() {
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
+
 		$page_id  = $this->factory->post->create(
 			array(
 				'post_type'   => 'page',
@@ -1445,6 +1479,8 @@ class MainNavigationTest extends WP_UnitTestCase {
 		if ( ! class_exists( 'Wpfaevent_Admin_Event_Metabox' ) ) {
 			$this->markTestSkipped( 'Wpfaevent_Admin_Event_Metabox class not available.' );
 		}
+
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
 
 		$page_id  = $this->factory->post->create(
 			array(

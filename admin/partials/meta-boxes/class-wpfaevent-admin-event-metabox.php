@@ -1104,7 +1104,10 @@ class Wpfaevent_Admin_Event_Metabox {
 	}
 
 	/**
-	 * Get a page's title for the navigation page picker, with a fallback for untitled pages.
+	 * Get a page's title for the navigation page picker.
+	 *
+	 * Falls back to the page ID for untitled pages, and for pages the current user
+	 * cannot read (for example someone else's private page), so their titles are not exposed.
 	 *
 	 * @since 1.0.0
 	 *
@@ -1112,6 +1115,11 @@ class Wpfaevent_Admin_Event_Metabox {
 	 * @return string
 	 */
 	private function get_nav_page_title( $page ) {
+		if ( ! current_user_can( 'read_post', $page->ID ) ) {
+			/* translators: %d: page ID. */
+			return sprintf( __( 'Unavailable page #%d', 'wpfaevent' ), $page->ID );
+		}
+
 		if ( '' !== trim( $page->post_title ) ) {
 			return $page->post_title;
 		}
