@@ -649,6 +649,12 @@ class Wpfaevent_JSONAPI_Parser {
 			$sessions[ $key ]['speakers'] = array_values( array_unique( array_merge( $existing_speakers, $session['speakers'] ) ) );
 		}
 
+		foreach ( array( 'date', 'time', 'end_time', 'starts_at', 'ends_at', 'room', 'track' ) as $field ) {
+			if ( empty( $sessions[ $key ][ $field ] ) && ! empty( $session[ $field ] ) ) {
+				$sessions[ $key ][ $field ] = $session[ $field ];
+			}
+		}
+
 		return $sessions;
 	}
 

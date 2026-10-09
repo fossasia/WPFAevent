@@ -390,7 +390,7 @@ class Wpfaevent_Schedule_Helper {
 			$row_time       = isset( $row[1] ) ? sanitize_text_field( $row[1] ) : '';
 			$date_label     = self::format_schedule_session_date( $start_datetime, $row_date, $row_time, $display_timezone, $event_timezone );
 
-			if ( empty( $date_label ) || __( 'TBD', 'wpfaevent' ) === $date_label ) {
+			if ( empty( $date_label ) || 'TBD' === $date_label || 'TBD' === $row_date || __( 'TBD', 'wpfaevent' ) === $date_label ) {
 				continue;
 			}
 
