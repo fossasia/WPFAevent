@@ -110,6 +110,7 @@ $can_manage_content  = class_exists( 'Wpfaevent_Roles' ) ? Wpfaevent_Roles::curr
 $can_delete_content  = class_exists( 'Wpfaevent_Roles' ) ? Wpfaevent_Roles::current_user_can_delete_content() : current_user_can( 'delete_posts' );
 $can_edit_this_event = $can_manage_content && current_user_can( 'edit_post', $event_id );
 $can_delete_event    = $can_delete_content && current_user_can( 'delete_post', $event_id );
+$description_note    = $can_edit_this_event && class_exists( 'Wpfaevent_Event_Description_Sync' ) ? Wpfaevent_Event_Description_Sync::get_note( $event_id ) : '';
 $is_admin            = current_user_can( 'manage_options' );
 $event_url           = esc_url( get_permalink( $event_id ) );
 
@@ -137,6 +138,10 @@ $is_bookmarked       = class_exists( 'Wpfaevent_User_Preferences_Service' ) && W
 	data-end-time="<?php echo esc_attr( $event_end_time ); ?>"
 	data-timezone="<?php echo esc_attr( $event_timezone ); ?>"
 	data-all-day="<?php echo esc_attr( $event_all_day ? '1' : '0' ); ?>"
+	<?php if ( '' !== $description_note ) : ?>
+	data-description-note="<?php echo esc_attr( $description_note ); ?>"
+	data-description-restore-url="<?php echo esc_url( Wpfaevent_Event_Description_Sync::get_restore_url( $event_id ) ); ?>"
+	<?php endif; ?>
 	data-time="<?php echo esc_attr( $event_time_value ); ?>">
 
 	<?php if ( $can_manage_content && ! $is_valid_date ) : ?>

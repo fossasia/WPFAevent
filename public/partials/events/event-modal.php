@@ -125,6 +125,10 @@ $wpfaevent_default_timezone = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent
 			<label for="editEventDescription"><?php esc_html_e( 'Description:', 'wpfaevent' ); ?></label>
 			<textarea id="editEventDescription" name="excerpt" rows="6" required></textarea>
 			<small class="wpfaevent-char-counter">0</small>
+			<p id="editEventDescriptionNote" class="wpfaevent-description-sync-note" hidden>
+				<span></span>
+				<a href="#"><?php esc_html_e( 'Restore from Eventyay', 'wpfaevent' ); ?></a>
+			</p>
 
 			<label for="editEventLeadText"><?php esc_html_e( 'Hero Lead Text:', 'wpfaevent' ); ?></label>
 			<textarea id="editEventLeadText" name="lead_text" rows="2" required maxlength="160"></textarea>

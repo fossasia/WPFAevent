@@ -658,6 +658,18 @@ const wpfaEvents = (function () {
 		document.getElementById('editCfsLink').value =
 			card.dataset.cfsLink || '';
 
+		// Note for imported events whose description was edited on this site.
+		const descriptionNote = document.getElementById(
+			'editEventDescriptionNote'
+		);
+		if (descriptionNote) {
+			descriptionNote.hidden = !card.dataset.descriptionNote;
+			descriptionNote.querySelector('span').textContent =
+				card.dataset.descriptionNote || '';
+			descriptionNote.querySelector('a').href =
+				card.dataset.descriptionRestoreUrl || '#';
+		}
+
 		const editStartTime = document.getElementById('editEventStartTime');
 		const editEndTime = document.getElementById('editEventEndTime');
 		const editAllDay = document.getElementById('editEventAllDay');
