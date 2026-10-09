@@ -1047,9 +1047,12 @@ class Wpfaevent_Event_Template_Controller {
 			'has_additional_information' => '' !== trim( wp_strip_all_tags( $venue_information . $transportation_information . $hotel_information ) ),
 			'custom_sections'            => $custom_sections,
 		);
-		$wpfa_event_nav_items   = class_exists( 'Wpfaevent_Event_Navigation_Helper' )
-			? Wpfaevent_Event_Navigation_Helper::build_nav_items( $wpfa_event_nav_context )
-			: array();
+
+		$default_nav_items    = class_exists( 'Wpfaevent_Event_Navigation_Helper' ) ? Wpfaevent_Event_Navigation_Helper::build_nav_items( $wpfa_event_nav_context ) : array();
+		$custom_nav           = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
+		$wpfa_event_nav_items = ( is_array( $custom_nav ) && ! empty( $custom_nav ) )
+			? $custom_nav
+			: $default_nav_items;
 
 		$site_logo_url = get_option( 'wpfa_site_logo_url', '' );
 		if ( empty( $site_logo_url ) ) {
@@ -1100,6 +1103,7 @@ class Wpfaevent_Event_Template_Controller {
 			'visible_exhibitors'                       => $visible_exhibitors,
 			'first_schedule'                           => $first_schedule,
 			'wpfa_event_nav_items'                     => $wpfa_event_nav_items,
+			'default_nav_items'                        => $default_nav_items,
 			'show_about'                               => $show_about,
 			'show_speakers'                            => $show_speakers,
 			'show_schedule'                            => $show_schedule,
@@ -1197,6 +1201,7 @@ class Wpfaevent_Event_Template_Controller {
 			'visible_exhibitors'                       => array(),
 			'first_schedule'                           => array(),
 			'wpfa_event_nav_items'                     => array(),
+			'default_nav_items'                        => array(),
 			'show_about'                               => false,
 			'show_speakers'                            => false,
 			'show_schedule'                            => false,
@@ -1254,5 +1259,21 @@ class Wpfaevent_Event_Template_Controller {
 			'visible_sponsor_groups'                   => array(),
 			'current_schedule_view'                    => 'list',
 		);
+	}
+
+	/**
+	 * Get automatically generated default navigation items for an event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return array<int, array<string, mixed>>
+	 */
+	public static function get_default_event_nav_items( $event_id ) {
+		$data = self::get_event_template_data( $event_id );
+
+		return ! empty( $data['default_nav_items'] ) && is_array( $data['default_nav_items'] )
+			? $data['default_nav_items']
+			: array();
 	}
 }
