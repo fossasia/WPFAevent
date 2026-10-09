@@ -94,16 +94,6 @@ class Wpfaevent_Admin_Event_Metabox {
 			'default'
 		);
 
-		// Additional information meta box (venue, transportation, hotel).
-		add_meta_box(
-			'wpfa_event_additional_information_box',
-			__( 'Additional Information', 'wpfaevent' ),
-			array( $this, 'render_event_additional_information_meta_box' ),
-			'wpfa_event',
-			'normal',
-			'default'
-		);
-
 		// Event navigation meta box.
 		add_meta_box(
 			'wpfa_event_navigation_box',
@@ -113,7 +103,6 @@ class Wpfaevent_Admin_Event_Metabox {
 			'normal',
 			'default'
 		);
-
 		// Remove the default Custom Fields meta box to avoid UI clutter.
 		// since we have enabled 'custom-fields' support for REST API visibility.
 		remove_meta_box( 'postcustom', 'wpfa_event', 'normal' );
@@ -824,43 +813,6 @@ class Wpfaevent_Admin_Event_Metabox {
 		<?php
 	}
 
-	/**
-	 * Render the Additional Information meta box (venue, transportation, hotel).
-	 *
-	 * @since 1.0.0
-	 * @param WP_Post $post The post object.
-	 */
-	public function render_event_additional_information_meta_box( $post ): void {
-		$venue_information          = get_post_meta( $post->ID, 'wpfa_event_venue_information', true );
-		$transportation_information = get_post_meta( $post->ID, 'wpfa_event_transportation_information', true );
-		$hotel_information          = get_post_meta( $post->ID, 'wpfa_event_hotel_information', true );
-
-		$venue_information          = is_string( $venue_information ) ? $venue_information : '';
-		$transportation_information = is_string( $transportation_information ) ? $transportation_information : '';
-		$hotel_information          = is_string( $hotel_information ) ? $hotel_information : '';
-
-		$editor_settings = array(
-			'textarea_rows' => 6,
-			'media_buttons' => false,
-		);
-		?>
-		<p class="description"><?php esc_html_e( 'Manually curated attendee information shown on the event page and the Additional Information page.', 'wpfaevent' ); ?></p>
-		<p class="wpfaevent-additional-info-field-label">
-			<label for="wpfa_event_venue_information"><strong><?php esc_html_e( 'Venue Information', 'wpfaevent' ); ?></strong></label>
-		</p>
-		<?php wp_editor( $venue_information, 'wpfa_event_venue_information', $editor_settings ); ?>
-
-		<p class="wpfaevent-additional-info-field-label">
-			<label for="wpfa_event_transportation_information"><strong><?php esc_html_e( 'Transportation Information', 'wpfaevent' ); ?></strong></label>
-		</p>
-		<?php wp_editor( $transportation_information, 'wpfa_event_transportation_information', $editor_settings ); ?>
-
-		<p class="wpfaevent-additional-info-field-label">
-			<label for="wpfa_event_hotel_information"><strong><?php esc_html_e( 'Hotel & Accommodation Information', 'wpfaevent' ); ?></strong></label>
-		</p>
-		<?php wp_editor( $hotel_information, 'wpfa_event_hotel_information', $editor_settings ); ?>
-		<?php
-	}
 
 	/**
 	 * Render Event Header Navigation meta box.
@@ -1179,19 +1131,6 @@ class Wpfaevent_Admin_Event_Metabox {
 					: $raw_color;
 
 				$this->update_or_delete_post_meta( $post_id, $color_field, $color );
-			}
-		}
-
-		$rich_text_fields = array(
-			'wpfa_event_venue_information',
-			'wpfa_event_transportation_information',
-			'wpfa_event_hotel_information',
-		);
-
-		foreach ( $rich_text_fields as $field ) {
-			if ( isset( $_POST[ $field ] ) && is_string( $_POST[ $field ] ) ) {
-				$value = wp_kses_post( wp_unslash( $_POST[ $field ] ) );
-				$this->update_or_delete_post_meta( $post_id, $field, $value );
 			}
 		}
 

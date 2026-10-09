@@ -3437,6 +3437,7 @@ class Wpfaevent_Eventyay_Importer {
 		$title             = $this->eventyay_event_title( $event );
 		$title             = $title ? $title : $event_slug;
 		$description       = $this->eventyay_event_description( $event );
+		$lead_text         = $this->parser->eventyay_event_lead_text( $event );
 		$preferred_post_id = absint( $preferred_post_id );
 		$existing_id       = $preferred_post_id && 'wpfa_event' === get_post_type( $preferred_post_id ) ? $preferred_post_id : $this->find_eventyay_event_post( $organizer_slug, $event_slug );
 		$post_status       = in_array( $settings['post_status'], array( 'draft', 'publish', 'pending', 'private' ), true ) ? $settings['post_status'] : 'draft';
@@ -3445,6 +3446,7 @@ class Wpfaevent_Eventyay_Importer {
 			'post_type'    => 'wpfa_event',
 			'post_status'  => $post_status,
 			'post_content' => wp_kses_post( $description ),
+			'post_excerpt' => wp_kses_post( $description ),
 		);
 		$created           = false;
 
@@ -3508,7 +3510,11 @@ class Wpfaevent_Eventyay_Importer {
 		$this->update_or_delete_post_meta( $saved_id, '_event_end_date', $end_date );
 		$this->update_or_delete_post_meta( $saved_id, '_event_place', $location );
 		$this->update_or_delete_post_meta( $saved_id, '_event_registration_link', $event_url );
-		$this->update_or_delete_post_meta( $saved_id, '_event_lead_text', wp_strip_all_tags( $description ) );
+		$existing_lead_text = trim( (string) get_post_meta( $saved_id, 'wpfa_event_lead_text', true ) );
+		if ( '' === $existing_lead_text && '' !== $lead_text ) {
+			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_lead_text', $lead_text );
+			$this->update_or_delete_post_meta( $saved_id, '_event_lead_text', '' );
+		}
 
 		update_post_meta( $saved_id, '_wpfa_eventyay_organizer_slug', sanitize_text_field( $organizer_slug ) );
 		update_post_meta( $saved_id, '_wpfa_eventyay_event_slug', sanitize_text_field( $event_slug ) );
