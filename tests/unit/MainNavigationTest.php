@@ -1370,6 +1370,35 @@ class MainNavigationTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test that an unavailable page without a title gets a readable label in the navigation editor.
+	 */
+	public function test_navigation_meta_box_labels_untitled_unavailable_page() {
+		$page_id  = $this->factory->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_status' => 'draft',
+				'post_title'  => '',
+			)
+		);
+		$event_id = $this->create_event_with_existing_page_nav( $page_id );
+		$metabox  = new Wpfaevent_Admin_Event_Metabox();
+
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$output = (string) ob_get_clean();
+
+		$this->assertStringContainsString( '(no title #' . $page_id . ') (not published)', $output );
+
+		wp_trash_post( $page_id );
+
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$output = (string) ob_get_clean();
+
+		$this->assertStringContainsString( '(no title #' . $page_id . ') (in trash)', $output );
+	}
+
+	/**
 	 * Test that a custom menu whose only items are unavailable pages is not replaced by the default menu.
 	 */
 	public function test_custom_navigation_with_only_unavailable_pages_does_not_fall_back_to_defaults() {

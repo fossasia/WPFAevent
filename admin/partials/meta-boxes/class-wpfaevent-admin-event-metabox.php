@@ -1075,11 +1075,11 @@ class Wpfaevent_Admin_Event_Metabox {
 				$unavailable_message = __( 'The selected page has been deleted, so this item is hidden from the public menu. Choose another page or remove this item.', 'wpfaevent' );
 			} elseif ( 'trash' === $page->post_status ) {
 				/* translators: %s: page title. */
-				$unavailable_label   = sprintf( __( '%s (in trash)', 'wpfaevent' ), $page->post_title );
+				$unavailable_label   = sprintf( __( '%s (in trash)', 'wpfaevent' ), $this->get_nav_page_title( $page ) );
 				$unavailable_message = __( 'The selected page is in the trash, so this item is hidden from the public menu. Restore the page, choose another page, or remove this item.', 'wpfaevent' );
 			} else {
 				/* translators: %s: page title. */
-				$unavailable_label   = sprintf( __( '%s (not published)', 'wpfaevent' ), $page->post_title );
+				$unavailable_label   = sprintf( __( '%s (not published)', 'wpfaevent' ), $this->get_nav_page_title( $page ) );
 				$unavailable_message = __( 'The selected page is no longer published, so this item is hidden from the public menu. Publish the page again, choose another page, or remove this item.', 'wpfaevent' );
 			}
 		}
@@ -1101,6 +1101,23 @@ class Wpfaevent_Admin_Event_Metabox {
 			<p class="wpfaevent-nav-page-warning" role="alert"><?php echo esc_html( $unavailable_message ); ?></p>
 		<?php endif; ?>
 		<?php
+	}
+
+	/**
+	 * Get a page's title for the navigation page picker, with a fallback for untitled pages.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Post $page Page post object.
+	 * @return string
+	 */
+	private function get_nav_page_title( $page ) {
+		if ( '' !== trim( $page->post_title ) ) {
+			return $page->post_title;
+		}
+
+		/* translators: %d: page ID. */
+		return sprintf( __( '(no title #%d)', 'wpfaevent' ), $page->ID );
 	}
 
 	/**
