@@ -603,6 +603,7 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 		$result = $parser->normalize_eventyay_submissions_payload(
 			$submissions,
 			array(
+				'base_url'       => 'https://eventyay.example',
 				'organizer_slug' => 'test-organizer',
 			),
 			'test-event'

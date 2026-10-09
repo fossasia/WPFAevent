@@ -876,6 +876,8 @@ class Wpfaevent_JSONAPI_Parser {
 		$organization = $this->eventyay_first_present_text( $speaker_resource, array( 'organization', 'organisation', 'company', 'affiliation' ) );
 		$category     = $this->eventyay_first_present_text( $speaker_resource, array( 'category', 'track' ) );
 
+		$base_url = isset( $settings['base_url'] ) ? (string) $settings['base_url'] : '';
+
 		return array(
 			'id'                  => 'eventyay-' . sanitize_key( $eventyay_speaker_id ),
 			'eventyay_speaker_id' => sanitize_text_field( $eventyay_speaker_id ),
@@ -884,13 +886,13 @@ class Wpfaevent_JSONAPI_Parser {
 			'position'            => sanitize_text_field( $position ),
 			'organization'        => sanitize_text_field( $organization ),
 			'category'            => sanitize_text_field( $category ),
-			'image'               => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'avatar', 'avatar_url', 'avatar-url', 'avatar_url_original', 'avatar-url-original', 'image', 'image_url', 'image-url', 'photo', 'photo_url', 'photo-url' ) ), $settings['base_url'] ),
+			'image'               => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'avatar', 'avatar_url', 'avatar-url', 'avatar_url_original', 'avatar-url-original', 'image', 'image_url', 'image-url', 'photo', 'photo_url', 'photo-url' ) ), $base_url ),
 			'bio'                 => $this->eventyay_first_present_rich_text( $speaker_resource, array( 'biography', 'bio', 'description', 'abstract', 'short_biography', 'short-biography', 'long_biography', 'long-biography' ) ),
 			'social'              => array(
-				'linkedin' => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'linkedin', 'linkedin_url', 'linkedin-url' ) ), $settings['base_url'] ),
-				'twitter'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'twitter', 'twitter_url', 'twitter-url', 'x_url' ) ), $settings['base_url'] ),
-				'github'   => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'github', 'github_url', 'github-url' ) ), $settings['base_url'] ),
-				'website'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'website', 'website_url', 'website-url', 'homepage', 'homepage_url', 'homepage-url', 'url' ) ), $settings['base_url'] ),
+				'linkedin' => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'linkedin', 'linkedin_url', 'linkedin-url' ) ), $base_url ),
+				'twitter'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'twitter', 'twitter_url', 'twitter-url', 'x_url' ) ), $base_url ),
+				'github'   => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'github', 'github_url', 'github-url' ) ), $base_url ),
+				'website'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'website', 'website_url', 'website-url', 'homepage', 'homepage_url', 'homepage-url', 'url' ) ), $base_url ),
 			),
 			'featured'            => $this->eventyay_speaker_is_featured( $speaker_resource ),
 			'featured_order'      => $this->eventyay_speaker_featured_order( $speaker_resource ),
