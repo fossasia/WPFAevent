@@ -976,6 +976,16 @@ if ( $show_ticket_widget ) {
 	<?php require WPFAEVENT_PATH . 'public/partials/footer.php'; ?>
 </div>
 
+<?php
+// Load admin modals if the user is an admin.
+if ( Wpfaevent_Roles::current_user_can_manage_dashboard() ) :
+	$modal_partial = WPFAEVENT_PATH . 'public/partials/speakers/speaker-modal.php';
+	if ( file_exists( $modal_partial ) ) {
+		include $modal_partial;
+	}
+endif;
+?>
+
 <?php wp_footer(); ?>
 </body>
 </html>

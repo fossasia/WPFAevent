@@ -414,6 +414,18 @@ const wpfaEvents = (function () {
 					.forEach((b) => b.classList.remove('active'));
 				targetBtn.classList.add('active');
 				filterEvents();
+			} else if (urlFilter === 'bookmarked') {
+				// Favorites tab is only available when logged in.
+				if (
+					typeof window !== 'undefined' &&
+					window.history &&
+					window.history.replaceState
+				) {
+					const cleanUrl = new URL(window.location.href);
+					cleanUrl.searchParams.delete('filter');
+					window.history.replaceState({}, '', cleanUrl.toString());
+				}
+				filterEvents();
 			}
 		}
 
@@ -447,10 +459,16 @@ const wpfaEvents = (function () {
 			return;
 		}
 
-		const upcomingLink = navMain.querySelector(
-			'a[href*="/events"]:not([href*="filter=past"])'
-		);
-		const pastLink = navMain.querySelector('a[href*="filter=past"]');
+		const upcomingLink =
+			navMain.querySelector(
+				'[data-nav="upcoming"], .nav-link-upcoming'
+			) ||
+			navMain.querySelector(
+				'a[href*="filter=upcoming"], a[href*="/events"]:not([href*="filter=past"])'
+			);
+		const pastLink =
+			navMain.querySelector('[data-nav="past"], .nav-link-past') ||
+			navMain.querySelector('a[href*="filter=past"]');
 
 		if (upcomingLink && pastLink) {
 			if (filter === 'past') {
