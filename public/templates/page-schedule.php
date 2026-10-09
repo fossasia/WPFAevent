@@ -82,7 +82,7 @@ $resolve_event_filter = static function ( $event_filter ) {
 	if ( is_numeric( $event_filter ) ) {
 		$event_id = absint( $event_filter );
 
-		return ( $event_id && 'wpfa_event' === get_post_type( $event_id ) && 'publish' === get_post_status( $event_id ) ) ? $event_id : 0;
+		return ( $event_id && 'wpfa_event' === get_post_type( $event_id ) ) ? $event_id : 0;
 	}
 
 	$events = get_posts(
@@ -374,19 +374,12 @@ if ( empty( $site_logo_url ) ) {
 }
 $site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 
-$back_navigation = class_exists( 'Wpfaevent_Schedule_Helper' )
-	? Wpfaevent_Schedule_Helper::get_back_navigation( $selected_event_id )
-	: array(
-		'url'  => (string) apply_filters( 'wpfaevent_events_url', home_url( '/events/' ) ),
-		'text' => __( 'Back to Events', 'wpfaevent' ),
-	);
-
 $header_vars = array(
 	'site_logo_url'        => $site_logo_url,
-	'event_page_url'       => $back_navigation['url'],
-	'show_back_button'     => true,
+	'event_page_url'       => home_url( '/events/' ),
+	'show_back_button'     => false,
 	'show_register_button' => false,
-	'back_button_text'     => $back_navigation['text'],
+	'back_button_text'     => __( 'Back to Events', 'wpfaevent' ),
 	'register_button_url'  => '',
 	'register_button_text' => __( 'Register', 'wpfaevent' ),
 );
@@ -456,6 +449,9 @@ $schedule_filter_reset_url = add_query_arg( $schedule_filter_reset_args, $schedu
 			<div class="wpfa-schedule-head">
 				<div>
 					<?php if ( $is_event_schedule && $selected_event_title ) : ?>
+						<p class="wpfa-event-kicker">
+							<a href="<?php echo esc_url( get_permalink( $selected_event_id ) ); ?>">&larr; <?php echo esc_html( $selected_event_title ); ?></a>
+						</p>
 						<h1><?php echo esc_html( $selected_event_title ); ?></h1>
 						<p><?php esc_html_e( 'Event schedule grouped by session date.', 'wpfaevent' ); ?></p>
 					<?php else : ?>
