@@ -149,6 +149,28 @@ class EventDescriptionSyncTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Backslashes in Eventyay descriptions survive import, tracking and restore.
+	 */
+	public function test_backslashes_survive_import_and_restore() {
+		$event_id = $this->import( 'Files live in C:\events\2027.' );
+		$this->assertSame( 'Files live in C:\events\2027.', get_post_field( 'post_content', $event_id ) );
+		$this->assertFalse( Wpfaevent_Event_Description_Sync::has_local_edit( $event_id ) );
+
+		wp_update_post(
+			array(
+				'ID'           => $event_id,
+				'post_excerpt' => 'Written for the website.',
+			)
+		);
+		$this->import( 'Moved to D:\events\2027.' );
+		$this->assertSame( 'Moved to D:\events\2027.', get_post_meta( $event_id, Wpfaevent_Event_Description_Sync::REMOTE_META, true ) );
+
+		$this->assertTrue( Wpfaevent_Event_Description_Sync::restore( $event_id ) );
+		$this->assertSame( 'Moved to D:\events\2027.', get_post_field( 'post_excerpt', $event_id ) );
+		$this->assertFalse( Wpfaevent_Event_Description_Sync::has_local_edit( $event_id ) );
+	}
+
+	/**
 	 * Events imported before tracking existed keep following Eventyay.
 	 */
 	public function test_event_without_fingerprint_follows_eventyay() {

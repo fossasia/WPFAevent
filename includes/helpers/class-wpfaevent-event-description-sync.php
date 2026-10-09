@@ -87,10 +87,11 @@ class Wpfaevent_Event_Description_Sync {
 		$post_id     = absint( $post_id );
 		$description = wp_kses_post( (string) $description );
 
-		update_post_meta( $post_id, self::REMOTE_META, $description );
+		// Meta writes unslash their input; slash it so backslashes in the text survive.
+		update_post_meta( $post_id, self::REMOTE_META, wp_slash( $description ) );
 
 		if ( $applied ) {
-			update_post_meta( $post_id, self::APPLIED_META, $description );
+			update_post_meta( $post_id, self::APPLIED_META, wp_slash( $description ) );
 			update_post_meta( $post_id, self::HASH_META, self::fingerprint( $post_id ) );
 		}
 	}
@@ -107,10 +108,12 @@ class Wpfaevent_Event_Description_Sync {
 		$post_id     = absint( $post_id );
 		$description = wp_kses_post( (string) get_post_meta( $post_id, self::REMOTE_META, true ) );
 		$result      = wp_update_post(
-			array(
-				'ID'           => $post_id,
-				'post_content' => $description,
-				'post_excerpt' => $description,
+			wp_slash(
+				array(
+					'ID'           => $post_id,
+					'post_content' => $description,
+					'post_excerpt' => $description,
+				)
 			),
 			true
 		);

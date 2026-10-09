@@ -224,6 +224,24 @@ const wpfaEvents = (function () {
 		setupTimeFormatControls(elements.createEventForm);
 		setupTimeFormatControls(elements.editEventForm);
 
+		// Restoring leaves the page, so confirm before unsaved form changes are lost.
+		const descriptionRestoreLink = document.querySelector(
+			'#editEventDescriptionNote a'
+		);
+		if (descriptionRestoreLink) {
+			descriptionRestoreLink.addEventListener('click', function (e) {
+				// The in-page confirmation dialog renders below the Edit Event modal.
+				// eslint-disable-next-line no-alert
+				const confirmed = window.confirm(
+					config.i18n.restoreDescription ||
+						'Replace the description with the one from Eventyay? Unsaved changes in this form will be lost.'
+				);
+				if (!confirmed) {
+					e.preventDefault();
+				}
+			});
+		}
+
 		// Event card actions delegation (admin only)
 		if (elements.eventsContainer) {
 			elements.eventsContainer.addEventListener(
