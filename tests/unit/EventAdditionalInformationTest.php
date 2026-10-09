@@ -48,15 +48,21 @@ class EventAdditionalInformationTest extends WP_UnitTestCase {
 	 */
 	public function test_additional_information_meta_box_is_not_registered() {
 		global $wp_meta_boxes;
-		$wp_meta_boxes = array();
+		$original_meta_boxes = $wp_meta_boxes;
 
-		( new Wpfaevent_Admin_Event_Metabox() )->register_meta_boxes();
+		try {
+			$wp_meta_boxes = array();
 
-		$normal_boxes = isset( $wp_meta_boxes['wpfa_event']['normal']['default'] )
-			? $wp_meta_boxes['wpfa_event']['normal']['default']
-			: array();
+			( new Wpfaevent_Admin_Event_Metabox() )->register_meta_boxes();
 
-		$this->assertArrayNotHasKey( 'wpfa_event_additional_information_box', $normal_boxes );
+			$normal_boxes = isset( $wp_meta_boxes['wpfa_event']['normal']['default'] )
+				? $wp_meta_boxes['wpfa_event']['normal']['default']
+				: array();
+
+			$this->assertArrayNotHasKey( 'wpfa_event_additional_information_box', $normal_boxes );
+		} finally {
+			$wp_meta_boxes = $original_meta_boxes;
+		}
 	}
 
 	/**
