@@ -378,15 +378,25 @@ class Wpfaevent_Schedule_Helper {
 				continue;
 			}
 
-			$row_meta       = isset( $schedule_meta[ $row_index ] ) && is_array( $schedule_meta[ $row_index ] ) ? $schedule_meta[ $row_index ] : array();
+			$row_meta  = isset( $schedule_meta[ $row_index ] ) && is_array( $schedule_meta[ $row_index ] ) ? $schedule_meta[ $row_index ] : array();
+			$row_state = isset( $row_meta['state'] ) ? strtolower( trim( (string) $row_meta['state'] ) ) : '';
+			if ( '' !== $row_state && 'confirmed' !== $row_state ) {
+				continue;
+			}
+
 			$start_datetime = isset( $row_meta['starts_at'] ) ? sanitize_text_field( $row_meta['starts_at'] ) : '';
 			$end_datetime   = isset( $row_meta['ends_at'] ) ? sanitize_text_field( $row_meta['ends_at'] ) : '';
 			$row_date       = isset( $row[0] ) ? sanitize_text_field( $row[0] ) : '';
 			$row_time       = isset( $row[1] ) ? sanitize_text_field( $row[1] ) : '';
+			$date_label     = self::format_schedule_session_date( $start_datetime, $row_date, $row_time, $display_timezone, $event_timezone );
+
+			if ( empty( $date_label ) || __( 'TBD', 'wpfaevent' ) === $date_label ) {
+				continue;
+			}
 
 			$item = array(
 				'date'           => $row_date,
-				'date_label'     => self::format_schedule_session_date( $start_datetime, $row_date, $row_time, $display_timezone, $event_timezone ),
+				'date_label'     => $date_label,
 				'time'           => $row_time,
 				'time_label'     => self::format_schedule_session_time( $start_datetime, $end_datetime, $row_date, $row_time, $display_timezone, $event_timezone ),
 				'title'          => ! empty( $row[2] ) ? sanitize_text_field( $row[2] ) : get_the_title( $event_id ),
@@ -444,7 +454,7 @@ class Wpfaevent_Schedule_Helper {
 		$groups = array();
 
 		foreach ( $items as $item ) {
-			$day_key = ! empty( $item['date_label'] ) ? $item['date_label'] : __( 'TBD', 'wpfaevent' );
+			$day_key = $item['date_label'];
 
 			if ( ! isset( $groups[ $day_key ] ) ) {
 				$groups[ $day_key ] = array();

@@ -1553,6 +1553,7 @@ class Wpfaevent_Eventyay_Importer {
 					'expand'    => 'speakers,track,submission_type,slots.room',
 					'lang'      => 'en',
 					'page_size' => absint( apply_filters( 'wpfaevent_eventyay_program_import_page_size', 50 ) ),
+					'state'     => 'confirmed',
 				),
 				$url
 			)
@@ -2571,10 +2572,18 @@ class Wpfaevent_Eventyay_Importer {
 				continue;
 			}
 
+			if ( isset( $session['state'] ) && '' !== $session['state'] && 'confirmed' !== strtolower( (string) $session['state'] ) ) {
+				continue;
+			}
+
 			$starts_at = isset( $session['starts_at'] ) ? sanitize_text_field( $session['starts_at'] ) : '';
 			$ends_at   = isset( $session['ends_at'] ) ? sanitize_text_field( $session['ends_at'] ) : '';
 			$date      = isset( $session['date'] ) ? sanitize_text_field( $session['date'] ) : '';
 			$time      = isset( $session['time'] ) ? sanitize_text_field( $session['time'] ) : '';
+
+			if ( empty( $starts_at ) && empty( $date ) ) {
+				continue;
+			}
 
 			if ( ! empty( $session['end_time'] ) ) {
 				$end_time = sanitize_text_field( $session['end_time'] );
@@ -2608,6 +2617,7 @@ class Wpfaevent_Eventyay_Importer {
 				'room'      => $room,
 				'starts_at' => $starts_at,
 				'ends_at'   => $ends_at,
+				'state'     => isset( $session['state'] ) ? sanitize_text_field( (string) $session['state'] ) : '',
 			);
 		}
 
@@ -3647,7 +3657,11 @@ class Wpfaevent_Eventyay_Importer {
 				continue;
 			}
 
-			$submission        = $this->normalize_eventyay_api_resource( $submission );
+			$submission = $this->normalize_eventyay_api_resource( $submission );
+			if ( ! $this->is_eventyay_confirmed_session( $submission ) ) {
+				continue;
+			}
+
 			$speaker_resources = $this->eventyay_list_value( isset( $submission['speakers'] ) ? $submission['speakers'] : array() );
 			$session           = $this->normalize_eventyay_submission_session( $submission );
 			$speaker_names     = array();
@@ -3716,6 +3730,9 @@ class Wpfaevent_Eventyay_Importer {
 			}
 
 			$slot_resource = $this->normalize_eventyay_api_resource( $slot_resource );
+			if ( ! $this->is_eventyay_confirmed_session( $slot_resource ) ) {
+				continue;
+			}
 			$submission    = isset( $slot_resource['submission'] ) && is_array( $slot_resource['submission'] )
 				? $this->normalize_eventyay_api_resource( $slot_resource['submission'] )
 				: array();
@@ -3873,6 +3890,7 @@ class Wpfaevent_Eventyay_Importer {
 			'track'     => is_array( $track ) ? $this->eventyay_text_value( isset( $track['name'] ) ? $track['name'] : '' ) : $this->eventyay_text_value( $track ),
 			'room'      => $room,
 			'source_id' => sanitize_text_field( $source_id ),
+			'state'     => sanitize_text_field( (string) $this->eventyay_first_present_text( $submission, array( 'state', 'status' ) ) ),
 		);
 	}
 
@@ -3899,6 +3917,11 @@ class Wpfaevent_Eventyay_Importer {
 		$ends_at    = $this->eventyay_first_present_raw( $slot, array( 'end', 'ends_at', 'ends-at', 'end_time', 'end-time' ) );
 		$title      = $this->eventyay_first_present_text( $submission, array( 'title', 'name' ) );
 		$abstract   = $this->eventyay_submission_abstract( $submission );
+		$state      = $this->eventyay_first_present_text( $submission, array( 'state', 'status' ) );
+
+		if ( empty( $state ) ) {
+			$state = $this->eventyay_first_present_text( $slot, array( 'state', 'status' ) );
+		}
 
 		if ( empty( $title ) ) {
 			$title = $this->eventyay_first_present_text( $slot, array( 'title', 'name', 'description' ) );
@@ -3920,6 +3943,7 @@ class Wpfaevent_Eventyay_Importer {
 			'track'     => is_array( $track ) ? $this->eventyay_text_value( isset( $track['name'] ) ? $track['name'] : '' ) : $this->eventyay_text_value( $track ),
 			'room'      => $room,
 			'source_id' => sanitize_text_field( $source_id ? $source_id : $slot_id ),
+			'state'     => sanitize_text_field( (string) $state ),
 		);
 	}
 
@@ -3940,6 +3964,18 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		return ! empty( $session['speakers'] );
+	}
+
+	/**
+	 * Determine whether an Eventyay submission or session resource is confirmed.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $session_resource Eventyay submission or session resource.
+	 * @return bool
+	 */
+	private function is_eventyay_confirmed_session( $session_resource ) {
+		return $this->parser->is_eventyay_confirmed_session( $session_resource );
 	}
 
 	/**
@@ -5245,6 +5281,10 @@ class Wpfaevent_Eventyay_Importer {
 				continue;
 			}
 
+			if ( ! $this->is_eventyay_confirmed_session( $resource ) ) {
+				continue;
+			}
+
 			++$session_count;
 
 			$session      = $this->normalize_eventyay_session_resource( $resource, $included );
@@ -5324,6 +5364,7 @@ class Wpfaevent_Eventyay_Importer {
 			'abstract'  => wp_kses_post( $this->attribute_value( $attributes, array( 'long-abstract', 'short-abstract', 'abstract', 'description' ) ) ),
 			'track'     => sanitize_text_field( $track_name ),
 			'source_id' => isset( $session_resource['id'] ) ? sanitize_text_field( $session_resource['id'] ) : '',
+			'state'     => sanitize_text_field( (string) $this->attribute_value( $attributes, array( 'state', 'status' ) ) ),
 		);
 	}
 
