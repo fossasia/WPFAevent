@@ -121,7 +121,11 @@ $header_vars = array(
 				<h1><?php esc_html_e( 'Past FOSSASIA Events', 'wpfaevent' ); ?></h1>
 				<p><?php esc_html_e( 'A look back at our community events, meetups, and conferences.', 'wpfaevent' ); ?></p>
 				<div class="hero-ctas">
-					<a href="<?php echo esc_url( home_url( '/events/' ) ); ?>" class="btn-secondary">
+					<?php
+					$upcoming_events_url = apply_filters( 'wpfaevent_upcoming_events_url', home_url( '/events/?filter=upcoming' ) );
+					$upcoming_events_url = apply_filters( 'wpfaevent_events_url', $upcoming_events_url );
+					?>
+					<a href="<?php echo esc_url( $upcoming_events_url ); ?>" class="btn-secondary">
 						<?php esc_html_e( 'View Upcoming Events', 'wpfaevent' ); ?>
 					</a>
 				</div>
