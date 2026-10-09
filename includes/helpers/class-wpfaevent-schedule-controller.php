@@ -180,9 +180,13 @@ class Wpfaevent_Schedule_Controller {
 		}
 		$site_logo_url = apply_filters( 'wpfa_site_logo_url', $site_logo_url );
 
-		$selected_event_permalink = $selected_event_id ? get_permalink( $selected_event_id ) : home_url( '/events/' );
-		if ( empty( $selected_event_permalink ) ) {
-			$selected_event_permalink = home_url( '/events/' );
+		$events_url               = apply_filters( 'wpfaevent_events_url', home_url( '/events/' ) );
+		$is_published_event       = $selected_event_id && 'publish' === get_post_status( $selected_event_id );
+		$selected_event_permalink = $is_published_event ? get_permalink( $selected_event_id ) : '';
+		$has_event_link           = ! empty( $selected_event_permalink );
+
+		if ( ! $has_event_link ) {
+			$selected_event_permalink = $events_url;
 		}
 
 		$header_vars = array(
@@ -190,7 +194,7 @@ class Wpfaevent_Schedule_Controller {
 			'event_page_url'       => $selected_event_permalink,
 			'show_back_button'     => true,
 			'show_register_button' => false,
-			'back_button_text'     => $selected_event_id ? __( 'Back to Event', 'wpfaevent' ) : __( 'Back to Events', 'wpfaevent' ),
+			'back_button_text'     => $has_event_link ? __( 'Back to Event', 'wpfaevent' ) : __( 'Back to Events', 'wpfaevent' ),
 			'register_button_url'  => '',
 			'register_button_text' => __( 'Register', 'wpfaevent' ),
 		);
@@ -281,7 +285,7 @@ class Wpfaevent_Schedule_Controller {
 		if ( is_numeric( $event_filter ) ) {
 			$event_id = absint( $event_filter );
 
-			return ( $event_id && 'wpfa_event' === get_post_type( $event_id ) ) ? $event_id : 0;
+			return ( $event_id && 'wpfa_event' === get_post_type( $event_id ) && 'publish' === get_post_status( $event_id ) ) ? $event_id : 0;
 		}
 
 		$events = get_posts(
