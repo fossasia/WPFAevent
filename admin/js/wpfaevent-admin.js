@@ -1,7 +1,8 @@
 (function ($) {
 	'use strict';
 
-	$(function () {		const sponsorGroupOrderForm = document.getElementById(
+	$(function () {
+		const sponsorGroupOrderForm = document.getElementById(
 			'wpfaevent-sponsor-group-order-form'
 		);
 		const sponsorGroupList = document.getElementById(
@@ -804,5 +805,4 @@
 			$card.attr('data-next-sub-index', String(nextSubIdx + 1));
 		});
 	});
-
 })(jQuery);
