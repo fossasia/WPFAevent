@@ -319,7 +319,11 @@ if ( $is_event_schedule ) {
 		);
 
 		foreach ( $filtered_schedule_items as $filtered_schedule_item ) {
-			$day_key = ! empty( $filtered_schedule_item['date_label'] ) ? $filtered_schedule_item['date_label'] : __( 'TBD', 'wpfaevent' );
+			if ( empty( $filtered_schedule_item['date_label'] ) || 'TBD' === $filtered_schedule_item['date_label'] || __( 'TBD', 'wpfaevent' ) === $filtered_schedule_item['date_label'] ) {
+				continue;
+			}
+
+			$day_key = $filtered_schedule_item['date_label'];
 
 			if ( ! isset( $visible_session_groups[ $day_key ] ) ) {
 				$visible_session_groups[ $day_key ] = array();
