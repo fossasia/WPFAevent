@@ -281,11 +281,34 @@ class Wpfaevent_JSONAPI_Parser {
 			return $is_sponsor;
 		}
 
-		if ( '' !== $this->eventyay_sponsor_group_name( $partner_resource ) ) {
+		$type = $this->eventyay_first_present_text( $partner_resource, array( 'type' ) );
+		if ( in_array( sanitize_key( $type ), array( 'exhibitor', 'exhibitors' ), true ) ) {
+			return 'sponsors' === $source_context;
+		}
+
+		$group = $this->eventyay_first_present_text(
+			$partner_resource,
+			array(
+				'sponsor_group_name',
+				'sponsor-group-name',
+				'sponsor_group',
+				'sponsor-group',
+				'level_name',
+				'level-name',
+				'sponsor_type',
+				'sponsor-type',
+				'sponsorship_type',
+				'sponsorship-type',
+				'package',
+				'package_name',
+				'package-name',
+				'tier',
+			)
+		);
+		if ( '' !== $group ) {
 			return true;
 		}
 
-		$type = $this->eventyay_first_present_text( $partner_resource, array( 'type' ) );
 		if ( in_array( sanitize_key( $type ), array( 'sponsor', 'sponsors' ), true ) ) {
 			return true;
 		}
@@ -318,6 +341,11 @@ class Wpfaevent_JSONAPI_Parser {
 			return $is_exhibitor;
 		}
 
+		$type = $this->eventyay_first_present_text( $partner_resource, array( 'type' ) );
+		if ( in_array( sanitize_key( $type ), array( 'sponsor', 'sponsors' ), true ) ) {
+			return 'exhibitors' === $source_context;
+		}
+
 		$booth = $this->eventyay_first_present_text(
 			$partner_resource,
 			array( 'booth_id', 'booth-id', 'booth_name', 'booth-name' )
@@ -326,7 +354,6 @@ class Wpfaevent_JSONAPI_Parser {
 			return true;
 		}
 
-		$type = $this->eventyay_first_present_text( $partner_resource, array( 'type' ) );
 		if ( in_array( sanitize_key( $type ), array( 'exhibitor', 'exhibitors' ), true ) ) {
 			return true;
 		}

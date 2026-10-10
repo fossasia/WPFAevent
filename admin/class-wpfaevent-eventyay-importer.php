@@ -1845,11 +1845,14 @@ class Wpfaevent_Eventyay_Importer {
 		$sponsors_available = ! is_wp_error( $sponsors_response )
 			|| ( ! is_wp_error( $exhibitors_response ) && ( ! empty( $sponsor_resources ) || $this->eventyay_error_has_http_status( $sponsors_response, 404 ) ) );
 
+		$existing_sponsors_backup = null;
+
 		if ( $sponsors_available ) {
-			$normalized_sponsors = $this->normalize_eventyay_sponsor_resources( $sponsor_resources, $settings, 'sponsors' );
-			$existing_sponsors   = $this->read_dashboard_json_file( 'sponsors-' . absint( $event_id ) . '.json', array() );
-			$sponsor_groups      = $this->merge_eventyay_sponsor_groups( $normalized_sponsors, $existing_sponsors );
-			$write_result        = $this->write_dashboard_json_file( 'sponsors-' . absint( $event_id ) . '.json', $sponsor_groups );
+			$normalized_sponsors      = $this->normalize_eventyay_sponsor_resources( $sponsor_resources, $settings, 'sponsors' );
+			$existing_sponsors        = $this->read_dashboard_json_file( 'sponsors-' . absint( $event_id ) . '.json', array() );
+			$existing_sponsors_backup = $existing_sponsors;
+			$sponsor_groups           = $this->merge_eventyay_sponsor_groups( $normalized_sponsors, $existing_sponsors );
+			$write_result             = $this->write_dashboard_json_file( 'sponsors-' . absint( $event_id ) . '.json', $sponsor_groups );
 
 			if ( is_wp_error( $write_result ) ) {
 				return $write_result;
@@ -1870,6 +1873,10 @@ class Wpfaevent_Eventyay_Importer {
 			$write_result          = $this->write_dashboard_json_file( 'exhibitors-' . absint( $event_id ) . '.json', $merged_exhibitors );
 
 			if ( is_wp_error( $write_result ) ) {
+				if ( null !== $existing_sponsors_backup ) {
+					$this->write_dashboard_json_file( 'sponsors-' . absint( $event_id ) . '.json', $existing_sponsors_backup );
+				}
+
 				return $write_result;
 			}
 

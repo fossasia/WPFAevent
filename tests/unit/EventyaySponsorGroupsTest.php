@@ -366,31 +366,37 @@ class EventyaySponsorGroupsTest extends WP_UnitTestCase {
 	public function test_eventyay_partner_classification_and_publication() {
 		$parser = new Wpfaevent_JSONAPI_Parser();
 
-		$pure_sponsor   = array(
+		$pure_sponsor      = array(
 			'name'               => 'Sponsor Only',
 			'is_sponsor'         => true,
 			'is_exhibitor'       => false,
 			'sponsor_group_name' => 'Gold Sponsors',
 			'published'          => true,
 		);
-		$pure_exhibitor = array(
+		$pure_exhibitor    = array(
 			'name'         => 'Exhibitor Only',
 			'is_sponsor'   => false,
 			'is_exhibitor' => true,
 			'published'    => true,
 		);
-		$dual_role      = array(
+		$dual_role         = array(
 			'name'               => 'Dual Role Org',
 			'is_sponsor'         => true,
 			'is_exhibitor'       => true,
 			'sponsor_group_name' => 'Headline Sponsors',
 			'published'          => true,
 		);
-		$unpublished    = array(
+		$unpublished       = array(
 			'name'         => 'Draft Org',
 			'is_sponsor'   => true,
 			'is_exhibitor' => true,
 			'published'    => false,
+		);
+		$exhibitor_by_type = array(
+			'name'      => 'Exhibitor Type Only',
+			'type'      => 'exhibitor',
+			'category'  => 'Booth',
+			'published' => true,
 		);
 
 		$this->assertTrue( $parser->is_eventyay_sponsor_resource( $pure_sponsor, 'exhibitors' ) );
@@ -404,6 +410,9 @@ class EventyaySponsorGroupsTest extends WP_UnitTestCase {
 
 		$this->assertFalse( $parser->is_eventyay_sponsor_resource( $unpublished, 'exhibitors' ) );
 		$this->assertFalse( $parser->is_eventyay_exhibitor_resource( $unpublished, 'exhibitors' ) );
+
+		$this->assertFalse( $parser->is_eventyay_sponsor_resource( $exhibitor_by_type, 'exhibitors' ) );
+		$this->assertTrue( $parser->is_eventyay_exhibitor_resource( $exhibitor_by_type, 'exhibitors' ) );
 	}
 
 	/**
