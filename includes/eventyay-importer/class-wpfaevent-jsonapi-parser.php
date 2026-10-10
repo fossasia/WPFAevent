@@ -183,10 +183,202 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return list<array<string, mixed>>
 	 */
-	public function normalize_eventyay_sponsor_resources( $resources, $settings ) {
+	/**
+	 * Return the first boolean value from an Eventyay resource, or null if none present.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $eventyay_resource Eventyay resource.
+	 * @param array $keys              Candidate keys.
+	 * @return bool|null
+	 * @phpstan-param array<array-key, mixed> $eventyay_resource
+	 * @phpstan-param list<string> $keys
+	 */
+	public function eventyay_first_present_boolean( $eventyay_resource, $keys ) {
+		foreach ( $keys as $key ) {
+			if ( ! array_key_exists( $key, $eventyay_resource ) ) {
+				continue;
+			}
+
+			$val = $eventyay_resource[ $key ];
+			if ( is_bool( $val ) ) {
+				return $val;
+			}
+
+			if ( is_numeric( $val ) ) {
+				return 0 !== (int) $val;
+			}
+
+			if ( is_string( $val ) && '' !== trim( $val ) ) {
+				return in_array( strtolower( trim( $val ) ), array( '1', 'true', 'yes', 'on' ), true );
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Determine whether an Eventyay partner resource is published.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $partner_resource Eventyay partner resource.
+	 * @return bool True if published or unspecified, false if explicitly unpublished.
+	 * @phpstan-param array<array-key, mixed> $partner_resource
+	 */
+	public function is_eventyay_partner_published( $partner_resource ) {
+		$partner_resource = $this->normalize_eventyay_api_resource( $partner_resource );
+
+		$published = $this->eventyay_first_present_boolean(
+			$partner_resource,
+			array( 'published', 'is_published', 'is-published' )
+		);
+		if ( null !== $published && ! $published ) {
+			return false;
+		}
+
+		$active = $this->eventyay_first_present_boolean(
+			$partner_resource,
+			array( 'active', 'is_active', 'is-active' )
+		);
+		if ( null !== $active && ! $active ) {
+			return false;
+		}
+
+		$status = $this->eventyay_first_present_text(
+			$partner_resource,
+			array( 'status', 'state', 'publication_status', 'publication-status' )
+		);
+		if ( '' !== $status && in_array( sanitize_key( $status ), array( 'unpublished', 'draft', 'inactive', 'withdrawn', 'rejected' ), true ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Determine whether an Eventyay resource represents a sponsor.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $partner_resource Eventyay partner resource.
+	 * @param string $source_context  Optional context ('sponsors' or 'exhibitors').
+	 * @return bool
+	 * @phpstan-param array<array-key, mixed> $partner_resource
+	 */
+	public function is_eventyay_sponsor_resource( $partner_resource, $source_context = '' ) {
+		$partner_resource = $this->normalize_eventyay_api_resource( $partner_resource );
+
+		if ( ! $this->is_eventyay_partner_published( $partner_resource ) ) {
+			return false;
+		}
+
+		$is_sponsor = $this->eventyay_first_present_boolean(
+			$partner_resource,
+			array( 'is_sponsor', 'is-sponsor' )
+		);
+		if ( null !== $is_sponsor ) {
+			return $is_sponsor;
+		}
+
+		if ( '' !== $this->eventyay_sponsor_group_name( $partner_resource ) ) {
+			return true;
+		}
+
+		$type = $this->eventyay_first_present_text( $partner_resource, array( 'type' ) );
+		if ( in_array( sanitize_key( $type ), array( 'sponsor', 'sponsors' ), true ) ) {
+			return true;
+		}
+
+		return 'sponsors' === $source_context;
+	}
+
+	/**
+	 * Determine whether an Eventyay resource represents an exhibitor.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $partner_resource Eventyay partner resource.
+	 * @param string $source_context  Optional context ('sponsors' or 'exhibitors').
+	 * @return bool
+	 * @phpstan-param array<array-key, mixed> $partner_resource
+	 */
+	public function is_eventyay_exhibitor_resource( $partner_resource, $source_context = '' ) {
+		$partner_resource = $this->normalize_eventyay_api_resource( $partner_resource );
+
+		if ( ! $this->is_eventyay_partner_published( $partner_resource ) ) {
+			return false;
+		}
+
+		$is_exhibitor = $this->eventyay_first_present_boolean(
+			$partner_resource,
+			array( 'is_exhibitor', 'is-exhibitor' )
+		);
+		if ( null !== $is_exhibitor ) {
+			return $is_exhibitor;
+		}
+
+		$booth = $this->eventyay_first_present_text(
+			$partner_resource,
+			array( 'booth_id', 'booth-id', 'booth_name', 'booth-name' )
+		);
+		if ( '' !== $booth ) {
+			return true;
+		}
+
+		$type = $this->eventyay_first_present_text( $partner_resource, array( 'type' ) );
+		if ( in_array( sanitize_key( $type ), array( 'exhibitor', 'exhibitors' ), true ) ) {
+			return true;
+		}
+
+		return 'exhibitors' === $source_context;
+	}
+
+	/**
+	 * Build a deduplication key for an Eventyay partner resource.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $partner_resource Partner resource.
+	 * @return string
+	 * @phpstan-param array<array-key, mixed> $partner_resource
+	 */
+	public function eventyay_partner_resource_key( $partner_resource ) {
+		$normalized = $this->normalize_eventyay_api_resource( $partner_resource );
+		$id         = $this->eventyay_resource_identifier( $normalized );
+		if ( '' !== $id ) {
+			return 'id:' . sanitize_key( $id );
+		}
+
+		$name = $this->eventyay_first_present_text( $normalized, array( 'name', 'title', 'label' ) );
+		if ( '' !== $name ) {
+			return 'name:' . sanitize_title( $name );
+		}
+
+		return '';
+	}
+
+	/**
+	 * Normalize Eventyay sponsor resources into dashboard sponsor records.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $resources      Eventyay sponsor resources.
+	 * @param array  $settings       Import settings.
+	 * @param string $source_context Optional source context.
+	 * @return array
+	 * @phpstan-param list<array<array-key, mixed>> $resources
+	 * @phpstan-param array<string, mixed> $settings
+	 * @phpstan-return list<array<string, mixed>>
+	 */
+	public function normalize_eventyay_sponsor_resources( $resources, $settings, $source_context = 'sponsors' ) {
 		$sponsors = array();
 
 		foreach ( $resources as $resource ) {
+			if ( ! is_array( $resource ) || ! $this->is_eventyay_sponsor_resource( $resource, $source_context ) ) {
+				continue;
+			}
+
 			$sponsor = $this->normalize_eventyay_sponsor_resource( $resource, $settings );
 			if ( ! empty( $sponsor['name'] ) ) {
 				$sponsors[] = $sponsor;
@@ -235,7 +427,7 @@ class Wpfaevent_JSONAPI_Parser {
 		$source_id        = $this->eventyay_resource_identifier( $sponsor_resource );
 		$name             = $this->eventyay_first_present_text( $sponsor_resource, array( 'name', 'title', 'label' ) );
 		$type             = $this->eventyay_sponsor_group_name( $sponsor_resource );
-		$level            = $this->eventyay_first_present_raw( $sponsor_resource, array( 'level', 'position', 'order', 'sort_order', 'sort-order' ) );
+		$level            = $this->eventyay_first_present_raw( $sponsor_resource, array( 'sponsor_group_level', 'sponsor-group-level', 'sponsor_position', 'sponsor-position', 'level', 'position', 'order', 'sort_order', 'sort-order' ) );
 
 		return array(
 			'id'          => $source_id ? 'eventyay-sponsor-' . sanitize_key( $source_id ) : 'eventyay-sponsor-' . sanitize_title( $name ),
@@ -247,6 +439,7 @@ class Wpfaevent_JSONAPI_Parser {
 			'image'       => $this->eventyay_url_value( $this->eventyay_first_present_raw( $sponsor_resource, array( 'logo-url', 'logo_url', 'logo', 'image', 'image-url', 'image_url' ) ), $settings['base_url'] ),
 			'type'        => sanitize_text_field( $type ),
 			'level'       => is_numeric( $level ) ? absint( $level ) : 0,
+			'published'   => true,
 		);
 	}
 
@@ -263,7 +456,7 @@ class Wpfaevent_JSONAPI_Parser {
 		$sponsor_resource = $this->normalize_eventyay_api_resource( $sponsor_resource );
 		$type             = $this->eventyay_first_present_text(
 			$sponsor_resource,
-			array( 'level_name', 'level-name', 'tier', 'category', 'sponsor_type', 'sponsor-type', 'sponsorship_type', 'sponsorship-type', 'package', 'package_name', 'package-name' )
+			array( 'sponsor_group_name', 'sponsor-group-name', 'sponsor_group', 'sponsor-group', 'level_name', 'level-name', 'tier', 'category', 'sponsor_type', 'sponsor-type', 'sponsorship_type', 'sponsorship-type', 'package', 'package_name', 'package-name' )
 		);
 
 		if ( '' !== $type ) {
@@ -288,17 +481,22 @@ class Wpfaevent_JSONAPI_Parser {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $resources Eventyay exhibitor resources.
-	 * @param array $settings  Import settings.
+	 * @param array  $resources      Eventyay exhibitor resources.
+	 * @param array  $settings       Import settings.
+	 * @param string $source_context Optional source context.
 	 * @return array
 	 * @phpstan-param list<array<array-key, mixed>> $resources
 	 * @phpstan-param array<string, mixed> $settings
 	 * @phpstan-return list<array<string, mixed>>
 	 */
-	public function normalize_eventyay_exhibitor_resources( $resources, $settings ) {
+	public function normalize_eventyay_exhibitor_resources( $resources, $settings, $source_context = 'exhibitors' ) {
 		$exhibitors = array();
 
 		foreach ( $resources as $resource ) {
+			if ( ! is_array( $resource ) || ! $this->is_eventyay_exhibitor_resource( $resource, $source_context ) ) {
+				continue;
+			}
+
 			$exhibitor = $this->normalize_eventyay_exhibitor_resource( $resource, $settings );
 			if ( ! empty( $exhibitor['name'] ) ) {
 				$exhibitors[] = $exhibitor;
@@ -346,7 +544,7 @@ class Wpfaevent_JSONAPI_Parser {
 		$exhibitor_resource = $this->normalize_eventyay_api_resource( $exhibitor_resource );
 		$source_id          = $this->eventyay_resource_identifier( $exhibitor_resource );
 		$name               = $this->eventyay_first_present_text( $exhibitor_resource, array( 'name', 'title', 'label' ) );
-		$position           = $this->eventyay_first_present_raw( $exhibitor_resource, array( 'position', 'order', 'sort_order', 'sort-order' ) );
+		$position           = $this->eventyay_first_present_raw( $exhibitor_resource, array( 'exhibitor_position', 'exhibitor-position', 'position', 'order', 'sort_order', 'sort-order' ) );
 
 		return array(
 			'id'            => $source_id ? 'eventyay-exhibitor-' . sanitize_key( $source_id ) : 'eventyay-exhibitor-' . sanitize_title( $name ),
@@ -362,6 +560,7 @@ class Wpfaevent_JSONAPI_Parser {
 			'contact_email' => sanitize_email( $this->eventyay_first_present_text( $exhibitor_resource, array( 'contact-email', 'contact_email', 'email' ) ) ),
 			'contact_link'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $exhibitor_resource, array( 'contact-link', 'contact_link' ) ), $settings['base_url'] ),
 			'position'      => is_numeric( $position ) ? absint( $position ) : 0,
+			'published'     => true,
 		);
 	}
 

@@ -359,4 +359,236 @@ class EventyaySponsorGroupsTest extends WP_UnitTestCase {
 		$this->assertSame( 'Alpha Sponsor', $stored_groups[0]['sponsors'][0]['name'] );
 		$this->assertSame( 'Beta Sponsor', $stored_groups[0]['sponsors'][1]['name'] );
 	}
+
+	/**
+	 * Verify modern Eventyay partner classification separates sponsors, exhibitors, dual-role, and unpublished records.
+	 */
+	public function test_eventyay_partner_classification_and_publication() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$pure_sponsor   = array(
+			'name'               => 'Sponsor Only',
+			'is_sponsor'         => true,
+			'is_exhibitor'       => false,
+			'sponsor_group_name' => 'Gold Sponsors',
+			'published'          => true,
+		);
+		$pure_exhibitor = array(
+			'name'         => 'Exhibitor Only',
+			'is_sponsor'   => false,
+			'is_exhibitor' => true,
+			'published'    => true,
+		);
+		$dual_role      = array(
+			'name'               => 'Dual Role Org',
+			'is_sponsor'         => true,
+			'is_exhibitor'       => true,
+			'sponsor_group_name' => 'Headline Sponsors',
+			'published'          => true,
+		);
+		$unpublished    = array(
+			'name'         => 'Draft Org',
+			'is_sponsor'   => true,
+			'is_exhibitor' => true,
+			'published'    => false,
+		);
+
+		$this->assertTrue( $parser->is_eventyay_sponsor_resource( $pure_sponsor, 'exhibitors' ) );
+		$this->assertFalse( $parser->is_eventyay_exhibitor_resource( $pure_sponsor, 'exhibitors' ) );
+
+		$this->assertFalse( $parser->is_eventyay_sponsor_resource( $pure_exhibitor, 'exhibitors' ) );
+		$this->assertTrue( $parser->is_eventyay_exhibitor_resource( $pure_exhibitor, 'exhibitors' ) );
+
+		$this->assertTrue( $parser->is_eventyay_sponsor_resource( $dual_role, 'exhibitors' ) );
+		$this->assertTrue( $parser->is_eventyay_exhibitor_resource( $dual_role, 'exhibitors' ) );
+
+		$this->assertFalse( $parser->is_eventyay_sponsor_resource( $unpublished, 'exhibitors' ) );
+		$this->assertFalse( $parser->is_eventyay_exhibitor_resource( $unpublished, 'exhibitors' ) );
+	}
+
+	/**
+	 * Verify modern Eventyay sponsor group name and level fields.
+	 */
+	public function test_normalize_eventyay_sponsor_resource_supports_modern_eventyay_fields() {
+		$parser  = new Wpfaevent_JSONAPI_Parser();
+		$sponsor = $parser->normalize_eventyay_sponsor_resource(
+			array(
+				'id'                  => '42',
+				'name'                => 'Modern Sponsor',
+				'sponsor_group_name'  => 'Diamond Partners',
+				'sponsor_group_level' => 3,
+			),
+			array(
+				'base_url' => 'https://eventyay.com',
+			)
+		);
+
+		$this->assertSame( 'Diamond Partners', $sponsor['type'] );
+		$this->assertSame( 3, $sponsor['level'] );
+		$this->assertTrue( $sponsor['published'] );
+	}
+
+	/**
+	 * Verify import falls back to unified /exhibitors endpoint when /sponsors 404s.
+	 */
+	public function test_import_eventyay_event_partner_data_imports_sponsors_when_sponsors_endpoint_404s() {
+		$event_id                  = $this->factory->post->create(
+			array(
+				'post_type'   => 'wpfa_event',
+				'post_status' => 'publish',
+				'post_title'  => 'Unified Partner Event',
+			)
+		);
+		$this->mock_upload_basedir = trailingslashit( sys_get_temp_dir() ) . 'wpfaevent-tests-' . wp_generate_password( 8, false );
+		wp_mkdir_p( $this->mock_upload_basedir );
+
+		$this->mock_http_responses = array(
+			'/sponsors'   => array(
+				'headers'  => array(),
+				'body'     => wp_json_encode( array( 'detail' => 'Not found' ) ),
+				'response' => array(
+					'code'    => 404,
+					'message' => 'Not Found',
+				),
+				'cookies'  => array(),
+				'filename' => null,
+			),
+			'/exhibitors' => array(
+				'headers'  => array(),
+				'body'     => wp_json_encode(
+					array(
+						'results' => array(
+							array(
+								'id'                 => '101',
+								'name'               => 'Pure Sponsor Corp',
+								'is_sponsor'         => true,
+								'is_exhibitor'       => false,
+								'sponsor_group_name' => 'Platinum Sponsors',
+								'published'          => true,
+							),
+							array(
+								'id'           => '102',
+								'name'         => 'Pure Exhibitor LLC',
+								'is_sponsor'   => false,
+								'is_exhibitor' => true,
+								'published'    => true,
+							),
+							array(
+								'id'                 => '103',
+								'name'               => 'Dual Partner Inc',
+								'is_sponsor'         => true,
+								'is_exhibitor'       => true,
+								'sponsor_group_name' => 'Platinum Sponsors',
+								'published'          => true,
+							),
+							array(
+								'id'                 => '104',
+								'name'               => 'Unpublished Partner',
+								'is_sponsor'         => true,
+								'is_exhibitor'       => true,
+								'sponsor_group_name' => 'Platinum Sponsors',
+								'published'          => false,
+							),
+						),
+						'next'    => null,
+					)
+				),
+				'response' => array(
+					'code'    => 200,
+					'message' => 'OK',
+				),
+				'cookies'  => array(),
+				'filename' => null,
+			),
+		);
+
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$method   = new ReflectionMethod( $importer, 'import_eventyay_event_partner_data' );
+		$method->setAccessible( true );
+
+		$result = $method->invoke(
+			$importer,
+			$event_id,
+			array(
+				'id'   => 'unified-event',
+				'slug' => 'unified-event',
+			),
+			array(
+				'base_url'  => 'https://eventyay.example',
+				'api_token' => '',
+			),
+			'unified-event'
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 2, $result['sponsor_count'] );
+		$this->assertSame( 2, $result['exhibitor_count'] );
+
+		$store         = new Wpfaevent_Eventyay_Dashboard_Store();
+		$stored_groups = $store->read_dashboard_json_file( 'sponsors-' . $event_id . '.json', array() );
+		$stored_exhibs = $store->read_dashboard_json_file( 'exhibitors-' . $event_id . '.json', array() );
+
+		// Sponsors: Pure Sponsor Corp and Dual Partner Inc.
+		$this->assertCount( 1, $stored_groups );
+		$sponsor_names = wp_list_pluck( $stored_groups[0]['sponsors'], 'name' );
+		$this->assertContains( 'Pure Sponsor Corp', $sponsor_names );
+		$this->assertContains( 'Dual Partner Inc', $sponsor_names );
+		$this->assertNotContains( 'Pure Exhibitor LLC', $sponsor_names );
+		$this->assertNotContains( 'Unpublished Partner', $sponsor_names );
+
+		// Exhibitors: Pure Exhibitor LLC and Dual Partner Inc.
+		$exhib_names = wp_list_pluck( $stored_exhibs, 'name' );
+		$this->assertContains( 'Pure Exhibitor LLC', $exhib_names );
+		$this->assertContains( 'Dual Partner Inc', $exhib_names );
+		$this->assertNotContains( 'Pure Sponsor Corp', $exhib_names );
+		$this->assertNotContains( 'Unpublished Partner', $exhib_names );
+	}
+
+	/**
+	 * Verify Wpfaevent_Partner_Helper::is_partner_published accurately reflects publication status.
+	 */
+	public function test_partner_helper_is_partner_published() {
+		$this->assertTrue(
+			Wpfaevent_Partner_Helper::is_partner_published(
+				array(
+					'name'      => 'Active',
+					'published' => true,
+				)
+			)
+		);
+		$this->assertTrue( Wpfaevent_Partner_Helper::is_partner_published( array( 'name' => 'Unspecified' ) ) );
+		$this->assertFalse(
+			Wpfaevent_Partner_Helper::is_partner_published(
+				array(
+					'name'      => 'Unpublished',
+					'published' => false,
+				)
+			)
+		);
+		$this->assertFalse(
+			Wpfaevent_Partner_Helper::is_partner_published(
+				array(
+					'name'         => 'Unpublished',
+					'is_published' => false,
+				)
+			)
+		);
+		$this->assertFalse(
+			Wpfaevent_Partner_Helper::is_partner_published(
+				array(
+					'name'   => 'Inactive',
+					'active' => false,
+				)
+			)
+		);
+		$this->assertFalse(
+			Wpfaevent_Partner_Helper::is_partner_published(
+				array(
+					'name'   => 'Draft',
+					'status' => 'draft',
+				)
+			)
+		);
+		$this->assertFalse( Wpfaevent_Partner_Helper::is_partner_published( 'not an array' ) );
+	}
 }
