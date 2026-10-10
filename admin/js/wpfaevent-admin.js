@@ -1,10 +1,7 @@
 (function ($) {
 	'use strict';
 
-	$(function () {
-		const $importForm = $('#wpfaevent-import-events-form');
-		const $updateForm = $('#wpfaevent-update-events-form');
-		const sponsorGroupOrderForm = document.getElementById(
+	$(function () {		const sponsorGroupOrderForm = document.getElementById(
 			'wpfaevent-sponsor-group-order-form'
 		);
 		const sponsorGroupList = document.getElementById(
@@ -156,19 +153,6 @@
 				}
 			}
 		);
-
-		function showImportNotice(message) {
-			const $container = $('.wrap').first();
-			const $existingNotices = $container.find(
-				'.notice.wpfaevent-import-notice'
-			);
-			const $notice = $('<div/>', {
-				class: 'notice notice-error is-dismissible wpfaevent-import-notice',
-			}).append($('<p/>').text(message));
-
-			$existingNotices.remove();
-			$container.prepend($notice);
-		}
 
 		const $eventyayImportForm = $('.wpfaevent-eventyay-import-form');
 
@@ -541,75 +525,285 @@
 				notice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 			}
 		}
+
+		/* -------------------------------------------------------------
+		 * Event Custom Navigation Metabox
+		 * ----------------------------------------------------------- */
+
+		// Items are submitted in DOM order, so reordering the cards is all
+		// that is needed for the saved navigation to follow the new order.
+		// Sub-items only sort within their own dropdown because their field
+		// names carry the parent item's index.
+		function initNavSortables() {
+			if (!$.fn.sortable) {
+				return;
+			}
+			const sortableOptions = {
+				axis: 'y',
+				forcePlaceholderSize: true,
+				placeholder: 'wpfaevent-nav-sortable-placeholder',
+			};
+			$('#wpfaevent-nav-items-container')
+				.not('.ui-sortable')
+				.sortable(
+					$.extend({}, sortableOptions, {
+						items: '> .wpfaevent-meta-card',
+						handle: '.wpfaevent-nav-card-handle',
+					})
+				);
+			$('#wpfaevent-nav-items-container .wpfaevent-nav-subitems-list')
+				.not('.ui-sortable')
+				.sortable(
+					$.extend({}, sortableOptions, {
+						items: '> .wpfaevent-nav-subitem-block',
+						handle: '.wpfaevent-nav-subitem-handle',
+					})
+				);
+		}
+
+		function announceNavPosition(position, total) {
+			const status = document.getElementById(
+				'wpfaevent-nav-order-status'
+			);
+			if (!status) {
+				return;
+			}
+			const template =
+				typeof window.wpfaeventAdminL10n !== 'undefined' &&
+				window.wpfaeventAdminL10n.navItemMoved
+					? window.wpfaeventAdminL10n.navItemMoved
+					: 'Moved to position %1$s of %2$s.';
+			// Clear first so repeating the same message is announced again.
+			status.textContent = '';
+			window.setTimeout(function () {
+				status.textContent = template
+					.replace('%1$s', String(position))
+					.replace('%2$s', String(total));
+			}, 50);
+		}
+
+		initNavSortables();
+
+		$(document).on('click', '.wpfaevent-nav-move-btn', function (e) {
+			e.preventDefault();
+			const $item = $(this).closest(
+				'.wpfaevent-nav-subitem-block, .wpfaevent-meta-card'
+			);
+			const selector = $item.hasClass('wpfaevent-nav-subitem-block')
+				? '.wpfaevent-nav-subitem-block'
+				: '.wpfaevent-meta-card';
+			const movingUp = $(this).data('direction') === 'up';
+			const $target = movingUp
+				? $item.prev(selector)
+				: $item.next(selector);
+			// Already first or last in its list: nothing moved, so nothing to announce.
+			if (!$target.length) {
+				return;
+			}
+			if (movingUp) {
+				$item.insertBefore($target);
+			} else {
+				$item.insertAfter($target);
+			}
+			// Moving the node in the DOM drops focus; keep it on the button
+			// so the item can be moved several steps from the keyboard.
+			this.focus();
+			const $siblings = $item.parent().children(selector);
+			announceNavPosition($siblings.index($item) + 1, $siblings.length);
+		});
+
+		$(document).on('click', '#wpfaevent-reset-nav-default', function (e) {
+			e.preventDefault();
+			const confirmMsg =
+				typeof window.wpfaeventAdminL10n !== 'undefined' &&
+				window.wpfaeventAdminL10n.confirmResetNav
+					? window.wpfaeventAdminL10n.confirmResetNav
+					: 'Reset navigation to default items?';
+			// eslint-disable-next-line no-alert
+			if (!window.confirm(confirmMsg)) {
+				return;
+			}
+			const container = document.getElementById(
+				'wpfaevent-nav-items-container'
+			);
+			if (!container) {
+				return;
+			}
+			const defaultTmpl = document.getElementById(
+				'wpfaevent-nav-default-template'
+			);
+			$(container).empty();
+			if (defaultTmpl && 'content' in defaultTmpl) {
+				container.appendChild(defaultTmpl.content.cloneNode(true));
+			}
+			initNavSortables();
+		});
+
+		$(document).on('click', '#wpfaevent-clear-nav', function (e) {
+			e.preventDefault();
+			const confirmMsg =
+				typeof window.wpfaeventAdminL10n !== 'undefined' &&
+				window.wpfaeventAdminL10n.confirmClearNav
+					? window.wpfaeventAdminL10n.confirmClearNav
+					: 'Clear all custom navigation items and use default navigation?';
+			// eslint-disable-next-line no-alert
+			if (!window.confirm(confirmMsg)) {
+				return;
+			}
+			$('#wpfaevent-nav-items-container').empty();
+		});
+
+		$(document).on('click', '#wpfaevent-add-nav-item', function (e) {
+			e.preventDefault();
+			const container = document.getElementById(
+				'wpfaevent-nav-items-container'
+			);
+			if (!container) {
+				return;
+			}
+			const itemTmpl = document.getElementById(
+				'wpfaevent-nav-item-template'
+			);
+			if (!itemTmpl || !('content' in itemTmpl)) {
+				return;
+			}
+			let maxIdx = -1;
+			$(container)
+				.find('.wpfaevent-meta-card')
+				.each(function () {
+					const idx = parseInt($(this).attr('data-index'), 10);
+					if (!isNaN(idx) && idx > maxIdx) {
+						maxIdx = idx;
+					}
+				});
+			const nextIdx = Math.max(0, maxIdx + 1);
+			const clone = itemTmpl.content.cloneNode(true);
+			const card = clone.querySelector('.wpfaevent-meta-card');
+			if (card) {
+				card.setAttribute('data-index', String(nextIdx));
+			}
+			const fields = clone.querySelectorAll('input, select, textarea');
+			fields.forEach(function (field) {
+				const name = field.getAttribute('name');
+				if (name) {
+					field.setAttribute(
+						'name',
+						name.replace(/\$\{navIndex\}/g, String(nextIdx))
+					);
+				}
+			});
+			container.appendChild(clone);
+			initNavSortables();
+		});
+
+		$(document).on('change', '.wpfaevent-nav-type-select', function () {
+			const val = $(this).val();
+			const $card = $(this).closest('.wpfaevent-meta-card');
+			$card
+				.find('.wpfaevent-nav-link-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'link');
+			$card
+				.find('.wpfaevent-nav-page-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'page');
+			$card
+				.find('.wpfaevent-nav-custom-page-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'custom_page');
+			$card
+				.find('.wpfaevent-nav-dropdown-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'dropdown');
+		});
+
+		$(document).on('change', '.wpfaevent-subitem-type-select', function () {
+			const val = $(this).val();
+			const $block = $(this).closest('.wpfaevent-nav-subitem-block');
+			$block
+				.find('.wpfaevent-sub-link-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'link');
+			$block
+				.find('.wpfaevent-sub-page-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'page');
+			$block
+				.find('.wpfaevent-sub-custom-row')
+				.toggleClass('wpfaevent-nav-row-hidden', val !== 'custom_page');
+		});
+
+		$(document).on('change', '.wpfaevent-nav-page-select', function () {
+			const $opt = $(this).find('option:selected');
+			const $card = $(this).closest('.wpfaevent-meta-card');
+			const $txt = $card.find('input[name*="[text]"]').first();
+			if (!$txt.val() && $opt.data('title')) {
+				$txt.val($opt.data('title'));
+			}
+		});
+
+		$(document).on('change', '.wpfaevent-sub-page-select', function () {
+			const $opt = $(this).find('option:selected');
+			const $block = $(this).closest('.wpfaevent-nav-subitem-block');
+			const $txt = $block.find('input[name*="[text]"]').first();
+			if (!$txt.val() && $opt.data('title')) {
+				$txt.val($opt.data('title'));
+			}
+		});
+
+		$(document).on('click', '.wpfaevent-remove-card-btn', function (e) {
+			e.preventDefault();
+			$(this).closest('.wpfaevent-meta-card').remove();
+		});
+
+		$(document).on('click', '.wpfaevent-remove-subitem-btn', function (e) {
+			e.preventDefault();
+			$(this).closest('.wpfaevent-nav-subitem-block').remove();
+		});
+
+		$(document).on('click', '.wpfaevent-add-subitem-btn', function (e) {
+			e.preventDefault();
+			const subTmpl = document.getElementById(
+				'wpfaevent-nav-subitem-template'
+			);
+			if (!subTmpl || !('content' in subTmpl)) {
+				return;
+			}
+			const $card = $(this).closest('.wpfaevent-meta-card');
+			const rawPIdx = $card.attr('data-index');
+			const parsedPIdx =
+				rawPIdx !== undefined ? parseInt(rawPIdx, 10) : 0;
+			const pIdx = isNaN(parsedPIdx) ? 0 : parsedPIdx;
+			let maxSubIdx = -1;
+			$card.find('.wpfaevent-nav-subitem-block').each(function () {
+				const nameAttr =
+					$(this)
+						.find('input, select, textarea')
+						.first()
+						.attr('name') || '';
+				const match = nameAttr.match(/\[items\]\[(\d+)\]/);
+				if (match) {
+					const sIdx = parseInt(match[1], 10);
+					if (!isNaN(sIdx) && sIdx > maxSubIdx) {
+						maxSubIdx = sIdx;
+					}
+				}
+			});
+			const nextSubIdx = Math.max(0, maxSubIdx + 1);
+			const clone = subTmpl.content.cloneNode(true);
+			const fields = clone.querySelectorAll('input, select, textarea');
+			fields.forEach(function (field) {
+				const name = field.getAttribute('name');
+				if (name) {
+					field.setAttribute(
+						'name',
+						name
+							.replace(/__PIDX__/g, String(pIdx))
+							.replace(/__SIDX__/g, String(nextSubIdx))
+					);
+				}
+			});
+			const subitemsList = $card.find('.wpfaevent-nav-subitems-list')[0];
+			if (subitemsList) {
+				subitemsList.appendChild(clone);
+			}
+			$card.attr('data-next-sub-index', String(nextSubIdx + 1));
+		});
 	});
 
-	function getEventTitle(event) {
-		if (!event) {
-			return 'Unnamed Event';
-		}
-
-		// Helper to extract string from localized object/array
-		function getStringValue(val) {
-			if (typeof val === 'string' && val.trim() !== '') {
-				return val.trim();
-			}
-			if (val && typeof val === 'object') {
-				const preferredKeys = [
-					'en',
-					'default',
-					'value',
-					'name',
-					'title',
-				];
-				for (let i = 0; i < preferredKeys.length; i++) {
-					const key = preferredKeys[i];
-					if (
-						typeof val[key] === 'string' &&
-						val[key].trim() !== ''
-					) {
-						return val[key].trim();
-					}
-				}
-				for (const key in val) {
-					if (Object.prototype.hasOwnProperty.call(val, key)) {
-						if (
-							typeof val[key] === 'string' &&
-							val[key].trim() !== ''
-						) {
-							return val[key].trim();
-						}
-					}
-				}
-			}
-			return null;
-		}
-
-		const name = getStringValue(event.name);
-		if (name) {
-			return name;
-		}
-
-		const title = getStringValue(event.title);
-		if (title) {
-			return title;
-		}
-
-		if (typeof event.slug === 'string' && event.slug.trim() !== '') {
-			return event.slug.trim();
-		}
-
-		if (
-			typeof event.identifier === 'string' &&
-			event.identifier.trim() !== ''
-		) {
-			return event.identifier.trim();
-		}
-
-		if (typeof event.code === 'string' && event.code.trim() !== '') {
-			return event.code.trim();
-		}
-
-		return 'Unnamed Event';
-	}
 })(jQuery);
 

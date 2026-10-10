@@ -298,6 +298,19 @@ class Wpfaevent_Meta_Event {
 				'description'       => __( 'Related speaker post IDs', 'wpfaevent' ),
 			)
 		);
+
+		// Event custom navigation items and dropdowns.
+		register_post_meta(
+			self::$post_type,
+			'wpfa_event_custom_navigation',
+			array(
+				'type'              => 'array',
+				'single'            => true,
+				'show_in_rest'      => false,
+				'sanitize_callback' => array( __CLASS__, 'sanitize_custom_navigation' ),
+				'description'       => __( 'Custom navigation items and dropdowns for the event', 'wpfaevent' ),
+			)
+		);
 	}
 
 	/**
@@ -319,6 +332,170 @@ class Wpfaevent_Meta_Event {
 		$speaker_ids = array_filter( $speaker_ids );
 
 		return array_values( array_unique( $speaker_ids ) );
+	}
+
+	/**
+	 * Sanitizes custom event navigation items.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $items Raw navigation items.
+	 * @return array<int, array<string, mixed>> Sanitized navigation items.
+	 */
+	public static function sanitize_custom_navigation( $items ) {
+		if ( is_string( $items ) ) {
+			$items = json_decode( $items, true );
+		}
+		if ( ! is_array( $items ) ) {
+			return array();
+		}
+
+		$clean      = array();
+		$used_slugs = array();
+
+		// Slugs of already saved custom pages are reserved up front so a new
+		// page with the same heading can never take over an existing page's
+		// URL, regardless of where either item is moved in the list.
+		$reserved_slugs = self::collect_custom_page_slugs( $items );
+
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) || empty( $item['text'] ) ) {
+				continue;
+			}
+			$type = isset( $item['type'] ) ? (string) $item['type'] : 'link';
+
+			if ( 'dropdown' === $type ) {
+				$text      = sanitize_text_field( (string) $item['text'] );
+				$sub_items = array();
+				if ( ! empty( $item['items'] ) && is_array( $item['items'] ) ) {
+					foreach ( $item['items'] as $sub ) {
+						$clean_sub = self::sanitize_nav_single_item( $sub, $used_slugs, $reserved_slugs );
+						if ( $clean_sub ) {
+							$sub_items[] = $clean_sub;
+						}
+					}
+				}
+				if ( ! empty( $sub_items ) ) {
+					$clean[] = array(
+						'text'  => $text,
+						'type'  => 'dropdown',
+						'items' => $sub_items,
+					);
+				}
+			} else {
+				$clean_item = self::sanitize_nav_single_item( $item, $used_slugs, $reserved_slugs );
+				if ( $clean_item ) {
+					$clean[] = $clean_item;
+				}
+			}
+		}
+
+		return $clean;
+	}
+
+	/**
+	 * Collects the slugs already assigned to custom pages in raw navigation items.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array<mixed> $items Raw navigation items.
+	 * @return array<string> Sanitized custom page slugs.
+	 */
+	private static function collect_custom_page_slugs( $items ) {
+		$candidates = array();
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$candidates[] = $item;
+			if ( isset( $item['type'] ) && 'dropdown' === $item['type'] && ! empty( $item['items'] ) && is_array( $item['items'] ) ) {
+				$candidates = array_merge( $candidates, $item['items'] );
+			}
+		}
+
+		$slugs = array();
+		foreach ( $candidates as $candidate ) {
+			if ( ! is_array( $candidate ) || ! isset( $candidate['type'] ) || 'custom_page' !== $candidate['type'] || empty( $candidate['slug'] ) ) {
+				continue;
+			}
+			$slug = sanitize_title( (string) $candidate['slug'] );
+			if ( '' !== $slug ) {
+				$slugs[] = $slug;
+			}
+		}
+
+		return $slugs;
+	}
+
+	/**
+	 * Sanitizes a single navigation item or sub-item.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array<string, mixed> $item           Raw item array.
+	 * @param array<string>        $used_slugs     Tracked custom page slugs for uniqueness.
+	 * @param array<string>        $reserved_slugs Slugs already saved on custom pages, kept free for those pages.
+	 * @return array<string, mixed>|null Sanitized item array or null if invalid.
+	 */
+	private static function sanitize_nav_single_item( $item, &$used_slugs, $reserved_slugs = array() ) {
+		if ( ! is_array( $item ) || empty( $item['text'] ) ) {
+			return null;
+		}
+
+		$text = sanitize_text_field( (string) $item['text'] );
+		$type = isset( $item['type'] ) ? (string) $item['type'] : 'link';
+
+		if ( 'dropdown' === $type ) {
+			return null;
+		}
+
+		if ( 'custom_page' === $type ) {
+			$title      = ! empty( $item['title'] ) ? sanitize_text_field( (string) $item['title'] ) : $text;
+			$content    = ! empty( $item['content'] ) ? trim( wp_kses_post( (string) $item['content'] ) ) : '';
+			$saved_slug = ! empty( $item['slug'] ) ? sanitize_title( (string) $item['slug'] ) : '';
+			$base_slug  = '' !== $saved_slug ? $saved_slug : sanitize_title( $title );
+			if ( '' === $base_slug ) {
+				$base_slug = 'custom-info';
+			}
+
+			// A page that already has a slug keeps it; a new page must also
+			// avoid the slugs reserved for existing pages.
+			$taken_slugs = '' !== $saved_slug ? $used_slugs : array_merge( $used_slugs, $reserved_slugs );
+			$slug        = $base_slug;
+			$suffix      = 2;
+			while ( in_array( $slug, $taken_slugs, true ) ) {
+				$slug = $base_slug . '-' . $suffix;
+				++$suffix;
+			}
+			$used_slugs[] = $slug;
+
+			return array(
+				'text'    => $text,
+				'type'    => 'custom_page',
+				'title'   => $title,
+				'slug'    => $slug,
+				'content' => $content,
+				'href'    => '?custom_page=' . $slug,
+			);
+		}
+
+		if ( 'page' === $type ) {
+			$page_id = ! empty( $item['page_id'] ) ? absint( $item['page_id'] ) : 0;
+			$href    = $page_id ? get_permalink( $page_id ) : ( ! empty( $item['href'] ) ? esc_url_raw( trim( (string) $item['href'] ) ) : '' );
+
+			return array(
+				'text'    => $text,
+				'type'    => 'page',
+				'page_id' => $page_id,
+				'href'    => $href ? $href : '',
+			);
+		}
+
+		return array(
+			'text' => $text,
+			'type' => 'link',
+			'href' => ! empty( $item['href'] ) ? esc_url_raw( trim( (string) $item['href'] ) ) : '',
+		);
 	}
 
 	/**

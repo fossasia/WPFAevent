@@ -149,6 +149,17 @@ class Wpfaevent_Admin {
 		 */
 
 		wp_enqueue_script( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'js/wpfaevent-admin.js', array( 'jquery', 'jquery-ui-sortable' ), $this->version, false );
+
+		wp_localize_script(
+			$this->plugin_name . '-admin',
+			'wpfaeventAdminL10n',
+			array(
+				'confirmResetNav' => __( 'Reset navigation to default items?', 'wpfaevent' ),
+				'confirmClearNav' => __( 'Clear all custom navigation items and use default navigation?', 'wpfaevent' ),
+				/* translators: 1: new position of the moved navigation item, 2: total number of items in its list. */
+				'navItemMoved'    => __( 'Moved to position %1$s of %2$s.', 'wpfaevent' ),
+			)
+		);
 	}
 
 	/**

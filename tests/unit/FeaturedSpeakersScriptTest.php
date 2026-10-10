@@ -56,7 +56,7 @@ class FeaturedSpeakersScriptTest extends WP_UnitTestCase {
 		$this->assertNotFalse( $source );
 
 		$start = strpos( $source, '// Featured Speakers Manual Ordering' );
-		$end = strpos( $source, '})(jQuery);', $start );
+		$end    = strpos( $source, '})(jQuery);', $start );
 
 		$this->assertNotFalse( $start );
 		$this->assertNotFalse( $end );

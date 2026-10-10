@@ -132,6 +132,16 @@
 	display: none;
 }
 
+.wpfaevent .wpfa-event-exhibitor-banner {
+	background: #f7fafc;
+	border-bottom: 1px solid var(--event-line);
+	display: block;
+	flex-shrink: 0;
+	height: 150px;
+	object-fit: cover;
+	width: 100%;
+}
+
 .wpfaevent .wpfa-event-exhibitor-summary {
 	cursor: pointer;
 	display: flex;

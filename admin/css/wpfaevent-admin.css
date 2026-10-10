@@ -41,37 +41,6 @@
     margin-bottom: 12px;
 }
 
-#poststuff #wpfa_event_additional_information_box .wpfaevent-additional-info-field-label,
-#wpfa_event_additional_information_box .wpfaevent-additional-info-field-label,
-#poststuff .wpfaevent-additional-info-field-label,
-.wpfaevent-additional-info-field-label {
-    float: left;
-    clear: both;
-    margin-top: 18px;
-    margin-bottom: 0;
-    line-height: 28px;
-}
-
-#poststuff #wpfa_event_additional_information_box .wpfaevent-additional-info-field-label:first-of-type,
-#wpfa_event_additional_information_box .wpfaevent-additional-info-field-label:first-of-type,
-#poststuff .wpfaevent-additional-info-field-label:first-of-type,
-.wpfaevent-additional-info-field-label:first-of-type {
-    margin-top: 6px;
-}
-
-#wpfa_event_additional_information_box .wp-switch-editor,
-#wp-wpfa_event_venue_information-wrap .wp-switch-editor,
-#wp-wpfa_event_transportation_information-wrap .wp-switch-editor,
-#wp-wpfa_event_hotel_information-wrap .wp-switch-editor {
-    margin-top: 0;
-}
-
-#wpfa_event_additional_information_box .wp-editor-tools,
-#wp-wpfa_event_venue_information-wrap .wp-editor-tools,
-#wp-wpfa_event_transportation_information-wrap .wp-editor-tools,
-#wp-wpfa_event_hotel_information-wrap .wp-editor-tools {
-    margin-bottom: 0;
-}
 
 /* The block editor's meta boxes pane traps TinyMCE fullscreen under its header. */
 .post-type-wpfa_event.mce-fullscreen .edit-post-meta-boxes-main,
@@ -93,12 +62,6 @@
     display: none;
 }
 
-#wpfa_event_additional_information_box .wp-editor-wrap,
-#wp-wpfa_event_venue_information-wrap,
-#wp-wpfa_event_transportation_information-wrap,
-#wp-wpfa_event_hotel_information-wrap {
-    margin-bottom: 8px;
-}
 
 .wpfaevent-custom-tabs-list {
     display: grid;
@@ -474,6 +437,135 @@
 
 .wpfaevent-meta-card-field.span-2 {
 	grid-column: span 2;
+}
+
+/**
+ * Event Navigation Metabox Styling
+ */
+.wpfaevent-nav-description {
+	margin-bottom: 10px;
+}
+
+.wpfaevent-nav-actions {
+	margin-top: 10px;
+}
+
+.wpfaevent-nav-actions button + button {
+	margin-left: 8px;
+}
+
+.wpfaevent-meta-card-field.wpfaevent-nav-page-row select,
+.wpfaevent-meta-card-field.wpfaevent-nav-custom-page-row textarea {
+	width: 100%;
+}
+
+.wpfaevent-meta-card-field.wpfaevent-nav-custom-page-row .wpfaevent-nav-content-label {
+	margin-top: 8px;
+}
+
+.wpfaevent-add-subitem-btn {
+	margin-top: 8px;
+}
+
+.wpfaevent-nav-subitem-block {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	padding: 10px;
+	margin-bottom: 8px;
+}
+
+.wpfaevent-nav-subitem-header {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 6px;
+}
+
+.wpfaevent-nav-subitem-label-input {
+	flex: 2;
+}
+
+.wpfaevent-subitem-type-select {
+	flex: 1;
+}
+
+.wpfaevent-remove-subitem-btn {
+	color: #a00;
+	font-size: 18px;
+	line-height: 1;
+	padding: 0 4px;
+	border: none;
+	background: none;
+	cursor: pointer;
+}
+
+.wpfaevent-remove-subitem-btn:hover {
+	color: #dc3232;
+}
+
+.wpfaevent-sub-field input,
+.wpfaevent-sub-field select,
+.wpfaevent-sub-field textarea {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.wpfaevent-sub-custom-row input {
+	margin-bottom: 6px;
+}
+
+.wpfaevent-nav-row-hidden {
+	display: none !important;
+}
+
+.wpfaevent-nav-order-controls {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-bottom: 10px;
+}
+
+.wpfaevent-nav-card-handle,
+.wpfaevent-nav-subitem-handle {
+	color: #646970;
+	cursor: move;
+}
+
+.wpfaevent-nav-card-handle:hover,
+.wpfaevent-nav-subitem-handle:hover {
+	color: #1d2327;
+}
+
+.button.wpfaevent-nav-move-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	padding: 0 4px;
+}
+
+.wpfaevent-nav-move-btn .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+
+.wpfaevent-nav-sortable-placeholder {
+	border: 2px dashed #c3c4c7;
+	border-radius: 4px;
+	background: #f6f7f7;
+	margin-bottom: 15px;
+	visibility: visible !important;
+}
+
+.wpfaevent-nav-subitems-list .wpfaevent-nav-sortable-placeholder {
+	margin-bottom: 8px;
+}
+
+.wpfaevent-meta-card.ui-sortable-helper,
+.wpfaevent-nav-subitem-block.ui-sortable-helper {
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /**

@@ -151,6 +151,7 @@ class Wpfaevent_AJAX_Controller {
 			)
 		);
 	}
+
 	/**
 	 * Report whether an Eventyay import is still running for the current user.
 	 *

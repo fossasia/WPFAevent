@@ -17,6 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 $wpfaevent_is_embed = ! empty( $GLOBALS['wpfaevent_template_embed'] );
 $today              = current_time( 'Y-m-d' );
 $is_admin           = current_user_can( 'manage_options' );
+$initial_filter     = class_exists( 'Wpfaevent_Event_Navigation_Helper' )
+	? Wpfaevent_Event_Navigation_Helper::get_initial_events_filter()
+	: 'all';
 
 // Pull all published event IDs.
 $event_ids = get_posts(
@@ -224,11 +227,11 @@ $header_vars = array(
 
 					<div class="events-filter-footer">
 						<div class="date-filter-tabs" role="group" aria-label="<?php esc_attr_e( 'Filter by date', 'wpfaevent' ); ?>">
-							<button class="date-filter-btn active" data-filter="all"><?php esc_html_e( 'All', 'wpfaevent' ); ?></button>
-							<button class="date-filter-btn" data-filter="upcoming"><?php esc_html_e( 'Upcoming', 'wpfaevent' ); ?></button>
-							<button class="date-filter-btn" data-filter="past"><?php esc_html_e( 'Past', 'wpfaevent' ); ?></button>
+							<button class="date-filter-btn<?php echo 'all' === $initial_filter ? ' active' : ''; ?>" data-filter="all"><?php esc_html_e( 'All', 'wpfaevent' ); ?></button>
+							<button class="date-filter-btn<?php echo 'upcoming' === $initial_filter ? ' active' : ''; ?>" data-filter="upcoming"><?php esc_html_e( 'Upcoming', 'wpfaevent' ); ?></button>
+							<button class="date-filter-btn<?php echo 'past' === $initial_filter ? ' active' : ''; ?>" data-filter="past"><?php esc_html_e( 'Past', 'wpfaevent' ); ?></button>
 							<?php if ( is_user_logged_in() ) : ?>
-								<button class="date-filter-btn" data-filter="bookmarked"><?php esc_html_e( 'Favorites', 'wpfaevent' ); ?></button>
+								<button class="date-filter-btn<?php echo 'bookmarked' === $initial_filter ? ' active' : ''; ?>" data-filter="bookmarked"><?php esc_html_e( 'Favorites', 'wpfaevent' ); ?></button>
 							<?php endif; ?>
 						</div>
 						<button id="searchEventsBtn" class="btn btn-primary">

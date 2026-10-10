@@ -80,11 +80,15 @@ class Wpfaevent_Eventyay_Importer {
 		$settings['organizer_slug'] = isset( $input['organizer_slug'] ) ? $this->sanitize_eventyay_path_segment( $input['organizer_slug'] ) : '';
 		$settings['event_slug']     = isset( $input['event_slug'] ) ? $this->sanitize_eventyay_path_segment( $input['event_slug'] ) : '';
 		$parsed_event_url           = array();
+		$invalid_event_url          = false;
 
 		if ( '' !== $event_url ) {
 			$parsed_event_url = $this->parse_eventyay_public_event_url( $event_url );
 
 			if ( empty( $parsed_event_url ) ) {
+				$invalid_event_url          = true;
+				$settings['organizer_slug'] = '';
+				$settings['event_slug']     = '';
 				add_settings_error(
 					'wpfaevent_eventyay_import',
 					'wpfaevent_eventyay_invalid_event_url',
@@ -97,7 +101,7 @@ class Wpfaevent_Eventyay_Importer {
 			}
 		}
 
-		if ( empty( $parsed_event_url ) ) {
+		if ( ! $invalid_event_url && empty( $parsed_event_url ) ) {
 			$parsed_event_url = $this->parse_eventyay_public_event_url( $base_url );
 		}
 
@@ -140,9 +144,9 @@ class Wpfaevent_Eventyay_Importer {
 
 		$settings['auto_sync_enabled'] = ! empty( $input['auto_sync_enabled'] );
 
-		$auto_sync_interval = isset( $input['auto_sync_interval'] ) ? sanitize_key( wp_unslash( $input['auto_sync_interval'] ) ) : $defaults['auto_sync_interval'];
+		$auto_sync_interval = isset( $input['auto_sync_interval'] ) ? sanitize_key( wp_unslash( $input['auto_sync_interval'] ) ) : ( isset( $current['auto_sync_interval'] ) ? $current['auto_sync_interval'] : 'daily' );
 		if ( ! in_array( $auto_sync_interval, array( 'hourly', 'twicedaily', 'daily' ), true ) ) {
-			$auto_sync_interval = $defaults['auto_sync_interval'];
+			$auto_sync_interval = 'daily';
 		}
 		$settings['auto_sync_interval'] = $auto_sync_interval;
 
@@ -196,30 +200,10 @@ class Wpfaevent_Eventyay_Importer {
 					<?php settings_fields( 'wpfaevent_eventyay_import' ); ?>
 					<table class="form-table" role="presentation">
 						<tr>
-							<th scope="row"><label for="wpfaevent_eventyay_base_url"><?php esc_html_e( 'Eventyay base URL', 'wpfaevent' ); ?></label></th>
-							<td>
-								<input type="url" class="regular-text" id="wpfaevent_eventyay_base_url" name="wpfaevent_eventyay_import_settings[base_url]" value="<?php echo esc_attr( $settings['base_url'] ); ?>" placeholder="https://eventyay.com">
-								<p class="description"><?php esc_html_e( 'Use the site root, not the API path. Self-hosted Eventyay installs are supported.', 'wpfaevent' ); ?></p>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row"><label for="wpfaevent_eventyay_organizer_slug"><?php esc_html_e( 'Organizer slug', 'wpfaevent' ); ?></label></th>
-							<td>
-								<input type="text" class="regular-text" id="wpfaevent_eventyay_organizer_slug" name="wpfaevent_eventyay_import_settings[organizer_slug]" value="<?php echo esc_attr( $settings['organizer_slug'] ); ?>" placeholder="bigevents">
-							</td>
-						</tr>
-						<tr>
 							<th scope="row"><label for="wpfaevent_eventyay_event_url"><?php esc_html_e( 'Event URL', 'wpfaevent' ); ?></label></th>
 							<td>
 								<input type="url" class="regular-text" id="wpfaevent_eventyay_event_url" name="wpfaevent_eventyay_import_settings[event_url]" value="<?php echo esc_attr( $event_url ); ?>" placeholder="https://eventyay.com/bigevents/sampleconf/">
 								<p class="description"><?php esc_html_e( 'Imports and updates now run one event at a time. Paste the full public Eventyay event URL here.', 'wpfaevent' ); ?></p>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row"><label for="wpfaevent_eventyay_event_slug"><?php esc_html_e( 'Event slug', 'wpfaevent' ); ?></label></th>
-							<td>
-								<input type="text" class="regular-text" id="wpfaevent_eventyay_event_slug" name="wpfaevent_eventyay_import_settings[event_slug]" value="<?php echo esc_attr( $settings['event_slug'] ); ?>" placeholder="sampleconf">
-								<p class="description"><?php esc_html_e( 'This is filled from the Event URL above and is required for single-event imports.', 'wpfaevent' ); ?></p>
 							</td>
 						</tr>
 						<tr>
@@ -497,6 +481,23 @@ class Wpfaevent_Eventyay_Importer {
 
 		$notice_key = 'wpfaevent_eventyay_import_notice_' . get_current_user_id();
 
+		if ( isset( $_POST['wpfaevent_eventyay_import_settings'] ) && is_array( $_POST['wpfaevent_eventyay_import_settings'] ) ) {
+			$raw_event_url = isset( $_POST['wpfaevent_eventyay_import_settings']['event_url'] ) ? trim( (string) wp_unslash( $_POST['wpfaevent_eventyay_import_settings']['event_url'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- URL is validated by parse_eventyay_public_event_url() before use.
+
+			if ( '' === $raw_event_url || empty( $this->parse_eventyay_public_event_url( $raw_event_url ) ) ) {
+				set_transient(
+					$notice_key,
+					array(
+						'type'    => 'error',
+						'message' => __( 'Please enter a valid public Eventyay event URL with both organizer and event slugs before importing.', 'wpfaevent' ),
+					),
+					MINUTE_IN_SECONDS * 5
+				);
+				wp_safe_redirect( admin_url( 'edit.php?post_type=wpfa_event&page=' . $return_page ) );
+				exit;
+			}
+		}
+
 		$lock = self::acquire_import_lock();
 		if ( false === $lock ) {
 			set_transient(
@@ -640,13 +641,23 @@ class Wpfaevent_Eventyay_Importer {
 			return array();
 		}
 
+		$scheme = strtolower( $parts['scheme'] );
+		$host   = strtolower( $parts['host'] );
+		if ( 'https' !== $scheme || ! in_array( $host, array( 'eventyay.com', 'dev.eventyay.com' ), true ) ) {
+			return array();
+		}
+
 		$path = trim( $parts['path'], '/' );
 		if ( '' === $path || 0 === strpos( $path, 'api/' ) || 0 === strpos( $path, 'v1/' ) ) {
 			return array();
 		}
 
-		$segments = array_values( array_filter( explode( '/', $path ) ) );
-		if ( count( $segments ) < 2 ) {
+		$segments = explode( '/', $path );
+		if ( in_array( '', $segments, true ) ) {
+			return array();
+		}
+
+		if ( 2 !== count( $segments ) ) {
 			return array();
 		}
 
@@ -657,7 +668,7 @@ class Wpfaevent_Eventyay_Importer {
 			return array();
 		}
 
-		$base_url = $parts['scheme'] . '://' . $parts['host'];
+		$base_url = $scheme . '://' . $host;
 		if ( ! empty( $parts['port'] ) ) {
 			$base_url .= ':' . absint( $parts['port'] );
 		}
@@ -3416,6 +3427,7 @@ class Wpfaevent_Eventyay_Importer {
 		$title             = $this->eventyay_event_title( $event );
 		$title             = $title ? $title : $event_slug;
 		$description       = $this->eventyay_event_description( $event );
+		$lead_text         = $this->parser->eventyay_event_lead_text( $event );
 		$preferred_post_id = absint( $preferred_post_id );
 		$existing_id       = $preferred_post_id && 'wpfa_event' === get_post_type( $preferred_post_id ) ? $preferred_post_id : $this->find_eventyay_event_post( $organizer_slug, $event_slug );
 		$post_status       = in_array( $settings['post_status'], array( 'draft', 'publish', 'pending', 'private' ), true ) ? $settings['post_status'] : 'draft';
@@ -3424,6 +3436,7 @@ class Wpfaevent_Eventyay_Importer {
 			'post_type'    => 'wpfa_event',
 			'post_status'  => $post_status,
 			'post_content' => wp_kses_post( $description ),
+			'post_excerpt' => wp_kses_post( $description ),
 		);
 		$created           = false;
 
@@ -3487,7 +3500,11 @@ class Wpfaevent_Eventyay_Importer {
 		$this->update_or_delete_post_meta( $saved_id, '_event_end_date', $end_date );
 		$this->update_or_delete_post_meta( $saved_id, '_event_place', $location );
 		$this->update_or_delete_post_meta( $saved_id, '_event_registration_link', $event_url );
-		$this->update_or_delete_post_meta( $saved_id, '_event_lead_text', wp_strip_all_tags( $description ) );
+		$existing_lead_text = trim( (string) get_post_meta( $saved_id, 'wpfa_event_lead_text', true ) );
+		if ( '' === $existing_lead_text && '' !== $lead_text ) {
+			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_lead_text', $lead_text );
+			$this->update_or_delete_post_meta( $saved_id, '_event_lead_text', '' );
+		}
 
 		update_post_meta( $saved_id, '_wpfa_eventyay_organizer_slug', sanitize_text_field( $organizer_slug ) );
 		update_post_meta( $saved_id, '_wpfa_eventyay_event_slug', sanitize_text_field( $event_slug ) );

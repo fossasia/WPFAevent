@@ -94,16 +94,15 @@ class Wpfaevent_Admin_Event_Metabox {
 			'default'
 		);
 
-		// Additional information meta box (venue, transportation, hotel).
+		// Event navigation meta box.
 		add_meta_box(
-			'wpfa_event_additional_information_box',
-			__( 'Additional Information', 'wpfaevent' ),
-			array( $this, 'render_event_additional_information_meta_box' ),
+			'wpfa_event_navigation_box',
+			__( 'Event Navigation', 'wpfaevent' ),
+			array( $this, 'render_event_navigation_meta_box' ),
 			'wpfa_event',
 			'normal',
 			'default'
 		);
-
 		// Remove the default Custom Fields meta box to avoid UI clutter.
 		// since we have enabled 'custom-fields' support for REST API visibility.
 		remove_meta_box( 'postcustom', 'wpfa_event', 'normal' );
@@ -814,41 +813,233 @@ class Wpfaevent_Admin_Event_Metabox {
 		<?php
 	}
 
+
 	/**
-	 * Render the Additional Information meta box (venue, transportation, hotel).
+	 * Render Event Header Navigation meta box.
 	 *
 	 * @since 1.0.0
+	 *
 	 * @param WP_Post $post The post object.
+	 * @return void
 	 */
-	public function render_event_additional_information_meta_box( $post ): void {
-		$venue_information          = get_post_meta( $post->ID, 'wpfa_event_venue_information', true );
-		$transportation_information = get_post_meta( $post->ID, 'wpfa_event_transportation_information', true );
-		$hotel_information          = get_post_meta( $post->ID, 'wpfa_event_hotel_information', true );
+	public function render_event_navigation_meta_box( $post ) {
+		$saved_items = get_post_meta( $post->ID, 'wpfa_event_custom_navigation', true );
+		$items       = is_array( $saved_items ) && ! empty( $saved_items ) ? $saved_items : array();
 
-		$venue_information          = is_string( $venue_information ) ? $venue_information : '';
-		$transportation_information = is_string( $transportation_information ) ? $transportation_information : '';
-		$hotel_information          = is_string( $hotel_information ) ? $hotel_information : '';
-
-		$editor_settings = array(
-			'textarea_rows' => 6,
-			'media_buttons' => false,
+		$wp_pages = get_pages(
+			array(
+				'post_status' => 'publish',
+				'sort_column' => 'post_title',
+			)
 		);
 		?>
-		<p class="description"><?php esc_html_e( 'Manually curated attendee information shown on the event page and the Additional Information page.', 'wpfaevent' ); ?></p>
-		<p class="wpfaevent-additional-info-field-label">
-			<label for="wpfa_event_venue_information"><strong><?php esc_html_e( 'Venue Information', 'wpfaevent' ); ?></strong></label>
+		<input type="hidden" name="wpfa_custom_nav_items_present" value="1">
+		<p class="description wpfaevent-nav-description">
+			<?php esc_html_e( 'Customize navigation links for this event. Leave empty to use dynamically generated default navigation. Click "Reset to Default" to load standard items for customization.', 'wpfaevent' ); ?>
+			<?php esc_html_e( 'Drag items by their handle or use the move up and move down buttons to change the order. The new order is applied when the event is saved.', 'wpfaevent' ); ?>
 		</p>
-		<?php wp_editor( $venue_information, 'wpfa_event_venue_information', $editor_settings ); ?>
+		<div id="wpfaevent-nav-order-status" class="screen-reader-text" aria-live="polite"></div>
+		<div class="wpfaevent-meta-cards-container" id="wpfaevent-nav-items-container">
+			<?php
+			foreach ( $items as $i => $item ) {
+				$this->render_nav_item_card( $i, $item, $wp_pages );
+			}
+			?>
+		</div>
+		<p class="wpfaevent-nav-actions">
+			<button type="button" class="button button-primary" id="wpfaevent-add-nav-item">
+				<?php esc_html_e( '+ Add Navigation Item', 'wpfaevent' ); ?>
+			</button>
+			<button type="button" class="button button-secondary" id="wpfaevent-reset-nav-default">
+				<?php esc_html_e( 'Reset to Default', 'wpfaevent' ); ?>
+			</button>
+			<button type="button" class="button button-secondary" id="wpfaevent-clear-nav">
+				<?php esc_html_e( 'Clear All', 'wpfaevent' ); ?>
+			</button>
+		</p>
+		<template id="wpfaevent-nav-default-template">
+			<?php
+			$default_cards = class_exists( 'Wpfaevent_Main_Navigation_Helper' )
+				? Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items( $post->ID )
+				: array();
+			foreach ( $default_cards as $di => $ditem ) {
+				$this->render_nav_item_card( $di, $ditem, $wp_pages );
+			}
+			?>
+		</template>
+		<template id="wpfaevent-nav-item-template">
+			<?php $this->render_nav_item_card( '${navIndex}', array(), $wp_pages ); ?>
+		</template>
+		<template id="wpfaevent-nav-subitem-template">
+			<?php $this->render_nav_subitem_row( '__PIDX__', '__SIDX__', array(), $wp_pages ); ?>
+		</template>
+		<?php
+	}
 
-		<p class="wpfaevent-additional-info-field-label">
-			<label for="wpfa_event_transportation_information"><strong><?php esc_html_e( 'Transportation Information', 'wpfaevent' ); ?></strong></label>
-		</p>
-		<?php wp_editor( $transportation_information, 'wpfa_event_transportation_information', $editor_settings ); ?>
+	/**
+	 * Render a single custom nav item card for the event edit screen.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int|string           $i        Item index.
+	 * @param array<string, mixed> $item     Item data.
+	 * @param array<WP_Post>       $wp_pages Published pages.
+	 * @return void
+	 */
+	private function render_nav_item_card( $i, $item, $wp_pages = array() ) {
+		$text      = isset( $item['text'] ) ? (string) $item['text'] : '';
+		$type      = isset( $item['type'] ) ? (string) $item['type'] : 'link';
+		$href      = isset( $item['href'] ) ? (string) $item['href'] : '';
+		$page_id   = isset( $item['page_id'] ) ? absint( $item['page_id'] ) : 0;
+		$title     = isset( $item['title'] ) ? (string) $item['title'] : '';
+		$slug      = isset( $item['slug'] ) ? (string) $item['slug'] : '';
+		$content   = isset( $item['content'] ) ? (string) $item['content'] : '';
+		$sub_items = isset( $item['items'] ) && is_array( $item['items'] ) ? $item['items'] : array();
 
-		<p class="wpfaevent-additional-info-field-label">
-			<label for="wpfa_event_hotel_information"><strong><?php esc_html_e( 'Hotel & Accommodation Information', 'wpfaevent' ); ?></strong></label>
-		</p>
-		<?php wp_editor( $hotel_information, 'wpfa_event_hotel_information', $editor_settings ); ?>
+		$link_row_class        = 'wpfaevent-meta-card-field wpfaevent-nav-link-row span-2' . ( 'link' === $type ? '' : ' wpfaevent-nav-row-hidden' );
+		$page_row_class        = 'wpfaevent-meta-card-field wpfaevent-nav-page-row span-2' . ( 'page' === $type ? '' : ' wpfaevent-nav-row-hidden' );
+		$custom_page_row_class = 'wpfaevent-meta-card-field wpfaevent-nav-custom-page-row span-2' . ( 'custom_page' === $type ? '' : ' wpfaevent-nav-row-hidden' );
+		$dropdown_row_class    = 'wpfaevent-meta-card-field wpfaevent-nav-dropdown-row span-2' . ( 'dropdown' === $type ? '' : ' wpfaevent-nav-row-hidden' );
+		?>
+		<div class="wpfaevent-meta-card" data-index="<?php echo esc_attr( (string) $i ); ?>" data-next-sub-index="<?php echo esc_attr( (string) count( $sub_items ) ); ?>">
+			<a href="#" class="wpfaevent-remove-card-btn"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a>
+			<div class="wpfaevent-nav-order-controls">
+				<span class="dashicons dashicons-menu wpfaevent-nav-card-handle" title="<?php esc_attr_e( 'Drag to reorder', 'wpfaevent' ); ?>" aria-hidden="true"></span>
+				<?php $this->render_nav_move_buttons( __( 'Move item up', 'wpfaevent' ), __( 'Move item down', 'wpfaevent' ) ); ?>
+			</div>
+			<div class="wpfaevent-meta-card-grid">
+				<div class="wpfaevent-meta-card-field">
+					<label><?php esc_html_e( 'Menu Label', 'wpfaevent' ); ?></label>
+					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][text]" value="<?php echo esc_attr( $text ); ?>" required placeholder="<?php esc_attr_e( 'e.g. Fund Info, About', 'wpfaevent' ); ?>">
+				</div>
+				<div class="wpfaevent-meta-card-field">
+					<label><?php esc_html_e( 'Item Type', 'wpfaevent' ); ?></label>
+					<select name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][type]" class="wpfaevent-nav-type-select">
+						<option value="link" <?php selected( $type, 'link' ); ?>><?php esc_html_e( 'Direct Link', 'wpfaevent' ); ?></option>
+						<option value="page" <?php selected( $type, 'page' ); ?>><?php esc_html_e( 'Existing Page', 'wpfaevent' ); ?></option>
+						<option value="custom_page" <?php selected( $type, 'custom_page' ); ?>><?php esc_html_e( 'Custom Page', 'wpfaevent' ); ?></option>
+						<option value="dropdown" <?php selected( $type, 'dropdown' ); ?>><?php esc_html_e( 'Dropdown Submenu', 'wpfaevent' ); ?></option>
+					</select>
+				</div>
+				<div class="<?php echo esc_attr( $link_row_class ); ?>">
+					<label><?php esc_html_e( 'Link URL', 'wpfaevent' ); ?></label>
+					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][href]" value="<?php echo esc_attr( $href ); ?>" placeholder="<?php esc_attr_e( 'https://... or /events/ or #about', 'wpfaevent' ); ?>">
+				</div>
+				<div class="<?php echo esc_attr( $page_row_class ); ?>">
+					<label><?php esc_html_e( 'Select Existing Page', 'wpfaevent' ); ?></label>
+					<select name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][page_id]" class="wpfaevent-nav-page-select">
+						<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
+						<?php foreach ( $wp_pages as $p ) : ?>
+							<option value="<?php echo absint( $p->ID ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>" <?php selected( $page_id, $p->ID ); ?>>
+								<?php echo esc_html( $p->post_title ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<div class="<?php echo esc_attr( $custom_page_row_class ); ?>">
+					<input type="hidden" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][slug]" value="<?php echo esc_attr( $slug ); ?>">
+					<label><?php esc_html_e( 'Page Heading', 'wpfaevent' ); ?></label>
+					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>">
+					<label class="wpfaevent-nav-content-label"><?php esc_html_e( 'Page Content & Bullets', 'wpfaevent' ); ?></label>
+					<textarea name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][content]" rows="4" placeholder="<?php esc_attr_e( "Enter page details, paragraphs, or bullet points:\n- Travel grant details\n- Application requirements\n- Deadline: Oct 30", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
+				</div>
+				<div class="<?php echo esc_attr( $dropdown_row_class ); ?>">
+					<label><strong><?php esc_html_e( 'Dropdown Sub-Items', 'wpfaevent' ); ?></strong></label>
+					<div class="wpfaevent-nav-subitems-list">
+						<?php
+						foreach ( $sub_items as $si => $sub ) {
+							$this->render_nav_subitem_row( $i, $si, $sub, $wp_pages );
+						}
+						?>
+					</div>
+					<button type="button" class="button button-secondary wpfaevent-add-subitem-btn">
+						<?php esc_html_e( '+ Add Sub-Item', 'wpfaevent' ); ?>
+					</button>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the keyboard-accessible move up / move down buttons for a nav item or sub-item.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $up_label   Accessible label for the move up button.
+	 * @param string $down_label Accessible label for the move down button.
+	 * @return void
+	 */
+	private function render_nav_move_buttons( $up_label, $down_label ) {
+		?>
+		<button type="button" class="button button-small wpfaevent-nav-move-btn" data-direction="up" title="<?php echo esc_attr( $up_label ); ?>">
+			<span class="dashicons dashicons-arrow-up-alt2" aria-hidden="true"></span>
+			<span class="screen-reader-text"><?php echo esc_html( $up_label ); ?></span>
+		</button>
+		<button type="button" class="button button-small wpfaevent-nav-move-btn" data-direction="down" title="<?php echo esc_attr( $down_label ); ?>">
+			<span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span>
+			<span class="screen-reader-text"><?php echo esc_html( $down_label ); ?></span>
+		</button>
+		<?php
+	}
+
+	/**
+	 * Render a single custom nav sub-item row.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int|string           $i        Parent item index.
+	 * @param int|string           $si       Sub-item index.
+	 * @param array<string, mixed> $sub      Sub-item data.
+	 * @param array<WP_Post>       $wp_pages Published pages.
+	 * @return void
+	 */
+	private function render_nav_subitem_row( $i, $si, $sub, $wp_pages = array() ) {
+		$text    = isset( $sub['text'] ) ? (string) $sub['text'] : '';
+		$type    = isset( $sub['type'] ) ? (string) $sub['type'] : 'link';
+		$href    = isset( $sub['href'] ) ? (string) $sub['href'] : '';
+		$page_id = isset( $sub['page_id'] ) ? absint( $sub['page_id'] ) : 0;
+		$title   = isset( $sub['title'] ) ? (string) $sub['title'] : '';
+		$slug    = isset( $sub['slug'] ) ? (string) $sub['slug'] : '';
+		$content = isset( $sub['content'] ) ? (string) $sub['content'] : '';
+		$prefix  = 'wpfa_custom_nav_items[' . esc_attr( (string) $i ) . '][items][' . esc_attr( (string) $si ) . ']';
+
+		$sub_link_class   = 'wpfaevent-sub-field wpfaevent-sub-link-row' . ( 'link' === $type ? '' : ' wpfaevent-nav-row-hidden' );
+		$sub_page_class   = 'wpfaevent-sub-field wpfaevent-sub-page-row' . ( 'page' === $type ? '' : ' wpfaevent-nav-row-hidden' );
+		$sub_custom_class = 'wpfaevent-sub-field wpfaevent-sub-custom-row' . ( 'custom_page' === $type ? '' : ' wpfaevent-nav-row-hidden' );
+		?>
+		<div class="wpfaevent-nav-subitem-block">
+			<div class="wpfaevent-nav-subitem-header">
+				<span class="dashicons dashicons-menu wpfaevent-nav-subitem-handle" title="<?php esc_attr_e( 'Drag to reorder', 'wpfaevent' ); ?>" aria-hidden="true"></span>
+				<?php $this->render_nav_move_buttons( __( 'Move sub-item up', 'wpfaevent' ), __( 'Move sub-item down', 'wpfaevent' ) ); ?>
+				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[text]" value="<?php echo esc_attr( $text ); ?>" class="wpfaevent-nav-subitem-label-input" placeholder="<?php esc_attr_e( 'Sub-Item Label (e.g. Fund Info)', 'wpfaevent' ); ?>" required>
+				<select name="<?php echo esc_attr( $prefix ); ?>[type]" class="wpfaevent-subitem-type-select">
+					<option value="link" <?php selected( $type, 'link' ); ?>><?php esc_html_e( 'Direct Link', 'wpfaevent' ); ?></option>
+					<option value="page" <?php selected( $type, 'page' ); ?>><?php esc_html_e( 'Existing Page', 'wpfaevent' ); ?></option>
+					<option value="custom_page" <?php selected( $type, 'custom_page' ); ?>><?php esc_html_e( 'Custom Page', 'wpfaevent' ); ?></option>
+				</select>
+				<button type="button" class="button button-link-delete wpfaevent-remove-subitem-btn" title="<?php esc_attr_e( 'Remove Sub-Item', 'wpfaevent' ); ?>">&times;</button>
+			</div>
+			<div class="<?php echo esc_attr( $sub_link_class ); ?>">
+				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[href]" value="<?php echo esc_attr( $href ); ?>" placeholder="<?php esc_attr_e( 'Sub-Item URL (e.g. /events/ or https://...)', 'wpfaevent' ); ?>">
+			</div>
+			<div class="<?php echo esc_attr( $sub_page_class ); ?>">
+				<select name="<?php echo esc_attr( $prefix ); ?>[page_id]" class="wpfaevent-sub-page-select">
+					<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
+					<?php foreach ( $wp_pages as $p ) : ?>
+						<option value="<?php echo absint( $p->ID ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>" <?php selected( $page_id, $p->ID ); ?>>
+							<?php echo esc_html( $p->post_title ); ?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+			</div>
+			<div class="<?php echo esc_attr( $sub_custom_class ); ?>">
+				<input type="hidden" name="<?php echo esc_attr( $prefix ); ?>[slug]" value="<?php echo esc_attr( $slug ); ?>">
+				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>">
+				<textarea name="<?php echo esc_attr( $prefix ); ?>[content]" rows="3" placeholder="<?php esc_attr_e( "Page details, text, or bullet points:\n- Travel grant details\n- Application requirements", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
+			</div>
+		</div>
+
 		<?php
 	}
 
@@ -970,19 +1161,6 @@ class Wpfaevent_Admin_Event_Metabox {
 					: $raw_color;
 
 				$this->update_or_delete_post_meta( $post_id, $color_field, $color );
-			}
-		}
-
-		$rich_text_fields = array(
-			'wpfa_event_venue_information',
-			'wpfa_event_transportation_information',
-			'wpfa_event_hotel_information',
-		);
-
-		foreach ( $rich_text_fields as $field ) {
-			if ( isset( $_POST[ $field ] ) && is_string( $_POST[ $field ] ) ) {
-				$value = wp_kses_post( wp_unslash( $_POST[ $field ] ) );
-				$this->update_or_delete_post_meta( $post_id, $field, $value );
 			}
 		}
 
@@ -1226,6 +1404,25 @@ class Wpfaevent_Admin_Event_Metabox {
 				'exhibitors-' . $post_id . '.json',
 				array()
 			);
+		}
+
+		// Handle custom event navigation saving only when the navigation metabox was submitted.
+		if ( isset( $_POST['wpfa_custom_nav_items_present'] ) ) {
+			if ( isset( $_POST['wpfa_custom_nav_items'] ) && is_array( $_POST['wpfa_custom_nav_items'] ) ) {
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by Wpfaevent_Meta_Event::sanitize_custom_navigation().
+				$raw_nav   = wp_unslash( $_POST['wpfa_custom_nav_items'] );
+				$clean_nav = class_exists( 'Wpfaevent_Meta_Event' )
+					? Wpfaevent_Meta_Event::sanitize_custom_navigation( $raw_nav )
+					: array();
+
+				if ( ! empty( $clean_nav ) ) {
+					update_post_meta( $post_id, 'wpfa_event_custom_navigation', $clean_nav );
+				} else {
+					delete_post_meta( $post_id, 'wpfa_event_custom_navigation' );
+				}
+			} else {
+				delete_post_meta( $post_id, 'wpfa_event_custom_navigation' );
+			}
 		}
 	}
 
