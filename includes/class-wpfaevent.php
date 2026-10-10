@@ -136,6 +136,7 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-partner-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-controller.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-template-controller.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-description-sync.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-main-navigation-helper.php';
 
 		// Eventyay Importer modular classes.
@@ -286,6 +287,7 @@ class Wpfaevent {
 		$event_metabox = new Wpfaevent_Admin_Event_Metabox();
 		$this->loader->add_action( 'add_meta_boxes', $event_metabox, 'register_meta_boxes' );
 		$this->loader->add_action( 'save_post_wpfa_event', $event_metabox, 'save_event_meta' );
+		$this->loader->add_action( 'admin_post_' . Wpfaevent_Event_Description_Sync::RESTORE_ACTION, 'Wpfaevent_Event_Description_Sync', 'handle_restore_request' );
 
 		$speaker_metabox = new Wpfaevent_Admin_Speaker_Metabox();
 		$this->loader->add_action( 'add_meta_boxes', $speaker_metabox, 'register_meta_boxes' );

@@ -3445,10 +3445,16 @@ class Wpfaevent_Eventyay_Importer {
 			'post_title'   => sanitize_text_field( $title ),
 			'post_type'    => 'wpfa_event',
 			'post_status'  => $post_status,
-			'post_content' => wp_kses_post( $description ),
-			'post_excerpt' => wp_kses_post( $description ),
+			'post_content' => wp_slash( wp_kses_post( $description ) ),
+			'post_excerpt' => wp_slash( wp_kses_post( $description ) ),
 		);
 		$created           = false;
+
+		// Keep a description that was edited on this site; other fields still sync.
+		$keep_local_description = $existing_id && Wpfaevent_Event_Description_Sync::has_local_edit( $existing_id );
+		if ( $keep_local_description ) {
+			unset( $post_data['post_content'], $post_data['post_excerpt'] );
+		}
 
 		if ( $existing_id ) {
 			$post_data['ID'] = $existing_id;
@@ -3470,6 +3476,8 @@ class Wpfaevent_Eventyay_Importer {
 				esc_html__( 'Could not save imported Eventyay event.', 'wpfaevent' )
 			);
 		}
+
+		Wpfaevent_Event_Description_Sync::remember_import( $saved_id, $description, ! $keep_local_description );
 
 		$start_datetime       = $this->eventyay_event_datetime( $event, 'start' );
 		$end_datetime         = $this->eventyay_event_datetime( $event, 'end' );

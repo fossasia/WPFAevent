@@ -329,3 +329,17 @@
     color: var(--brand);
     font-weight: bold;
 }
+
+/* Edit Event modal note for a locally edited imported description */
+.wpfaevent-description-sync-note {
+    margin: 4px 0 12px;
+    padding: 8px 12px;
+    border-left: 3px solid var(--brand);
+    background: var(--bg);
+    font-size: 13px;
+}
+
+.wpfaevent-description-sync-note a {
+    font-weight: 600;
+    white-space: nowrap;
+}
