@@ -434,9 +434,6 @@ class Wpfaevent_Event_Template_Controller {
 		$event_header_image_url     = $event_header_image_url ? esc_url_raw( $event_header_image_url ) : '';
 		$event_logo_url             = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
 		$event_logo_url             = $event_logo_url ? esc_url_raw( $event_logo_url ) : '';
-		$ticket_widget_url          = get_post_meta( $event_id, 'wpfa_event_ticket_widget_url', true );
-		$ticket_widget_url          = $ticket_widget_url ? esc_url_raw( $ticket_widget_url ) : '';
-
 		if ( ! $event_header_image_url && ! empty( $site_settings['event_header_image_url'] ) ) {
 			$event_header_image_url = esc_url_raw( $site_settings['event_header_image_url'] );
 		}
@@ -445,11 +442,21 @@ class Wpfaevent_Event_Template_Controller {
 			$event_logo_url = esc_url_raw( $site_settings['event_logo_url'] );
 		}
 
-		if ( ! $ticket_widget_url && ! empty( $site_settings['ticket_widget_url'] ) ) {
-			$ticket_widget_url = esc_url_raw( $site_settings['ticket_widget_url'] );
+		$has_ticket_widget_meta = metadata_exists( 'post', $event_id, 'wpfa_event_ticket_widget_url' );
+		if ( $has_ticket_widget_meta ) {
+			$raw_ticket_widget_meta = get_post_meta( $event_id, 'wpfa_event_ticket_widget_url', true );
+			$ticket_widget_url      = class_exists( 'Wpfaevent_Meta_Event' )
+				? Wpfaevent_Meta_Event::sanitize_ticket_widget_input( $raw_ticket_widget_meta )
+				: esc_url_raw( (string) $raw_ticket_widget_meta );
+		} elseif ( ! empty( $site_settings['ticket_widget_url'] ) ) {
+			$ticket_widget_url = class_exists( 'Wpfaevent_Meta_Event' )
+				? Wpfaevent_Meta_Event::sanitize_ticket_widget_input( $site_settings['ticket_widget_url'] )
+				: esc_url_raw( (string) $site_settings['ticket_widget_url'] );
+		} else {
+			$ticket_widget_url = '';
 		}
 
-		if ( ! $ticket_widget_url && $event_url && get_post_meta( $event_id, '_wpfa_eventyay_event_slug', true ) ) {
+		if ( ! $ticket_widget_url && ! $has_ticket_widget_meta && $event_url && get_post_meta( $event_id, '_wpfa_eventyay_event_slug', true ) ) {
 			$ticket_widget_url = $event_url;
 		}
 
@@ -459,7 +466,11 @@ class Wpfaevent_Event_Template_Controller {
 		}
 
 		$build_eventyay_widget_assets = static function ( $widget_url ) {
-			$widget_url = trim( (string) $widget_url );
+			if ( class_exists( 'Wpfaevent_Meta_Event' ) ) {
+				$widget_url = Wpfaevent_Meta_Event::sanitize_ticket_widget_input( $widget_url );
+			} else {
+				$widget_url = trim( (string) $widget_url );
+			}
 
 			if ( '' === $widget_url || ! wp_http_validate_url( $widget_url ) ) {
 				return array();
@@ -507,22 +518,9 @@ class Wpfaevent_Event_Template_Controller {
 
 		$ticket_widget_assets   = $build_eventyay_widget_assets( $ticket_widget_url );
 		$show_ticket_section    = ! empty( $ticket_widget_assets['event_url'] );
-		$site_host              = (string) wp_parse_url( home_url(), PHP_URL_HOST );
-		$site_host              = strtolower( $site_host );
-		$is_ip_host             = '' !== $site_host && false !== filter_var( $site_host, FILTER_VALIDATE_IP );
-		$can_embed_widget       = $show_ticket_section && is_ssl() && ! $is_ip_host;
 		$show_ticket_widget     = (bool) apply_filters( 'wpfaevent_enable_embedded_ticket_widget', $show_ticket_section, $event_id, $ticket_widget_assets );
 		$ticket_widget_id       = 'wpfa-event-ticket-widget-' . absint( $event_id );
-		$ticket_widget_redirect = $show_ticket_widget && ! $can_embed_widget;
 		$ticket_widget_skip_ssl = ! is_ssl();
-		$ticket_widget_message  = '';
-
-		if ( $ticket_widget_redirect ) {
-			$ticket_widget_message = __(
-				'Ticket selection is shown here, but checkout will open on Eventyay because embedded checkout is unavailable on this site.',
-				'wpfaevent'
-			);
-		}
 
 		$about_content = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
 		$post_excerpt  = trim( (string) get_post_field( 'post_excerpt', $event_id ) );
@@ -634,7 +632,6 @@ class Wpfaevent_Event_Template_Controller {
 					$registration_status_label = __( 'Closed', 'wpfaevent' );
 					$show_ticket_widget        = false;
 					$show_ticket_section       = false;
-					$ticket_widget_redirect    = false;
 					$register_url              = '';
 				}
 			} catch ( Exception $exception ) {
@@ -1083,7 +1080,7 @@ class Wpfaevent_Event_Template_Controller {
 			'site_logo_url'        => $site_logo_url,
 			'event_page_url'       => home_url( '/events/' ),
 			'show_back_button'     => true,
-			'show_register_button' => ! empty( $register_url ),
+			'show_register_button' => false,
 			'back_button_text'     => __( 'All Events', 'wpfaevent' ),
 			'register_button_url'  => $register_url,
 			'register_button_text' => $register_text,
@@ -1103,10 +1100,8 @@ class Wpfaevent_Event_Template_Controller {
 			'event_logo_url'                           => $event_logo_url,
 			'show_ticket_widget'                       => $show_ticket_widget,
 			'show_ticket_section'                      => $show_ticket_section,
-			'ticket_widget_redirect'                   => $ticket_widget_redirect,
 			'ticket_widget_assets'                     => $ticket_widget_assets,
 			'ticket_widget_id'                         => $ticket_widget_id,
-			'ticket_widget_message'                    => $ticket_widget_message,
 			'ticket_widget_skip_ssl'                   => $ticket_widget_skip_ssl,
 			'registration_status_label'                => $registration_status_label,
 			'location'                                 => $location,
@@ -1197,10 +1192,8 @@ class Wpfaevent_Event_Template_Controller {
 			'event_logo_url'                           => '',
 			'show_ticket_widget'                       => false,
 			'show_ticket_section'                      => false,
-			'ticket_widget_redirect'                   => false,
 			'ticket_widget_assets'                     => array(),
 			'ticket_widget_id'                         => '',
-			'ticket_widget_message'                    => '',
 			'ticket_widget_skip_ssl'                   => false,
 			'registration_status_label'                => __( 'Open', 'wpfaevent' ),
 			'event_start_content'                      => '',

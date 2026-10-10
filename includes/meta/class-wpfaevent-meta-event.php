@@ -241,8 +241,8 @@ class Wpfaevent_Meta_Event {
 				'type'              => 'string',
 				'single'            => true,
 				'show_in_rest'      => true,
-				'sanitize_callback' => 'esc_url_raw',
-				'description'       => __( 'Eventyay ticket widget event URL', 'wpfaevent' ),
+				'sanitize_callback' => array( __CLASS__, 'sanitize_ticket_widget_input' ),
+				'description'       => __( 'Eventyay ticket widget event URL or embed code', 'wpfaevent' ),
 			)
 		);
 
@@ -1315,5 +1315,139 @@ class Wpfaevent_Meta_Event {
 		}
 
 		return sprintf( '%s%02d:%02d', $matches[1], $hours, $minutes );
+	}
+
+	/**
+	 * Sanitize and extract the event ticket widget URL from raw user input.
+	 *
+	 * Accepts HTML embed snippets, Markdown embed code/links, or direct event URLs,
+	 * extracting and normalizing the clean event ticket shop URL so attendees can
+	 * purchase tickets directly without leaving the site.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $input Raw input (HTML snippet, Markdown, or URL).
+	 * @return string Normalized ticket widget event URL, or empty string.
+	 */
+	public static function sanitize_ticket_widget_input( $input ) {
+		if ( ! is_scalar( $input ) ) {
+			return '';
+		}
+
+		$input = trim( wp_unslash( (string) $input ) );
+		if ( '' === $input ) {
+			return '';
+		}
+
+		$url = '';
+
+		// 1. Look for event="..." attribute on widget elements (eventyay-widget, pretix-widget, or div).
+		if ( preg_match( '/<(?:eventyay-widget|pretix-widget|div)\b[^>]*\sevent\s*=\s*[\'"]([^\'"]+)[\'"]/i', $input, $matches ) ) {
+			$url = $matches[1];
+		}
+
+		// 2. Look for Markdown image link syntax first, then standard Markdown link syntax.
+		if ( ! $url && preg_match( '/\[\s*!\[.*?\]\(.*?\)\]\(\s*<?(https?:\/\/[^\s\)\'"]+)>?(?:\s+["\'][^"\']*["\'])?\s*\)/is', $input, $matches ) ) {
+			$url = $matches[1];
+		} elseif ( ! $url && preg_match( '/\[(?:[^\]]*)\]\(\s*<?(https?:\/\/[^\s\)\'"]+)>?(?:\s+["\'][^"\']*["\'])?\s*\)/i', $input, $matches ) ) {
+			$url = $matches[1];
+		}
+
+		// 3. Look for Markdown autolink syntax: <https://...>.
+		if ( ! $url && preg_match( '/<((?:https?:\/\/)[^\s>]+)>/i', $input, $matches ) ) {
+			$url = $matches[1];
+		}
+
+		// 4. Look for <link href="..."> stylesheet tag (e.g. .../widget/v1.css).
+		if ( ! $url && preg_match( '/<link[^>]+href=[\'"]([^\'"]+)[\'"]/i', $input, $matches ) ) {
+			$url = $matches[1];
+		}
+
+		// 5. Look for noscript / fallback anchor: <a href="...">.
+		if ( ! $url && preg_match( '/<a[^>]+href=[\'"]([^\'"]+)[\'"]/i', $input, $matches ) ) {
+			$url = $matches[1];
+		}
+
+		// 6. Direct URL or fallback regex search for an http(s) URL in the input.
+		if ( ! $url ) {
+			if ( wp_http_validate_url( $input ) ) {
+				$url = $input;
+			} elseif ( preg_match( '/https?:\/\/[^\s<>"\'\)]+/i', $input, $matches ) ) {
+				$url = $matches[0];
+			}
+		}
+
+		$url = trim( $url );
+		if ( '' === $url ) {
+			return '';
+		}
+
+		// Strip trailing punctuation often found in text or markdown (such as periods or semicolons).
+		$url = rtrim( $url, '.,;:)' );
+
+		// Reject script-only widget asset URLs when no event URL was extracted.
+		if ( preg_match( '#/widget/v1(?:\.[a-z]{2})?\.js$#i', $url ) ) {
+			return '';
+		}
+
+		// If URL points to a widget asset (.../widget/v1.css or .../widget/v1.en.js), strip asset suffix.
+		$url = (string) preg_replace( '#/widget/v1(?:\.[a-z]{2})?\.(?:css|js)$#i', '', $url );
+
+		$sanitized_url = esc_url_raw( $url );
+		if ( ! wp_http_validate_url( $sanitized_url ) ) {
+			return '';
+		}
+
+		$parts = wp_parse_url( $sanitized_url );
+		if ( ! is_array( $parts ) || empty( $parts['scheme'] ) || empty( $parts['host'] ) ) {
+			return '';
+		}
+
+		$scheme = strtolower( (string) $parts['scheme'] );
+		if ( 'https' !== $scheme ) {
+			return '';
+		}
+
+		$host          = strtolower( (string) $parts['host'] );
+		$allowed_hosts = apply_filters(
+			'wpfaevent_ticket_widget_allowed_hosts',
+			array( 'eventyay.com', 'pretix.eu' )
+		);
+
+		$host_allowed = false;
+		if ( is_array( $allowed_hosts ) ) {
+			foreach ( $allowed_hosts as $allowed_host ) {
+				$allowed_host = strtolower( trim( (string) $allowed_host ) );
+				if ( '' === $allowed_host ) {
+					continue;
+				}
+				if ( $host === $allowed_host || substr( $host, -( strlen( $allowed_host ) + 1 ) ) === '.' . $allowed_host ) {
+					$host_allowed = true;
+					break;
+				}
+			}
+		}
+
+		if ( ! $host_allowed ) {
+			return '';
+		}
+
+		$path = ! empty( $parts['path'] ) ? trailingslashit( (string) $parts['path'] ) : '/';
+		if ( '/' === $path || '' === trim( $path, '/' ) ) {
+			return '';
+		}
+
+		$origin = $scheme . '://' . $host;
+		if ( isset( $parts['port'] ) ) {
+			$origin .= ':' . absint( $parts['port'] );
+		}
+
+		$final_url = $origin . $path;
+
+		if ( ! empty( $parts['query'] ) ) {
+			$final_url .= '?' . (string) $parts['query'];
+		}
+
+		return esc_url_raw( $final_url );
 	}
 }
