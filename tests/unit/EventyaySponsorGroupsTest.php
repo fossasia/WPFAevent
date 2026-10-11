@@ -600,4 +600,264 @@ class EventyaySponsorGroupsTest extends WP_UnitTestCase {
 		);
 		$this->assertFalse( Wpfaevent_Partner_Helper::is_partner_published( 'not an array' ) );
 	}
+
+	/**
+	 * Verify exhibitor-only resources cannot appear as sponsors and legacy fallback is preserved.
+	 */
+	public function test_partner_role_classification_and_legacy_fallbacks() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		// Exhibitor-only resources must not appear as sponsors even if fetched from sponsors context.
+		$exhibitor_by_type = array(
+			'name' => 'Exhibitor Record',
+			'type' => 'exhibitor',
+		);
+		$this->assertFalse( $parser->is_eventyay_sponsor_resource( $exhibitor_by_type, 'sponsors' ) );
+		$this->assertTrue( $parser->is_eventyay_exhibitor_resource( $exhibitor_by_type, 'sponsors' ) );
+
+		$exhibitor_by_flag = array(
+			'name'         => 'Exhibitor Flag Record',
+			'is_exhibitor' => true,
+		);
+		$this->assertFalse( $parser->is_eventyay_sponsor_resource( $exhibitor_by_flag, 'sponsors' ) );
+		$this->assertTrue( $parser->is_eventyay_exhibitor_resource( $exhibitor_by_flag, 'sponsors' ) );
+
+		// Sponsor-only resources must not appear as exhibitors even if fetched from exhibitors context.
+		$sponsor_by_type = array(
+			'name' => 'Sponsor Record',
+			'type' => 'sponsor',
+		);
+		$this->assertTrue( $parser->is_eventyay_sponsor_resource( $sponsor_by_type, 'exhibitors' ) );
+		$this->assertFalse( $parser->is_eventyay_exhibitor_resource( $sponsor_by_type, 'exhibitors' ) );
+
+		$sponsor_by_flag = array(
+			'name'       => 'Sponsor Flag Record',
+			'is_sponsor' => true,
+		);
+		$this->assertTrue( $parser->is_eventyay_sponsor_resource( $sponsor_by_flag, 'exhibitors' ) );
+		$this->assertFalse( $parser->is_eventyay_exhibitor_resource( $sponsor_by_flag, 'exhibitors' ) );
+
+		// Legacy records without explicit role information fall back to source context.
+		$legacy_record = array(
+			'name' => 'Legacy Record',
+		);
+		$this->assertTrue( $parser->is_eventyay_sponsor_resource( $legacy_record, 'sponsors' ) );
+		$this->assertFalse( $parser->is_eventyay_exhibitor_resource( $legacy_record, 'sponsors' ) );
+
+		$this->assertFalse( $parser->is_eventyay_sponsor_resource( $legacy_record, 'exhibitors' ) );
+		$this->assertTrue( $parser->is_eventyay_exhibitor_resource( $legacy_record, 'exhibitors' ) );
+	}
+
+	/**
+	 * Verify re-import reconciles unpublished partners and removes them from stored files.
+	 */
+	public function test_import_eventyay_event_partner_data_reconciles_unpublished_partners() {
+		$event_id                  = $this->factory->post->create(
+			array(
+				'post_type'   => 'wpfa_event',
+				'post_status' => 'publish',
+				'post_title'  => 'Unpublished Partner Test Event',
+			)
+		);
+		$this->mock_upload_basedir = trailingslashit( sys_get_temp_dir() ) . 'wpfaevent-tests-' . wp_generate_password( 8, false );
+		wp_mkdir_p( $this->mock_upload_basedir );
+
+		$store = new Wpfaevent_Eventyay_Dashboard_Store();
+
+		// Seed existing files with older records (without source and published fields).
+		$store->write_dashboard_json_file(
+			'sponsors-' . $event_id . '.json',
+			array(
+				array(
+					'group_name' => 'Sponsors',
+					'sponsors'   => array(
+						array(
+							'id'          => 'eventyay-sponsor-201',
+							'eventyay_id' => '201',
+							'name'        => 'Old Sponsor Corp',
+						),
+					),
+				),
+			)
+		);
+
+		$store->write_dashboard_json_file(
+			'exhibitors-' . $event_id . '.json',
+			array(
+				array(
+					'id'          => 'eventyay-exhibitor-202',
+					'eventyay_id' => '202',
+					'name'        => 'Old Exhibitor LLC',
+				),
+			)
+		);
+
+		// Mock API responses where both partners are now marked unpublished.
+		$this->mock_http_responses = array(
+			'/sponsors'   => array(
+				'headers'  => array(),
+				'body'     => wp_json_encode(
+					array(
+						'results' => array(
+							array(
+								'id'        => '201',
+								'name'      => 'Old Sponsor Corp',
+								'published' => false,
+							),
+						),
+						'next'    => null,
+					)
+				),
+				'response' => array(
+					'code'    => 200,
+					'message' => 'OK',
+				),
+				'cookies'  => array(),
+				'filename' => null,
+			),
+			'/exhibitors' => array(
+				'headers'  => array(),
+				'body'     => wp_json_encode(
+					array(
+						'results' => array(
+							array(
+								'id'        => '202',
+								'name'      => 'Old Exhibitor LLC',
+								'published' => false,
+							),
+						),
+						'next'    => null,
+					)
+				),
+				'response' => array(
+					'code'    => 200,
+					'message' => 'OK',
+				),
+				'cookies'  => array(),
+				'filename' => null,
+			),
+		);
+
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$method   = new ReflectionMethod( $importer, 'import_eventyay_event_partner_data' );
+		$method->setAccessible( true );
+
+		$result = $method->invoke(
+			$importer,
+			$event_id,
+			array(
+				'id'   => 'unpublish-event',
+				'slug' => 'unpublish-event',
+			),
+			array(
+				'base_url'  => 'https://eventyay.example',
+				'api_token' => '',
+			),
+			'unpublish-event'
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 0, $result['sponsor_count'] );
+		$this->assertSame( 0, $result['exhibitor_count'] );
+
+		$stored_groups = $store->read_dashboard_json_file( 'sponsors-' . $event_id . '.json', array() );
+		$stored_exhibs = $store->read_dashboard_json_file( 'exhibitors-' . $event_id . '.json', array() );
+
+		$this->assertEmpty( $stored_groups );
+		$this->assertEmpty( $stored_exhibs );
+	}
+
+	/**
+	 * Verify existing partner data is preserved when API endpoint requests fail.
+	 */
+	public function test_import_eventyay_event_partner_data_preserves_existing_data_on_api_failure() {
+		$event_id                  = $this->factory->post->create(
+			array(
+				'post_type'   => 'wpfa_event',
+				'post_status' => 'publish',
+				'post_title'  => 'API Failure Event',
+			)
+		);
+		$this->mock_upload_basedir = trailingslashit( sys_get_temp_dir() ) . 'wpfaevent-tests-' . wp_generate_password( 8, false );
+		wp_mkdir_p( $this->mock_upload_basedir );
+
+		$store = new Wpfaevent_Eventyay_Dashboard_Store();
+
+		$initial_sponsors   = array(
+			array(
+				'group_name' => 'Gold Sponsors',
+				'sponsors'   => array(
+					array(
+						'id'        => 'eventyay-sponsor-301',
+						'name'      => 'Preserved Sponsor',
+						'source'    => 'eventyay',
+						'published' => true,
+					),
+				),
+			),
+		);
+		$initial_exhibitors = array(
+			array(
+				'id'        => 'eventyay-exhibitor-302',
+				'name'      => 'Preserved Exhibitor',
+				'source'    => 'eventyay',
+				'published' => true,
+			),
+		);
+
+		$store->write_dashboard_json_file( 'sponsors-' . $event_id . '.json', $initial_sponsors );
+		$store->write_dashboard_json_file( 'exhibitors-' . $event_id . '.json', $initial_exhibitors );
+
+		// Mock 500 error for both endpoints.
+		$this->mock_http_responses = array(
+			'/sponsors'   => array(
+				'headers'  => array(),
+				'body'     => wp_json_encode( array( 'detail' => 'Server Error' ) ),
+				'response' => array(
+					'code'    => 500,
+					'message' => 'Internal Server Error',
+				),
+				'cookies'  => array(),
+				'filename' => null,
+			),
+			'/exhibitors' => array(
+				'headers'  => array(),
+				'body'     => wp_json_encode( array( 'detail' => 'Server Error' ) ),
+				'response' => array(
+					'code'    => 500,
+					'message' => 'Internal Server Error',
+				),
+				'cookies'  => array(),
+				'filename' => null,
+			),
+		);
+
+		$importer = new Wpfaevent_Eventyay_Importer();
+		$method   = new ReflectionMethod( $importer, 'import_eventyay_event_partner_data' );
+		$method->setAccessible( true );
+
+		$result = $method->invoke(
+			$importer,
+			$event_id,
+			array(
+				'id'   => 'api-failure-event',
+				'slug' => 'api-failure-event',
+			),
+			array(
+				'base_url'  => 'https://eventyay.example',
+				'api_token' => '',
+			),
+			'api-failure-event'
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 2, $result['skipped'] );
+
+		// Data must be intact.
+		$stored_groups = $store->read_dashboard_json_file( 'sponsors-' . $event_id . '.json', array() );
+		$stored_exhibs = $store->read_dashboard_json_file( 'exhibitors-' . $event_id . '.json', array() );
+
+		$this->assertSame( $initial_sponsors, $stored_groups );
+		$this->assertSame( $initial_exhibitors, $stored_exhibs );
+	}
 }

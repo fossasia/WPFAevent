@@ -281,9 +281,17 @@ class Wpfaevent_JSONAPI_Parser {
 			return $is_sponsor;
 		}
 
-		$type = $this->eventyay_first_present_text( $partner_resource, array( 'type' ) );
-		if ( in_array( sanitize_key( $type ), array( 'exhibitor', 'exhibitors' ), true ) ) {
-			return 'sponsors' === $source_context;
+		$type = sanitize_key( $this->eventyay_first_present_text( $partner_resource, array( 'type' ) ) );
+		if ( in_array( $type, array( 'exhibitor', 'exhibitors' ), true ) ) {
+			return false;
+		}
+
+		$is_exhibitor = $this->eventyay_first_present_boolean(
+			$partner_resource,
+			array( 'is_exhibitor', 'is-exhibitor' )
+		);
+		if ( true === $is_exhibitor ) {
+			return false;
 		}
 
 		$group = $this->eventyay_first_present_text(
@@ -309,7 +317,7 @@ class Wpfaevent_JSONAPI_Parser {
 			return true;
 		}
 
-		if ( in_array( sanitize_key( $type ), array( 'sponsor', 'sponsors' ), true ) ) {
+		if ( in_array( $type, array( 'sponsor', 'sponsors' ), true ) ) {
 			return true;
 		}
 
@@ -341,9 +349,17 @@ class Wpfaevent_JSONAPI_Parser {
 			return $is_exhibitor;
 		}
 
-		$type = $this->eventyay_first_present_text( $partner_resource, array( 'type' ) );
-		if ( in_array( sanitize_key( $type ), array( 'sponsor', 'sponsors' ), true ) ) {
-			return 'exhibitors' === $source_context;
+		$type = sanitize_key( $this->eventyay_first_present_text( $partner_resource, array( 'type' ) ) );
+		if ( in_array( $type, array( 'sponsor', 'sponsors' ), true ) ) {
+			return false;
+		}
+
+		$is_sponsor = $this->eventyay_first_present_boolean(
+			$partner_resource,
+			array( 'is_sponsor', 'is-sponsor' )
+		);
+		if ( true === $is_sponsor ) {
+			return false;
 		}
 
 		$booth = $this->eventyay_first_present_text(
@@ -354,7 +370,7 @@ class Wpfaevent_JSONAPI_Parser {
 			return true;
 		}
 
-		if ( in_array( sanitize_key( $type ), array( 'exhibitor', 'exhibitors' ), true ) ) {
+		if ( in_array( $type, array( 'exhibitor', 'exhibitors' ), true ) ) {
 			return true;
 		}
 
@@ -2955,6 +2971,35 @@ class Wpfaevent_JSONAPI_Parser {
 	}
 
 	/**
+	 * Determine whether a stored partner record originated from Eventyay.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $record Partner record.
+	 * @return bool
+	 * @phpstan-param array<string, mixed>|mixed $record
+	 */
+	public function is_eventyay_partner_record( $record ) {
+		if ( ! is_array( $record ) ) {
+			return false;
+		}
+
+		if ( ! empty( $record['source'] ) && 'eventyay' === $record['source'] ) {
+			return true;
+		}
+
+		if ( ! empty( $record['eventyay_id'] ) ) {
+			return true;
+		}
+
+		if ( ! empty( $record['id'] ) && is_string( $record['id'] ) && 0 === strpos( $record['id'], 'eventyay-' ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Determine whether a sponsor group is owned by Eventyay import.
 	 *
 	 * @since 1.0.0
@@ -2964,7 +3009,15 @@ class Wpfaevent_JSONAPI_Parser {
 	 * @phpstan-param array<string, mixed> $group
 	 */
 	public function is_eventyay_sponsor_group( $group ) {
+		if ( ! is_array( $group ) ) {
+			return false;
+		}
+
 		if ( ! empty( $group['source'] ) && 'eventyay' === $group['source'] ) {
+			return true;
+		}
+
+		if ( ! empty( $group['eventyay_group_key'] ) ) {
 			return true;
 		}
 
@@ -2973,7 +3026,7 @@ class Wpfaevent_JSONAPI_Parser {
 		}
 
 		foreach ( $group['sponsors'] as $sponsor ) {
-			if ( is_array( $sponsor ) && ! empty( $sponsor['source'] ) && 'eventyay' === $sponsor['source'] ) {
+			if ( is_array( $sponsor ) && $this->is_eventyay_partner_record( $sponsor ) ) {
 				return true;
 			}
 		}
@@ -3013,6 +3066,17 @@ class Wpfaevent_JSONAPI_Parser {
 				}
 
 				continue;
+			}
+
+			if ( ! empty( $group['sponsors'] ) && is_array( $group['sponsors'] ) ) {
+				$group['sponsors'] = array_values(
+					array_filter(
+						$group['sponsors'],
+						function ( $sponsor ) {
+							return ! $this->is_eventyay_partner_record( $sponsor );
+						}
+					)
+				);
 			}
 
 			if ( '' !== $group_key ) {
@@ -3087,7 +3151,7 @@ class Wpfaevent_JSONAPI_Parser {
 		$records  = array();
 
 		foreach ( $existing as $record ) {
-			if ( ! is_array( $record ) || ( ! empty( $record['source'] ) && 'eventyay' === $record['source'] ) ) {
+			if ( ! is_array( $record ) || $this->is_eventyay_partner_record( $record ) ) {
 				continue;
 			}
 

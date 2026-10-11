@@ -1785,62 +1785,21 @@ class Wpfaevent_Eventyay_Importer {
 		$raw_exhibitors = ( ! is_wp_error( $exhibitors_response ) && ! empty( $exhibitors_response['resources'] ) ) ? $exhibitors_response['resources'] : array();
 
 		// Modern Eventyay (eventyay-exhibition) serves both sponsors and exhibitors from /exhibitors/.
-		$sponsor_resources_map = array();
-		foreach ( $raw_sponsors as $resource ) {
-			if ( ! is_array( $resource ) || ! $this->parser->is_eventyay_sponsor_resource( $resource, 'sponsors' ) ) {
-				continue;
-			}
-			$key = $this->eventyay_partner_resource_key( $resource );
-			if ( '' !== $key ) {
-				$sponsor_resources_map[ $key ] = $resource;
-			} else {
-				$sponsor_resources_map[] = $resource;
-			}
-		}
+		$sponsor_resources = $this->collect_eventyay_partner_candidates(
+			array(
+				'sponsors'   => $raw_sponsors,
+				'exhibitors' => $raw_exhibitors,
+			),
+			'sponsor'
+		);
 
-		foreach ( $raw_exhibitors as $resource ) {
-			if ( ! is_array( $resource ) || ! $this->parser->is_eventyay_sponsor_resource( $resource, 'exhibitors' ) ) {
-				continue;
-			}
-			$key = $this->eventyay_partner_resource_key( $resource );
-			if ( '' !== $key && isset( $sponsor_resources_map[ $key ] ) ) {
-				$sponsor_resources_map[ $key ] = array_merge( $sponsor_resources_map[ $key ], $resource );
-			} elseif ( '' !== $key ) {
-				$sponsor_resources_map[ $key ] = $resource;
-			} else {
-				$sponsor_resources_map[] = $resource;
-			}
-		}
-
-		$exhibitor_resources_map = array();
-		foreach ( $raw_exhibitors as $resource ) {
-			if ( ! is_array( $resource ) || ! $this->parser->is_eventyay_exhibitor_resource( $resource, 'exhibitors' ) ) {
-				continue;
-			}
-			$key = $this->eventyay_partner_resource_key( $resource );
-			if ( '' !== $key ) {
-				$exhibitor_resources_map[ $key ] = $resource;
-			} else {
-				$exhibitor_resources_map[] = $resource;
-			}
-		}
-
-		foreach ( $raw_sponsors as $resource ) {
-			if ( ! is_array( $resource ) || ! $this->parser->is_eventyay_exhibitor_resource( $resource, 'sponsors' ) ) {
-				continue;
-			}
-			$key = $this->eventyay_partner_resource_key( $resource );
-			if ( '' !== $key && isset( $exhibitor_resources_map[ $key ] ) ) {
-				$exhibitor_resources_map[ $key ] = array_merge( $exhibitor_resources_map[ $key ], $resource );
-			} elseif ( '' !== $key ) {
-				$exhibitor_resources_map[ $key ] = $resource;
-			} else {
-				$exhibitor_resources_map[] = $resource;
-			}
-		}
-
-		$sponsor_resources   = array_values( $sponsor_resources_map );
-		$exhibitor_resources = array_values( $exhibitor_resources_map );
+		$exhibitor_resources = $this->collect_eventyay_partner_candidates(
+			array(
+				'exhibitors' => $raw_exhibitors,
+				'sponsors'   => $raw_sponsors,
+			),
+			'exhibitor'
+		);
 
 		$sponsors_available = ! is_wp_error( $sponsors_response )
 			|| ( ! is_wp_error( $exhibitors_response ) && ( ! empty( $sponsor_resources ) || $this->eventyay_error_has_http_status( $sponsors_response, 404 ) ) );
@@ -1886,6 +1845,50 @@ class Wpfaevent_Eventyay_Importer {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Collect and deduplicate partner candidates from ordered endpoint sources.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array<string, list<array<array-key, mixed>>> $sources Ordered endpoint sources (context => resources).
+	 * @param string                                       $type    Partner candidate type ('sponsor' or 'exhibitor').
+	 * @return list<array<array-key, mixed>> Deduplicated partner resources.
+	 */
+	private function collect_eventyay_partner_candidates( $sources, $type ) {
+		$map = array();
+
+		foreach ( $sources as $source_context => $resources ) {
+			if ( ! is_array( $resources ) ) {
+				continue;
+			}
+
+			foreach ( $resources as $resource ) {
+				if ( ! is_array( $resource ) ) {
+					continue;
+				}
+
+				$is_match = 'sponsor' === $type
+					? $this->parser->is_eventyay_sponsor_resource( $resource, $source_context )
+					: $this->parser->is_eventyay_exhibitor_resource( $resource, $source_context );
+
+				if ( ! $is_match ) {
+					continue;
+				}
+
+				$key = $this->parser->eventyay_partner_resource_key( $resource );
+				if ( '' !== $key && isset( $map[ $key ] ) ) {
+					$map[ $key ] = array_merge( $map[ $key ], $resource );
+				} elseif ( '' !== $key ) {
+					$map[ $key ] = $resource;
+				} else {
+					$map[] = $resource;
+				}
+			}
+		}
+
+		return array_values( $map );
 	}
 
 	/**
@@ -2139,42 +2142,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @phpstan-param array<array-key, mixed> $sponsor_resource
 	 */
 	private function eventyay_sponsor_group_name( $sponsor_resource ) {
-		$type = $this->eventyay_first_present_text(
-			$sponsor_resource,
-			array(
-				'sponsor_group_name',
-				'sponsor-group-name',
-				'sponsor_group',
-				'sponsor-group',
-				'level_name',
-				'level-name',
-				'sponsor_type',
-				'sponsor-type',
-				'sponsorship_type',
-				'sponsorship-type',
-				'package',
-				'package_name',
-				'package-name',
-				'tier',
-				'category',
-			)
-		);
-
-		if ( '' !== $type ) {
-			return $type;
-		}
-
-		$type = $this->eventyay_first_present_text( $sponsor_resource, array( 'type' ) );
-		if ( '' === $type ) {
-			return '';
-		}
-
-		$type_key = sanitize_key( $type );
-		if ( in_array( $type_key, array( 'sponsor', 'sponsors' ), true ) ) {
-			return '';
-		}
-
-		return $type;
+		return $this->parser->eventyay_sponsor_group_name( $sponsor_resource );
 	}
 
 	/**
@@ -2190,165 +2158,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @phpstan-return list<array<string, mixed>>
 	 */
 	private function merge_eventyay_sponsor_groups( $imported, $existing ) {
-		$existing        = is_array( $existing ) ? $existing : array();
-		$group_map       = array();
-		$ordered_entries = array();
-		$ordered_keys    = array();
-
-		foreach ( $existing as $group ) {
-			if ( ! is_array( $group ) ) {
-				continue;
-			}
-
-			$group_key = Wpfaevent_Partner_Helper::get_sponsor_group_key( $group );
-
-			if ( $this->is_eventyay_sponsor_group( $group ) ) {
-				if ( '' !== $group_key && ! in_array( $group_key, $ordered_keys, true ) ) {
-					$ordered_entries[] = $group_key;
-					$ordered_keys[]    = $group_key;
-				}
-
-				continue;
-			}
-
-			if ( '' !== $group_key ) {
-				if ( ! in_array( $group_key, $ordered_keys, true ) ) {
-					$ordered_entries[] = $group_key;
-					$ordered_keys[]    = $group_key;
-				}
-
-				$group_map[ $group_key ] = $group;
-				continue;
-			}
-
-			$ordered_entries[] = array(
-				'__raw_group' => $group,
-			);
-		}
-
-		$imported_groups = $this->group_eventyay_sponsors( $imported );
-
-		foreach ( $imported_groups as $group ) {
-			$group_key = Wpfaevent_Partner_Helper::get_sponsor_group_key( $group );
-			if ( '' === $group_key ) {
-				$ordered_entries[] = array(
-					'__raw_group' => $group,
-				);
-				continue;
-			}
-
-			$group_map[ $group_key ] = $group;
-
-			if ( ! in_array( $group_key, $ordered_keys, true ) ) {
-				$ordered_entries[] = $group_key;
-				$ordered_keys[]    = $group_key;
-			}
-		}
-
-		$merged_groups = array();
-
-		foreach ( $ordered_entries as $entry ) {
-			if ( is_array( $entry ) && isset( $entry['__raw_group'] ) ) {
-				$merged_groups[] = $entry['__raw_group'];
-				continue;
-			}
-
-			if ( isset( $group_map[ $entry ] ) ) {
-				$merged_groups[] = $group_map[ $entry ];
-				unset( $group_map[ $entry ] );
-			}
-		}
-
-		foreach ( $group_map as $group ) {
-			$merged_groups[] = $group;
-		}
-
-		return $merged_groups;
-	}
-
-	/**
-	 * Group imported sponsors by Eventyay type or level.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $sponsors Imported sponsors.
-	 * @return array
-	 * @phpstan-param list<array<string, mixed>> $sponsors
-	 * @phpstan-return list<array<string, mixed>>
-	 */
-	private function group_eventyay_sponsors( $sponsors ) {
-		$groups = array();
-
-		foreach ( $sponsors as $sponsor ) {
-			$group_name = ! empty( $sponsor['type'] ) ? $sponsor['type'] : '';
-			if ( '' === trim( $group_name ) && ! empty( $sponsor['level'] ) ) {
-				$group_name = sprintf(
-					/* translators: %d: Sponsor level number. */
-					__( 'Level %d Sponsors', 'wpfaevent' ),
-					absint( $sponsor['level'] )
-				);
-			}
-
-			if ( '' === trim( $group_name ) ) {
-				$group_name = __( 'Sponsors', 'wpfaevent' );
-			}
-
-			$key = Wpfaevent_Partner_Helper::normalize_sponsor_group_key( $group_name );
-			if ( empty( $groups[ $key ] ) ) {
-				$groups[ $key ] = array(
-					'group_name'         => sanitize_text_field( $group_name ),
-					'source'             => 'eventyay',
-					'eventyay_group_key' => $key,
-					'centered'           => false,
-					'logo_size'          => 160,
-					'sponsors'           => array(),
-				);
-			}
-
-			$groups[ $key ]['sponsors'][] = $sponsor;
-		}
-
-		return array_values( $groups );
-	}
-
-	/**
-	 * Determine whether a sponsor group is owned by Eventyay import.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $group Sponsor group.
-	 * @return bool
-	 * @phpstan-param array<string, mixed> $group
-	 */
-	private function is_eventyay_sponsor_group( $group ) {
-		if ( ! empty( $group['source'] ) && 'eventyay' === $group['source'] ) {
-			return true;
-		}
-
-		if ( empty( $group['sponsors'] ) || ! is_array( $group['sponsors'] ) ) {
-			return false;
-		}
-
-		foreach ( $group['sponsors'] as $sponsor ) {
-			if ( is_array( $sponsor ) && ! empty( $sponsor['source'] ) && 'eventyay' === $sponsor['source'] ) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Build a deduplication key for an Eventyay partner resource.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $partner_resource Partner resource.
-	 * @return string
-	 * @phpstan-param array<array-key, mixed> $partner_resource
-	 */
-	private function eventyay_partner_resource_key( $partner_resource ) {
-		return $this->parser->eventyay_partner_resource_key( $partner_resource );
+		return $this->parser->merge_eventyay_sponsor_groups( $imported, $existing );
 	}
 
 	/**
@@ -2463,22 +2273,7 @@ class Wpfaevent_Eventyay_Importer {
 	 * @phpstan-return list<array<string, mixed>>
 	 */
 	private function merge_eventyay_flat_records( $imported, $existing ) {
-		$existing = is_array( $existing ) ? $existing : array();
-		$records  = array();
-
-		foreach ( $existing as $record ) {
-			if ( ! is_array( $record ) || ( ! empty( $record['source'] ) && 'eventyay' === $record['source'] ) ) {
-				continue;
-			}
-
-			$records[] = $record;
-		}
-
-		foreach ( $imported as $record ) {
-			$records[] = $record;
-		}
-
-		return $records;
+		return $this->parser->merge_eventyay_flat_records( $imported, $existing );
 	}
 
 	/**
