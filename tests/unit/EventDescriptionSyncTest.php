@@ -251,9 +251,9 @@ class EventDescriptionSyncTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Events imported before excerpts were written (content only) follow Eventyay.
+	 * A content-only legacy import that still matches Eventyay follows it and starts tracking.
 	 */
-	public function test_legacy_content_only_import_follows_eventyay() {
+	public function test_legacy_content_only_import_in_sync_follows_eventyay() {
 		$event_id = $this->import( 'Original description.' );
 		wp_update_post(
 			array(
@@ -263,10 +263,34 @@ class EventDescriptionSyncTest extends WP_UnitTestCase {
 		);
 		$this->make_legacy( $event_id );
 
+		$this->import( 'Original description.' );
+		$this->assertSame( 'Original description.', get_post_field( 'post_excerpt', $event_id ) );
+		$this->assertSame( '', Wpfaevent_Event_Description_Sync::get_note( $event_id ) );
+
+		$this->import( 'Updated on Eventyay.' );
+		$this->assertSame( 'Updated on Eventyay.', get_post_field( 'post_content', $event_id ) );
+	}
+
+	/**
+	 * A content-only legacy import that differs from Eventyay is ambiguous, so it is kept.
+	 */
+	public function test_legacy_content_only_import_with_changed_text_is_kept() {
+		$event_id = $this->import( 'Original description.' );
+		wp_update_post(
+			array(
+				'ID'           => $event_id,
+				'post_content' => 'Edited in WP admin before the upgrade.',
+				'post_excerpt' => '',
+			)
+		);
+		$this->make_legacy( $event_id );
+
 		$this->import( 'Updated on Eventyay.' );
 
+		$this->assertSame( 'Edited in WP admin before the upgrade.', get_post_field( 'post_content', $event_id ) );
+		$this->assertStringContainsString( 'Eventyay has a newer description', Wpfaevent_Event_Description_Sync::get_note( $event_id ) );
+		$this->assertTrue( Wpfaevent_Event_Description_Sync::restore( $event_id ) );
 		$this->assertSame( 'Updated on Eventyay.', get_post_field( 'post_content', $event_id ) );
-		$this->assertSame( '', Wpfaevent_Event_Description_Sync::get_note( $event_id ) );
 	}
 
 	/**

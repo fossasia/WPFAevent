@@ -47,8 +47,13 @@ class Wpfaevent_Event_Description_Sync {
 	 * write the same text to the content and excerpt (older imports wrote only
 	 * the content), while the Edit Event modal saves only the
 	 * excerpt and WP admin and the dashboard save only the content. Two different
-	 * non-empty description fields therefore mean a local edit, which is kept and
-	 * marked for later syncs. Title or status changes are not evidence.
+	 * description fields therefore mean a local edit, which is kept and marked
+	 * for later syncs. Title or status changes are not evidence.
+	 *
+	 * An empty excerpt next to content that differs from Eventyay is ambiguous: a
+	 * content-only import whose text changed on Eventyay looks the same as a
+	 * local content edit. It is kept, so no edit is lost, and the note offers to
+	 * restore Eventyay's newer description.
 	 *
 	 * @since 1.0.0
 	 *
@@ -66,7 +71,7 @@ class Wpfaevent_Event_Description_Sync {
 		$description = self::normalize( wp_kses_post( (string) $description ) );
 		$content     = self::normalize( get_post_field( 'post_content', $post_id ) );
 		$excerpt     = self::normalize( get_post_field( 'post_excerpt', $post_id ) );
-		if ( '' === $excerpt || $content === $excerpt ) {
+		if ( $content === $excerpt || ( '' === $excerpt && $content === $description ) ) {
 			return false;
 		}
 
