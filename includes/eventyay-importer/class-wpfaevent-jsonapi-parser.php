@@ -396,7 +396,11 @@ class Wpfaevent_JSONAPI_Parser {
 				continue;
 			}
 
-			$submission        = $this->normalize_eventyay_api_resource( $submission );
+			$submission = $this->normalize_eventyay_api_resource( $submission );
+			if ( ! $this->is_eventyay_confirmed_session( $submission ) ) {
+				continue;
+			}
+
 			$speaker_resources = $this->eventyay_list_value( isset( $submission['speakers'] ) ? $submission['speakers'] : array() );
 			$session           = $this->normalize_eventyay_submission_session( $submission );
 			$speaker_names     = array();
@@ -481,6 +485,10 @@ class Wpfaevent_JSONAPI_Parser {
 					continue;
 				}
 
+				if ( ! $this->is_eventyay_confirmed_session( $session_resource ) ) {
+					continue;
+				}
+
 				$session             = $this->normalize_eventyay_submission_session( $this->normalize_eventyay_api_resource( $session_resource ) );
 				$session['speakers'] = array_values( array_unique( array( $speaker['name'] ) ) );
 				$speaker['category'] = empty( $speaker['category'] ) && ! empty( $session['track'] ) ? $session['track'] : $speaker['category'];
@@ -527,6 +535,9 @@ class Wpfaevent_JSONAPI_Parser {
 			}
 
 			$slot_resource = $this->normalize_eventyay_api_resource( $slot_resource );
+			if ( ! $this->is_eventyay_confirmed_session( $slot_resource ) ) {
+				continue;
+			}
 			$submission    = isset( $slot_resource['submission'] ) && is_array( $slot_resource['submission'] )
 				? $this->normalize_eventyay_api_resource( $slot_resource['submission'] )
 				: array();
@@ -638,6 +649,12 @@ class Wpfaevent_JSONAPI_Parser {
 			$sessions[ $key ]['speakers'] = array_values( array_unique( array_merge( $existing_speakers, $session['speakers'] ) ) );
 		}
 
+		foreach ( array( 'date', 'time', 'end_time', 'starts_at', 'ends_at', 'room', 'track' ) as $field ) {
+			if ( empty( $sessions[ $key ][ $field ] ) && ! empty( $session[ $field ] ) ) {
+				$sessions[ $key ][ $field ] = $session[ $field ];
+			}
+		}
+
 		return $sessions;
 	}
 
@@ -684,6 +701,7 @@ class Wpfaevent_JSONAPI_Parser {
 			'track'     => is_array( $track ) ? $this->eventyay_text_value( isset( $track['name'] ) ? $track['name'] : '' ) : $this->eventyay_text_value( $track ),
 			'room'      => $room,
 			'source_id' => sanitize_text_field( $source_id ),
+			'state'     => sanitize_text_field( (string) $this->eventyay_first_present_text( $submission, array( 'state', 'status' ) ) ),
 		);
 	}
 
@@ -710,6 +728,11 @@ class Wpfaevent_JSONAPI_Parser {
 		$ends_at    = $this->eventyay_first_present_raw( $slot, array( 'end', 'ends_at', 'ends-at', 'end_time', 'end-time' ) );
 		$title      = $this->eventyay_first_present_text( $submission, array( 'title', 'name' ) );
 		$abstract   = $this->eventyay_submission_abstract( $submission );
+		$state      = $this->eventyay_first_present_text( $submission, array( 'state', 'status' ) );
+
+		if ( empty( $state ) ) {
+			$state = $this->eventyay_first_present_text( $slot, array( 'state', 'status' ) );
+		}
 
 		if ( empty( $title ) ) {
 			$title = $this->eventyay_first_present_text( $slot, array( 'title', 'name', 'description' ) );
@@ -731,6 +754,7 @@ class Wpfaevent_JSONAPI_Parser {
 			'track'     => is_array( $track ) ? $this->eventyay_text_value( isset( $track['name'] ) ? $track['name'] : '' ) : $this->eventyay_text_value( $track ),
 			'room'      => $room,
 			'source_id' => sanitize_text_field( $source_id ? $source_id : $slot_id ),
+			'state'     => sanitize_text_field( (string) $state ),
 		);
 	}
 
@@ -751,6 +775,43 @@ class Wpfaevent_JSONAPI_Parser {
 		}
 
 		return ! empty( $session['speakers'] );
+	}
+
+	/**
+	 * Determine whether an Eventyay submission or session resource is confirmed.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $session_resource Eventyay submission or session resource.
+	 * @return bool
+	 */
+	public function is_eventyay_confirmed_session( $session_resource ) {
+		if ( ! is_array( $session_resource ) ) {
+			return false;
+		}
+
+		$normalized = $this->normalize_eventyay_api_resource( $session_resource );
+
+		if ( isset( $normalized['submission'] ) && is_array( $normalized['submission'] ) ) {
+			$sub_resource = $this->normalize_eventyay_api_resource( $normalized['submission'] );
+			$sub_state    = strtolower( trim( (string) $this->eventyay_first_present_text( $sub_resource, array( 'state', 'status' ) ) ) );
+			if ( '' !== $sub_state && 'confirmed' !== $sub_state ) {
+				return false;
+			}
+		}
+
+		$state = strtolower( trim( (string) $this->eventyay_first_present_text( $normalized, array( 'state', 'status' ) ) ) );
+		if ( '' !== $state ) {
+			return 'confirmed' === $state;
+		}
+
+		$slot      = $this->eventyay_first_slot( $normalized );
+		$starts_at = $this->eventyay_first_present_raw( $slot, array( 'start', 'starts_at', 'starts-at', 'start_time', 'start-time', 'date_from', 'date-from' ) );
+		if ( empty( $starts_at ) ) {
+			$starts_at = $this->eventyay_first_present_raw( $normalized, array( 'starts_at', 'starts-at', 'start_time', 'start-time', 'date_from', 'date-from', 'date' ) );
+		}
+
+		return ! empty( $starts_at );
 	}
 
 	/**
@@ -810,7 +871,7 @@ class Wpfaevent_JSONAPI_Parser {
 			':',
 			array_filter(
 				array(
-					$settings['organizer_slug'],
+					isset( $settings['organizer_slug'] ) ? $settings['organizer_slug'] : '',
 					$event_slug,
 					$source_id ? $source_id : sanitize_title( $name ),
 				)
@@ -821,6 +882,8 @@ class Wpfaevent_JSONAPI_Parser {
 		$organization = $this->eventyay_first_present_text( $speaker_resource, array( 'organization', 'organisation', 'company', 'affiliation' ) );
 		$category     = $this->eventyay_first_present_text( $speaker_resource, array( 'category', 'track' ) );
 
+		$base_url = isset( $settings['base_url'] ) ? (string) $settings['base_url'] : '';
+
 		return array(
 			'id'                  => 'eventyay-' . sanitize_key( $eventyay_speaker_id ),
 			'eventyay_speaker_id' => sanitize_text_field( $eventyay_speaker_id ),
@@ -829,13 +892,13 @@ class Wpfaevent_JSONAPI_Parser {
 			'position'            => sanitize_text_field( $position ),
 			'organization'        => sanitize_text_field( $organization ),
 			'category'            => sanitize_text_field( $category ),
-			'image'               => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'avatar', 'avatar_url', 'avatar-url', 'avatar_url_original', 'avatar-url-original', 'image', 'image_url', 'image-url', 'photo', 'photo_url', 'photo-url' ) ), $settings['base_url'] ),
+			'image'               => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'avatar', 'avatar_url', 'avatar-url', 'avatar_url_original', 'avatar-url-original', 'image', 'image_url', 'image-url', 'photo', 'photo_url', 'photo-url' ) ), $base_url ),
 			'bio'                 => $this->eventyay_first_present_rich_text( $speaker_resource, array( 'biography', 'bio', 'description', 'abstract', 'short_biography', 'short-biography', 'long_biography', 'long-biography' ) ),
 			'social'              => array(
-				'linkedin' => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'linkedin', 'linkedin_url', 'linkedin-url' ) ), $settings['base_url'] ),
-				'twitter'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'twitter', 'twitter_url', 'twitter-url', 'x_url' ) ), $settings['base_url'] ),
-				'github'   => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'github', 'github_url', 'github-url' ) ), $settings['base_url'] ),
-				'website'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'website', 'website_url', 'website-url', 'homepage', 'homepage_url', 'homepage-url', 'url' ) ), $settings['base_url'] ),
+				'linkedin' => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'linkedin', 'linkedin_url', 'linkedin-url' ) ), $base_url ),
+				'twitter'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'twitter', 'twitter_url', 'twitter-url', 'x_url' ) ), $base_url ),
+				'github'   => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'github', 'github_url', 'github-url' ) ), $base_url ),
+				'website'  => $this->eventyay_url_value( $this->eventyay_first_present_raw( $speaker_resource, array( 'website', 'website_url', 'website-url', 'homepage', 'homepage_url', 'homepage-url', 'url' ) ), $base_url ),
 			),
 			'featured'            => $this->eventyay_speaker_is_featured( $speaker_resource ),
 			'featured_order'      => $this->eventyay_speaker_featured_order( $speaker_resource ),
@@ -1534,6 +1597,10 @@ class Wpfaevent_JSONAPI_Parser {
 			$event,
 			array(
 				'description',
+				'description_html',
+				'description-html',
+				'frontpage_content',
+				'frontpage-content',
 				'frontpage_text',
 				'frontpage-text',
 				'event_info_text',
@@ -1552,6 +1619,102 @@ class Wpfaevent_JSONAPI_Parser {
 		);
 
 		return $this->eventyay_rich_text_value( $value );
+	}
+
+	/**
+	 * Extract the short lead text for an Eventyay event.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $event Eventyay event resource.
+	 * @return string
+	 * @phpstan-param array<array-key, mixed> $event
+	 */
+	public function eventyay_event_lead_text( $event ) {
+		$dedicated_value   = $this->eventyay_event_first_present_raw(
+			$event,
+			array(
+				'headline',
+				'lead_text',
+				'lead-text',
+				'subtitle',
+				'short_description',
+				'short-description',
+				'summary',
+			),
+			true
+		);
+		$description_value = $this->eventyay_event_first_present_raw(
+			$event,
+			array(
+				'description',
+				'description_html',
+				'description-html',
+				'frontpage_content',
+				'frontpage-content',
+				'frontpage_text',
+				'frontpage-text',
+			),
+			true
+		);
+		$to_plain_text     = static function ( $value ) {
+			$value = is_scalar( $value ) ? (string) $value : '';
+			$value = preg_replace( '/<\s*(?:br\s*\/?>|\/(?:p|div|li|h[1-6]|blockquote|tr|table)\s*)>/i', ' ', $value );
+			$value = is_string( $value ) ? wp_strip_all_tags( $value ) : '';
+			$value = preg_replace( '/\s+/', ' ', $value );
+
+			return is_string( $value ) ? trim( $value ) : '';
+		};
+		$lead_text         = $to_plain_text( $this->eventyay_rich_text_value( $dedicated_value ) );
+		$description       = $to_plain_text( $this->eventyay_rich_text_value( $description_value ) );
+		$limit_lead_text   = static function ( $value ) {
+			$value = sanitize_text_field( $value );
+			if ( function_exists( 'mb_strlen' ) && mb_strlen( $value ) > 160 ) {
+				$value = mb_substr( $value, 0, 160 );
+				$space = mb_strrpos( $value, ' ' );
+				if ( false !== $space ) {
+					$value = mb_substr( $value, 0, $space );
+				}
+			} elseif ( strlen( $value ) > 160 ) {
+				$value = substr( $value, 0, 160 );
+				$space = strrpos( $value, ' ' );
+				if ( false !== $space ) {
+					$value = substr( $value, 0, $space );
+				}
+			}
+
+			return trim( $value );
+		};
+
+		$has_separate_description = '' !== $to_plain_text(
+			$this->eventyay_rich_text_value(
+				$this->eventyay_event_first_present_raw(
+					$event,
+					array(
+						'description',
+						'description_html',
+						'description-html',
+						'frontpage_content',
+						'frontpage-content',
+						'frontpage_text',
+						'frontpage-text',
+					),
+					true
+				)
+			)
+		);
+
+		if ( '' !== $lead_text && ( ! $has_separate_description || $lead_text !== $description ) ) {
+			return $limit_lead_text( $lead_text );
+		}
+
+		$description = $to_plain_text( $this->eventyay_rich_text_value( $description_value ) );
+
+		if ( preg_match( '/^(.+?(?:[!?](?=\s|$)|\.(?=\s+[A-Z]|$)))/u', $description, $matches ) ) {
+			return $limit_lead_text( $matches[1] );
+		}
+
+		return '';
 	}
 
 	/**
@@ -1661,6 +1824,10 @@ class Wpfaevent_JSONAPI_Parser {
 				continue;
 			}
 
+			if ( ! $this->is_eventyay_confirmed_session( $resource ) ) {
+				continue;
+			}
+
 			++$session_count;
 
 			$session      = $this->normalize_eventyay_session_resource( $resource, $included );
@@ -1753,6 +1920,10 @@ class Wpfaevent_JSONAPI_Parser {
 
 			foreach ( $speaker_sessions as $session_resource ) {
 				if ( ! is_array( $session_resource ) ) {
+					continue;
+				}
+
+				if ( ! $this->is_eventyay_confirmed_session( $session_resource ) ) {
 					continue;
 				}
 
@@ -1895,6 +2066,7 @@ class Wpfaevent_JSONAPI_Parser {
 			'abstract'  => wp_kses_post( $this->attribute_value( $attributes, array( 'long-abstract', 'short-abstract', 'abstract', 'description' ) ) ),
 			'track'     => sanitize_text_field( $track_name ),
 			'source_id' => isset( $session_resource['id'] ) ? sanitize_text_field( $session_resource['id'] ) : '',
+			'state'     => sanitize_text_field( (string) $this->attribute_value( $attributes, array( 'state', 'status' ) ) ),
 		);
 	}
 

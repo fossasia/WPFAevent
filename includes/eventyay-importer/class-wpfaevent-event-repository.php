@@ -63,6 +63,7 @@ class Wpfaevent_Event_Repository {
 		$title          = $this->parser->eventyay_event_title( $event );
 		$title          = $title ? $title : $event_slug;
 		$description    = $this->parser->eventyay_event_description( $event );
+		$lead_text      = $this->parser->eventyay_event_lead_text( $event );
 		$existing_id    = $this->find_eventyay_event_post( $organizer_slug, $event_slug );
 		$post_status    = in_array( $settings['post_status'], array( 'draft', 'publish', 'pending', 'private' ), true ) ? $settings['post_status'] : 'draft';
 		$post_data      = array(
@@ -70,6 +71,7 @@ class Wpfaevent_Event_Repository {
 			'post_type'    => 'wpfa_event',
 			'post_status'  => $post_status,
 			'post_content' => wp_kses_post( $description ),
+			'post_excerpt' => wp_kses_post( $description ),
 		);
 		$created        = false;
 
@@ -144,7 +146,11 @@ class Wpfaevent_Event_Repository {
 		$this->update_or_delete_post_meta( $saved_id, '_event_end_date', $end_date );
 		$this->update_or_delete_post_meta( $saved_id, '_event_place', $location );
 		$this->update_or_delete_post_meta( $saved_id, '_event_registration_link', $event_url );
-		$this->update_or_delete_post_meta( $saved_id, '_event_lead_text', wp_strip_all_tags( $description ) );
+		$existing_lead_text = trim( (string) get_post_meta( $saved_id, 'wpfa_event_lead_text', true ) );
+		if ( '' === $existing_lead_text && '' !== $lead_text ) {
+			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_lead_text', $lead_text );
+			$this->update_or_delete_post_meta( $saved_id, '_event_lead_text', '' );
+		}
 
 		update_post_meta( $saved_id, '_wpfa_eventyay_organizer_slug', sanitize_text_field( $organizer_slug ) );
 		update_post_meta( $saved_id, '_wpfa_eventyay_event_slug', sanitize_text_field( $event_slug ) );
@@ -399,10 +405,18 @@ class Wpfaevent_Event_Repository {
 				continue;
 			}
 
+			if ( isset( $session['state'] ) && '' !== $session['state'] && 'confirmed' !== strtolower( (string) $session['state'] ) ) {
+				continue;
+			}
+
 			$starts_at = isset( $session['starts_at'] ) ? sanitize_text_field( $session['starts_at'] ) : '';
 			$ends_at   = isset( $session['ends_at'] ) ? sanitize_text_field( $session['ends_at'] ) : '';
 			$date      = isset( $session['date'] ) ? sanitize_text_field( $session['date'] ) : '';
 			$time      = isset( $session['time'] ) ? sanitize_text_field( $session['time'] ) : '';
+
+			if ( empty( $starts_at ) && empty( $date ) ) {
+				continue;
+			}
 
 			if ( ! empty( $session['end_time'] ) ) {
 				$end_time = sanitize_text_field( $session['end_time'] );
@@ -436,6 +450,7 @@ class Wpfaevent_Event_Repository {
 				'room'      => $room,
 				'starts_at' => $starts_at,
 				'ends_at'   => $ends_at,
+				'state'     => isset( $session['state'] ) ? sanitize_text_field( (string) $session['state'] ) : '',
 			);
 		}
 

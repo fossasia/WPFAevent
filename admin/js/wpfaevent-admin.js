@@ -735,6 +735,89 @@
 		/* -------------------------------------------------------------
 		 * Event Custom Navigation Metabox
 		 * ----------------------------------------------------------- */
+
+		// Items are submitted in DOM order, so reordering the cards is all
+		// that is needed for the saved navigation to follow the new order.
+		// Sub-items only sort within their own dropdown because their field
+		// names carry the parent item's index.
+		function initNavSortables() {
+			if (!$.fn.sortable) {
+				return;
+			}
+			const sortableOptions = {
+				axis: 'y',
+				forcePlaceholderSize: true,
+				placeholder: 'wpfaevent-nav-sortable-placeholder',
+			};
+			$('#wpfaevent-nav-items-container')
+				.not('.ui-sortable')
+				.sortable(
+					$.extend({}, sortableOptions, {
+						items: '> .wpfaevent-meta-card',
+						handle: '.wpfaevent-nav-card-handle',
+					})
+				);
+			$('#wpfaevent-nav-items-container .wpfaevent-nav-subitems-list')
+				.not('.ui-sortable')
+				.sortable(
+					$.extend({}, sortableOptions, {
+						items: '> .wpfaevent-nav-subitem-block',
+						handle: '.wpfaevent-nav-subitem-handle',
+					})
+				);
+		}
+
+		function announceNavPosition(position, total) {
+			const status = document.getElementById(
+				'wpfaevent-nav-order-status'
+			);
+			if (!status) {
+				return;
+			}
+			const template =
+				typeof window.wpfaeventAdminL10n !== 'undefined' &&
+				window.wpfaeventAdminL10n.navItemMoved
+					? window.wpfaeventAdminL10n.navItemMoved
+					: 'Moved to position %1$s of %2$s.';
+			// Clear first so repeating the same message is announced again.
+			status.textContent = '';
+			window.setTimeout(function () {
+				status.textContent = template
+					.replace('%1$s', String(position))
+					.replace('%2$s', String(total));
+			}, 50);
+		}
+
+		initNavSortables();
+
+		$(document).on('click', '.wpfaevent-nav-move-btn', function (e) {
+			e.preventDefault();
+			const $item = $(this).closest(
+				'.wpfaevent-nav-subitem-block, .wpfaevent-meta-card'
+			);
+			const selector = $item.hasClass('wpfaevent-nav-subitem-block')
+				? '.wpfaevent-nav-subitem-block'
+				: '.wpfaevent-meta-card';
+			const movingUp = $(this).data('direction') === 'up';
+			const $target = movingUp
+				? $item.prev(selector)
+				: $item.next(selector);
+			// Already first or last in its list: nothing moved, so nothing to announce.
+			if (!$target.length) {
+				return;
+			}
+			if (movingUp) {
+				$item.insertBefore($target);
+			} else {
+				$item.insertAfter($target);
+			}
+			// Moving the node in the DOM drops focus; keep it on the button
+			// so the item can be moved several steps from the keyboard.
+			this.focus();
+			const $siblings = $item.parent().children(selector);
+			announceNavPosition($siblings.index($item) + 1, $siblings.length);
+		});
+
 		$(document).on('click', '#wpfaevent-reset-nav-default', function (e) {
 			e.preventDefault();
 			const confirmMsg =
@@ -759,6 +842,7 @@
 			if (defaultTmpl && 'content' in defaultTmpl) {
 				container.appendChild(defaultTmpl.content.cloneNode(true));
 			}
+			initNavSortables();
 		});
 
 		$(document).on('click', '#wpfaevent-clear-nav', function (e) {
@@ -815,6 +899,7 @@
 				}
 			});
 			container.appendChild(clone);
+			initNavSortables();
 		});
 
 		$(document).on('change', '.wpfaevent-nav-type-select', function () {

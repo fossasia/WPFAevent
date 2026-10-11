@@ -1200,6 +1200,213 @@ class MainNavigationTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test that saving the navigation editor stores items and dropdown sub-items in the
+	 * order they were submitted, which is the order the cards have on the edit screen
+	 * after being reordered, and that the public navigation follows that order.
+	 */
+	public function test_save_event_meta_follows_reordered_navigation() {
+		if ( ! class_exists( 'Wpfaevent_Admin_Event_Metabox' ) ) {
+			$this->markTestSkipped( 'Wpfaevent_Admin_Event_Metabox class not available.' );
+		}
+
+		$user_id = $this->factory->user->create( array( 'role' => 'administrator' ) );
+		wp_set_current_user( $user_id );
+
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'  => 'wpfa_event',
+				'post_title' => 'Event With Reordered Nav',
+			)
+		);
+
+		// Field names keep the index each card was rendered with, so after moving the
+		// last of five items to the top the browser submits index 4 first. Sub-items of
+		// the dropdown were reordered the same way.
+		$_POST['wpfa_event_meta_nonce']         = wp_create_nonce( 'wpfa_event_meta_nonce' );
+		$_POST['wpfa_custom_nav_items_present'] = '1';
+		$_POST['wpfa_custom_nav_items']         = array(
+			4 => array(
+				'text'    => 'Travel Info',
+				'type'    => 'custom_page',
+				'title'   => 'Travel Info',
+				'slug'    => 'travel-info',
+				'content' => 'Travel details.',
+			),
+			0 => array(
+				'text' => 'Overview',
+				'type' => 'link',
+				'href' => '#about',
+			),
+			1 => array(
+				'text' => 'Speakers',
+				'type' => 'link',
+				'href' => '#speakers',
+			),
+			2 => array(
+				'text'  => 'Resources',
+				'type'  => 'dropdown',
+				'items' => array(
+					2 => array(
+						'text' => 'Visa Letters',
+						'type' => 'link',
+						'href' => 'https://example.com/visa',
+					),
+					0 => array(
+						'text' => 'Hotels',
+						'type' => 'link',
+						'href' => 'https://example.com/hotels',
+					),
+					1 => array(
+						'text' => 'Maps',
+						'type' => 'link',
+						'href' => 'https://example.com/maps',
+					),
+				),
+			),
+			3 => array(
+				'text' => 'Schedule',
+				'type' => 'link',
+				'href' => '#schedule',
+			),
+		);
+
+		$metabox = new Wpfaevent_Admin_Event_Metabox();
+		$metabox->save_event_meta( $event_id );
+
+		$saved_nav = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
+		$this->assertIsArray( $saved_nav );
+		$this->assertSame(
+			array( 'Travel Info', 'Overview', 'Speakers', 'Resources', 'Schedule' ),
+			wp_list_pluck( $saved_nav, 'text' )
+		);
+		$this->assertSame(
+			array( 'Visa Letters', 'Hotels', 'Maps' ),
+			wp_list_pluck( $saved_nav[3]['items'], 'text' )
+		);
+		$this->assertSame( 'travel-info', $saved_nav[0]['slug'] );
+
+		// The edit screen renders the saved order with sequential indexes again.
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$metabox_output = ob_get_clean();
+
+		$this->assertStringContainsString( 'name="wpfa_custom_nav_items[0][text]" value="Travel Info"', $metabox_output );
+		$this->assertStringContainsString( 'name="wpfa_custom_nav_items[3][items][0][text]" value="Visa Letters"', $metabox_output );
+
+		// The public event navigation lists the items in the saved order.
+		$wpfa_event_nav_items = $saved_nav;
+		ob_start();
+		include WPFAEVENT_PATH . 'public/partials/event-section-nav.php';
+		$public_output = ob_get_clean();
+
+		$travel_pos   = strpos( $public_output, 'Travel Info' );
+		$overview_pos = strpos( $public_output, 'Overview' );
+		$this->assertNotFalse( $travel_pos );
+		$this->assertNotFalse( $overview_pos );
+		$this->assertLessThan( $overview_pos, $travel_pos );
+
+		$visa_pos  = strpos( $public_output, 'Visa Letters' );
+		$hotel_pos = strpos( $public_output, 'Hotels' );
+		$maps_pos  = strpos( $public_output, 'Maps' );
+		$this->assertNotFalse( $visa_pos );
+		$this->assertLessThan( $hotel_pos, $visa_pos );
+		$this->assertLessThan( $maps_pos, $hotel_pos );
+
+		unset( $_POST['wpfa_event_meta_nonce'], $_POST['wpfa_custom_nav_items_present'], $_POST['wpfa_custom_nav_items'] );
+	}
+
+	/**
+	 * Test that an existing custom page keeps its URL when a new page with the same heading
+	 * is placed above it, so old links keep opening the original page after a reorder.
+	 */
+	public function test_moved_custom_page_keeps_existing_slug() {
+		$event_id = $this->factory->post->create( array( 'post_type' => 'wpfa_event' ) );
+
+		$raw_items = array(
+			array(
+				'text'    => 'Travel Info (new)',
+				'type'    => 'custom_page',
+				'title'   => 'Travel Info',
+				'slug'    => '',
+				'content' => 'New page content.',
+			),
+			array(
+				'text'  => 'More',
+				'type'  => 'dropdown',
+				'items' => array(
+					array(
+						'text'    => 'Travel Info',
+						'type'    => 'custom_page',
+						'title'   => 'Travel Info',
+						'slug'    => 'travel-info',
+						'content' => 'Original page content.',
+					),
+				),
+			),
+		);
+
+		$sanitized = Wpfaevent_Meta_Event::sanitize_custom_navigation( $raw_items );
+
+		$this->assertSame( 'travel-info-2', $sanitized[0]['slug'] );
+		$this->assertSame( 'travel-info', $sanitized[1]['items'][0]['slug'] );
+		$this->assertSame( '?custom_page=travel-info', $sanitized[1]['items'][0]['href'] );
+
+		update_post_meta( $event_id, 'wpfa_event_custom_navigation', $sanitized );
+
+		$page = Wpfaevent_Main_Navigation_Helper::get_custom_page( $event_id, 'travel-info' );
+		$this->assertIsArray( $page );
+		$this->assertSame( 'Original page content.', $page['content'] );
+	}
+
+	/**
+	 * Test that every navigation card and sub-item renders a drag handle and
+	 * keyboard-operable move buttons.
+	 */
+	public function test_navigation_meta_box_renders_reorder_controls() {
+		if ( ! class_exists( 'Wpfaevent_Admin_Event_Metabox' ) ) {
+			$this->markTestSkipped( 'Wpfaevent_Admin_Event_Metabox class not available.' );
+		}
+
+		$event_id = $this->factory->post->create( array( 'post_type' => 'wpfa_event' ) );
+		update_post_meta(
+			$event_id,
+			'wpfa_event_custom_navigation',
+			array(
+				array(
+					'text' => 'Overview',
+					'type' => 'link',
+					'href' => '#about',
+				),
+				array(
+					'text'  => 'More',
+					'type'  => 'dropdown',
+					'items' => array(
+						array(
+							'text' => 'Hotels',
+							'type' => 'link',
+							'href' => 'https://example.com/hotels',
+						),
+					),
+				),
+			)
+		);
+
+		$metabox = new Wpfaevent_Admin_Event_Metabox();
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'id="wpfaevent-nav-order-status"', $output );
+		$this->assertStringContainsString( 'wpfaevent-nav-card-handle', $output );
+		$this->assertStringContainsString( 'wpfaevent-nav-subitem-handle', $output );
+		$this->assertStringContainsString( 'data-direction="up"', $output );
+		$this->assertStringContainsString( 'data-direction="down"', $output );
+		$this->assertStringContainsString( 'Move item up', $output );
+		$this->assertStringContainsString( 'Move sub-item down', $output );
+		$this->assertStringNotContainsString( 'style=', $output );
+	}
+
+	/**
 	 * Create an event whose custom navigation links to a WordPress page, top level and in a dropdown.
 	 *
 	 * @param int $page_id Linked page ID.
