@@ -173,24 +173,18 @@ class EventDescriptionSyncTest extends WP_UnitTestCase {
 	/**
 	 * Turn an event into one imported before description tracking existed.
 	 *
-	 * @param int    $event_id    Event post ID.
-	 * @param string $imported_at Last import time (GMT, MySQL format).
-	 * @param string $modified_at Last post modification time (GMT, MySQL format).
+	 * @param int $event_id Event post ID.
 	 * @return void
 	 */
-	private function make_legacy( $event_id, $imported_at, $modified_at ) {
-		global $wpdb;
-
+	private function make_legacy( $event_id ) {
 		delete_post_meta( $event_id, Wpfaevent_Event_Description_Sync::HASH_META );
 		delete_post_meta( $event_id, Wpfaevent_Event_Description_Sync::APPLIED_META );
 		delete_post_meta( $event_id, Wpfaevent_Event_Description_Sync::REMOTE_META );
-		update_post_meta( $event_id, '_wpfa_eventyay_last_imported_at', $imported_at );
-		$wpdb->update( $wpdb->posts, array( 'post_modified_gmt' => $modified_at ), array( 'ID' => $event_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		clean_post_cache( $event_id );
 	}
 
 	/**
-	 * A legacy event edited on this site before the upgrade keeps its description.
+	 * A legacy event edited in the modal keeps its description, and the note reports
+	 * that Eventyay's description changed.
 	 */
 	public function test_legacy_event_edited_locally_is_kept() {
 		$event_id = $this->import( 'Original description.' );
@@ -200,32 +194,78 @@ class EventDescriptionSyncTest extends WP_UnitTestCase {
 				'post_excerpt' => 'Edited before the upgrade.',
 			)
 		);
-		$this->make_legacy( $event_id, gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS ), gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS ) );
+		$this->make_legacy( $event_id );
 
 		$this->import( 'Updated on Eventyay.', 'Renamed on Eventyay' );
 
 		$this->assertSame( 'Edited before the upgrade.', get_post_field( 'post_excerpt', $event_id ) );
 		$this->assertSame( 'Renamed on Eventyay', get_the_title( $event_id ) );
-		$this->assertSame( 'Description edited on this site. Eventyay syncs will not change it.', Wpfaevent_Event_Description_Sync::get_note( $event_id ) );
+		$this->assertTrue( Wpfaevent_Event_Description_Sync::has_newer_remote( $event_id ) );
+		$this->assertStringContainsString( 'Eventyay has a newer description', Wpfaevent_Event_Description_Sync::get_note( $event_id ) );
 
 		// Later syncs keep it too, and restore brings back Eventyay's text.
 		$this->import( 'Changed again on Eventyay.' );
 		$this->assertSame( 'Edited before the upgrade.', get_post_field( 'post_excerpt', $event_id ) );
-		$this->assertStringContainsString( 'Eventyay has a newer description', Wpfaevent_Event_Description_Sync::get_note( $event_id ) );
 		$this->assertTrue( Wpfaevent_Event_Description_Sync::restore( $event_id ) );
 		$this->assertSame( 'Changed again on Eventyay.', get_post_field( 'post_excerpt', $event_id ) );
 	}
 
 	/**
-	 * A legacy event not modified since its last import follows Eventyay's changes.
+	 * A legacy event edited in WP admin keeps its description; with Eventyay unchanged
+	 * the note does not claim a newer description.
 	 */
-	public function test_legacy_event_changed_only_on_eventyay_follows_eventyay() {
+	public function test_legacy_content_edit_with_unchanged_eventyay_is_kept() {
 		$event_id = $this->import( 'Original description.' );
-		$this->make_legacy( $event_id, gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS ), gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS ) );
+		wp_update_post(
+			array(
+				'ID'           => $event_id,
+				'post_content' => 'Longer website copy.',
+			)
+		);
+		$this->make_legacy( $event_id );
+
+		$this->import( 'Original description.' );
+
+		$this->assertSame( 'Longer website copy.', get_post_field( 'post_content', $event_id ) );
+		$this->assertSame( 'Description edited on this site. Eventyay syncs will not change it.', Wpfaevent_Event_Description_Sync::get_note( $event_id ) );
+	}
+
+	/**
+	 * A title-only change on a legacy event does not lock its description.
+	 */
+	public function test_legacy_title_change_does_not_keep_old_description() {
+		$event_id = $this->import( 'Original description.' );
+		wp_update_post(
+			array(
+				'ID'         => $event_id,
+				'post_title' => 'Renamed on this site',
+			)
+		);
+		$this->make_legacy( $event_id );
 
 		$this->import( 'Updated on Eventyay.' );
 
+		$this->assertSame( 'Updated on Eventyay.', get_post_field( 'post_content', $event_id ) );
 		$this->assertSame( 'Updated on Eventyay.', get_post_field( 'post_excerpt', $event_id ) );
+		$this->assertSame( '', Wpfaevent_Event_Description_Sync::get_note( $event_id ) );
+	}
+
+	/**
+	 * Events imported before excerpts were written (content only) follow Eventyay.
+	 */
+	public function test_legacy_content_only_import_follows_eventyay() {
+		$event_id = $this->import( 'Original description.' );
+		wp_update_post(
+			array(
+				'ID'           => $event_id,
+				'post_excerpt' => '',
+			)
+		);
+		$this->make_legacy( $event_id );
+
+		$this->import( 'Updated on Eventyay.' );
+
+		$this->assertSame( 'Updated on Eventyay.', get_post_field( 'post_content', $event_id ) );
 		$this->assertSame( '', Wpfaevent_Event_Description_Sync::get_note( $event_id ) );
 	}
 
@@ -234,7 +274,7 @@ class EventDescriptionSyncTest extends WP_UnitTestCase {
 	 */
 	public function test_legacy_event_in_sync_starts_tracking() {
 		$event_id = $this->import( 'Original description.' );
-		$this->make_legacy( $event_id, gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS ), gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS ) );
+		$this->make_legacy( $event_id );
 
 		$this->import( 'Original description.' );
 		$this->assertNotSame( '', get_post_meta( $event_id, Wpfaevent_Event_Description_Sync::HASH_META, true ) );

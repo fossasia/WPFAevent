@@ -43,10 +43,12 @@ class Wpfaevent_Event_Description_Sync {
 	/**
 	 * Decide whether an import must keep the event's current description.
 	 *
-	 * Events imported before fingerprints existed are checked once: if their
-	 * description differs from Eventyay and the post was modified after its last
-	 * import, the difference was made on this site, so it is kept and marked as
-	 * a local edit for later syncs.
+	 * Events imported before fingerprints existed are checked once. Imports
+	 * write the same text to the content and excerpt (older imports wrote only
+	 * the content), while the Edit Event modal saves only the
+	 * excerpt and WP admin and the dashboard save only the content. Two different
+	 * non-empty description fields therefore mean a local edit, which is kept and
+	 * marked for later syncs. Title or status changes are not evidence.
 	 *
 	 * @since 1.0.0
 	 *
@@ -64,20 +66,18 @@ class Wpfaevent_Event_Description_Sync {
 		$description = self::normalize( wp_kses_post( (string) $description ) );
 		$content     = self::normalize( get_post_field( 'post_content', $post_id ) );
 		$excerpt     = self::normalize( get_post_field( 'post_excerpt', $post_id ) );
-		if ( $content === $description && $excerpt === $description ) {
-			return false;
-		}
-
-		// Not modified since the last import: the difference came from Eventyay.
-		$imported_at = strtotime( (string) get_post_meta( $post_id, '_wpfa_eventyay_last_imported_at', true ) );
-		$modified_at = strtotime( (string) get_post_field( 'post_modified_gmt', $post_id ) );
-		if ( $imported_at && $modified_at && $modified_at <= $imported_at ) {
+		if ( '' === $excerpt || $content === $excerpt ) {
 			return false;
 		}
 
 		// Baseline as if Eventyay's text had been applied, so the edit stays detected.
 		update_post_meta( $post_id, self::HASH_META, md5( $description . "\0" . $description ) );
-		update_post_meta( $post_id, self::APPLIED_META, wp_slash( $description ) );
+
+		// The unedited field still holds the last imported text. If it matches Eventyay,
+		// Eventyay has not changed; otherwise the baseline is unknown but differs from
+		// Eventyay's current text, so has_newer_remote() reports a newer description.
+		$baseline = ( $content === $description || $excerpt === $description ) ? $description : '';
+		update_post_meta( $post_id, self::APPLIED_META, wp_slash( $baseline ) );
 
 		return true;
 	}
