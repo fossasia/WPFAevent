@@ -156,6 +156,8 @@ class Wpfaevent_Admin {
 			array(
 				'confirmResetNav' => __( 'Reset navigation to default items?', 'wpfaevent' ),
 				'confirmClearNav' => __( 'Clear all custom navigation items and use default navigation?', 'wpfaevent' ),
+				/* translators: 1: new position of the moved navigation item, 2: total number of items in its list. */
+				'navItemMoved'    => __( 'Moved to position %1$s of %2$s.', 'wpfaevent' ),
 			)
 		);
 	}

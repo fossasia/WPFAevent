@@ -523,8 +523,13 @@ class Wpfaevent_Event_Template_Controller {
 		$ticket_widget_skip_ssl = ! is_ssl();
 
 		$about_content = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
+		$post_excerpt  = trim( (string) get_post_field( 'post_excerpt', $event_id ) );
 		$post_content  = trim( (string) get_post_field( 'post_content', $event_id ) );
-		$event_lead    = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
+		$event_lead    = trim( (string) get_post_meta( $event_id, 'wpfa_event_lead_text', true ) );
+
+		if ( '' === $event_lead ) {
+			$event_lead = trim( (string) get_post_meta( $event_id, '_event_lead_text', true ) );
+		}
 
 		$main_speaker_limit             = absint( apply_filters( 'wpfa_event_main_speaker_limit', 20, $event_id ) );
 		$main_speaker_limit             = $main_speaker_limit ? $main_speaker_limit : 20;
@@ -668,6 +673,10 @@ class Wpfaevent_Event_Template_Controller {
 					continue;
 				}
 
+				if ( class_exists( 'Wpfaevent_Partner_Helper' ) && ! Wpfaevent_Partner_Helper::is_partner_published( $sponsor ) ) {
+					continue;
+				}
+
 				if ( empty( $sponsor['image'] ) && defined( 'WPFAEVENT_URL' ) ) {
 					$sponsor['image'] = WPFAEVENT_URL . 'assets/images/logo.png';
 				}
@@ -694,6 +703,10 @@ class Wpfaevent_Event_Template_Controller {
 
 		foreach ( $exhibitors as $exhibitor ) {
 			if ( ! is_array( $exhibitor ) || empty( $exhibitor['name'] ) ) {
+				continue;
+			}
+
+			if ( class_exists( 'Wpfaevent_Partner_Helper' ) && ! Wpfaevent_Partner_Helper::is_partner_published( $exhibitor ) ) {
 				continue;
 			}
 
@@ -780,8 +793,14 @@ class Wpfaevent_Event_Template_Controller {
 			);
 		}
 
-		if ( '' === $about_content ) {
-			$about_content = '' !== $post_content ? $post_content : $event_lead;
+		if ( '' !== $post_excerpt ) {
+			$about_content = $post_excerpt;
+		} elseif ( '' === $about_content ) {
+			$about_content = $post_content;
+		}
+
+		if ( '' === $event_lead && '' !== $about_content ) {
+			$event_lead = wp_trim_words( wp_strip_all_tags( $about_content ), 20, '…' );
 		}
 
 		$date_label           = ! empty( $event_calendar_data['date_label'] ) ? sanitize_text_field( $event_calendar_data['date_label'] ) : $format_event_date( $start_date );
@@ -884,15 +903,25 @@ class Wpfaevent_Event_Template_Controller {
 				continue;
 			}
 
-			$row_meta       = isset( $schedule_meta[ $row_index ] ) && is_array( $schedule_meta[ $row_index ] ) ? $schedule_meta[ $row_index ] : array();
+			$row_meta  = isset( $schedule_meta[ $row_index ] ) && is_array( $schedule_meta[ $row_index ] ) ? $schedule_meta[ $row_index ] : array();
+			$row_state = isset( $row_meta['state'] ) ? strtolower( trim( (string) $row_meta['state'] ) ) : '';
+			if ( '' !== $row_state && 'confirmed' !== $row_state ) {
+				continue;
+			}
+
 			$start_datetime = isset( $row_meta['starts_at'] ) ? sanitize_text_field( $row_meta['starts_at'] ) : '';
 			$end_datetime   = isset( $row_meta['ends_at'] ) ? sanitize_text_field( $row_meta['ends_at'] ) : '';
 			$row_date       = isset( $row[0] ) ? sanitize_text_field( $row[0] ) : '';
 			$row_time       = isset( $row[1] ) ? sanitize_text_field( $row[1] ) : '';
+			$date_label     = $format_schedule_date( $start_datetime, $row_date, $row_time );
+
+			if ( empty( $date_label ) || 'TBD' === $date_label || 'TBD' === $row_date || __( 'TBD', 'wpfaevent' ) === $date_label ) {
+				continue;
+			}
 
 			$schedule_item = array(
 				'date'           => $row_date,
-				'date_label'     => $format_schedule_date( $start_datetime, $row_date, $row_time ),
+				'date_label'     => $date_label,
 				'time'           => $row_time,
 				'time_label'     => $format_schedule_time( $start_datetime, $end_datetime, $row_date, $row_time ),
 				'title'          => ! empty( $row[2] ) ? sanitize_text_field( $row[2] ) : $event_title,
@@ -908,7 +937,7 @@ class Wpfaevent_Event_Template_Controller {
 			$time_parts                  = preg_split( '/\s*-\s*/', $schedule_item['time_label'], 2 );
 			$schedule_item['time_start'] = isset( $time_parts[0] ) ? trim( $time_parts[0] ) : $schedule_item['time_label'];
 			$schedule_item['time_end']   = isset( $time_parts[1] ) ? trim( $time_parts[1] ) : '';
-			$schedule_item['day_key']    = sanitize_title( $schedule_item['date_label'] ? $schedule_item['date_label'] : __( 'TBD', 'wpfaevent' ) );
+			$schedule_item['day_key']    = sanitize_title( $schedule_item['date_label'] );
 			$schedule_item['track_key']  = sanitize_title( $schedule_item['track'] );
 			$schedule_item['room_key']   = sanitize_title( $schedule_item['room'] );
 
@@ -931,10 +960,8 @@ class Wpfaevent_Event_Template_Controller {
 		);
 
 		foreach ( $schedule_items as $schedule_item ) {
-			$day_label = $schedule_item['date_label'] ? $schedule_item['date_label'] : __( 'TBD', 'wpfaevent' );
-
 			if ( ! empty( $schedule_item['day_key'] ) ) {
-				$event_session_filter_options['days'][ $schedule_item['day_key'] ] = $day_label;
+				$event_session_filter_options['days'][ $schedule_item['day_key'] ] = $schedule_item['date_label'];
 			}
 
 			if ( ! empty( $schedule_item['track_key'] ) && ! empty( $schedule_item['track'] ) ) {
@@ -975,7 +1002,7 @@ class Wpfaevent_Event_Template_Controller {
 		$schedule_preview_day_groups = array();
 
 		foreach ( $schedule_preview_items as $schedule_item ) {
-			$day_key = ! empty( $schedule_item['date_label'] ) ? $schedule_item['date_label'] : __( 'TBD', 'wpfaevent' );
+			$day_key = $schedule_item['date_label'];
 
 			if ( ! isset( $schedule_preview_day_groups[ $day_key ] ) ) {
 				$schedule_preview_day_groups[ $day_key ] = array();
@@ -1088,6 +1115,7 @@ class Wpfaevent_Event_Template_Controller {
 			'location'                                 => $location,
 			'event_language_label'                     => $event_language_label,
 			'schedule_items'                           => $schedule_items,
+			'event_lead_text'                          => $event_lead,
 			'about_content'                            => $about_content,
 			'register_url'                             => $register_url,
 			'register_text'                            => $register_text,
@@ -1184,6 +1212,7 @@ class Wpfaevent_Event_Template_Controller {
 			'location'                                 => '',
 			'event_language_label'                     => '',
 			'schedule_items'                           => array(),
+			'event_lead_text'                          => '',
 			'about_content'                            => '',
 			'register_url'                             => '',
 			'register_text'                            => '',

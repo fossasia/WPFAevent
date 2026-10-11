@@ -44,112 +44,25 @@ class EventAdditionalInformationTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Saving the event persists venue, transportation, and hotel information.
+	 * Additional information meta box is no longer registered in Edit Event.
 	 */
-	public function test_event_editor_saves_additional_information_fields() {
-		$_POST = array(
-			'wpfa_event_meta_nonce'                 => wp_create_nonce( 'wpfa_event_meta_nonce' ),
-			'wpfa_event_venue_information'          => '<p>Main Hall, Level 2</p>',
-			'wpfa_event_transportation_information' => '<p>Take MRT to City Hall station.</p>',
-			'wpfa_event_hotel_information'          => '<p>Recommended Hotel: Grand Plaza.</p>',
-		);
+	public function test_additional_information_meta_box_is_not_registered() {
+		global $wp_meta_boxes;
+		$original_meta_boxes = $wp_meta_boxes;
 
-		( new Wpfaevent_Admin_Event_Metabox() )->save_event_meta( $this->event_id );
+		try {
+			$wp_meta_boxes = array();
 
-		$this->assertSame( '<p>Main Hall, Level 2</p>', get_post_meta( $this->event_id, 'wpfa_event_venue_information', true ) );
-		$this->assertSame( '<p>Take MRT to City Hall station.</p>', get_post_meta( $this->event_id, 'wpfa_event_transportation_information', true ) );
-		$this->assertSame( '<p>Recommended Hotel: Grand Plaza.</p>', get_post_meta( $this->event_id, 'wpfa_event_hotel_information', true ) );
-	}
+			( new Wpfaevent_Admin_Event_Metabox() )->register_meta_boxes();
 
-	/**
-	 * Non-string POST values are rejected and not saved.
-	 */
-	public function test_event_editor_rejects_non_string_additional_information() {
-		$_POST = array(
-			'wpfa_event_meta_nonce'        => wp_create_nonce( 'wpfa_event_meta_nonce' ),
-			'wpfa_event_venue_information' => array( 'invalid' => 'array' ),
-		);
+			$normal_boxes = isset( $wp_meta_boxes['wpfa_event']['normal']['default'] )
+				? $wp_meta_boxes['wpfa_event']['normal']['default']
+				: array();
 
-		( new Wpfaevent_Admin_Event_Metabox() )->save_event_meta( $this->event_id );
-
-		$this->assertSame( '', get_post_meta( $this->event_id, 'wpfa_event_venue_information', true ) );
-	}
-
-	/**
-	 * Emptying an additional information field removes the stored post meta.
-	 */
-	public function test_event_editor_removes_emptied_additional_information_fields() {
-		update_post_meta( $this->event_id, 'wpfa_event_venue_information', '<p>Old venue</p>' );
-		update_post_meta( $this->event_id, 'wpfa_event_transportation_information', '<p>Old transportation</p>' );
-		update_post_meta( $this->event_id, 'wpfa_event_hotel_information', '<p>Old hotel</p>' );
-
-		$_POST = array(
-			'wpfa_event_meta_nonce'                 => wp_create_nonce( 'wpfa_event_meta_nonce' ),
-			'wpfa_event_venue_information'          => '',
-			'wpfa_event_transportation_information' => '',
-			'wpfa_event_hotel_information'          => '',
-		);
-
-		( new Wpfaevent_Admin_Event_Metabox() )->save_event_meta( $this->event_id );
-
-		$this->assertSame( '', get_post_meta( $this->event_id, 'wpfa_event_venue_information', true ) );
-		$this->assertSame( '', get_post_meta( $this->event_id, 'wpfa_event_transportation_information', true ) );
-		$this->assertSame( '', get_post_meta( $this->event_id, 'wpfa_event_hotel_information', true ) );
-	}
-
-	/**
-	 * Updating the event when one field is cleared removes only that field while preserving others.
-	 */
-	public function test_event_editor_updates_and_clears_single_field_while_preserving_others() {
-		// All three fields have content and are saved.
-		$_POST = array(
-			'wpfa_event_meta_nonce'                 => wp_create_nonce( 'wpfa_event_meta_nonce' ),
-			'wpfa_event_venue_information'          => '<p>Main Hall, Level 2</p>',
-			'wpfa_event_transportation_information' => '<p>Take MRT to City Hall station.</p>',
-			'wpfa_event_hotel_information'          => '<p>Recommended Hotel: Grand Plaza.</p>',
-		);
-
-		( new Wpfaevent_Admin_Event_Metabox() )->save_event_meta( $this->event_id );
-
-		$this->assertSame( '<p>Main Hall, Level 2</p>', get_post_meta( $this->event_id, 'wpfa_event_venue_information', true ) );
-		$this->assertSame( '<p>Take MRT to City Hall station.</p>', get_post_meta( $this->event_id, 'wpfa_event_transportation_information', true ) );
-		$this->assertSame( '<p>Recommended Hotel: Grand Plaza.</p>', get_post_meta( $this->event_id, 'wpfa_event_hotel_information', true ) );
-
-		// One field is cleared while the other two still have content.
-		$_POST = array(
-			'wpfa_event_meta_nonce'                 => wp_create_nonce( 'wpfa_event_meta_nonce' ),
-			'wpfa_event_venue_information'          => '<p>Main Hall, Level 2</p>',
-			'wpfa_event_transportation_information' => '',
-			'wpfa_event_hotel_information'          => '<p>Recommended Hotel: Grand Plaza.</p>',
-		);
-
-		// The event is saved again.
-		( new Wpfaevent_Admin_Event_Metabox() )->save_event_meta( $this->event_id );
-
-		// Only the cleared field is removed while the other two remain unchanged.
-		$this->assertSame( '<p>Main Hall, Level 2</p>', get_post_meta( $this->event_id, 'wpfa_event_venue_information', true ) );
-		$this->assertSame( '', get_post_meta( $this->event_id, 'wpfa_event_transportation_information', true ) );
-		$this->assertSame( '<p>Recommended Hotel: Grand Plaza.</p>', get_post_meta( $this->event_id, 'wpfa_event_hotel_information', true ) );
-	}
-
-	/**
-	 * Meta box renders safely when additional information post meta contains non-string values.
-	 */
-	public function test_render_event_additional_information_meta_box_handles_non_string_values() {
-		update_post_meta( $this->event_id, 'wpfa_event_venue_information', array( 'unexpected' => 'array' ) );
-		update_post_meta( $this->event_id, 'wpfa_event_transportation_information', false );
-		update_post_meta( $this->event_id, 'wpfa_event_hotel_information', 12345 );
-
-		$post = get_post( $this->event_id );
-		$this->assertInstanceOf( WP_Post::class, $post );
-
-		ob_start();
-		( new Wpfaevent_Admin_Event_Metabox() )->render_event_additional_information_meta_box( $post );
-		$output = ob_get_clean();
-
-		$this->assertStringContainsString( 'wpfa_event_venue_information', $output );
-		$this->assertStringContainsString( 'wpfa_event_transportation_information', $output );
-		$this->assertStringContainsString( 'wpfa_event_hotel_information', $output );
+			$this->assertArrayNotHasKey( 'wpfa_event_additional_information_box', $normal_boxes );
+		} finally {
+			$wp_meta_boxes = $original_meta_boxes;
+		}
 	}
 
 	/**
