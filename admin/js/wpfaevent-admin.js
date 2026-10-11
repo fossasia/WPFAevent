@@ -951,6 +951,20 @@
 			}
 		});
 
+		// Only warn while the unavailable page is still the one selected.
+		$(document).on(
+			'change',
+			'.wpfaevent-nav-page-select, .wpfaevent-sub-page-select',
+			function () {
+				const unavailable = !!$(this)
+					.find('option:selected')
+					.data('unavailable');
+				$(this)
+					.siblings('.wpfaevent-nav-page-warning')
+					.toggleClass('wpfaevent-nav-row-hidden', !unavailable);
+			}
+		);
+
 		$(document).on('click', '.wpfaevent-remove-card-btn', function (e) {
 			e.preventDefault();
 			$(this).closest('.wpfaevent-meta-card').remove();
