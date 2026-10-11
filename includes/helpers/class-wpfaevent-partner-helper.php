@@ -367,6 +367,39 @@ class Wpfaevent_Partner_Helper {
 	}
 
 	/**
+	 * Determine whether a stored partner record is published.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $partner Partner record.
+	 * @return bool
+	 * @phpstan-param array<string, mixed> $partner
+	 */
+	public static function is_partner_published( $partner ) {
+		if ( ! is_array( $partner ) ) {
+			return false;
+		}
+
+		if ( isset( $partner['published'] ) && ! $partner['published'] ) {
+			return false;
+		}
+
+		if ( isset( $partner['is_published'] ) && ! $partner['is_published'] ) {
+			return false;
+		}
+
+		if ( isset( $partner['active'] ) && ! $partner['active'] ) {
+			return false;
+		}
+
+		if ( isset( $partner['status'] ) && in_array( sanitize_key( (string) $partner['status'] ), array( 'unpublished', 'draft', 'inactive', 'withdrawn', 'rejected' ), true ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Find an exhibitor record by key.
 	 *
 	 * @since 1.0.0
@@ -380,7 +413,7 @@ class Wpfaevent_Partner_Helper {
 		$exhibitors = self::read_dashboard_json_file( 'exhibitors-' . absint( $event_id ) . '.json', array() );
 
 		foreach ( $exhibitors as $exhibitor ) {
-			if ( ! is_array( $exhibitor ) ) {
+			if ( ! is_array( $exhibitor ) || ! self::is_partner_published( $exhibitor ) ) {
 				continue;
 			}
 
@@ -412,7 +445,7 @@ class Wpfaevent_Partner_Helper {
 			$group_name = ! empty( $sponsor_group['group_name'] ) ? sanitize_text_field( $sponsor_group['group_name'] ) : __( 'Sponsors', 'wpfaevent' );
 
 			foreach ( $sponsor_group['sponsors'] as $sponsor ) {
-				if ( ! is_array( $sponsor ) ) {
+				if ( ! is_array( $sponsor ) || ! self::is_partner_published( $sponsor ) ) {
 					continue;
 				}
 
