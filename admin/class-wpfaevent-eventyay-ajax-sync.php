@@ -1316,10 +1316,18 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 				continue;
 			}
 
+			if ( isset( $session['state'] ) && '' !== $session['state'] && 'confirmed' !== strtolower( (string) $session['state'] ) ) {
+				continue;
+			}
+
 			$starts_at = isset( $session['starts_at'] ) ? sanitize_text_field( $session['starts_at'] ) : '';
 			$ends_at   = isset( $session['ends_at'] ) ? sanitize_text_field( $session['ends_at'] ) : '';
 			$date      = isset( $session['date'] ) ? sanitize_text_field( $session['date'] ) : '';
 			$time      = isset( $session['time'] ) ? sanitize_text_field( $session['time'] ) : '';
+
+			if ( empty( $starts_at ) && empty( $date ) ) {
+				continue;
+			}
 
 			if ( ! empty( $session['end_time'] ) ) {
 				$end_time = sanitize_text_field( $session['end_time'] );
@@ -1353,6 +1361,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 				'room'      => $room,
 				'starts_at' => $starts_at,
 				'ends_at'   => $ends_at,
+				'state'     => isset( $session['state'] ) ? sanitize_text_field( (string) $session['state'] ) : '',
 			);
 		}
 

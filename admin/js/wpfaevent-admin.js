@@ -2,8 +2,6 @@
 	'use strict';
 
 	$(function () {
-		const $importForm = $('#wpfaevent-import-events-form');
-		const $updateForm = $('#wpfaevent-update-events-form');
 		const sponsorGroupOrderForm = document.getElementById(
 			'wpfaevent-sponsor-group-order-form'
 		);
@@ -157,19 +155,6 @@
 			}
 		);
 
-		function showImportNotice(message) {
-			const $container = $('.wrap').first();
-			const $existingNotices = $container.find(
-				'.notice.wpfaevent-import-notice'
-			);
-			const $notice = $('<div/>', {
-				class: 'notice notice-error is-dismissible wpfaevent-import-notice',
-			}).append($('<p/>').text(message));
-
-			$existingNotices.remove();
-			$container.prepend($notice);
-		}
-
 		const $eventyayImportForm = $('.wpfaevent-eventyay-import-form');
 
 		if ($eventyayImportForm.length) {
@@ -224,196 +209,6 @@
 
 				setTimeout(poll, 3000);
 			}
-		}
-
-		if ($importForm.length || $updateForm.length) {
-			const $form = $importForm.length ? $importForm : $updateForm;
-			const rawReturnPage = $form
-				.find('input[name="wpfaevent_eventyay_return_page"]')
-				.val();
-			const returnPage = /^[a-zA-Z0-9_-]+$/.test(rawReturnPage || '')
-				? rawReturnPage
-				: 'wpfaevent-import-events';
-
-			$form.on('submit', function (e) {
-				e.preventDefault();
-
-				const nonce = $form.find('input[name="_wpnonce"]').val();
-				if (!nonce) {
-					showImportNotice(
-						'Security validation failed: Nonce missing.'
-					);
-					return;
-				}
-
-				// Initialize stats
-				let fetched = 0;
-				let created = 0;
-				let updated = 0;
-				let skipped = 0;
-
-				// Show overlay
-				const $overlay = $('#wpfaevent-import-progress-overlay');
-				const $title = $('#wpfaevent-progress-title');
-				const $bar = $('#wpfaevent-progress-bar');
-				const $status = $('#wpfaevent-progress-status');
-				const $details = $('#wpfaevent-progress-details');
-
-				$overlay.css('display', 'flex');
-				$title.text('Syncing with Eventyay');
-				$bar.css('width', '0%');
-				$status.text('Connecting to Eventyay...');
-				$details.text('');
-
-				// Fetch all events first
-				$.ajax({
-					url: ajaxurl,
-					type: 'POST',
-					data: {
-						action: 'wpfaevent_import_get_events',
-						nonce,
-					},
-					success(response) {
-						if (!response.success) {
-							saveSummaryAndRedirect(
-								'error',
-								response.data.message ||
-									'Failed to fetch events from the endpoint.',
-								returnPage,
-								nonce
-							);
-							return;
-						}
-
-						const events = response.data.events;
-						if (!events || !events.length) {
-							saveSummaryAndRedirect(
-								'error',
-								'No Eventyay events were returned by the configured endpoint.',
-								returnPage,
-								nonce
-							);
-							return;
-						}
-
-						fetched = events.length;
-						$status.text(
-							'Found ' + fetched + ' event(s). Starting sync...'
-						);
-						processNextEvent(events, 0);
-					},
-					error(xhr) {
-						let errorMsg =
-							'Failed to fetch events from Eventyay endpoint.';
-						if (
-							xhr.responseJSON &&
-							xhr.responseJSON.data &&
-							xhr.responseJSON.data.message
-						) {
-							errorMsg = xhr.responseJSON.data.message;
-						}
-						saveSummaryAndRedirect(
-							'error',
-							errorMsg,
-							returnPage,
-							nonce
-						);
-					},
-				});
-
-				function processNextEvent(events, index) {
-					if (index >= events.length) {
-						$status.text('Finalizing sync...');
-						$bar.css('width', '100%');
-						const message =
-							'Fetched ' +
-							fetched +
-							' Eventyay event(s). Created ' +
-							created +
-							', updated ' +
-							updated +
-							', skipped ' +
-							skipped +
-							'.';
-						saveSummaryAndRedirect(
-							'success',
-							message,
-							returnPage,
-							nonce
-						);
-						return;
-					}
-
-					const event = events[index];
-					const percent = Math.round((index / events.length) * 100);
-					$bar.css('width', percent + '%');
-
-					const eventTitle = getEventTitle(event);
-					$status.text(
-						'Importing ' +
-							(index + 1) +
-							' of ' +
-							events.length +
-							': ' +
-							eventTitle
-					);
-					$details.text(
-						'Saving event details, location, and dates...'
-					);
-
-					$.ajax({
-						url: ajaxurl,
-						type: 'POST',
-						data: {
-							action: 'wpfaevent_import_single_event',
-							nonce,
-							event: JSON.stringify(event),
-						},
-						success(response) {
-							if (response.success) {
-								const res = response.data;
-								created += res.created || 0;
-								updated += res.updated || 0;
-								skipped += res.skipped || 0;
-							} else {
-								skipped++;
-							}
-							setTimeout(function () {
-								processNextEvent(events, index + 1);
-							}, 300);
-						},
-						error() {
-							skipped++;
-							setTimeout(function () {
-								processNextEvent(events, index + 1);
-							}, 300);
-						},
-					});
-				}
-
-				function saveSummaryAndRedirect(
-					type,
-					message,
-					targetPage,
-					summaryNonce
-				) {
-					$.ajax({
-						url: ajaxurl,
-						type: 'POST',
-						data: {
-							action: 'wpfaevent_import_save_summary',
-							nonce: summaryNonce,
-							type,
-							message,
-						},
-						complete() {
-							window.location.href =
-								'edit.php?post_type=wpfa_event&page=' +
-								encodeURIComponent(targetPage);
-						},
-					});
-				}
-			});
 		}
 
 		// Featured Speakers Manual Ordering
@@ -735,6 +530,89 @@
 		/* -------------------------------------------------------------
 		 * Event Custom Navigation Metabox
 		 * ----------------------------------------------------------- */
+
+		// Items are submitted in DOM order, so reordering the cards is all
+		// that is needed for the saved navigation to follow the new order.
+		// Sub-items only sort within their own dropdown because their field
+		// names carry the parent item's index.
+		function initNavSortables() {
+			if (!$.fn.sortable) {
+				return;
+			}
+			const sortableOptions = {
+				axis: 'y',
+				forcePlaceholderSize: true,
+				placeholder: 'wpfaevent-nav-sortable-placeholder',
+			};
+			$('#wpfaevent-nav-items-container')
+				.not('.ui-sortable')
+				.sortable(
+					$.extend({}, sortableOptions, {
+						items: '> .wpfaevent-meta-card',
+						handle: '.wpfaevent-nav-card-handle',
+					})
+				);
+			$('#wpfaevent-nav-items-container .wpfaevent-nav-subitems-list')
+				.not('.ui-sortable')
+				.sortable(
+					$.extend({}, sortableOptions, {
+						items: '> .wpfaevent-nav-subitem-block',
+						handle: '.wpfaevent-nav-subitem-handle',
+					})
+				);
+		}
+
+		function announceNavPosition(position, total) {
+			const status = document.getElementById(
+				'wpfaevent-nav-order-status'
+			);
+			if (!status) {
+				return;
+			}
+			const template =
+				typeof window.wpfaeventAdminL10n !== 'undefined' &&
+				window.wpfaeventAdminL10n.navItemMoved
+					? window.wpfaeventAdminL10n.navItemMoved
+					: 'Moved to position %1$s of %2$s.';
+			// Clear first so repeating the same message is announced again.
+			status.textContent = '';
+			window.setTimeout(function () {
+				status.textContent = template
+					.replace('%1$s', String(position))
+					.replace('%2$s', String(total));
+			}, 50);
+		}
+
+		initNavSortables();
+
+		$(document).on('click', '.wpfaevent-nav-move-btn', function (e) {
+			e.preventDefault();
+			const $item = $(this).closest(
+				'.wpfaevent-nav-subitem-block, .wpfaevent-meta-card'
+			);
+			const selector = $item.hasClass('wpfaevent-nav-subitem-block')
+				? '.wpfaevent-nav-subitem-block'
+				: '.wpfaevent-meta-card';
+			const movingUp = $(this).data('direction') === 'up';
+			const $target = movingUp
+				? $item.prev(selector)
+				: $item.next(selector);
+			// Already first or last in its list: nothing moved, so nothing to announce.
+			if (!$target.length) {
+				return;
+			}
+			if (movingUp) {
+				$item.insertBefore($target);
+			} else {
+				$item.insertAfter($target);
+			}
+			// Moving the node in the DOM drops focus; keep it on the button
+			// so the item can be moved several steps from the keyboard.
+			this.focus();
+			const $siblings = $item.parent().children(selector);
+			announceNavPosition($siblings.index($item) + 1, $siblings.length);
+		});
+
 		$(document).on('click', '#wpfaevent-reset-nav-default', function (e) {
 			e.preventDefault();
 			const confirmMsg =
@@ -759,6 +637,7 @@
 			if (defaultTmpl && 'content' in defaultTmpl) {
 				container.appendChild(defaultTmpl.content.cloneNode(true));
 			}
+			initNavSortables();
 		});
 
 		$(document).on('click', '#wpfaevent-clear-nav', function (e) {
@@ -815,6 +694,7 @@
 				}
 			});
 			container.appendChild(clone);
+			initNavSortables();
 		});
 
 		$(document).on('change', '.wpfaevent-nav-type-select', function () {
@@ -925,73 +805,4 @@
 			$card.attr('data-next-sub-index', String(nextSubIdx + 1));
 		});
 	});
-
-	function getEventTitle(event) {
-		if (!event) {
-			return 'Unnamed Event';
-		}
-
-		// Helper to extract string from localized object/array
-		function getStringValue(val) {
-			if (typeof val === 'string' && val.trim() !== '') {
-				return val.trim();
-			}
-			if (val && typeof val === 'object') {
-				const preferredKeys = [
-					'en',
-					'default',
-					'value',
-					'name',
-					'title',
-				];
-				for (let i = 0; i < preferredKeys.length; i++) {
-					const key = preferredKeys[i];
-					if (
-						typeof val[key] === 'string' &&
-						val[key].trim() !== ''
-					) {
-						return val[key].trim();
-					}
-				}
-				for (const key in val) {
-					if (Object.prototype.hasOwnProperty.call(val, key)) {
-						if (
-							typeof val[key] === 'string' &&
-							val[key].trim() !== ''
-						) {
-							return val[key].trim();
-						}
-					}
-				}
-			}
-			return null;
-		}
-
-		const name = getStringValue(event.name);
-		if (name) {
-			return name;
-		}
-
-		const title = getStringValue(event.title);
-		if (title) {
-			return title;
-		}
-
-		if (typeof event.slug === 'string' && event.slug.trim() !== '') {
-			return event.slug.trim();
-		}
-
-		if (
-			typeof event.identifier === 'string' &&
-			event.identifier.trim() !== ''
-		) {
-			return event.identifier.trim();
-		}
-
-		if (typeof event.code === 'string' && event.code.trim() !== '') {
-			return event.code.trim();
-		}
-
-		return 'Unnamed Event';
-	}
 })(jQuery);
