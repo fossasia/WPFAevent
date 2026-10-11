@@ -676,6 +676,10 @@ class Wpfaevent_Event_Template_Controller {
 					continue;
 				}
 
+				if ( class_exists( 'Wpfaevent_Partner_Helper' ) && ! Wpfaevent_Partner_Helper::is_partner_published( $sponsor ) ) {
+					continue;
+				}
+
 				if ( empty( $sponsor['image'] ) && defined( 'WPFAEVENT_URL' ) ) {
 					$sponsor['image'] = WPFAEVENT_URL . 'assets/images/logo.png';
 				}
@@ -702,6 +706,10 @@ class Wpfaevent_Event_Template_Controller {
 
 		foreach ( $exhibitors as $exhibitor ) {
 			if ( ! is_array( $exhibitor ) || empty( $exhibitor['name'] ) ) {
+				continue;
+			}
+
+			if ( class_exists( 'Wpfaevent_Partner_Helper' ) && ! Wpfaevent_Partner_Helper::is_partner_published( $exhibitor ) ) {
 				continue;
 			}
 
