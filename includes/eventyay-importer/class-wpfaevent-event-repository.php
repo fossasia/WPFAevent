@@ -76,7 +76,7 @@ class Wpfaevent_Event_Repository {
 		$created        = false;
 
 		// Keep a description that was edited on this site; other fields still sync.
-		$keep_local_description = $existing_id && Wpfaevent_Event_Description_Sync::has_local_edit( $existing_id );
+		$keep_local_description = $existing_id && Wpfaevent_Event_Description_Sync::keep_local_description( $existing_id, $description );
 		if ( $keep_local_description ) {
 			unset( $post_data['post_content'], $post_data['post_excerpt'] );
 		}

@@ -41,10 +41,49 @@ class Wpfaevent_Event_Description_Sync {
 	const RESTORE_ACTION = 'wpfaevent_restore_eventyay_description';
 
 	/**
-	 * Whether the description was edited in WordPress since the last import wrote it.
+	 * Decide whether an import must keep the event's current description.
 	 *
-	 * Events imported before this tracking existed have no fingerprint and keep
-	 * following Eventyay.
+	 * Events imported before fingerprints existed are checked once: if their
+	 * description differs from Eventyay and the post was modified after its last
+	 * import, the difference was made on this site, so it is kept and marked as
+	 * a local edit for later syncs.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $post_id     Event post ID.
+	 * @param string $description Description from Eventyay.
+	 * @return bool
+	 */
+	public static function keep_local_description( $post_id, $description ) {
+		$post_id = absint( $post_id );
+
+		if ( '' !== (string) get_post_meta( $post_id, self::HASH_META, true ) ) {
+			return self::has_local_edit( $post_id );
+		}
+
+		$description = self::normalize( wp_kses_post( (string) $description ) );
+		$content     = self::normalize( get_post_field( 'post_content', $post_id ) );
+		$excerpt     = self::normalize( get_post_field( 'post_excerpt', $post_id ) );
+		if ( $content === $description && $excerpt === $description ) {
+			return false;
+		}
+
+		// Not modified since the last import: the difference came from Eventyay.
+		$imported_at = strtotime( (string) get_post_meta( $post_id, '_wpfa_eventyay_last_imported_at', true ) );
+		$modified_at = strtotime( (string) get_post_field( 'post_modified_gmt', $post_id ) );
+		if ( $imported_at && $modified_at && $modified_at <= $imported_at ) {
+			return false;
+		}
+
+		// Baseline as if Eventyay's text had been applied, so the edit stays detected.
+		update_post_meta( $post_id, self::HASH_META, md5( $description . "\0" . $description ) );
+		update_post_meta( $post_id, self::APPLIED_META, wp_slash( $description ) );
+
+		return true;
+	}
+
+	/**
+	 * Whether the description was edited in WordPress since the last import wrote it.
 	 *
 	 * @since 1.0.0
 	 *
