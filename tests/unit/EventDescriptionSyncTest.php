@@ -149,6 +149,34 @@ class EventDescriptionSyncTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Restoring an empty Eventyay description works on an event whose title was cleared.
+	 */
+	public function test_restore_empty_description_on_untitled_event() {
+		$event_id = $this->import( 'Original description.' );
+		wp_update_post(
+			array(
+				'ID'           => $event_id,
+				'post_excerpt' => 'Written for the website.',
+			)
+		);
+		$this->import( '' );
+		wp_update_post(
+			array(
+				'ID'         => $event_id,
+				'post_title' => '',
+			)
+		);
+
+		$this->assertTrue( Wpfaevent_Event_Description_Sync::restore( $event_id ) );
+		$this->assertSame( '', get_post_field( 'post_content', $event_id ) );
+		$this->assertSame( '', get_post_field( 'post_excerpt', $event_id ) );
+		$this->assertSame( '', get_post_field( 'post_title', $event_id ) );
+
+		// The override is scoped to the restore: other empty saves are still rejected.
+		$this->assertInstanceOf( WP_Error::class, wp_insert_post( array( 'post_type' => 'wpfa_event' ), true ) );
+	}
+
+	/**
 	 * Backslashes in Eventyay descriptions survive import, tracking and restore.
 	 */
 	public function test_backslashes_survive_import_and_restore() {

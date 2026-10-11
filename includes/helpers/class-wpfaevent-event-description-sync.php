@@ -151,7 +151,14 @@ class Wpfaevent_Event_Description_Sync {
 	public static function restore( $post_id ) {
 		$post_id     = absint( $post_id );
 		$description = wp_kses_post( (string) get_post_meta( $post_id, self::REMOTE_META, true ) );
-		$result      = wp_update_post(
+
+		// WordPress rejects updates that leave title, content and excerpt all empty;
+		// an empty Eventyay description must still restore on an untitled event.
+		$allow_empty = static function ( $maybe_empty, $postarr ) use ( $post_id ) {
+			return isset( $postarr['ID'] ) && absint( $postarr['ID'] ) === $post_id ? false : $maybe_empty;
+		};
+		add_filter( 'wp_insert_post_empty_content', $allow_empty, 10, 2 );
+		$result = wp_update_post(
 			wp_slash(
 				array(
 					'ID'           => $post_id,
@@ -161,6 +168,7 @@ class Wpfaevent_Event_Description_Sync {
 			),
 			true
 		);
+		remove_filter( 'wp_insert_post_empty_content', $allow_empty, 10 );
 
 		if ( is_wp_error( $result ) || ! $result ) {
 			return false;
