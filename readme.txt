@@ -4,7 +4,7 @@ Tags: events, eventyay, schedule, speakers, calendar
 Requires at least: 5.8
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 1.0.0
 License: Apache2
 License URI: https://www.apache.org/licenses/LICENSE-2.0.txt
 
@@ -37,5 +37,5 @@ You can configure the Eventyay API endpoint, cache TTL, and sync intervals by na
 You can use the built-in Gutenberg blocks or use the shortcodes such as `[wpfaevent_events]` or `[wpfaevent_speakers]` on any page or post.
 
 == Changelog ==
-= 0.1.0 =
-* Initial skeleton.
+= 1.0.0 =
+* Initial release of FOSSASIA Event plugin with pages, blocks, shortcodes, and Eventyay API integration.
