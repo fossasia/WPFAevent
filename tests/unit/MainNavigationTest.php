@@ -1405,4 +1405,68 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Move sub-item down', $output );
 		$this->assertStringNotContainsString( 'style=', $output );
 	}
+
+	/**
+	 * Test that render_event_navigation_meta_box renders rich editors for custom pages and base editor.
+	 */
+	public function test_render_event_navigation_meta_box_with_custom_pages() {
+		$event_id = $this->factory->post->create( array( 'post_type' => 'wpfa_event' ) );
+		update_post_meta(
+			$event_id,
+			'wpfa_event_custom_navigation',
+			array(
+				array(
+					'text'    => 'Travel Grant',
+					'type'    => 'custom_page',
+					'title'   => 'Grant Information',
+					'content' => '<p>Grant <strong>details</strong></p>',
+				),
+				array(
+					'text'  => 'More Info',
+					'type'  => 'dropdown',
+					'items' => array(
+						array(
+							'text'    => 'Visa Guide',
+							'type'    => 'custom_page',
+							'title'   => 'Visa Guidance',
+							'content' => '<ul><li>Visa checklist</li></ul>',
+						),
+					),
+				),
+			)
+		);
+
+		$metabox = new Wpfaevent_Admin_Event_Metabox();
+		ob_start();
+		$metabox->render_event_navigation_meta_box( get_post( $event_id ) );
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'wpfa_nav_editor_base', $output );
+		$this->assertStringContainsString( 'wpfa_custom_nav_content_0', $output );
+		$this->assertStringContainsString( 'wpfa_custom_nav_sub_content_1_0', $output );
+		$this->assertStringContainsString( 'wpfaevent-custom-page-content', $output );
+	}
+
+	/**
+	 * Test that sanitize_custom_navigation preserves rich HTML markup in custom page content.
+	 */
+	public function test_sanitize_custom_navigation_preserves_rich_html() {
+		$html_content = '<p>Apply for <strong>Travel Grants</strong>.</p><ul><li>Open to all</li></ul><p><a href="https://example.com/apply">Apply here</a></p>';
+		$raw_items    = array(
+			array(
+				'text'    => 'Grants',
+				'type'    => 'custom_page',
+				'title'   => 'Grant Information',
+				'content' => $html_content,
+			),
+		);
+
+		$sanitized = Wpfaevent_Meta_Event::sanitize_custom_navigation( $raw_items );
+
+		$this->assertCount( 1, $sanitized );
+		$this->assertSame( 'custom_page', $sanitized[0]['type'] );
+		$this->assertStringContainsString( '<strong>Travel Grants</strong>', $sanitized[0]['content'] );
+		$this->assertStringContainsString( '<ul><li>Open to all</li></ul>', $sanitized[0]['content'] );
+		$this->assertStringContainsString( '<a href="https://example.com/apply">Apply here</a>', $sanitized[0]['content'] );
+	}
 }

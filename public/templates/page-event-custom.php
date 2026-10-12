@@ -38,19 +38,20 @@ $header_vars = ! empty( $event_data['header_vars'] ) && is_array( $event_data['h
 	? $event_data['header_vars']
 	: array();
 
+$event_title = ! empty( $event_data['event_title'] ) ? (string) $event_data['event_title'] : get_the_title( $event_id );
+$event_url   = ! empty( $event_data['event_url'] ) ? (string) $event_data['event_url'] : get_permalink( $event_id );
+
 $site_logo_url        = isset( $header_vars['site_logo_url'] ) ? $header_vars['site_logo_url'] : ( defined( 'WPFAEVENT_URL' ) ? WPFAEVENT_URL . 'assets/images/logo.png' : '' );
-$event_page_url       = isset( $header_vars['event_page_url'] ) ? $header_vars['event_page_url'] : home_url( '/events/' );
-$show_back_button     = isset( $header_vars['show_back_button'] ) ? $header_vars['show_back_button'] : true;
+$event_page_url       = $event_url ? $event_url : ( isset( $header_vars['event_page_url'] ) ? $header_vars['event_page_url'] : home_url( '/events/' ) );
+$show_back_button     = true;
 $show_register_button = isset( $header_vars['show_register_button'] ) ? $header_vars['show_register_button'] : false;
-$back_button_text     = isset( $header_vars['back_button_text'] ) ? $header_vars['back_button_text'] : __( 'All Events', 'wpfaevent' );
+$back_button_text     = $event_url ? __( 'Back to Event', 'wpfaevent' ) : __( 'Back to Events', 'wpfaevent' );
 $register_button_url  = isset( $header_vars['register_button_url'] ) ? $header_vars['register_button_url'] : '';
 $register_button_text = isset( $header_vars['register_button_text'] ) ? $header_vars['register_button_text'] : __( 'Register', 'wpfaevent' );
 
 $event_style_attr = ! empty( $event_data['event_style_attr'] )
 	? (string) $event_data['event_style_attr']
 	: ( class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::build_event_style_attribute( $event_id ) : '' );
-$event_title      = ! empty( $event_data['event_title'] ) ? (string) $event_data['event_title'] : get_the_title( $event_id );
-$event_url        = ! empty( $event_data['event_url'] ) ? (string) $event_data['event_url'] : get_permalink( $event_id );
 
 // Convert markdown-style bullet lines (- item or * item) into <ul><li> only if plain text was entered.
 $formatted_content = $page_body;

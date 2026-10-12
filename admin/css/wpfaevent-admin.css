@@ -459,6 +459,24 @@
 	width: 100%;
 }
 
+.wpfaevent-meta-card-field.wpfaevent-nav-custom-page-row .wp-editor-wrap,
+.wpfaevent-sub-custom-row .wp-editor-wrap {
+	box-sizing: border-box;
+	margin-top: 4px;
+	width: 100%;
+}
+
+.wpfaevent-meta-card-field.wpfaevent-nav-custom-page-row .wp-editor-wrap .wp-editor-container,
+.wpfaevent-sub-custom-row .wp-editor-wrap .wp-editor-container {
+	border: 1px solid #c3c4c7;
+}
+
+.wpfaevent-meta-card-field.wpfaevent-nav-custom-page-row .wp-editor-wrap textarea,
+.wpfaevent-sub-custom-row .wp-editor-wrap textarea {
+	box-sizing: border-box;
+	width: 100%;
+}
+
 .wpfaevent-meta-card-field.wpfaevent-nav-custom-page-row .wpfaevent-nav-content-label {
 	margin-top: 8px;
 }
