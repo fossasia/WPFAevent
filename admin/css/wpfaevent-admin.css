@@ -42,7 +42,12 @@
 }
 
 
-/* The block editor's meta boxes pane traps TinyMCE fullscreen under its header. */
+/*
+ * The block editor's meta boxes pane traps TinyMCE fullscreen under its header.
+ * These internal block-editor selectors were verified against WordPress 7.1.
+ * They are not a stable API; recheck them when upgrading WordPress.
+ * See https://github.com/fossasia/WPFAevent/issues/325 for the fullscreen bug.
+ */
 .post-type-wpfa_event.mce-fullscreen .edit-post-meta-boxes-main,
 .post-type-wpfa_speaker.mce-fullscreen .edit-post-meta-boxes-main {
     filter: none;
