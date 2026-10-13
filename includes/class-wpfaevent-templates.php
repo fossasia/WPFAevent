@@ -10,6 +10,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/templates/class-wpfaevent-template-shortcodes.php';
+
 /**
  * Registers and loads plugin-provided page templates.
  *
@@ -95,6 +97,17 @@ class Wpfaevent_Templates {
 	);
 
 	/**
+	 * Gets the plugin-provided template definitions.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<string, array<string, string>> Template definitions keyed by template key.
+	 */
+	public static function get_templates() {
+		return self::$templates;
+	}
+
+	/**
 	 * Registers WordPress hooks for template registration and loading.
 	 *
 	 * Hooks into:
@@ -111,7 +124,7 @@ class Wpfaevent_Templates {
 		add_filter( 'template_include', array( __CLASS__, 'load' ), 99 );
 		add_filter( 'redirect_canonical', array( __CLASS__, 'prevent_canonical_redirect_for_virtual_routes' ), 10, 2 );
 		add_action( 'template_redirect', array( __CLASS__, 'maybe_redirect_old_routes' ), 9 );
-		add_action( 'init', array( __CLASS__, 'register_shortcodes' ) );
+		add_action( 'init', array( 'Wpfaevent_Template_Shortcodes', 'register' ) );
 		add_action( 'init', array( __CLASS__, 'register_blocks' ) );
 		add_action( 'init', array( __CLASS__, 'register_patterns' ) );
 	}
@@ -290,16 +303,14 @@ class Wpfaevent_Templates {
 	/**
 	 * Registers shortcode entry points for WPFA templates.
 	 *
+	 * Kept for backward compatibility; delegates to Wpfaevent_Template_Shortcodes.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
 	public static function register_shortcodes() {
-		foreach ( self::$templates as $template ) {
-			add_shortcode( $template['shortcode'], array( __CLASS__, 'render_shortcode' ) );
-		}
-
-		add_shortcode( 'wpfaevent_template', array( __CLASS__, 'render_shortcode' ) );
+		Wpfaevent_Template_Shortcodes::register();
 	}
 
 	/**
@@ -386,6 +397,8 @@ class Wpfaevent_Templates {
 	/**
 	 * Renders WPFA shortcode output.
 	 *
+	 * Kept for backward compatibility; delegates to Wpfaevent_Template_Shortcodes.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @param array<string, string> $atts    Shortcode attributes.
@@ -394,41 +407,7 @@ class Wpfaevent_Templates {
 	 * @return string Rendered shortcode markup.
 	 */
 	public static function render_shortcode( $atts = array(), $content = '', $tag = '' ) {
-		$key = self::get_template_key_by_shortcode( $tag );
-
-		if ( 'wpfaevent_template' === $tag ) {
-			$atts = shortcode_atts(
-				array(
-					'template' => 'events',
-					'align'    => '',
-				),
-				$atts,
-				$tag
-			);
-			$key  = self::normalize_template_key( $atts['template'] );
-		} else {
-			$atts = shortcode_atts(
-				array(
-					'align' => '',
-				),
-				$atts,
-				$tag
-			);
-		}
-
-		$output = self::render_embed( $key );
-
-		if ( '' === $output ) {
-			return $output;
-		}
-
-		if ( ! empty( $atts['align'] ) && in_array( $atts['align'], array( 'wide', 'full' ), true ) ) {
-			$block_slug = isset( self::$templates[ $key ]['block'] ) ? self::$templates[ $key ]['block'] : 'template';
-			$class_name = 'wp-block-wpfaevent-' . esc_attr( $block_slug ) . ' align' . esc_attr( $atts['align'] );
-			return '<div class="' . $class_name . '">' . $output . '</div>';
-		}
-
-		return $output;
+		return Wpfaevent_Template_Shortcodes::render( $atts, $content, $tag );
 	}
 
 	/**
@@ -578,7 +557,7 @@ class Wpfaevent_Templates {
 	 * @param string $key Template key, slug, shortcode-style name, or file.
 	 * @return string Template key, or empty string.
 	 */
-	private static function normalize_template_key( $key ) {
+	public static function normalize_template_key( $key ) {
 		$raw_key = (string) $key;
 		$key     = sanitize_key( $key );
 
@@ -632,24 +611,6 @@ class Wpfaevent_Templates {
 		}
 
 		return $active;
-	}
-
-	/**
-	 * Gets the template key for a shortcode tag.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $shortcode Shortcode tag.
-	 * @return string Template key, or empty string.
-	 */
-	private static function get_template_key_by_shortcode( $shortcode ) {
-		foreach ( self::$templates as $key => $template ) {
-			if ( $template['shortcode'] === $shortcode ) {
-				return $key;
-			}
-		}
-
-		return '';
 	}
 
 	/**
