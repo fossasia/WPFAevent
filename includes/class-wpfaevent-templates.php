@@ -124,7 +124,7 @@ class Wpfaevent_Templates {
 		add_filter( 'template_include', array( __CLASS__, 'load' ), 99 );
 		add_filter( 'redirect_canonical', array( __CLASS__, 'prevent_canonical_redirect_for_virtual_routes' ), 10, 2 );
 		add_action( 'template_redirect', array( __CLASS__, 'maybe_redirect_old_routes' ), 9 );
-		add_action( 'init', array( 'Wpfaevent_Template_Shortcodes', 'register' ) );
+		add_action( 'init', array( __CLASS__, 'register_shortcodes' ) );
 		add_action( 'init', array( __CLASS__, 'register_blocks' ) );
 		add_action( 'init', array( __CLASS__, 'register_patterns' ) );
 	}

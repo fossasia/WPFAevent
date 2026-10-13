@@ -81,6 +81,14 @@ class TemplateShortcodesTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Shortcodes stay hooked through the legacy callback, so integrations can
+	 * still unhook them with remove_action().
+	 */
+	public function test_init_hook_uses_legacy_callback() {
+		$this->assertNotFalse( has_action( 'init', array( 'Wpfaevent_Templates', 'register_shortcodes' ) ) );
+	}
+
+	/**
 	 * The legacy Wpfaevent_Templates::render_shortcode() entry point still works.
 	 */
 	public function test_legacy_render_shortcode_delegates() {
