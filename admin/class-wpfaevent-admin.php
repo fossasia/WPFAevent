@@ -120,7 +120,10 @@ class Wpfaevent_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'css/wpfaevent-admin.css', array(), $this->version, 'all' );
+		// Version by file time so browsers and CDNs drop a cached copy whenever the stylesheet changes.
+		$admin_css_path    = plugin_dir_path( __FILE__ ) . 'css/wpfaevent-admin.css';
+		$admin_css_version = file_exists( $admin_css_path ) ? (string) filemtime( $admin_css_path ) : $this->version;
+		wp_enqueue_style( $this->plugin_name . '-admin', plugin_dir_url( __FILE__ ) . 'css/wpfaevent-admin.css', array(), $admin_css_version, 'all' );
 
 		$screen = get_current_screen();
 		if ( $screen && ( 'wpfa_speaker' === $screen->post_type || 'edit-wpfa_speaker' === $screen->id || 'wpfa_event' === $screen->post_type || false !== strpos( $screen->id, 'wpfaevent-sponsors' ) || false !== strpos( $screen->id, 'wpfaevent-exhibitors' ) ) ) {
