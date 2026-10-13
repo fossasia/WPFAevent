@@ -491,39 +491,41 @@ class Wpfaevent_Admin_Event_Metabox {
 
 		$this->schedule_sessions = $sessions;
 		?>
-		<table class="wp-list-table widefat fixed striped" id="wpfaevent-schedule-sessions-table">
-			<thead>
-				<tr>
-					<th class="wpfa-col-date"><?php esc_html_e( 'Date', 'wpfaevent' ); ?></th>
-					<th class="wpfa-col-start-time"><?php esc_html_e( 'Start Time', 'wpfaevent' ); ?></th>
-					<th class="wpfa-col-end-time"><?php esc_html_e( 'End Time', 'wpfaevent' ); ?></th>
-					<th><?php esc_html_e( 'Session Title', 'wpfaevent' ); ?></th>
-					<th><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></th>
-					<th class="wpfa-col-track"><?php esc_html_e( 'Track', 'wpfaevent' ); ?></th>
-					<th class="wpfa-col-room"><?php esc_html_e( 'Room', 'wpfaevent' ); ?></th>
-					<th class="wpfa-col-action"><?php esc_html_e( 'Action', 'wpfaevent' ); ?></th>
-				</tr>
-			</thead>
-			<tbody id="wpfaevent-schedule-sessions-body">
-				<?php
-				$sessions = $this->schedule_sessions;
-				if ( ! empty( $sessions ) ) :
-					foreach ( $sessions as $index => $sess ) :
-						?>
-						<tr>
-							<td><input type="date" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][date]" value="<?php echo esc_attr( $sess['date'] ); ?>" required></td>
-							<td><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][start_time]" value="<?php echo esc_attr( $sess['start_time'] ); ?>" required></td>
-							<td><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][end_time]" value="<?php echo esc_attr( $sess['end_time'] ); ?>"></td>
-							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][title]" value="<?php echo esc_attr( $sess['title'] ); ?>" required></td>
-							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][speakers]" value="<?php echo esc_attr( $sess['speakers'] ); ?>"></td>
-							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][track]" value="<?php echo esc_attr( $sess['track'] ); ?>"></td>
-							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][room]" value="<?php echo esc_attr( $sess['room'] ); ?>"></td>
-							<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a></td>
-						</tr>
-					<?php endforeach; ?>
-				<?php endif; ?>
-			</tbody>
-		</table>
+		<div class="wpfaevent-schedule-table-wrap">
+			<table class="wp-list-table widefat fixed striped" id="wpfaevent-schedule-sessions-table">
+				<thead>
+					<tr>
+						<th class="wpfa-col-date"><?php esc_html_e( 'Date', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-start-time"><?php esc_html_e( 'Start Time', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-end-time"><?php esc_html_e( 'End Time', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-title"><?php esc_html_e( 'Session Title', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-speakers"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-track"><?php esc_html_e( 'Track', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-room"><?php esc_html_e( 'Room', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-action"><?php esc_html_e( 'Action', 'wpfaevent' ); ?></th>
+					</tr>
+				</thead>
+				<tbody id="wpfaevent-schedule-sessions-body">
+					<?php
+					$sessions = $this->schedule_sessions;
+					if ( ! empty( $sessions ) ) :
+						foreach ( $sessions as $index => $sess ) :
+							?>
+							<tr>
+								<td><input type="date" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][date]" value="<?php echo esc_attr( $sess['date'] ); ?>" required></td>
+								<td><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][start_time]" value="<?php echo esc_attr( $sess['start_time'] ); ?>" required></td>
+								<td><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][end_time]" value="<?php echo esc_attr( $sess['end_time'] ); ?>"></td>
+								<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][title]" value="<?php echo esc_attr( $sess['title'] ); ?>" required></td>
+								<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][speakers]" value="<?php echo esc_attr( $sess['speakers'] ); ?>"></td>
+								<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][track]" value="<?php echo esc_attr( $sess['track'] ); ?>"></td>
+								<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][room]" value="<?php echo esc_attr( $sess['room'] ); ?>"></td>
+								<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a></td>
+							</tr>
+						<?php endforeach; ?>
+					<?php endif; ?>
+				</tbody>
+			</table>
+		</div>
 		<button type="button" class="button button-primary" id="wpfaevent-add-session-row">
 			<?php esc_html_e( 'Add Session', 'wpfaevent' ); ?>
 		</button>
