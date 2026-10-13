@@ -124,7 +124,7 @@ add_filter(
 		</header>
 
 		<?php
-		$wpfa_event_nav_items = ! empty( $event_data['wpfa_event_nav_items'] ) && is_array( $event_data['wpfa_event_nav_items'] )
+		$wpfa_event_nav_items = isset( $event_data['wpfa_event_nav_items'] ) && is_array( $event_data['wpfa_event_nav_items'] )
 			? $event_data['wpfa_event_nav_items']
 			: ( class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ? Wpfaevent_Main_Navigation_Helper::get_default_event_nav_items( $event_id ) : array() );
 
