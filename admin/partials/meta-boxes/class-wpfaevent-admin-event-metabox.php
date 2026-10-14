@@ -873,6 +873,19 @@ class Wpfaevent_Admin_Event_Metabox {
 		<template id="wpfaevent-nav-subitem-template">
 			<?php $this->render_nav_subitem_row( '__PIDX__', '__SIDX__', array(), $wp_pages ); ?>
 		</template>
+		<div class="screen-reader-text">
+			<?php
+			wp_editor(
+				'',
+				'wpfa_nav_editor_base',
+				array(
+					'quicktags'     => true,
+					'media_buttons' => false,
+					'textarea_rows' => 6,
+				)
+			);
+			?>
+		</div>
 		<?php
 	}
 
@@ -934,7 +947,29 @@ class Wpfaevent_Admin_Event_Metabox {
 					<label><?php esc_html_e( 'Page Heading', 'wpfaevent' ); ?></label>
 					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>">
 					<label class="wpfaevent-nav-content-label"><?php esc_html_e( 'Page Content & Bullets', 'wpfaevent' ); ?></label>
-					<textarea name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][content]" rows="4" placeholder="<?php esc_attr_e( "Enter page details, paragraphs, or bullet points:\n- Travel grant details\n- Application requirements\n- Deadline: Oct 30", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
+					<?php
+					$is_template = ! is_numeric( $i );
+					$editor_id   = 'wpfa_custom_nav_content_' . ( $is_template ? '${navIndex}' : preg_replace( '/[^a-z0-9_]/i', '_', (string) $i ) );
+					if ( ! $is_template && 'custom_page' === $type ) {
+						wp_editor(
+							$content,
+							$editor_id,
+							array(
+								'textarea_name' => 'wpfa_custom_nav_items[' . esc_attr( (string) $i ) . '][content]',
+								'textarea_rows' => 6,
+								'media_buttons' => false,
+								'tinymce'       => array(
+									'wpautop' => true,
+								),
+								'quicktags'     => true,
+							)
+						);
+					} else {
+						?>
+						<textarea id="<?php echo esc_attr( $editor_id ); ?>" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][content]" class="wpfaevent-custom-page-content" rows="6" placeholder="<?php esc_attr_e( "Enter page details, paragraphs, or bullet points:\n- Travel grant details\n- Application requirements\n- Deadline: Oct 30", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
+						<?php
+					}
+					?>
 				</div>
 				<div class="<?php echo esc_attr( $dropdown_row_class ); ?>">
 					<label><strong><?php esc_html_e( 'Dropdown Sub-Items', 'wpfaevent' ); ?></strong></label>
@@ -1022,7 +1057,29 @@ class Wpfaevent_Admin_Event_Metabox {
 			<div class="<?php echo esc_attr( $sub_custom_class ); ?>">
 				<input type="hidden" name="<?php echo esc_attr( $prefix ); ?>[slug]" value="<?php echo esc_attr( $slug ); ?>">
 				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>">
-				<textarea name="<?php echo esc_attr( $prefix ); ?>[content]" rows="3" placeholder="<?php esc_attr_e( "Page details, text, or bullet points:\n- Travel grant details\n- Application requirements", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
+				<?php
+				$is_sub_template = ! is_numeric( $i ) || ! is_numeric( $si );
+				$sub_editor_id   = 'wpfa_custom_nav_sub_content_' . ( $is_sub_template ? '__PIDX_____SIDX__' : preg_replace( '/[^a-z0-9_]/i', '_', (string) $i ) . '_' . preg_replace( '/[^a-z0-9_]/i', '_', (string) $si ) );
+				if ( ! $is_sub_template && 'custom_page' === $type ) {
+					wp_editor(
+						$content,
+						$sub_editor_id,
+						array(
+							'textarea_name' => esc_attr( $prefix ) . '[content]',
+							'textarea_rows' => 4,
+							'media_buttons' => false,
+							'tinymce'       => array(
+								'wpautop' => true,
+							),
+							'quicktags'     => true,
+						)
+					);
+				} else {
+					?>
+					<textarea id="<?php echo esc_attr( $sub_editor_id ); ?>" name="<?php echo esc_attr( $prefix ); ?>[content]" class="wpfaevent-custom-page-content" rows="3" placeholder="<?php esc_attr_e( "Page details, text, or bullet points:\n- Travel grant details\n- Application requirements", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
+					<?php
+				}
+				?>
 			</div>
 		</div>
 
