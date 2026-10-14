@@ -40,15 +40,23 @@ $header_vars = ! empty( $event_data['header_vars'] ) && is_array( $event_data['h
 
 $event_permalink = get_permalink( $event_id );
 $event_title     = ! empty( $event_data['event_title'] ) ? (string) $event_data['event_title'] : get_the_title( $event_id );
-$event_url       = ! empty( $event_data['event_url'] ) ? (string) $event_data['event_url'] : ( $event_permalink ? $event_permalink : '' );
 
 $site_logo_url        = isset( $header_vars['site_logo_url'] ) ? $header_vars['site_logo_url'] : ( defined( 'WPFAEVENT_URL' ) ? WPFAEVENT_URL . 'assets/images/logo.png' : '' );
-$event_page_url       = $event_permalink ? $event_permalink : ( isset( $header_vars['event_page_url'] ) ? $header_vars['event_page_url'] : home_url( '/events/' ) );
-$show_back_button     = true;
+$show_back_button     = isset( $header_vars['show_back_button'] ) ? (bool) $header_vars['show_back_button'] : true;
 $show_register_button = isset( $header_vars['show_register_button'] ) ? $header_vars['show_register_button'] : false;
-$back_button_text     = $event_permalink ? __( 'Back to Event', 'wpfaevent' ) : __( 'Back to Events', 'wpfaevent' );
 $register_button_url  = isset( $header_vars['register_button_url'] ) ? $header_vars['register_button_url'] : '';
 $register_button_text = isset( $header_vars['register_button_text'] ) ? $header_vars['register_button_text'] : __( 'Register', 'wpfaevent' );
+
+// Custom page contract: Custom subpages navigate back to the parent event page.
+$default_event_page_url = $event_permalink ? $event_permalink : home_url( '/events/' );
+$event_page_url         = ( isset( $header_vars['event_page_url'] ) && home_url( '/events/' ) !== $header_vars['event_page_url'] )
+	? $header_vars['event_page_url']
+	: $default_event_page_url;
+
+$default_back_text = $event_permalink ? __( 'Back to Event', 'wpfaevent' ) : __( 'Back to Events', 'wpfaevent' );
+$back_button_text  = ( isset( $header_vars['back_button_text'] ) && __( 'All Events', 'wpfaevent' ) !== $header_vars['back_button_text'] )
+	? $header_vars['back_button_text']
+	: $default_back_text;
 
 $event_style_attr = ! empty( $event_data['event_style_attr'] )
 	? (string) $event_data['event_style_attr']
