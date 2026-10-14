@@ -1783,6 +1783,8 @@ class MainNavigationTest extends WP_UnitTestCase {
 		$output = ob_get_clean();
 
 		$this->assertStringContainsString( 'wpfa_nav_editor_base', $output );
+		$this->assertStringContainsString( 'id="wp-wpfa_custom_nav_content_0-wrap"', $output );
+		$this->assertStringContainsString( 'id="wp-wpfa_custom_nav_sub_content_1_0-wrap"', $output );
 		$this->assertStringContainsString( 'wpfa_custom_nav_content_0', $output );
 		$this->assertStringContainsString( 'wpfa_custom_nav_sub_content_1_0', $output );
 		$this->assertStringContainsString( 'wpfaevent-custom-page-content', $output );
