@@ -293,6 +293,13 @@ const wpfaEvents = (function () {
 	}
 
 	/**
+	 * Descriptions waiting for their editor to finish initializing, by textarea ID.
+	 *
+	 * @type {Object<string, string>}
+	 */
+	const pendingDescriptions = {};
+
+	/**
 	 * Show a description in a modal's Description field.
 	 *
 	 * On first use the field becomes a WordPress visual editor, so admins
@@ -315,13 +322,26 @@ const wpfaEvents = (function () {
 			return;
 		}
 
-		// Older descriptions typed in the plain textarea use line breaks for paragraphs.
-		const content = api.autop(value);
+		// Older descriptions typed in the plain textarea use line breaks for
+		// paragraphs. HTML descriptions are kept as they are.
+		const content = /<(p|div|ul|ol|h[1-6]|blockquote|pre|table)\b/i.test(
+			value
+		)
+			? value
+			: api.autop(value);
 		const editor = window.tinymce.get(id);
 
-		if (editor) {
+		if (editor?.initialized) {
 			editor.setContent(content);
 			editor.save();
+			return;
+		}
+
+		// Applied on init, so an editor still loading can't show an older description.
+		pendingDescriptions[id] = content;
+		textarea.value = content;
+
+		if (editor) {
 			return;
 		}
 
@@ -331,13 +351,19 @@ const wpfaEvents = (function () {
 			? textarea.nextElementSibling
 			: null;
 
-		textarea.value = content;
 		// TinyMCE hides the textarea, so the browser can't flag it; the submit handler checks it instead.
 		textarea.required = false;
 
 		api.initialize(id, {
 			tinymce: {
 				setup(instance) {
+					instance.on('init', () => {
+						if (id in pendingDescriptions) {
+							instance.setContent(pendingDescriptions[id]);
+							delete pendingDescriptions[id];
+						}
+					});
+
 					instance.on(
 						'init input change keyup undo redo SetContent',
 						() => {
@@ -364,6 +390,22 @@ const wpfaEvents = (function () {
 	function updateDescriptionCounter(editor, counter) {
 		// Count the text the admin sees, not the HTML tags.
 		counter.textContent = `${editor.getContent({ format: 'text' }).trim().length}`;
+	}
+
+	/**
+	 * Check whether a description has no visible text.
+	 *
+	 * The visual editor can send markup such as `<p>&nbsp;</p>` for a field
+	 * that looks empty.
+	 *
+	 * @param {string} html Description HTML.
+	 * @return {boolean} True when nothing would be shown.
+	 */
+	function isBlankDescription(html) {
+		// DOMParser documents are inert, so markup in the description can't run.
+		const doc = new DOMParser().parseFromString(html, 'text/html');
+
+		return (doc.body.textContent || '').trim() === '';
 	}
 
 	/**
@@ -827,7 +869,13 @@ const wpfaEvents = (function () {
 		const missingFields = [];
 
 		requiredFields.forEach((field) => {
-			if (!formData.get(field) || formData.get(field).trim() === '') {
+			const value = formData.get(field) || '';
+			const isBlank =
+				field === 'excerpt'
+					? isBlankDescription(value)
+					: value.trim() === '';
+
+			if (isBlank) {
 				missingFields.push(field);
 			}
 		});
@@ -927,7 +975,13 @@ const wpfaEvents = (function () {
 		const missingFields = [];
 
 		requiredFields.forEach((field) => {
-			if (!formData.get(field) || formData.get(field).trim() === '') {
+			const value = formData.get(field) || '';
+			const isBlank =
+				field === 'excerpt'
+					? isBlankDescription(value)
+					: value.trim() === '';
+
+			if (isBlank) {
 				missingFields.push(field);
 			}
 		});
