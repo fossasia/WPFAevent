@@ -403,7 +403,7 @@ const wpfaEvents = (function () {
 	 */
 	function isBlankDescription(html) {
 		// DOMParser documents are inert, so markup in the description can't run.
-		const doc = new DOMParser().parseFromString(html, 'text/html');
+		const doc = new window.DOMParser().parseFromString(html, 'text/html');
 
 		return (doc.body.textContent || '').trim() === '';
 	}
