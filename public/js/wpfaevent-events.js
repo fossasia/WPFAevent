@@ -276,6 +276,106 @@ const wpfaEvents = (function () {
 	}
 
 	/**
+	 * Get the Classic editor API loaded by wp_enqueue_editor().
+	 *
+	 * @return {Object|null} Editor API, or null when it is not loaded.
+	 */
+	function getEditorApi() {
+		const wp = window.wp || {};
+		// The block editor package takes over wp.editor and keeps this API as wp.oldEditor.
+		const api = wp.oldEditor || wp.editor;
+
+		if (window.tinymce && typeof api?.initialize === 'function') {
+			return api;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Show a description in a modal's Description field.
+	 *
+	 * On first use the field becomes a WordPress visual editor, so admins
+	 * edit formatted text instead of the HTML stored for the event.
+	 *
+	 * @param {string} id    Description textarea ID.
+	 * @param {string} value Description HTML or plain text.
+	 */
+	function setDescription(id, value) {
+		const textarea = document.getElementById(id);
+
+		if (!textarea) {
+			return;
+		}
+
+		const api = getEditorApi();
+
+		if (!api) {
+			textarea.value = value;
+			return;
+		}
+
+		// Older descriptions typed in the plain textarea use line breaks for paragraphs.
+		const content = api.autop(value);
+		const editor = window.tinymce.get(id);
+
+		if (editor) {
+			editor.setContent(content);
+			editor.save();
+			return;
+		}
+
+		const counter = textarea.nextElementSibling?.classList.contains(
+			'wpfaevent-char-counter'
+		)
+			? textarea.nextElementSibling
+			: null;
+
+		textarea.value = content;
+		// TinyMCE hides the textarea, so the browser can't flag it; the submit handler checks it instead.
+		textarea.required = false;
+
+		api.initialize(id, {
+			tinymce: {
+				setup(instance) {
+					instance.on(
+						'init input change keyup undo redo SetContent',
+						() => {
+							instance.save();
+
+							if (counter) {
+								updateDescriptionCounter(instance, counter);
+							}
+						}
+					);
+				},
+			},
+			quicktags: false,
+			mediaButtons: false,
+		});
+	}
+
+	/**
+	 * Update a Description field's counter from the visual editor.
+	 *
+	 * @param {Object}      editor  TinyMCE editor instance.
+	 * @param {HTMLElement} counter Counter element below the field.
+	 */
+	function updateDescriptionCounter(editor, counter) {
+		// Count the text the admin sees, not the HTML tags.
+		counter.textContent = `${editor.getContent({ format: 'text' }).trim().length}`;
+	}
+
+	/**
+	 * Copy visual editor content into the description textareas.
+	 */
+	function saveDescriptions() {
+		if (getEditorApi()) {
+			window.tinymce.triggerSave();
+		}
+	}
+
+	/**
 	 * Setup all-day toggles for event time inputs
 	 *
 	 * @param {HTMLFormElement|null|undefined} form Event form element.
@@ -628,6 +728,9 @@ const wpfaEvents = (function () {
 		if (elements.createEventModal) {
 			elements.createEventModal.style.display = 'flex';
 		}
+
+		// After showing the modal, so the editor is sized to the visible field.
+		setDescription('eventDescription', '');
 	}
 
 	/**
@@ -649,8 +752,6 @@ const wpfaEvents = (function () {
 			card.dataset.endDate || '';
 		document.getElementById('editEventPlace').value =
 			card.dataset.place || '';
-		document.getElementById('editEventDescription').value =
-			card.dataset.description || '';
 		document.getElementById('editEventLeadText').value =
 			card.dataset.leadText || '';
 		document.getElementById('editRegistrationLink').value =
@@ -688,6 +789,9 @@ const wpfaEvents = (function () {
 		if (elements.editEventModal) {
 			elements.editEventModal.style.display = 'flex';
 		}
+
+		// After showing the modal, so the editor is sized to the visible field.
+		setDescription('editEventDescription', card.dataset.description || '');
 	}
 
 	/**
@@ -707,6 +811,7 @@ const wpfaEvents = (function () {
 		}
 
 		const form = e.target;
+		saveDescriptions();
 		const formData = new FormData(form);
 		appendLegacyTimeAlias(formData);
 		const submitBtn = form.querySelector('button[type="submit"]');
@@ -806,6 +911,7 @@ const wpfaEvents = (function () {
 		}
 
 		const form = e.target;
+		saveDescriptions();
 		const formData = new FormData(form);
 		appendLegacyTimeAlias(formData);
 		const submitBtn = form.querySelector('button[type="submit"]');
