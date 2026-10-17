@@ -431,6 +431,30 @@
 	margin-bottom: 0;
 }
 
+.wpfaevent .wpfa-event-rich-text {
+	min-width: 0;
+	overflow-wrap: break-word;
+}
+
+.wpfaevent .wpfa-event-rich-text pre {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.wpfaevent .wpfa-event-rich-text table {
+	border-collapse: collapse;
+	display: block;
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.wpfaevent .wpfa-event-rich-text th,
+.wpfaevent .wpfa-event-rich-text td {
+	border: 1px solid #d9dee5;
+	padding: 6px 10px;
+	text-align: left;
+}
+
 .wpfaevent .wpfa-event-additional-preview h2,
 .wpfaevent .wpfa-event-custom-tab-content h2,
 .wpfaevent .wpfa-additional-information-body h2 {
