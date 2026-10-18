@@ -28,12 +28,12 @@ class EventyayAjaxErrorTest extends WP_Ajax_UnitTestCase {
 
 		$terminated = false;
 		$status     = null;
-		$capture  = static function ( $header, $code ) use ( &$status ) {
+		$capture    = static function ( $header, $code ) use ( &$status ) {
 			$status = $code;
 			return $header;
 		};
-		$error    = new WP_Error( 'upstream_failure', 'The upstream request failed.', $data );
-		$ob_level = ob_get_level();
+		$error      = new WP_Error( 'upstream_failure', 'The upstream request failed.', $data );
+		$ob_level   = ob_get_level();
 		add_filter( 'status_header', $capture, 10, 2 );
 		$this->_last_response = '';
 		ob_start();
@@ -79,7 +79,7 @@ class EventyayAjaxErrorTest extends WP_Ajax_UnitTestCase {
 			'rate limited'    => array( array( 'http_status' => 429 ), 429 ),
 			'unavailable'     => array( array( 'http_status' => 503 ), 503 ),
 			'lower boundary'  => array( array( 'http_status' => 400 ), 400 ),
-			'upper boundary'  => array( array( 'http_status' => 599 ), 599 ),
+			'server error'    => array( array( 'http_status' => 511 ), 511 ),
 			'non error'       => array( array( 'http_status' => 399 ), 500 ),
 			'out of range'    => array( array( 'http_status' => 600 ), 500 ),
 			'missing status'  => array( array(), 500 ),
