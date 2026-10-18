@@ -203,8 +203,14 @@ class Wpfaevent_AJAX_Controller {
 		if ( is_array( $error_data ) ) {
 			if ( isset( $error_data['status'] ) ) {
 				$status = absint( $error_data['status'] );
+			} elseif ( isset( $error_data['http_status'] ) ) {
+				$status = absint( $error_data['http_status'] );
 			}
 			$response = array_merge( $response, $error_data );
+		}
+
+		if ( $status < 400 || $status > 599 ) {
+			$status = 500;
 		}
 
 		wp_send_json_error( $response, $status );

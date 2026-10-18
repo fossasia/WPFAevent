@@ -162,6 +162,8 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 
 			if ( isset( $error_data['status'] ) ) {
 				$status = absint( $error_data['status'] );
+			} elseif ( isset( $error_data['http_status'] ) ) {
+				$status = absint( $error_data['http_status'] );
 			}
 		}
 
