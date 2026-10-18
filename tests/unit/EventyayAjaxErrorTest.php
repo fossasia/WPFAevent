@@ -13,6 +13,8 @@ class EventyayAjaxErrorTest extends WP_Ajax_UnitTestCase {
 	/**
 	 * Check the real WordPress JSON serializer for both sync implementations.
 	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
 	 * @dataProvider error_status_provider
 	 * @param string            $controller    Sync controller class.
 	 * @param array<string,int> $data          Error details from the API client.
@@ -24,7 +26,8 @@ class EventyayAjaxErrorTest extends WP_Ajax_UnitTestCase {
 		$method     = $reflection->getMethod( 'send_eventyay_ajax_error' );
 		$method->setAccessible( true );
 
-		$status   = null;
+		$terminated = false;
+		$status     = null;
 		$capture  = static function ( $header, $code ) use ( &$status ) {
 			$status = $code;
 			return $header;
@@ -39,7 +42,7 @@ class EventyayAjaxErrorTest extends WP_Ajax_UnitTestCase {
 			$method->invoke( $instance, $error );
 			$this->fail( 'The error response must terminate the AJAX request.' );
 		} catch ( WPAjaxDieContinueException $exception ) {
-			// WordPress captured the actual JSON response before terminating.
+			$terminated = true;
 		} finally {
 			remove_filter( 'status_header', $capture, 10 );
 			while ( ob_get_level() > $ob_level ) {
@@ -47,6 +50,7 @@ class EventyayAjaxErrorTest extends WP_Ajax_UnitTestCase {
 			}
 		}
 
+		$this->assertTrue( $terminated );
 		$this->assertSame( $expected_code, $status );
 		$this->assertSame(
 			array(
@@ -80,7 +84,13 @@ class EventyayAjaxErrorTest extends WP_Ajax_UnitTestCase {
 			'out of range'    => array( array( 'http_status' => 600 ), 500 ),
 			'missing status'  => array( array(), 500 ),
 			'local error'     => array( array( 'status' => 400 ), 400 ),
-			'local priority'  => array( array( 'status' => 403, 'http_status' => 503 ), 403 ),
+			'local priority'  => array(
+				array(
+					'status'      => 403,
+					'http_status' => 503,
+				),
+				403,
+			),
 		);
 		$tests = array();
 		foreach ( array( 'Wpfaevent_Eventyay_Ajax_Sync', 'Wpfaevent_AJAX_Controller' ) as $controller ) {
