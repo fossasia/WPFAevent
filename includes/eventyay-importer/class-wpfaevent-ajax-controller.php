@@ -209,7 +209,7 @@ class Wpfaevent_AJAX_Controller {
 			$response = array_merge( $response, $error_data );
 		}
 
-		if ( $status < 400 || $status > 599 ) {
+		if ( $status < 400 || $status > 599 || '' === get_status_header_desc( $status ) ) {
 			$status = 500;
 		}
 

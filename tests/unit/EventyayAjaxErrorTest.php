@@ -80,6 +80,8 @@ class EventyayAjaxErrorTest extends WP_Ajax_UnitTestCase {
 			'unavailable'     => array( array( 'http_status' => 503 ), 503 ),
 			'lower boundary'  => array( array( 'http_status' => 400 ), 400 ),
 			'server error'    => array( array( 'http_status' => 511 ), 511 ),
+			'unknown error'   => array( array( 'http_status' => 599 ), 500 ),
+			'unknown local'   => array( array( 'status' => 599 ), 500 ),
 			'non error'       => array( array( 'http_status' => 399 ), 500 ),
 			'out of range'    => array( array( 'http_status' => 600 ), 500 ),
 			'missing status'  => array( array(), 500 ),

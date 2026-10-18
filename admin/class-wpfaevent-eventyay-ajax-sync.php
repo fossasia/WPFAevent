@@ -167,7 +167,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 			}
 		}
 
-		if ( $status < 400 || $status > 599 ) {
+		if ( $status < 400 || $status > 599 || '' === get_status_header_desc( $status ) ) {
 			$status = 500;
 		}
 
