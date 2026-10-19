@@ -375,16 +375,15 @@
  * The table uses a fixed layout, so columns without a width only get the
  * space left over by the others. The date, time, track, room and action
  * columns get fixed widths and Session Title and Speakers share the rest.
- * Below the minimum width the table scrolls sideways inside its wrapper
- * instead of squeezing those two columns to nothing.
+ * When the metabox is too narrow for that, each row becomes a card instead
+ * (see the container query below), so nothing scrolls sideways.
  */
 .wpfaevent-schedule-table-wrap {
-	overflow-x: auto;
+	container: wpfaevent-schedule / inline-size;
 }
 
 #wpfaevent-schedule-sessions-table {
 	margin-top: 10px;
-	min-width: 1040px;
 }
 
 #wpfaevent-schedule-sessions-table th {
@@ -431,10 +430,121 @@
 	text-align: center;
 }
 
-/* WordPress stacks list table cells on small screens, so drop the minimum there. */
-@media screen and (max-width: 782px) {
+/*
+ * Card layout for metaboxes narrower than the table needs. Each session is a
+ * card like .wpfaevent-meta-card: Date, times, Track, Room and Remove on the
+ * first line, Session Title and Speakers on the second. The ID selectors also
+ * override WordPress core's own small-screen list table rules.
+ */
+@container wpfaevent-schedule (width < 1040px) {
+	#wpfaevent-schedule-sessions-table,
+	#wpfaevent-schedule-sessions-table tbody {
+		display: block;
+	}
+
 	#wpfaevent-schedule-sessions-table {
-		min-width: 0;
+		border: 0;
+		background: transparent;
+		box-shadow: none;
+	}
+
+	#wpfaevent-schedule-sessions-table thead {
+		display: none;
+	}
+
+	#wpfaevent-schedule-sessions-table tbody tr {
+		display: grid;
+		grid-template-columns: 130px 125px 125px minmax(0, 1fr) minmax(0, 1fr) auto;
+		grid-template-areas:
+			"date start end track room action"
+			"title title title speakers speakers speakers";
+		gap: 12px 10px;
+		margin-bottom: 15px;
+		padding: 15px;
+		background: #fff;
+		border: 1px solid #ccd0d4;
+		border-radius: 4px;
+		box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+	}
+
+	#wpfaevent-schedule-sessions-table tbody td {
+		width: auto;
+		padding: 0;
+	}
+
+	#wpfaevent-schedule-sessions-table td[data-label]::before {
+		content: attr(data-label);
+		position: static;
+		display: block;
+		width: auto;
+		margin-bottom: 5px;
+		font-size: 12px;
+		font-weight: 600;
+		color: #23282d;
+	}
+
+	#wpfaevent-schedule-sessions-table td.wpfa-col-date {
+		grid-area: date;
+	}
+
+	#wpfaevent-schedule-sessions-table td.wpfa-col-start-time {
+		grid-area: start;
+	}
+
+	#wpfaevent-schedule-sessions-table td.wpfa-col-end-time {
+		grid-area: end;
+	}
+
+	#wpfaevent-schedule-sessions-table td.wpfa-col-title {
+		grid-area: title;
+	}
+
+	#wpfaevent-schedule-sessions-table td.wpfa-col-speakers {
+		grid-area: speakers;
+	}
+
+	#wpfaevent-schedule-sessions-table td.wpfa-col-track {
+		grid-area: track;
+	}
+
+	#wpfaevent-schedule-sessions-table td.wpfa-col-room {
+		grid-area: room;
+	}
+
+	/* Pinned to the card's top-right corner, like .wpfaevent-remove-card-btn. */
+	#wpfaevent-schedule-sessions-table td.wpfa-col-action {
+		grid-area: action;
+		align-self: start;
+		justify-self: end;
+		font-size: 13px;
+	}
+}
+
+/* Too narrow for five fields on one line (phones, narrow editor panes). */
+@container wpfaevent-schedule (width < 700px) {
+	#wpfaevent-schedule-sessions-table tbody tr {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		grid-template-areas:
+			"date action"
+			"start end"
+			"title title"
+			"speakers speakers"
+			"track room";
+	}
+}
+
+@container wpfaevent-schedule (width < 420px) {
+	#wpfaevent-schedule-sessions-table tbody tr {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			"action"
+			"date"
+			"start"
+			"end"
+			"title"
+			"speakers"
+			"track"
+			"room";
 	}
 }
 

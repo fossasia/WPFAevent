@@ -512,13 +512,13 @@ class Wpfaevent_Admin_Event_Metabox {
 						foreach ( $sessions as $index => $sess ) :
 							?>
 							<tr>
-								<td><input type="date" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][date]" value="<?php echo esc_attr( $sess['date'] ); ?>" required></td>
-								<td><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][start_time]" value="<?php echo esc_attr( $sess['start_time'] ); ?>" required></td>
-								<td><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][end_time]" value="<?php echo esc_attr( $sess['end_time'] ); ?>"></td>
-								<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][title]" value="<?php echo esc_attr( $sess['title'] ); ?>" required></td>
-								<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][speakers]" value="<?php echo esc_attr( $sess['speakers'] ); ?>"></td>
-								<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][track]" value="<?php echo esc_attr( $sess['track'] ); ?>"></td>
-								<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][room]" value="<?php echo esc_attr( $sess['room'] ); ?>"></td>
+								<td class="wpfa-col-date" data-label="<?php esc_attr_e( 'Date', 'wpfaevent' ); ?>"><input type="date" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][date]" value="<?php echo esc_attr( $sess['date'] ); ?>" required></td>
+								<td class="wpfa-col-start-time" data-label="<?php esc_attr_e( 'Start Time', 'wpfaevent' ); ?>"><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][start_time]" value="<?php echo esc_attr( $sess['start_time'] ); ?>" required></td>
+								<td class="wpfa-col-end-time" data-label="<?php esc_attr_e( 'End Time', 'wpfaevent' ); ?>"><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][end_time]" value="<?php echo esc_attr( $sess['end_time'] ); ?>"></td>
+								<td class="wpfa-col-title" data-label="<?php esc_attr_e( 'Session Title', 'wpfaevent' ); ?>"><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][title]" value="<?php echo esc_attr( $sess['title'] ); ?>" required></td>
+								<td class="wpfa-col-speakers" data-label="<?php esc_attr_e( 'Speakers', 'wpfaevent' ); ?>"><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][speakers]" value="<?php echo esc_attr( $sess['speakers'] ); ?>"></td>
+								<td class="wpfa-col-track" data-label="<?php esc_attr_e( 'Track', 'wpfaevent' ); ?>"><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][track]" value="<?php echo esc_attr( $sess['track'] ); ?>"></td>
+								<td class="wpfa-col-room" data-label="<?php esc_attr_e( 'Room', 'wpfaevent' ); ?>"><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][room]" value="<?php echo esc_attr( $sess['room'] ); ?>"></td>
 								<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a></td>
 							</tr>
 						<?php endforeach; ?>
@@ -537,16 +537,22 @@ class Wpfaevent_Admin_Event_Metabox {
 				$('#wpfaevent-add-session-row').on('click', function(e) {
 					e.preventDefault();
 					const html = `<tr>
-						<td><input type="date" name="wpfa_schedule_sessions[${sessionIndex}][date]" required></td>
-						<td><input type="time" name="wpfa_schedule_sessions[${sessionIndex}][start_time]" required></td>
-						<td><input type="time" name="wpfa_schedule_sessions[${sessionIndex}][end_time]"></td>
-						<td><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][title]" required></td>
-						<td><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][speakers]"></td>
-						<td><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][track]"></td>
-						<td><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][room]"></td>
+						<td class="wpfa-col-date"><input type="date" name="wpfa_schedule_sessions[${sessionIndex}][date]" required></td>
+						<td class="wpfa-col-start-time"><input type="time" name="wpfa_schedule_sessions[${sessionIndex}][start_time]" required></td>
+						<td class="wpfa-col-end-time"><input type="time" name="wpfa_schedule_sessions[${sessionIndex}][end_time]"></td>
+						<td class="wpfa-col-title"><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][title]" required></td>
+						<td class="wpfa-col-speakers"><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][speakers]"></td>
+						<td class="wpfa-col-track"><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][track]"></td>
+						<td class="wpfa-col-room"><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][room]"></td>
 						<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session">Remove</a></td>
 					</tr>`;
-					$('#wpfaevent-schedule-sessions-body').append(html);
+					const $row = $(html);
+					const $headers = $('#wpfaevent-schedule-sessions-table thead th');
+					// Reuse the translated header text as each cell's card-layout label.
+					$row.children('td').not('.wpfa-col-action').each(function(i) {
+						$(this).attr('data-label', $headers.eq(i).text());
+					});
+					$('#wpfaevent-schedule-sessions-body').append($row);
 					sessionIndex++;
 				});
 
