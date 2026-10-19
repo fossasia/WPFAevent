@@ -49,6 +49,30 @@ class TemplateShortcodesTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Without a template attribute the generic shortcode renders the events template.
+	 */
+	public function test_generic_shortcode_defaults_to_events_template() {
+		Wpfaevent_Template_Shortcodes::register();
+
+		$output = do_shortcode( '[wpfaevent_template]' );
+
+		$this->assertStringContainsString( 'wpfa-events', $output );
+		$this->assertSame( Wpfaevent_Templates::render_embed( 'events' ), $output );
+	}
+
+	/**
+	 * The default events template keeps its block class when aligned.
+	 */
+	public function test_generic_shortcode_default_template_wraps_aligned_output() {
+		Wpfaevent_Template_Shortcodes::register();
+
+		$this->assertStringStartsWith(
+			'<div class="wp-block-wpfaevent-events alignwide">',
+			do_shortcode( '[wpfaevent_template align="wide"]' )
+		);
+	}
+
+	/**
 	 * Wide and full alignment wrap the output in an aligned block container.
 	 */
 	public function test_align_attribute_wraps_output() {
@@ -86,6 +110,18 @@ class TemplateShortcodesTest extends WP_UnitTestCase {
 	 */
 	public function test_init_hook_uses_legacy_callback() {
 		$this->assertNotFalse( has_action( 'init', array( 'Wpfaevent_Templates', 'register_shortcodes' ) ) );
+	}
+
+	/**
+	 * Removing the legacy init callback stops shortcode registration, because
+	 * no other init callback registers the shortcodes.
+	 */
+	public function test_removing_legacy_init_callback_unhooks_shortcodes() {
+		$legacy_callback = array( 'Wpfaevent_Templates', 'register_shortcodes' );
+
+		$this->assertTrue( remove_action( 'init', $legacy_callback ) );
+		$this->assertFalse( has_action( 'init', $legacy_callback ) );
+		$this->assertFalse( has_action( 'init', array( 'Wpfaevent_Template_Shortcodes', 'register' ) ) );
 	}
 
 	/**
