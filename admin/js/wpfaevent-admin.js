@@ -535,6 +535,96 @@
 		// that is needed for the saved navigation to follow the new order.
 		// Sub-items only sort within their own dropdown because their field
 		// names carry the parent item's index.
+		function getNavEditorSettings(editorId) {
+			let mceConfig = {
+				wpautop: true,
+				plugins:
+					'charmap colorpicker hr lists paste tabfocus textcolor wordpress wpautoresize wpeditimage wpgallery wplink wptextpattern',
+				toolbar1:
+					'formatselect bold italic bullist numlist blockquote alignleft aligncenter alignright link unlink wp_more spellchecker dfw',
+			};
+			if (
+				window.tinyMCEPreInit &&
+				window.tinyMCEPreInit.mceInit &&
+				window.tinyMCEPreInit.mceInit.wpfa_nav_editor_base
+			) {
+				mceConfig = $.extend(
+					{},
+					window.tinyMCEPreInit.mceInit.wpfa_nav_editor_base,
+					{
+						selector: '#' + editorId,
+						body_class: editorId + ' post-type-wpfa_event',
+					}
+				);
+			}
+			return {
+				tinymce: mceConfig,
+				quicktags: true,
+				mediaButtons: false,
+			};
+		}
+
+		function initNavEditor(id) {
+			if (!window.wp || !window.wp.editor || !id) {
+				return;
+			}
+			const textarea = document.getElementById(id);
+			if (!textarea) {
+				return;
+			}
+			if (window.tinymce && window.tinymce.get(id)) {
+				return;
+			}
+			window.wp.editor.initialize(id, getNavEditorSettings(id));
+		}
+
+		function removeEditorsInElement($element) {
+			const ids = [];
+			if (
+				!window.wp ||
+				!window.wp.editor ||
+				!$element ||
+				!$element.length
+			) {
+				return ids;
+			}
+			$element
+				.find('textarea.wpfaevent-custom-page-content, .wp-editor-area')
+				.each(function () {
+					const id = this.id;
+					const tinymce = window.tinymce || window.tinyMCE;
+					if (id && tinymce && tinymce.get(id)) {
+						const editor = tinymce.get(id);
+						const isCodeTab =
+							(typeof editor.isHidden === 'function' &&
+								editor.isHidden()) ||
+							$('#wp-' + id + '-wrap').hasClass('html-active');
+						const codeValue = isCodeTab ? this.value : null;
+
+						window.wp.editor.remove(id);
+
+						if (codeValue !== null) {
+							this.value = codeValue;
+						}
+						ids.push(id);
+					}
+				});
+			return ids;
+		}
+
+		function restoreEditors(ids) {
+			if (!window.wp || !window.wp.editor || !ids || !ids.length) {
+				return;
+			}
+			ids.forEach(function (id) {
+				initNavEditor(id);
+			});
+		}
+
+		// Items are submitted in DOM order, so reordering the cards is all
+		// that is needed for the saved navigation to follow the new order.
+		// Sub-items only sort within their own dropdown because their field
+		// names carry the parent item's index.
 		function initNavSortables() {
 			if (!$.fn.sortable) {
 				return;
@@ -543,6 +633,18 @@
 				axis: 'y',
 				forcePlaceholderSize: true,
 				placeholder: 'wpfaevent-nav-sortable-placeholder',
+				start(e, ui) {
+					ui.item.data(
+						'wpfa-editor-ids',
+						removeEditorsInElement(ui.item)
+					);
+				},
+				stop(e, ui) {
+					const ids = ui.item.data('wpfa-editor-ids');
+					if (ids && ids.length) {
+						restoreEditors(ids);
+					}
+				},
 			};
 			$('#wpfaevent-nav-items-container')
 				.not('.ui-sortable')
@@ -601,11 +703,13 @@
 			if (!$target.length) {
 				return;
 			}
+			const editorIds = removeEditorsInElement($item);
 			if (movingUp) {
 				$item.insertBefore($target);
 			} else {
 				$item.insertAfter($target);
 			}
+			restoreEditors(editorIds);
 			// Moving the node in the DOM drops focus; keep it on the button
 			// so the item can be moved several steps from the keyboard.
 			this.focus();
@@ -630,6 +734,7 @@
 			if (!container) {
 				return;
 			}
+			removeEditorsInElement($(container));
 			const defaultTmpl = document.getElementById(
 				'wpfaevent-nav-default-template'
 			);
@@ -651,6 +756,7 @@
 			if (!window.confirm(confirmMsg)) {
 				return;
 			}
+			removeEditorsInElement($('#wpfaevent-nav-items-container'));
 			$('#wpfaevent-nav-items-container').empty();
 		});
 
@@ -692,6 +798,13 @@
 						name.replace(/\$\{navIndex\}/g, String(nextIdx))
 					);
 				}
+				const id = field.getAttribute('id');
+				if (id) {
+					field.setAttribute(
+						'id',
+						id.replace(/\$\{navIndex\}/g, String(nextIdx))
+					);
+				}
 			});
 			container.appendChild(clone);
 			initNavSortables();
@@ -712,6 +825,15 @@
 			$card
 				.find('.wpfaevent-nav-dropdown-row')
 				.toggleClass('wpfaevent-nav-row-hidden', val !== 'dropdown');
+
+			if (val === 'custom_page') {
+				const textarea = $card.find(
+					'.wpfaevent-nav-custom-page-row textarea.wpfaevent-custom-page-content'
+				)[0];
+				if (textarea && textarea.id) {
+					initNavEditor(textarea.id);
+				}
+			}
 		});
 
 		$(document).on('change', '.wpfaevent-subitem-type-select', function () {
@@ -726,6 +848,15 @@
 			$block
 				.find('.wpfaevent-sub-custom-row')
 				.toggleClass('wpfaevent-nav-row-hidden', val !== 'custom_page');
+
+			if (val === 'custom_page') {
+				const textarea = $block.find(
+					'.wpfaevent-sub-custom-row textarea.wpfaevent-custom-page-content'
+				)[0];
+				if (textarea && textarea.id) {
+					initNavEditor(textarea.id);
+				}
+			}
 		});
 
 		$(document).on('change', '.wpfaevent-nav-page-select', function () {
@@ -762,12 +893,16 @@
 
 		$(document).on('click', '.wpfaevent-remove-card-btn', function (e) {
 			e.preventDefault();
-			$(this).closest('.wpfaevent-meta-card').remove();
+			const $card = $(this).closest('.wpfaevent-meta-card');
+			removeEditorsInElement($card);
+			$card.remove();
 		});
 
 		$(document).on('click', '.wpfaevent-remove-subitem-btn', function (e) {
 			e.preventDefault();
-			$(this).closest('.wpfaevent-nav-subitem-block').remove();
+			const $block = $(this).closest('.wpfaevent-nav-subitem-block');
+			removeEditorsInElement($block);
+			$block.remove();
 		});
 
 		$(document).on('click', '.wpfaevent-add-subitem-btn', function (e) {
@@ -811,12 +946,62 @@
 							.replace(/__SIDX__/g, String(nextSubIdx))
 					);
 				}
+				const id = field.getAttribute('id');
+				if (id) {
+					field.setAttribute(
+						'id',
+						id
+							.replace(/__PIDX__/g, String(pIdx))
+							.replace(/__SIDX__/g, String(nextSubIdx))
+					);
+				}
 			});
 			const subitemsList = $card.find('.wpfaevent-nav-subitems-list')[0];
 			if (subitemsList) {
 				subitemsList.appendChild(clone);
 			}
 			$card.attr('data-next-sub-index', String(nextSubIdx + 1));
+		});
+
+		$('form#post').on('submit', function () {
+			const tinymce = window.tinymce || window.tinyMCE;
+			if (tinymce) {
+				const codeValues = {};
+				const editors = tinymce.editors;
+				if (editors) {
+					const editorList = Array.isArray(editors)
+						? editors
+						: Object.values(editors);
+					editorList.forEach(function (editor) {
+						if (!editor || !editor.id) {
+							return;
+						}
+						const isCodeTab =
+							(typeof editor.isHidden === 'function' &&
+								editor.isHidden()) ||
+							$('#wp-' + editor.id + '-wrap').hasClass(
+								'html-active'
+							);
+						if (isCodeTab) {
+							const textarea = document.getElementById(editor.id);
+							if (textarea) {
+								codeValues[editor.id] = textarea.value;
+							}
+						}
+					});
+				}
+
+				if (typeof tinymce.triggerSave === 'function') {
+					tinymce.triggerSave();
+				}
+
+				Object.keys(codeValues).forEach(function (id) {
+					const textarea = document.getElementById(id);
+					if (textarea) {
+						textarea.value = codeValues[id];
+					}
+				});
+			}
 		});
 	});
 })(jQuery);
