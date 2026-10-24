@@ -116,7 +116,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 
 		$cpt_result = $this->sync_eventyay_speaker_posts( $import['speakers'], $event_id );
 
-		$schedule_rows = $this->write_eventyay_schedule_table( $event_id, $import['sessions'] );
+		$schedule_rows = isset( $import['sessions'] ) ? $this->write_eventyay_schedule_table( $event_id, $import['sessions'] ) : 0;
 		if ( is_wp_error( $schedule_rows ) ) {
 			$this->send_eventyay_ajax_error( $schedule_rows );
 		}
@@ -1105,7 +1105,7 @@ class Wpfaevent_Eventyay_Ajax_Sync {
 
 		$cpt_result = $this->sync_eventyay_speaker_posts( $import['speakers'], $event_id );
 
-		$schedule_rows = $this->write_eventyay_schedule_table( $event_id, $import['sessions'] );
+		$schedule_rows = isset( $import['sessions'] ) ? $this->write_eventyay_schedule_table( $event_id, $import['sessions'] ) : 0;
 		if ( is_wp_error( $schedule_rows ) ) {
 			return $schedule_rows;
 		}
