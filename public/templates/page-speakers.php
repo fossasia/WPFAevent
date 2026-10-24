@@ -121,7 +121,7 @@ if ( $selected_event_id ) {
 					return true;
 				}
 
-				$haystack = get_the_title( $speaker_id ) . ' ' . get_post_field( 'post_content', $speaker_id );
+				$haystack = get_the_title( $speaker_id ) . ' ' . wp_strip_all_tags( get_post_field( 'post_content', $speaker_id ) );
 
 				return false !== stripos( $haystack, $search_term );
 			}
