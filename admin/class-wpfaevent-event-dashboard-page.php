@@ -502,6 +502,7 @@ class Wpfaevent_Event_Dashboard_Page {
 			'wpfa_event_registration_link',
 			'wpfa_event_url',
 			'wpfa_event_cfs_link',
+			'wpfa_event_ticket_widget_url',
 			'wpfa_event_languages',
 			'post_content',
 		);
@@ -522,6 +523,12 @@ class Wpfaevent_Event_Dashboard_Page {
 			case 'wpfa_event_cfs_link':
 				$formatted_value = esc_url_raw( $value );
 				$display_value   = esc_url( $value );
+				break;
+			case 'wpfa_event_ticket_widget_url':
+				$formatted_value = class_exists( 'Wpfaevent_Meta_Event' )
+					? Wpfaevent_Meta_Event::sanitize_ticket_widget_input( $value )
+					: esc_url_raw( $value );
+				$display_value   = esc_url( $formatted_value );
 				break;
 			case 'wpfa_event_start_date':
 			case 'wpfa_event_end_date':
@@ -563,7 +570,39 @@ class Wpfaevent_Event_Dashboard_Page {
 				break;
 		}
 
-		// 2. Persist in underlying post table or post meta
+		// 2. Update dashboard JSON settings file (site-settings-$event_id.json) if applicable.
+		$store         = new Wpfaevent_Eventyay_Dashboard_Store();
+		$settings_file = 'site-settings-' . absint( $event_id ) . '.json';
+		$settings      = $store->read_dashboard_json_file( $settings_file, array() );
+		$settings      = is_array( $settings ) ? $settings : array();
+
+		$json_updated = false;
+		if ( 'wpfa_event_logo_url' === $field ) {
+			$settings['event_logo_url'] = $formatted_value;
+			$json_updated               = true;
+		} elseif ( 'wpfa_event_header_image_url' === $field ) {
+			$settings['hero_image_url'] = $formatted_value;
+			$json_updated               = true;
+		} elseif ( 'wpfa_event_registration_link' === $field ) {
+			$settings['reg_button_link'] = $formatted_value;
+			$json_updated                = true;
+		} elseif ( 'wpfa_event_ticket_widget_url' === $field ) {
+			if ( '' !== $formatted_value ) {
+				$settings['ticket_widget_url'] = $formatted_value;
+			} else {
+				unset( $settings['ticket_widget_url'] );
+			}
+			$json_updated = true;
+		}
+
+		if ( $json_updated ) {
+			$write_result = $store->write_dashboard_json_file( $settings_file, $settings );
+			if ( is_wp_error( $write_result ) ) {
+				return $write_result;
+			}
+		}
+
+		// 3. Persist in underlying post table or post meta
 		if ( 'post_content' === $field ) {
 			wp_update_post(
 				array(
@@ -584,31 +623,6 @@ class Wpfaevent_Event_Dashboard_Page {
 			update_post_meta( $event_id, '_event_end_date', $formatted_value );
 		} elseif ( 'wpfa_event_registration_link' === $field ) {
 			update_post_meta( $event_id, '_event_registration_link', $formatted_value );
-		}
-
-		// 3. Update dashboard JSON settings file (site-settings-$event_id.json) if applicable.
-		$store         = new Wpfaevent_Eventyay_Dashboard_Store();
-		$settings_file = 'site-settings-' . absint( $event_id ) . '.json';
-		$settings      = $store->read_dashboard_json_file( $settings_file, array() );
-		$settings      = is_array( $settings ) ? $settings : array();
-
-		$json_updated = false;
-		if ( 'wpfa_event_logo_url' === $field ) {
-			$settings['event_logo_url'] = $formatted_value;
-			$json_updated               = true;
-		} elseif ( 'wpfa_event_header_image_url' === $field ) {
-			$settings['hero_image_url'] = $formatted_value;
-			$json_updated               = true;
-		} elseif ( 'wpfa_event_registration_link' === $field ) {
-			$settings['reg_button_link'] = $formatted_value;
-			$json_updated                = true;
-		}
-
-		if ( $json_updated ) {
-			$write_result = $store->write_dashboard_json_file( $settings_file, $settings );
-			if ( is_wp_error( $write_result ) ) {
-				return $write_result;
-			}
 		}
 
 		return array(

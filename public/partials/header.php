@@ -13,14 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Default values.
-$site_logo_url               = isset( $site_logo_url ) ? $site_logo_url : WPFAEVENT_URL . 'assets/images/logo.png';
-$event_page_url              = isset( $event_page_url ) ? $event_page_url : home_url( '/events/' );
-$show_back_button            = isset( $show_back_button ) ? $show_back_button : false;
-$show_register_button        = isset( $show_register_button ) ? $show_register_button : false;
-$back_button_text            = isset( $back_button_text ) ? $back_button_text : __( 'Back to Event', 'wpfaevent' );
-$default_register_button_url = apply_filters( 'wpfaevent_register_button_url', 'https://eventyay.com/e/4c0e0c27' );
-$register_button_url         = isset( $register_button_url ) ? $register_button_url : $default_register_button_url;
-$register_button_text        = isset( $register_button_text ) ? $register_button_text : __( 'Register', 'wpfaevent' );
+$site_logo_url    = isset( $site_logo_url ) ? $site_logo_url : WPFAEVENT_URL . 'assets/images/logo.png';
+$event_page_url   = isset( $event_page_url ) ? $event_page_url : home_url( '/events/' );
+$show_back_button = isset( $show_back_button ) ? $show_back_button : false;
+$back_button_text = isset( $back_button_text ) ? $back_button_text : __( 'Back to Event', 'wpfaevent' );
 
 // Get the Code of Conduct page ID, with caching handled by the cache class.
 $coc_page_id = Wpfaevent_Cache::get_coc_page_id();
@@ -96,19 +92,11 @@ $coc_url            = $coc_page_id ? get_permalink( $coc_page_id ) : home_url( '
 				?>
 			</div>
 			
-			<?php if ( $show_back_button || $show_register_button ) : ?>
+			<?php if ( $show_back_button ) : ?>
 			<div class="nav-links-secondary">
-				<?php if ( $show_back_button ) : ?>
-					<a href="<?php echo esc_url( $event_page_url ); ?>" class="btn btn-secondary">
-						<?php echo esc_html( $back_button_text ); ?>
-					</a>
-				<?php endif; ?>
-				
-				<?php if ( $show_register_button ) : ?>
-					<a href="<?php echo esc_url( $register_button_url ); ?>" target="_blank" rel="noopener" class="btn btn-primary">
-						<?php echo esc_html( $register_button_text ); ?>
-					</a>
-				<?php endif; ?>
+				<a href="<?php echo esc_url( $event_page_url ); ?>" class="btn btn-secondary">
+					<?php echo esc_html( $back_button_text ); ?>
+				</a>
 			</div>
 			<?php endif; ?>
 		</nav>

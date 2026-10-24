@@ -274,6 +274,18 @@ $custom_tab_count   = isset( $sections['custom_tab_count'] ) ? absint( $sections
 						<button type="button" class="wpfaevent-edit-field-btn wpfaevent-edit-field-btn--inline button button-small button-link"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></button>
 					</div>
 				</li>
+				<li class="wpfaevent-editable-item" data-field="wpfa_event_ticket_widget_url" data-type="url" data-label="<?php esc_attr_e( 'Ticket widget', 'wpfaevent' ); ?>" data-raw-value="<?php echo esc_attr( ! empty( $event['ticket_widget_url'] ) ? $event['ticket_widget_url'] : '' ); ?>">
+					<div class="wpfaevent-field-container">
+						<span class="wpfaevent-field-value">
+							<?php if ( ! empty( $event['ticket_widget_url'] ) ) : ?>
+								<a href="<?php echo esc_url( $event['ticket_widget_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $event['ticket_widget_url'] ); ?></a>
+							<?php else : ?>
+								<?php esc_html_e( 'Ticket widget not configured.', 'wpfaevent' ); ?>
+							<?php endif; ?>
+						</span>
+						<button type="button" class="wpfaevent-edit-field-btn wpfaevent-edit-field-btn--inline button button-small button-link"><?php esc_html_e( 'Edit', 'wpfaevent' ); ?></button>
+					</div>
+				</li>
 				<li>
 					<?php if ( ! empty( $settings['eventyay_api_url'] ) ) : ?>
 						<a href="<?php echo esc_url( $settings['eventyay_api_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Saved Eventyay API URL', 'wpfaevent' ); ?></a>
