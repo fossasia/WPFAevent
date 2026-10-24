@@ -1,0 +1,271 @@
+<?php
+/**
+ * Keeps WordPress edits to imported event descriptions across Eventyay syncs.
+ *
+ * @package    Wpfaevent
+ * @subpackage Wpfaevent/includes/helpers
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Tracks whether an imported event description was edited on this site.
+ *
+ * Each import that writes the description stores a fingerprint of the saved
+ * content and excerpt. When the post no longer matches that fingerprint, the
+ * description was edited in WordPress (modal, WP admin, dashboard or REST) and
+ * later syncs leave it alone until it is restored from Eventyay.
+ */
+class Wpfaevent_Event_Description_Sync {
+
+	/**
+	 * Latest description received from Eventyay.
+	 */
+	const REMOTE_META = '_wpfa_eventyay_description';
+
+	/**
+	 * Eventyay description that was last written into the post.
+	 */
+	const APPLIED_META = '_wpfa_eventyay_description_applied';
+
+	/**
+	 * Fingerprint of the post content and excerpt right after that write.
+	 */
+	const HASH_META = '_wpfa_eventyay_description_hash';
+
+	/**
+	 * Admin-post action that restores the Eventyay description.
+	 */
+	const RESTORE_ACTION = 'wpfaevent_restore_eventyay_description';
+
+	/**
+	 * Decide whether an import must keep the event's current description.
+	 *
+	 * Events imported before fingerprints existed are checked once. Imports
+	 * write the same text to the content and excerpt (older imports wrote only
+	 * the content), while the Edit Event modal saves only the
+	 * excerpt and WP admin and the dashboard save only the content. Two different
+	 * description fields therefore mean a local edit, which is kept and marked
+	 * for later syncs. Title or status changes are not evidence.
+	 *
+	 * An empty excerpt next to content that differs from Eventyay is ambiguous: a
+	 * content-only import whose text changed on Eventyay looks the same as a
+	 * local content edit. It is kept, so no edit is lost, and the note offers to
+	 * restore Eventyay's newer description.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $post_id     Event post ID.
+	 * @param string $description Description from Eventyay.
+	 * @return bool
+	 */
+	public static function keep_local_description( $post_id, $description ) {
+		$post_id = absint( $post_id );
+
+		if ( '' !== (string) get_post_meta( $post_id, self::HASH_META, true ) ) {
+			return self::has_local_edit( $post_id );
+		}
+
+		$description = self::normalize( wp_kses_post( (string) $description ) );
+		$content     = self::normalize( get_post_field( 'post_content', $post_id ) );
+		$excerpt     = self::normalize( get_post_field( 'post_excerpt', $post_id ) );
+		if ( $content === $excerpt || ( '' === $excerpt && $content === $description ) ) {
+			return false;
+		}
+
+		// Baseline as if Eventyay's text had been applied, so the edit stays detected.
+		update_post_meta( $post_id, self::HASH_META, md5( $description . "\0" . $description ) );
+
+		// The unedited field still holds the last imported text. If it matches Eventyay,
+		// Eventyay has not changed; otherwise the baseline is unknown but differs from
+		// Eventyay's current text, so has_newer_remote() reports a newer description.
+		$baseline = ( $content === $description || $excerpt === $description ) ? $description : '';
+		update_post_meta( $post_id, self::APPLIED_META, wp_slash( $baseline ) );
+
+		return true;
+	}
+
+	/**
+	 * Whether the description was edited in WordPress since the last import wrote it.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $post_id Event post ID.
+	 * @return bool
+	 */
+	public static function has_local_edit( $post_id ) {
+		$hash = (string) get_post_meta( absint( $post_id ), self::HASH_META, true );
+
+		return '' !== $hash && self::fingerprint( $post_id ) !== $hash;
+	}
+
+	/**
+	 * Whether Eventyay has a different description than the one the local edit replaced.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $post_id Event post ID.
+	 * @return bool
+	 */
+	public static function has_newer_remote( $post_id ) {
+		$post_id = absint( $post_id );
+		$remote  = self::normalize( get_post_meta( $post_id, self::REMOTE_META, true ) );
+		$applied = self::normalize( get_post_meta( $post_id, self::APPLIED_META, true ) );
+
+		return $remote !== $applied;
+	}
+
+	/**
+	 * Record the description an import received, and whether it was written to the post.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int    $post_id     Event post ID.
+	 * @param string $description Description from Eventyay.
+	 * @param bool   $applied     Whether the import wrote it into the post.
+	 * @return void
+	 */
+	public static function remember_import( $post_id, $description, $applied ) {
+		$post_id     = absint( $post_id );
+		$description = wp_kses_post( (string) $description );
+
+		// Meta writes unslash their input; slash it so backslashes in the text survive.
+		update_post_meta( $post_id, self::REMOTE_META, wp_slash( $description ) );
+
+		if ( $applied ) {
+			update_post_meta( $post_id, self::APPLIED_META, wp_slash( $description ) );
+			update_post_meta( $post_id, self::HASH_META, self::fingerprint( $post_id ) );
+		}
+	}
+
+	/**
+	 * Replace the local description with the latest one from Eventyay.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $post_id Event post ID.
+	 * @return bool
+	 */
+	public static function restore( $post_id ) {
+		$post_id     = absint( $post_id );
+		$description = wp_kses_post( (string) get_post_meta( $post_id, self::REMOTE_META, true ) );
+
+		// WordPress rejects updates that leave title, content and excerpt all empty;
+		// an empty Eventyay description must still restore on an untitled event.
+		$allow_empty = static function ( $maybe_empty, $postarr ) use ( $post_id ) {
+			return isset( $postarr['ID'] ) && absint( $postarr['ID'] ) === $post_id ? false : $maybe_empty;
+		};
+		add_filter( 'wp_insert_post_empty_content', $allow_empty, 10, 2 );
+		$result = wp_update_post(
+			wp_slash(
+				array(
+					'ID'           => $post_id,
+					'post_content' => $description,
+					'post_excerpt' => $description,
+				)
+			),
+			true
+		);
+		remove_filter( 'wp_insert_post_empty_content', $allow_empty, 10 );
+
+		if ( is_wp_error( $result ) || ! $result ) {
+			return false;
+		}
+
+		self::remember_import( $post_id, $description, true );
+
+		return true;
+	}
+
+	/**
+	 * Get the editor note for a locally edited imported description.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $post_id Event post ID.
+	 * @return string Empty when the event follows Eventyay.
+	 */
+	public static function get_note( $post_id ) {
+		if ( ! self::has_local_edit( $post_id ) ) {
+			return '';
+		}
+
+		if ( self::has_newer_remote( $post_id ) ) {
+			return __( 'Description edited on this site. Eventyay has a newer description, which syncs will not apply.', 'wpfaevent' );
+		}
+
+		return __( 'Description edited on this site. Eventyay syncs will not change it.', 'wpfaevent' );
+	}
+
+	/**
+	 * Build the nonce-protected "Restore from Eventyay" URL.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $post_id Event post ID.
+	 * @return string
+	 */
+	public static function get_restore_url( $post_id ) {
+		$post_id = absint( $post_id );
+
+		return wp_nonce_url(
+			add_query_arg(
+				array(
+					'action'  => self::RESTORE_ACTION,
+					'post_id' => $post_id,
+				),
+				admin_url( 'admin-post.php' )
+			),
+			self::RESTORE_ACTION . '_' . $post_id
+		);
+	}
+
+	/**
+	 * Handle the "Restore from Eventyay" admin-post request.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	public static function handle_restore_request() {
+		$post_id = isset( $_GET['post_id'] ) ? absint( $_GET['post_id'] ) : 0;
+
+		check_admin_referer( self::RESTORE_ACTION . '_' . $post_id );
+
+		if ( ! $post_id || 'wpfa_event' !== get_post_type( $post_id ) || ! current_user_can( 'edit_post', $post_id ) ) {
+			wp_die( esc_html__( 'You are not allowed to edit this event.', 'wpfaevent' ), 403 );
+		}
+
+		if ( ! self::restore( $post_id ) ) {
+			wp_die( esc_html__( 'Could not restore the Eventyay description.', 'wpfaevent' ) );
+		}
+
+		$redirect = wp_get_referer();
+		wp_safe_redirect( $redirect ? $redirect : (string) get_edit_post_link( $post_id, 'url' ) );
+		exit;
+	}
+
+	/**
+	 * Fingerprint the description fields currently stored on the post.
+	 *
+	 * @param int $post_id Event post ID.
+	 * @return string
+	 */
+	private static function fingerprint( $post_id ) {
+		$post_id = absint( $post_id );
+
+		return md5( self::normalize( get_post_field( 'post_content', $post_id ) ) . "\0" . self::normalize( get_post_field( 'post_excerpt', $post_id ) ) );
+	}
+
+	/**
+	 * Normalize text so form round-trips (CRLF line endings, outer whitespace) do not count as edits.
+	 *
+	 * @param mixed $text Raw text.
+	 * @return string
+	 */
+	private static function normalize( $text ) {
+		return trim( str_replace( array( "\r\n", "\r" ), "\n", (string) $text ) );
+	}
+}

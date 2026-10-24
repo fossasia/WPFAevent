@@ -54,6 +54,19 @@ class Wpfaevent_Admin_Event_Metabox {
 			);
 		}
 
+		// Note for imported events whose description was edited on this site.
+		$current_post = get_post();
+		if ( $current_post && 'wpfa_event' === $current_post->post_type && '' !== Wpfaevent_Event_Description_Sync::get_note( $current_post->ID ) ) {
+			add_meta_box(
+				'wpfa_eventyay_description',
+				__( 'Eventyay Description', 'wpfaevent' ),
+				array( $this, 'render_eventyay_description_meta_box' ),
+				'wpfa_event',
+				'side',
+				'high'
+			);
+		}
+
 		// Event colors meta box.
 		add_meta_box(
 			'wpfa_event_colors_box',
@@ -333,6 +346,22 @@ class Wpfaevent_Admin_Event_Metabox {
 			});
 		}());
 		</script>
+		<?php
+	}
+
+	/**
+	 * Render the note for a locally edited imported description.
+	 *
+	 * @since 1.0.0
+	 * @param WP_Post $post The post object.
+	 * @return void
+	 */
+	public function render_eventyay_description_meta_box( $post ) {
+		?>
+		<p><?php echo esc_html( Wpfaevent_Event_Description_Sync::get_note( $post->ID ) ); ?></p>
+		<a class="button" href="<?php echo esc_url( Wpfaevent_Event_Description_Sync::get_restore_url( $post->ID ) ); ?>" onclick="return confirm( '<?php echo esc_js( __( 'Replace the description with the one from Eventyay?', 'wpfaevent' ) ); ?>' );">
+			<?php esc_html_e( 'Restore from Eventyay', 'wpfaevent' ); ?>
+		</a>
 		<?php
 	}
 
