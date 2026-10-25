@@ -35,13 +35,13 @@ class EventyayAjaxHandlerTest extends WP_Ajax_UnitTestCase {
 	 * @runInSeparateProcess
 	 * @preserveGlobalState disabled
 	 * @dataProvider failure_provider
-	 * @param string $case          Failure to exercise.
+	 * @param string $scenario          Failure to exercise.
 	 * @param int    $expected_code Expected AJAX HTTP status.
 	 * @param string $message       Expected response message fragment.
 	 * @param int    $request_count Expected outgoing request count.
 	 */
-	public function test_sync_request_failures( $case, $expected_code, $message, $request_count ) {
-		$role = 'unauthorized' === $case ? 'subscriber' : 'administrator';
+	public function test_sync_request_failures( $scenario, $expected_code, $message, $request_count ) {
+		$role = 'unauthorized' === $scenario ? 'subscriber' : 'administrator';
 		wp_set_current_user( self::factory()->user->create( array( 'role' => $role ) ) );
 		$event_id = self::factory()->post->create( array( 'post_type' => 'wpfa_event' ) );
 		$requests = array();
@@ -50,19 +50,22 @@ class EventyayAjaxHandlerTest extends WP_Ajax_UnitTestCase {
 			$status = $code;
 			return $header;
 		};
-		$http     = static function ( $pre, $args, $url ) use ( &$requests, $case ) {
-			$requests[] = array( 'url' => $url, 'args' => $args );
+		$http     = static function ( $pre, $args, $url ) use ( &$requests, $scenario ) {
+			$requests[] = array(
+				'url'  => $url,
+				'args' => $args,
+			);
 			return array(
 				'headers'  => array(),
-				'body'     => 'malformed' === $case ? '{' : wp_json_encode( array( 'detail' => 'Token rejected' ) ),
-				'response' => array( 'code' => 'upstream' === $case ? 401 : 200 ),
+				'body'     => 'malformed' === $scenario ? '{' : wp_json_encode( array( 'detail' => 'Token rejected' ) ),
+				'response' => array( 'code' => 'upstream' === $scenario ? 401 : 200 ),
 				'cookies'  => array(),
 			);
 		};
 		$_POST    = array(
-			'nonce'            => 'nonce' === $case ? 'invalid' : wp_create_nonce( 'fossasia_admin_nonce' ),
-			'event_id'         => 'missing event' === $case ? 0 : $event_id,
-			'eventyay_api_url' => 'missing URL' === $case ? '' : 'https://api.eventyay.com/v1/events/example/sessions?filter[state]=confirmed',
+			'nonce'            => 'nonce' === $scenario ? 'invalid' : wp_create_nonce( 'fossasia_admin_nonce' ),
+			'event_id'         => 'missing event' === $scenario ? 0 : $event_id,
+			'eventyay_api_url' => 'missing URL' === $scenario ? '' : 'https://api.eventyay.com/v1/events/example/sessions?filter[state]=confirmed',
 		);
 		add_filter( 'pre_http_request', $http, 10, 3 );
 		add_filter( 'status_header', $capture, 10, 2 );
@@ -97,7 +100,7 @@ class EventyayAjaxHandlerTest extends WP_Ajax_UnitTestCase {
 			$this->assertSame( 20, $requests[0]['args']['timeout'] );
 			$this->assertSame( 3, $requests[0]['args']['redirection'] );
 		}
-		if ( 'upstream' === $case ) {
+		if ( 'upstream' === $scenario ) {
 			$this->assertSame( 401, $response['data']['http_status'] );
 			$this->assertSame( array( 'detail' => 'Token rejected' ), $response['data']['body'] );
 		}
