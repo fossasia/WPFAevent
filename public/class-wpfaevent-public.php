@@ -213,6 +213,7 @@ class Wpfaevent_Public {
 					'updateErrorGeneric' => __( 'Error updating event. Please try again.', 'wpfaevent' ),
 					'noPermission'       => __( 'You do not have permission to perform this action.', 'wpfaevent' ),
 					'loadError'          => __( 'Error loading event data', 'wpfaevent' ),
+					'restoreDescription' => __( 'Replace the description with the one from Eventyay? Unsaved changes in this form will be lost.', 'wpfaevent' ),
 				),
 			),
 			Wpfaevent_Roles::get_frontend_script_capabilities()
