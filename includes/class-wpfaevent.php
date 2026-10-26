@@ -287,6 +287,7 @@ class Wpfaevent {
 		$this->loader->add_action( 'add_meta_boxes', $event_metabox, 'register_meta_boxes' );
 		$this->loader->add_action( 'save_post_wpfa_event', $event_metabox, 'save_event_meta' );
 		$this->loader->add_action( 'admin_post_' . Wpfaevent_Event_Description_Sync::RESTORE_ACTION, 'Wpfaevent_Event_Description_Sync', 'handle_restore_request' );
+		$this->loader->add_action( 'enqueue_block_editor_assets', $event_metabox, 'enqueue_description_notice' );
 
 		$speaker_metabox = new Wpfaevent_Admin_Speaker_Metabox();
 		$this->loader->add_action( 'add_meta_boxes', $speaker_metabox, 'register_meta_boxes' );

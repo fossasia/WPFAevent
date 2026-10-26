@@ -54,9 +54,11 @@ class Wpfaevent_Admin_Event_Metabox {
 			);
 		}
 
-		// Note for imported events whose description was edited on this site.
+		// Note for imported events whose description was edited on this site. The block
+		// editor shows it as an editor notice instead (see enqueue_description_notice()),
+		// so the meta box remains only as the classic editor fallback.
 		$current_post = get_post();
-		if ( $current_post && 'wpfa_event' === $current_post->post_type && '' !== Wpfaevent_Event_Description_Sync::get_note( $current_post->ID ) ) {
+		if ( $current_post && 'wpfa_event' === $current_post->post_type && ! $this->uses_block_editor( $current_post ) && '' !== Wpfaevent_Event_Description_Sync::get_note( $current_post->ID ) ) {
 			add_meta_box(
 				'wpfa_eventyay_description',
 				__( 'Eventyay Description', 'wpfaevent' ),
@@ -347,6 +349,56 @@ class Wpfaevent_Admin_Event_Metabox {
 		}());
 		</script>
 		<?php
+	}
+
+	/**
+	 * Show the description sync note as a block editor notice with a restore action.
+	 *
+	 * Uses the editor's native notices so the status and the "Restore from Eventyay"
+	 * action appear at the top of the editing area, next to the description. Restoring
+	 * still goes through the nonce-protected admin-post handler.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public function enqueue_description_notice() {
+		$current_post = get_post();
+		if ( ! $current_post || 'wpfa_event' !== $current_post->post_type || ! current_user_can( 'edit_post', $current_post->ID ) ) {
+			return;
+		}
+
+		$note = Wpfaevent_Event_Description_Sync::get_note( $current_post->ID );
+		if ( '' === $note ) {
+			return;
+		}
+
+		$handle = 'wpfaevent-description-notice';
+		wp_enqueue_script( $handle, WPFAEVENT_URL . 'admin/js/wpfaevent-description-notice.js', array( 'wp-data', 'wp-notices', 'wp-editor' ), WPFAEVENT_VERSION, true );
+		wp_localize_script(
+			$handle,
+			'wpfaeventDescriptionNotice',
+			array(
+				'note'       => $note,
+				// wp_localize_script() decodes the "&amp;" that wp_nonce_url() adds, so the script gets a usable URL.
+				'restoreUrl' => Wpfaevent_Event_Description_Sync::get_restore_url( $current_post->ID ),
+				'i18n'       => array(
+					'restore'        => __( 'Restore from Eventyay', 'wpfaevent' ),
+					'confirm'        => __( 'Replace the description with the one from Eventyay?', 'wpfaevent' ),
+					'confirmUnsaved' => __( 'Replace the description with the one from Eventyay? Unsaved changes to this event will be lost.', 'wpfaevent' ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Whether the post is edited in the block editor.
+	 *
+	 * @since 1.0.0
+	 * @param WP_Post $post The post object.
+	 * @return bool
+	 */
+	private function uses_block_editor( $post ) {
+		return function_exists( 'use_block_editor_for_post' ) && use_block_editor_for_post( $post );
 	}
 
 	/**
