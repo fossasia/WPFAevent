@@ -76,11 +76,7 @@ class Wpfaevent_Event_Repository {
 
 		if ( $existing_id ) {
 			$post_data['ID'] = $existing_id;
-			$excerpt         = Wpfaevent_Event_Description::excerpt_to_save( $existing_id );
-			if ( null !== $excerpt ) {
-				$post_data['post_excerpt'] = $excerpt;
-			}
-			$saved_id = wp_update_post( $post_data, true );
+			$saved_id        = wp_update_post( $post_data, true );
 		} else {
 			$post_data['post_name'] = sanitize_title( $organizer_slug . '-' . $event_slug );
 			$saved_id               = wp_insert_post( $post_data, true );

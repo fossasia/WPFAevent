@@ -43,54 +43,63 @@ class Wpfaevent_Event_Description {
 	}
 
 	/**
-	 * Check whether an excerpt only holds a copy of the description.
-	 *
-	 * Imports and the Edit Event modal used to store the description in the
-	 * excerpt as well. A copy matches post_content as text, or is the only
-	 * description for events whose post_content is empty. Any other excerpt
-	 * is a summary someone wrote, and is kept.
+	 * Check whether an excerpt only repeats a description.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $excerpt Saved post_excerpt.
-	 * @param string $content Saved post_content.
-	 * @return bool True when the excerpt can be cleared.
+	 * @param string $excerpt     Excerpt HTML.
+	 * @param string $description Description HTML.
+	 * @return bool True when both have the same visible text.
 	 */
-	public static function is_description_copy( $excerpt, $content ) {
+	public static function is_description_copy( $excerpt, $description ) {
 		$excerpt_text = self::text( $excerpt );
 
-		if ( '' === $excerpt_text ) {
-			return false;
-		}
-
-		$content_text = self::text( $content );
-
-		return '' === $content_text || $excerpt_text === $content_text;
+		return '' !== $excerpt_text && self::text( $description ) === $excerpt_text;
 	}
 
 	/**
-	 * Get the excerpt to save with a new description.
+	 * Clear an event excerpt that only copies the description.
+	 *
+	 * Imports and the Edit Event modal used to store the description in the
+	 * excerpt as well. Running on every save covers imports, the modal, the
+	 * WordPress editor and REST alike. An excerpt matching the saved or the
+	 * incoming description is cleared; any other excerpt is a summary someone
+	 * wrote, and is kept.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $event_id Event post ID, or 0 for a new event.
-	 * @return string|null Empty string to clear a copied excerpt, or null to leave it alone.
+	 * @param array<string, mixed> $data    Slashed post data about to be saved.
+	 * @param array<string, mixed> $postarr Slashed post data passed to wp_insert_post().
+	 * @return array<string, mixed> Post data.
 	 */
-	public static function excerpt_to_save( $event_id ) {
-		$post = $event_id ? get_post( $event_id ) : null;
-
-		if ( ! $post ) {
-			return null;
+	public static function clear_copied_excerpt( $data, $postarr ) {
+		if ( ! isset( $data['post_type'], $data['post_excerpt'] ) || 'wpfa_event' !== $data['post_type'] ) {
+			return $data;
 		}
 
-		return self::is_description_copy( $post->post_excerpt, $post->post_content ) ? '' : null;
+		$excerpt      = wp_unslash( (string) $data['post_excerpt'] );
+		$descriptions = array( wp_unslash( isset( $data['post_content'] ) ? (string) $data['post_content'] : '' ) );
+		$saved        = ! empty( $postarr['ID'] ) ? get_post( absint( $postarr['ID'] ) ) : null;
+
+		if ( $saved ) {
+			$descriptions[] = $saved->post_content;
+		}
+
+		foreach ( $descriptions as $description ) {
+			if ( self::is_description_copy( $excerpt, $description ) ) {
+				$data['post_excerpt'] = '';
+				break;
+			}
+		}
+
+		return $data;
 	}
 
 	/**
 	 * Get the visible text of a description, with whitespace collapsed.
 	 *
-	 * Comparing text instead of markup treats a description re-saved by an
-	 * editor (different line breaks or paragraph tags) as the same description.
+	 * Tags count as word breaks, so a description re-saved by an editor (with
+	 * different line breaks or paragraph tags) still reads as the same text.
 	 *
 	 * @since 1.0.0
 	 *
@@ -98,7 +107,8 @@ class Wpfaevent_Event_Description {
 	 * @return string Plain text.
 	 */
 	private static function text( $html ) {
-		$text = html_entity_decode( wp_strip_all_tags( (string) $html ), ENT_QUOTES, 'UTF-8' );
+		$text = wp_strip_all_tags( str_replace( '<', ' <', (string) $html ) );
+		$text = html_entity_decode( $text, ENT_QUOTES, 'UTF-8' );
 
 		return trim( (string) preg_replace( '/[\s\x{00A0}]+/u', ' ', $text ) );
 	}

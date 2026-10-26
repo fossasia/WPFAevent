@@ -333,8 +333,13 @@ $header_vars = array(
 									<p class="wpfa-linked-event-meta"><?php echo esc_html( implode( ' | ', $event_meta ) ); ?></p>
 								<?php endif; ?>
 
-								<?php if ( has_excerpt( $event_id ) ) : ?>
-									<p><?php echo esc_html( get_the_excerpt( $event_id ) ); ?></p>
+								<?php
+								$event_summary = has_excerpt( $event_id )
+									? get_the_excerpt( $event_id )
+									: wp_trim_words( wp_strip_all_tags( Wpfaevent_Event_Description::get( $event_id ) ), 30, '…' );
+								?>
+								<?php if ( '' !== $event_summary ) : ?>
+									<p><?php echo esc_html( $event_summary ); ?></p>
 								<?php endif; ?>
 							</article>
 						<?php endforeach; ?>

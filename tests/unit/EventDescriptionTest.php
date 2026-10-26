@@ -29,16 +29,23 @@ class EventDescriptionTest extends WP_UnitTestCase {
 	 * @return int Event post ID.
 	 */
 	private function create_legacy_import( $slug, $description ) {
+		global $wpdb;
+
 		$event_id = $this->factory->post->create(
 			array(
 				'post_type'    => 'wpfa_event',
 				'post_name'    => 'fossasia-' . $slug,
 				'post_content' => $description,
-				'post_excerpt' => $description,
 			)
 		);
 		update_post_meta( $event_id, '_wpfa_eventyay_organizer_slug', 'fossasia' );
 		update_post_meta( $event_id, '_wpfa_eventyay_event_slug', $slug );
+
+		// Saving now clears a copied excerpt, so write the old stored state directly.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->update( $wpdb->posts, array( 'post_excerpt' => $description ), array( 'ID' => $event_id ) );
+		clean_post_cache( $event_id );
+		$this->assertSame( $description, get_post_field( 'post_excerpt', $event_id ) );
 
 		return $event_id;
 	}
@@ -73,7 +80,8 @@ class EventDescriptionTest extends WP_UnitTestCase {
 	public function test_is_description_copy() {
 		$this->assertTrue( Wpfaevent_Event_Description::is_description_copy( '<p>Same text.</p>', '<p>Same text.</p>' ) );
 		$this->assertTrue( Wpfaevent_Event_Description::is_description_copy( "<p>One.</p>\n<p>Two&nbsp;words.</p>", "One.\r\n\r\nTwo words." ) );
-		$this->assertTrue( Wpfaevent_Event_Description::is_description_copy( 'Only stored here.', '' ) );
+		$this->assertTrue( Wpfaevent_Event_Description::is_description_copy( '<p>One.</p><p>Two</p>', 'One. Two' ) );
+		$this->assertFalse( Wpfaevent_Event_Description::is_description_copy( 'A summary written by an admin.', '' ) );
 		$this->assertFalse( Wpfaevent_Event_Description::is_description_copy( 'A short summary.', '<p>The full description.</p>' ) );
 		$this->assertFalse( Wpfaevent_Event_Description::is_description_copy( '', '<p>The full description.</p>' ) );
 	}
@@ -169,20 +177,99 @@ class EventDescriptionTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Saving from the Edit Event modal clears a copied excerpt but keeps a written summary.
+	 * Any save, such as one from the WordPress editor, clears an excerpt that copied the old description.
 	 */
-	public function test_excerpt_to_save() {
-		$copied  = $this->create_legacy_import( 'modal-copied-event', '<p>Old description.</p>' );
-		$summary = $this->factory->post->create(
+	public function test_saving_new_content_clears_copied_excerpt() {
+		$event_id = $this->create_legacy_import( 'editor-save-event', '<p>Imported description.</p>' );
+
+		wp_update_post(
+			array(
+				'ID'           => $event_id,
+				'post_content' => '<p>Changed in the WordPress editor.</p>',
+			)
+		);
+
+		$this->assertSame( '', get_post_field( 'post_excerpt', $event_id ) );
+	}
+
+	/**
+	 * An excerpt saved as a copy of the new description is cleared too.
+	 */
+	public function test_excerpt_matching_new_content_is_cleared() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_content' => '<p>Same description.</p>',
+				'post_excerpt' => 'Same description.',
+			)
+		);
+
+		$this->assertSame( '', get_post_field( 'post_excerpt', $event_id ) );
+	}
+
+	/**
+	 * A summary someone wrote is kept, including on events with no post_content.
+	 */
+	public function test_written_summary_is_kept() {
+		$with_content    = $this->factory->post->create(
 			array(
 				'post_type'    => 'wpfa_event',
 				'post_content' => '<p>The full description.</p>',
 				'post_excerpt' => 'A summary written by an admin.',
 			)
 		);
+		$without_content = $this->factory->post->create(
+			array(
+				'post_type'    => 'wpfa_event',
+				'post_content' => '',
+				'post_excerpt' => 'A summary written by an admin.',
+			)
+		);
+		wp_update_post(
+			array(
+				'ID'           => $without_content,
+				'post_content' => '<p>A description added later.</p>',
+			)
+		);
 
-		$this->assertSame( '', Wpfaevent_Event_Description::excerpt_to_save( $copied ) );
-		$this->assertNull( Wpfaevent_Event_Description::excerpt_to_save( $summary ) );
-		$this->assertNull( Wpfaevent_Event_Description::excerpt_to_save( 0 ) );
+		$this->assertSame( 'A summary written by an admin.', get_post_field( 'post_excerpt', $with_content ) );
+		$this->assertSame( 'A summary written by an admin.', get_post_field( 'post_excerpt', $without_content ) );
+	}
+
+	/**
+	 * Other post types keep an excerpt that matches their content.
+	 */
+	public function test_other_post_types_are_not_changed() {
+		$post_id = $this->factory->post->create(
+			array(
+				'post_content' => 'Same text.',
+				'post_excerpt' => 'Same text.',
+			)
+		);
+
+		$this->assertSame( 'Same text.', get_post_field( 'post_excerpt', $post_id ) );
+	}
+
+	/**
+	 * Modals loaded before this change send the description as excerpt; the handler still reads it.
+	 */
+	public function test_handler_reads_description_from_content_or_legacy_excerpt() {
+		$handler = new Wpfaevent_Event_Handler();
+		$method  = new ReflectionMethod( $handler, 'get_posted_description' );
+		$method->setAccessible( true );
+		$saved_post = $_POST; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+		try {
+			$_POST = array(
+				'content' => '<p>New field.</p>',
+				'excerpt' => 'Old field.',
+			);
+			$this->assertSame( '<p>New field.</p>', $method->invoke( $handler ) );
+
+			$_POST = array( 'excerpt' => '<p>Old field.</p>' );
+			$this->assertSame( '<p>Old field.</p>', $method->invoke( $handler ) );
+		} finally {
+			$_POST = $saved_post;
+		}
 	}
 }

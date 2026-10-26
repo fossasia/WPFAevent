@@ -224,6 +224,9 @@ class Wpfaevent {
 
 		// Register Speaker meta fields.
 		$this->loader->add_action( 'init', 'Wpfaevent_Meta_Speaker', 'register' );
+
+		// Event descriptions live in post_content; clear excerpts that only copy them.
+		$this->loader->add_filter( 'wp_insert_post_data', 'Wpfaevent_Event_Description', 'clear_copied_excerpt', 10, 2 );
 	}
 
 	/**

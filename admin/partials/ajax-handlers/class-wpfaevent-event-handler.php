@@ -119,7 +119,7 @@ class Wpfaevent_Event_Handler {
 		}
 
 		$title             = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
-		$description       = isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '';
+		$description       = $this->get_posted_description();
 		$start_date        = isset( $_POST['start_date'] ) ? sanitize_text_field( wp_unslash( $_POST['start_date'] ) ) : '';
 		$location          = isset( $_POST['location'] ) ? sanitize_text_field( wp_unslash( $_POST['location'] ) ) : '';
 		$lead_text         = isset( $_POST['lead_text'] ) ? sanitize_text_field( wp_unslash( $_POST['lead_text'] ) ) : '';
@@ -270,7 +270,7 @@ class Wpfaevent_Event_Handler {
 		}
 
 		// Validate required fields - must match UI requirements.
-		$required_fields = array( 'title', 'content', 'start_date', 'location', 'lead_text', 'registration_link' );
+		$required_fields = array( 'title', 'start_date', 'location', 'lead_text', 'registration_link' );
 		foreach ( $required_fields as $field ) {
 			if ( empty( $_POST[ $field ] ) ) {
 				/* translators: %s: Field name */
@@ -301,7 +301,7 @@ class Wpfaevent_Event_Handler {
 
 		// Check and sanitize input fields.
 		$title   = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
-		$content = isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '';
+		$content = $this->get_posted_description();
 
 		if ( $this->is_blank_description( $content ) ) {
 			/* translators: %s: Field name */
@@ -314,12 +314,6 @@ class Wpfaevent_Event_Handler {
 			'post_title'   => $title,
 			'post_content' => $content,
 		);
-
-		// The description lives in post_content; clear an excerpt that only copied it.
-		$excerpt = Wpfaevent_Event_Description::excerpt_to_save( $event_id );
-		if ( null !== $excerpt ) {
-			$event_data['post_excerpt'] = $excerpt;
-		}
 
 		$update_result = wp_update_post( $event_data, true );
 
@@ -508,6 +502,26 @@ class Wpfaevent_Event_Handler {
 		}
 
 		update_post_meta( $post_id, $key, $value );
+	}
+
+	/**
+	 * Get the sanitized description sent by the event modals.
+	 *
+	 * Modals loaded before the description moved to post_content send it as
+	 * `excerpt`, so that is accepted when `content` is missing.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string Description HTML.
+	 */
+	private function get_posted_description() {
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Both callers verify the nonce first.
+		$field = isset( $_POST['content'] ) ? 'content' : 'excerpt';
+
+		$description = isset( $_POST[ $field ] ) ? wp_kses_post( wp_unslash( $_POST[ $field ] ) ) : '';
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
+
+		return $description;
 	}
 
 	/**
