@@ -221,6 +221,7 @@ class Wpfaevent_Templates {
 	 * Ensures:
 	 * - Only affects singular pages
 	 * - Template file exists before overriding WordPress resolution
+	 * - Locked password-protected events and speakers keep the theme template
 	 *
 	 * @since 1.0.0
 	 *
@@ -228,6 +229,12 @@ class Wpfaevent_Templates {
 	 * @return string Absolute path to the template to load.
 	 */
 	public static function load( $template ) {
+		// The plugin templates print post content directly, so let the theme
+		// render the core password form until the visitor unlocks the post.
+		if ( is_singular( array( 'wpfa_event', 'wpfa_speaker' ) ) && post_password_required( get_queried_object_id() ) ) {
+			return $template;
+		}
+
 		if ( is_singular( 'wpfa_speaker' ) ) {
 			$candidate = WPFAEVENT_PATH . 'public/templates/single-wpfa-speaker.php';
 

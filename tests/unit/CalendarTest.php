@@ -170,4 +170,47 @@ class CalendarTest extends WP_UnitTestCase {
 			Wpfaevent_Calendar::get_event_ics_url( $event_id )
 		);
 	}
+
+	/**
+	 * Password-protected event content should not leak into calendar exports.
+	 */
+	public function test_password_protected_event_omits_description_from_calendar_data() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'     => 'wpfa_event',
+				'post_status'   => 'publish',
+				'post_password' => 'secret',
+				'post_content'  => 'Private venue access code',
+			)
+		);
+		update_post_meta( $event_id, 'wpfa_event_start_date', '2026-06-05' );
+
+		$event = Wpfaevent_Calendar::get_event_calendar_data( $event_id );
+		$ics   = Wpfaevent_Calendar::generate_event_ics( $event_id );
+
+		$this->assertIsArray( $event );
+		$this->assertSame( '', $event['description'] );
+		$this->assertStringNotContainsString( 'Private venue access code', $ics );
+		$this->assertStringNotContainsString(
+			'Private venue access code',
+			Wpfaevent_Calendar::get_event_google_calendar_url( $event_id )
+		);
+	}
+
+	/**
+	 * Locked password-protected events should not use the plugin template.
+	 */
+	public function test_password_protected_event_keeps_theme_template() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'     => 'wpfa_event',
+				'post_status'   => 'publish',
+				'post_password' => 'secret',
+			)
+		);
+
+		$this->go_to( get_permalink( $event_id ) );
+
+		$this->assertSame( 'single.php', Wpfaevent_Templates::load( 'single.php' ) );
+	}
 }
