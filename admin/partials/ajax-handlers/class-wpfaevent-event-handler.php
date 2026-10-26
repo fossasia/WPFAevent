@@ -315,6 +315,11 @@ class Wpfaevent_Event_Handler {
 			'post_content' => $content,
 		);
 
+		// Without post_content, the modal showed the excerpt as the description, so this edit replaces it.
+		if ( '' === trim( (string) $event->post_content ) ) {
+			$event_data['post_excerpt'] = '';
+		}
+
 		$update_result = wp_update_post( $event_data, true );
 
 		if ( is_wp_error( $update_result ) || 0 === $update_result ) {

@@ -334,9 +334,11 @@ $header_vars = array(
 								<?php endif; ?>
 
 								<?php
-								$event_summary = has_excerpt( $event_id )
+								$event_full_text = Wpfaevent_Event_Description::get( $event_id );
+								// An excerpt that only copies the description (older imports) is not a summary.
+								$event_summary = has_excerpt( $event_id ) && ! Wpfaevent_Event_Description::is_description_copy( get_post_field( 'post_excerpt', $event_id ), $event_full_text )
 									? get_the_excerpt( $event_id )
-									: wp_trim_words( wp_strip_all_tags( Wpfaevent_Event_Description::get( $event_id ) ), 30, '…' );
+									: wp_trim_words( wp_strip_all_tags( $event_full_text ), 30, '…' );
 								?>
 								<?php if ( '' !== $event_summary ) : ?>
 									<p><?php echo esc_html( $event_summary ); ?></p>
