@@ -135,6 +135,7 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-partner-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-controller.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-description.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-template-controller.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-main-navigation-helper.php';
 

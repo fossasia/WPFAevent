@@ -779,9 +779,8 @@ class Wpfaevent_Calendar {
 	 */
 	private static function get_event_description( $event_id, $post ) {
 		$sources = array(
-			$post->post_excerpt,
+			Wpfaevent_Event_Description::get( $post ),
 			get_post_meta( $event_id, 'wpfa_event_lead_text', true ),
-			$post->post_content,
 		);
 
 		foreach ( $sources as $source ) {

@@ -525,8 +525,7 @@ class Wpfaevent_Event_Template_Controller {
 		}
 
 		$about_content = isset( $site_settings['about_section_content'] ) ? trim( (string) $site_settings['about_section_content'] ) : '';
-		$post_excerpt  = trim( (string) get_post_field( 'post_excerpt', $event_id ) );
-		$post_content  = trim( (string) get_post_field( 'post_content', $event_id ) );
+		$description   = Wpfaevent_Event_Description::get( $event_id );
 		$event_lead    = trim( (string) get_post_meta( $event_id, 'wpfa_event_lead_text', true ) );
 
 		if ( '' === $event_lead ) {
@@ -796,10 +795,9 @@ class Wpfaevent_Event_Template_Controller {
 			);
 		}
 
-		if ( '' !== $post_excerpt ) {
-			$about_content = $post_excerpt;
-		} elseif ( '' === $about_content ) {
-			$about_content = $post_content;
+		// The event description (post_content) is what the WordPress editor and the Edit Event modal change.
+		if ( '' !== $description ) {
+			$about_content = $description;
 		}
 
 		if ( '' === $event_lead && '' !== $about_content ) {

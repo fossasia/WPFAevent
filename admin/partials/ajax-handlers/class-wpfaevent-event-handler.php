@@ -119,7 +119,7 @@ class Wpfaevent_Event_Handler {
 		}
 
 		$title             = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
-		$excerpt           = isset( $_POST['excerpt'] ) ? wp_kses_post( wp_unslash( $_POST['excerpt'] ) ) : '';
+		$description       = isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '';
 		$start_date        = isset( $_POST['start_date'] ) ? sanitize_text_field( wp_unslash( $_POST['start_date'] ) ) : '';
 		$location          = isset( $_POST['location'] ) ? sanitize_text_field( wp_unslash( $_POST['location'] ) ) : '';
 		$lead_text         = isset( $_POST['lead_text'] ) ? sanitize_text_field( wp_unslash( $_POST['lead_text'] ) ) : '';
@@ -128,7 +128,7 @@ class Wpfaevent_Event_Handler {
 		// Validate required fields - must match UI requirements.
 		$required_fields = array(
 			'title'             => $title,
-			'excerpt'           => $this->is_blank_description( $excerpt ) ? '' : $excerpt,
+			'content'           => $this->is_blank_description( $description ) ? '' : $description,
 			'start_date'        => $start_date,
 			'location'          => $location,
 			'lead_text'         => $lead_text,
@@ -169,8 +169,7 @@ class Wpfaevent_Event_Handler {
 		// Create event post - now that all validations pass.
 		$event_data = array(
 			'post_title'   => $title,
-			'post_content' => isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '',
-			'post_excerpt' => $excerpt,
+			'post_content' => $description,
 			'post_type'    => 'wpfa_event',
 			'post_status'  => 'publish',
 		);
@@ -271,7 +270,7 @@ class Wpfaevent_Event_Handler {
 		}
 
 		// Validate required fields - must match UI requirements.
-		$required_fields = array( 'title', 'excerpt', 'start_date', 'location', 'lead_text', 'registration_link' );
+		$required_fields = array( 'title', 'content', 'start_date', 'location', 'lead_text', 'registration_link' );
 		foreach ( $required_fields as $field ) {
 			if ( empty( $_POST[ $field ] ) ) {
 				/* translators: %s: Field name */
@@ -302,22 +301,24 @@ class Wpfaevent_Event_Handler {
 
 		// Check and sanitize input fields.
 		$title   = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
-		$excerpt = isset( $_POST['excerpt'] ) ? wp_kses_post( wp_unslash( $_POST['excerpt'] ) ) : '';
 		$content = isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '';
 
-		if ( $this->is_blank_description( $excerpt ) ) {
+		if ( $this->is_blank_description( $content ) ) {
 			/* translators: %s: Field name */
-			wp_send_json_error( sprintf( esc_html__( 'Missing required field: %s', 'wpfaevent' ), 'excerpt' ) );
+			wp_send_json_error( sprintf( esc_html__( 'Missing required field: %s', 'wpfaevent' ), 'content' ) );
 		}
 
 		// Update post - only after image validation passes.
 		$event_data = array(
 			'ID'           => $event_id,
 			'post_title'   => $title,
-			'post_excerpt' => $excerpt,
+			'post_content' => $content,
 		);
-		if ( isset( $_POST['content'] ) ) {
-			$event_data['post_content'] = $content;
+
+		// The description lives in post_content; clear an excerpt that only copied it.
+		$excerpt = Wpfaevent_Event_Description::excerpt_to_save( $event_id );
+		if ( null !== $excerpt ) {
+			$event_data['post_excerpt'] = $excerpt;
 		}
 
 		$update_result = wp_update_post( $event_data, true );

@@ -312,14 +312,14 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Frontend-edited descriptions use the post excerpt on the event page.
+	 * The event page shows post_content, not an excerpt left over from older imports.
 	 */
-	public function test_event_template_uses_post_excerpt_before_post_content() {
+	public function test_event_template_uses_post_content_before_post_excerpt() {
 		$event_id = $this->factory->post->create(
 			array(
 				'post_type'    => 'wpfa_event',
-				'post_content' => 'The old event description.',
-				'post_excerpt' => 'The updated event description.',
+				'post_content' => 'The updated event description.',
+				'post_excerpt' => 'The old event description.',
 			)
 		);
 
@@ -329,9 +329,9 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * A frontend-edited description takes precedence over stale dashboard content.
+	 * The event description takes precedence over stale dashboard content.
 	 */
-	public function test_event_template_uses_edited_excerpt_before_stale_about_content() {
+	public function test_event_template_uses_description_before_stale_about_content() {
 		$event_id   = $this->factory->post->create(
 			array(
 				'post_type'    => 'wpfa_event',
@@ -435,7 +435,7 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 		$this->assertSame( 'The first sentence is the hero lead.', get_post_meta( $event_id['id'], 'wpfa_event_lead_text', true ) );
 		$this->assertSame( '', get_post_meta( $event_id['id'], '_event_lead_text', true ) );
 		$this->assertSame( 'The first sentence is the hero lead. The rest is event detail.', get_post_field( 'post_content', $event_id['id'] ) );
-		$this->assertSame( 'The first sentence is the hero lead. The rest is event detail.', get_post_field( 'post_excerpt', $event_id['id'] ) );
+		$this->assertSame( '', get_post_field( 'post_excerpt', $event_id['id'] ) );
 	}
 
 	/**
@@ -516,7 +516,7 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 		$this->assertIsArray( $result );
 		$this->assertSame( 'The active importer uses the parser.', get_post_meta( $result['id'], 'wpfa_event_lead_text', true ) );
 		$this->assertSame( 'The active importer uses the parser. More details follow.', get_post_field( 'post_content', $result['id'] ) );
-		$this->assertSame( 'The active importer uses the parser. More details follow.', get_post_field( 'post_excerpt', $result['id'] ) );
+		$this->assertSame( '', get_post_field( 'post_excerpt', $result['id'] ) );
 	}
 
 	/**
