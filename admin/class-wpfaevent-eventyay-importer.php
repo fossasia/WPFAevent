@@ -3346,7 +3346,6 @@ class Wpfaevent_Eventyay_Importer {
 			'post_type'    => 'wpfa_event',
 			'post_status'  => $post_status,
 			'post_content' => wp_kses_post( $description ),
-			'post_excerpt' => wp_kses_post( $description ),
 		);
 		$created           = false;
 

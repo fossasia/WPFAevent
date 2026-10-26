@@ -135,6 +135,7 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-partner-helper.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-controller.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-description.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-template-controller.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-main-navigation-helper.php';
 
@@ -223,6 +224,9 @@ class Wpfaevent {
 
 		// Register Speaker meta fields.
 		$this->loader->add_action( 'init', 'Wpfaevent_Meta_Speaker', 'register' );
+
+		// Event descriptions live in post_content; clear excerpts that only copy them.
+		$this->loader->add_filter( 'wp_insert_post_data', 'Wpfaevent_Event_Description', 'clear_copied_excerpt', 10, 2 );
 	}
 
 	/**

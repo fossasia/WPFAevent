@@ -333,8 +333,15 @@ $header_vars = array(
 									<p class="wpfa-linked-event-meta"><?php echo esc_html( implode( ' | ', $event_meta ) ); ?></p>
 								<?php endif; ?>
 
-								<?php if ( has_excerpt( $event_id ) ) : ?>
-									<p><?php echo esc_html( get_the_excerpt( $event_id ) ); ?></p>
+								<?php
+								$event_full_text = Wpfaevent_Event_Description::get( $event_id );
+								// An excerpt that only copies the description (older imports) is not a summary.
+								$event_summary = has_excerpt( $event_id ) && ! Wpfaevent_Event_Description::is_description_copy( get_post_field( 'post_excerpt', $event_id ), $event_full_text )
+									? get_the_excerpt( $event_id )
+									: wp_trim_words( wp_strip_all_tags( $event_full_text ), 30, '…' );
+								?>
+								<?php if ( '' !== $event_summary ) : ?>
+									<p><?php echo esc_html( $event_summary ); ?></p>
 								<?php endif; ?>
 							</article>
 						<?php endforeach; ?>
