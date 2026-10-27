@@ -137,6 +137,7 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-schedule-controller.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-event-template-controller.php';
 		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-main-navigation-helper.php';
+		require_once plugin_dir_path( __FILE__ ) . 'helpers/class-wpfaevent-protected-content.php';
 
 		// Eventyay Importer modular classes.
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-jsonapi-resource-utils.php';
@@ -361,6 +362,10 @@ class Wpfaevent {
 		// Calendar export endpoint.
 		$this->loader->add_action( 'rest_api_init', 'Wpfaevent_Calendar', 'register_rest_routes' );
 		$this->loader->add_filter( 'rest_pre_serve_request', 'Wpfaevent_Calendar', 'serve_rest_calendar', 10, 4 );
+
+		// Hide protected event and speaker meta from the REST API until unlocked.
+		$this->loader->add_filter( 'rest_prepare_wpfa_event', 'Wpfaevent_Protected_Content', 'filter_rest_response', 10, 3 );
+		$this->loader->add_filter( 'rest_prepare_wpfa_speaker', 'Wpfaevent_Protected_Content', 'filter_rest_response', 10, 3 );
 	}
 
 	/**
