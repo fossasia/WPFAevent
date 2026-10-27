@@ -198,9 +198,9 @@ class CalendarTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Locked password-protected events should not use the plugin template.
+	 * Locked password-protected events should use the password form template.
 	 */
-	public function test_password_protected_event_keeps_theme_template() {
+	public function test_password_protected_event_uses_locked_template() {
 		$event_id = $this->factory->post->create(
 			array(
 				'post_type'     => 'wpfa_event',
@@ -211,6 +211,9 @@ class CalendarTest extends WP_UnitTestCase {
 
 		$this->go_to( get_permalink( $event_id ) );
 
-		$this->assertSame( 'single.php', Wpfaevent_Templates::load( 'single.php' ) );
+		$this->assertSame(
+			WPFAEVENT_PATH . 'public/templates/single-wpfa-locked.php',
+			Wpfaevent_Templates::load( 'single.php' )
+		);
 	}
 }

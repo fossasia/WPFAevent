@@ -147,4 +147,29 @@ class ProtectedContentTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'Private speaker bio', $html );
 		$this->assertStringNotContainsString( 'Private talk abstract', $html );
 	}
+
+	/**
+	 * The locked template shows the password form and no protected text.
+	 */
+	public function test_locked_template_shows_only_password_form() {
+		$event_id = $this->protected_event();
+		wp_update_post(
+			array(
+				'ID'           => $event_id,
+				'post_content' => 'Private event content',
+			)
+		);
+
+		foreach ( array( $event_id, $this->protected_speaker() ) as $post_id ) {
+			$this->go_to( get_permalink( $post_id ) );
+
+			ob_start();
+			include WPFAEVENT_PATH . 'public/templates/single-wpfa-locked.php';
+			$html = ob_get_clean();
+
+			$this->assertStringContainsString( 'post-password-form', $html );
+			$this->assertStringContainsString( get_the_title( $post_id ), $html );
+			$this->assertDoesNotMatchRegularExpression( '/Private (event content|lead text|excerpt|speaker bio|talk abstract)/', $html );
+		}
+	}
 }
