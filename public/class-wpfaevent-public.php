@@ -533,6 +533,11 @@ class Wpfaevent_Public {
 			wp_enqueue_style( $this->plugin_name . '-events' );
 			wp_enqueue_style( $this->plugin_name . '-bookmark' );
 			wp_enqueue_script( $this->plugin_name . '-events' );
+
+			// The event modals, shown to the same users, edit the description in the WordPress editor.
+			if ( current_user_can( 'manage_options' ) ) {
+				wp_enqueue_editor();
+			}
 		}
 
 		if ( is_singular( 'wpfa_speaker' ) || is_singular( 'wpfa_event' ) ) {

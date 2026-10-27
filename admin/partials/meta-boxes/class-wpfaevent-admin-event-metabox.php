@@ -491,39 +491,41 @@ class Wpfaevent_Admin_Event_Metabox {
 
 		$this->schedule_sessions = $sessions;
 		?>
-		<table class="wp-list-table widefat fixed striped" id="wpfaevent-schedule-sessions-table">
-			<thead>
-				<tr>
-					<th class="wpfa-col-date"><?php esc_html_e( 'Date', 'wpfaevent' ); ?></th>
-					<th class="wpfa-col-start-time"><?php esc_html_e( 'Start Time', 'wpfaevent' ); ?></th>
-					<th class="wpfa-col-end-time"><?php esc_html_e( 'End Time', 'wpfaevent' ); ?></th>
-					<th><?php esc_html_e( 'Session Title', 'wpfaevent' ); ?></th>
-					<th><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></th>
-					<th class="wpfa-col-track"><?php esc_html_e( 'Track', 'wpfaevent' ); ?></th>
-					<th class="wpfa-col-room"><?php esc_html_e( 'Room', 'wpfaevent' ); ?></th>
-					<th class="wpfa-col-action"><?php esc_html_e( 'Action', 'wpfaevent' ); ?></th>
-				</tr>
-			</thead>
-			<tbody id="wpfaevent-schedule-sessions-body">
-				<?php
-				$sessions = $this->schedule_sessions;
-				if ( ! empty( $sessions ) ) :
-					foreach ( $sessions as $index => $sess ) :
-						?>
-						<tr>
-							<td><input type="date" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][date]" value="<?php echo esc_attr( $sess['date'] ); ?>" required></td>
-							<td><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][start_time]" value="<?php echo esc_attr( $sess['start_time'] ); ?>" required></td>
-							<td><input type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][end_time]" value="<?php echo esc_attr( $sess['end_time'] ); ?>"></td>
-							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][title]" value="<?php echo esc_attr( $sess['title'] ); ?>" required></td>
-							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][speakers]" value="<?php echo esc_attr( $sess['speakers'] ); ?>"></td>
-							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][track]" value="<?php echo esc_attr( $sess['track'] ); ?>"></td>
-							<td><input type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][room]" value="<?php echo esc_attr( $sess['room'] ); ?>"></td>
-							<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a></td>
-						</tr>
-					<?php endforeach; ?>
-				<?php endif; ?>
-			</tbody>
-		</table>
+		<div class="wpfaevent-schedule-table-wrap">
+			<table class="wp-list-table widefat fixed striped" id="wpfaevent-schedule-sessions-table">
+				<thead>
+					<tr>
+						<th class="wpfa-col-date"><?php esc_html_e( 'Date', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-start-time"><?php esc_html_e( 'Start Time', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-end-time"><?php esc_html_e( 'End Time', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-title"><?php esc_html_e( 'Session Title', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-speakers"><?php esc_html_e( 'Speakers', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-track"><?php esc_html_e( 'Track', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-room"><?php esc_html_e( 'Room', 'wpfaevent' ); ?></th>
+						<th class="wpfa-col-action"><?php esc_html_e( 'Action', 'wpfaevent' ); ?></th>
+					</tr>
+				</thead>
+				<tbody id="wpfaevent-schedule-sessions-body">
+					<?php
+					$sessions = $this->schedule_sessions;
+					if ( ! empty( $sessions ) ) :
+						foreach ( $sessions as $index => $sess ) :
+							?>
+							<tr>
+								<td class="wpfa-col-date" data-label="<?php esc_attr_e( 'Date', 'wpfaevent' ); ?>"><input aria-label="<?php esc_attr_e( 'Date', 'wpfaevent' ); ?>" type="date" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][date]" value="<?php echo esc_attr( $sess['date'] ); ?>" required></td>
+								<td class="wpfa-col-start-time" data-label="<?php esc_attr_e( 'Start Time', 'wpfaevent' ); ?>"><input aria-label="<?php esc_attr_e( 'Start Time', 'wpfaevent' ); ?>" type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][start_time]" value="<?php echo esc_attr( $sess['start_time'] ); ?>" required></td>
+								<td class="wpfa-col-end-time" data-label="<?php esc_attr_e( 'End Time', 'wpfaevent' ); ?>"><input aria-label="<?php esc_attr_e( 'End Time', 'wpfaevent' ); ?>" type="time" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][end_time]" value="<?php echo esc_attr( $sess['end_time'] ); ?>"></td>
+								<td class="wpfa-col-title" data-label="<?php esc_attr_e( 'Session Title', 'wpfaevent' ); ?>"><input aria-label="<?php esc_attr_e( 'Session Title', 'wpfaevent' ); ?>" type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][title]" value="<?php echo esc_attr( $sess['title'] ); ?>" required></td>
+								<td class="wpfa-col-speakers" data-label="<?php esc_attr_e( 'Speakers', 'wpfaevent' ); ?>"><input aria-label="<?php esc_attr_e( 'Speakers', 'wpfaevent' ); ?>" type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][speakers]" value="<?php echo esc_attr( $sess['speakers'] ); ?>"></td>
+								<td class="wpfa-col-track" data-label="<?php esc_attr_e( 'Track', 'wpfaevent' ); ?>"><input aria-label="<?php esc_attr_e( 'Track', 'wpfaevent' ); ?>" type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][track]" value="<?php echo esc_attr( $sess['track'] ); ?>"></td>
+								<td class="wpfa-col-room" data-label="<?php esc_attr_e( 'Room', 'wpfaevent' ); ?>"><input aria-label="<?php esc_attr_e( 'Room', 'wpfaevent' ); ?>" type="text" name="wpfa_schedule_sessions[<?php echo absint( $index ); ?>][room]" value="<?php echo esc_attr( $sess['room'] ); ?>"></td>
+								<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session"><?php esc_html_e( 'Remove', 'wpfaevent' ); ?></a></td>
+							</tr>
+						<?php endforeach; ?>
+					<?php endif; ?>
+				</tbody>
+			</table>
+		</div>
 		<button type="button" class="button button-primary" id="wpfaevent-add-session-row">
 			<?php esc_html_e( 'Add Session', 'wpfaevent' ); ?>
 		</button>
@@ -535,16 +537,23 @@ class Wpfaevent_Admin_Event_Metabox {
 				$('#wpfaevent-add-session-row').on('click', function(e) {
 					e.preventDefault();
 					const html = `<tr>
-						<td><input type="date" name="wpfa_schedule_sessions[${sessionIndex}][date]" required></td>
-						<td><input type="time" name="wpfa_schedule_sessions[${sessionIndex}][start_time]" required></td>
-						<td><input type="time" name="wpfa_schedule_sessions[${sessionIndex}][end_time]"></td>
-						<td><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][title]" required></td>
-						<td><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][speakers]"></td>
-						<td><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][track]"></td>
-						<td><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][room]"></td>
+						<td class="wpfa-col-date"><input type="date" name="wpfa_schedule_sessions[${sessionIndex}][date]" required></td>
+						<td class="wpfa-col-start-time"><input type="time" name="wpfa_schedule_sessions[${sessionIndex}][start_time]" required></td>
+						<td class="wpfa-col-end-time"><input type="time" name="wpfa_schedule_sessions[${sessionIndex}][end_time]"></td>
+						<td class="wpfa-col-title"><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][title]" required></td>
+						<td class="wpfa-col-speakers"><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][speakers]"></td>
+						<td class="wpfa-col-track"><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][track]"></td>
+						<td class="wpfa-col-room"><input type="text" name="wpfa_schedule_sessions[${sessionIndex}][room]"></td>
 						<td class="wpfa-col-action"><a href="#" class="wpfaevent-remove-session">Remove</a></td>
 					</tr>`;
-					$('#wpfaevent-schedule-sessions-body').append(html);
+					const $row = $(html);
+					const $headers = $('#wpfaevent-schedule-sessions-table thead th');
+					// Reuse the translated header text as each cell's card-layout label and its input's accessible name.
+					$row.children('td').not('.wpfa-col-action').each(function(i) {
+						const label = $headers.eq(i).text();
+						$(this).attr('data-label', label).find('input').attr('aria-label', label);
+					});
+					$('#wpfaevent-schedule-sessions-body').append($row);
 					sessionIndex++;
 				});
 
@@ -873,6 +882,19 @@ class Wpfaevent_Admin_Event_Metabox {
 		<template id="wpfaevent-nav-subitem-template">
 			<?php $this->render_nav_subitem_row( '__PIDX__', '__SIDX__', array(), $wp_pages ); ?>
 		</template>
+		<div class="screen-reader-text">
+			<?php
+			wp_editor(
+				'',
+				'wpfa_nav_editor_base',
+				array(
+					'quicktags'     => true,
+					'media_buttons' => false,
+					'textarea_rows' => 6,
+				)
+			);
+			?>
+		</div>
 		<?php
 	}
 
@@ -927,21 +949,36 @@ class Wpfaevent_Admin_Event_Metabox {
 				</div>
 				<div class="<?php echo esc_attr( $page_row_class ); ?>">
 					<label><?php esc_html_e( 'Select Existing Page', 'wpfaevent' ); ?></label>
-					<select name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][page_id]" class="wpfaevent-nav-page-select">
-						<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
-						<?php foreach ( $wp_pages as $p ) : ?>
-							<option value="<?php echo absint( $p->ID ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>" <?php selected( $page_id, $p->ID ); ?>>
-								<?php echo esc_html( $p->post_title ); ?>
-							</option>
-						<?php endforeach; ?>
-					</select>
+					<?php $this->render_nav_page_select( 'wpfa_custom_nav_items[' . (string) $i . '][page_id]', 'wpfaevent-nav-page-select', $page_id, $wp_pages ); ?>
 				</div>
 				<div class="<?php echo esc_attr( $custom_page_row_class ); ?>">
 					<input type="hidden" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][slug]" value="<?php echo esc_attr( $slug ); ?>">
 					<label><?php esc_html_e( 'Page Heading', 'wpfaevent' ); ?></label>
 					<input type="text" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>">
 					<label class="wpfaevent-nav-content-label"><?php esc_html_e( 'Page Content & Bullets', 'wpfaevent' ); ?></label>
-					<textarea name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][content]" rows="4" placeholder="<?php esc_attr_e( "Enter page details, paragraphs, or bullet points:\n- Travel grant details\n- Application requirements\n- Deadline: Oct 30", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
+					<?php
+					$is_template = ! is_numeric( $i );
+					$editor_id   = 'wpfa_custom_nav_content_' . ( $is_template ? '${navIndex}' : preg_replace( '/[^a-z0-9_]/i', '_', (string) $i ) );
+					if ( ! $is_template && 'custom_page' === $type ) {
+						wp_editor(
+							$content,
+							$editor_id,
+							array(
+								'textarea_name' => 'wpfa_custom_nav_items[' . esc_attr( (string) $i ) . '][content]',
+								'textarea_rows' => 6,
+								'media_buttons' => false,
+								'tinymce'       => array(
+									'wpautop' => true,
+								),
+								'quicktags'     => true,
+							)
+						);
+					} else {
+						?>
+						<textarea id="<?php echo esc_attr( $editor_id ); ?>" name="wpfa_custom_nav_items[<?php echo esc_attr( (string) $i ); ?>][content]" class="wpfaevent-custom-page-content" rows="6" placeholder="<?php esc_attr_e( "Enter page details, paragraphs, or bullet points:\n- Travel grant details\n- Application requirements\n- Deadline: Oct 30", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
+						<?php
+					}
+					?>
 				</div>
 				<div class="<?php echo esc_attr( $dropdown_row_class ); ?>">
 					<label><strong><?php esc_html_e( 'Dropdown Sub-Items', 'wpfaevent' ); ?></strong></label>
@@ -1024,23 +1061,119 @@ class Wpfaevent_Admin_Event_Metabox {
 				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[href]" value="<?php echo esc_attr( $href ); ?>" placeholder="<?php esc_attr_e( 'Sub-Item URL (e.g. /events/ or https://...)', 'wpfaevent' ); ?>">
 			</div>
 			<div class="<?php echo esc_attr( $sub_page_class ); ?>">
-				<select name="<?php echo esc_attr( $prefix ); ?>[page_id]" class="wpfaevent-sub-page-select">
-					<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
-					<?php foreach ( $wp_pages as $p ) : ?>
-						<option value="<?php echo absint( $p->ID ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>" <?php selected( $page_id, $p->ID ); ?>>
-							<?php echo esc_html( $p->post_title ); ?>
-						</option>
-					<?php endforeach; ?>
-				</select>
+				<?php $this->render_nav_page_select( $prefix . '[page_id]', 'wpfaevent-sub-page-select', $page_id, $wp_pages ); ?>
 			</div>
 			<div class="<?php echo esc_attr( $sub_custom_class ); ?>">
 				<input type="hidden" name="<?php echo esc_attr( $prefix ); ?>[slug]" value="<?php echo esc_attr( $slug ); ?>">
 				<input type="text" name="<?php echo esc_attr( $prefix ); ?>[title]" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'Page Heading (e.g. Fund Information)', 'wpfaevent' ); ?>">
-				<textarea name="<?php echo esc_attr( $prefix ); ?>[content]" rows="3" placeholder="<?php esc_attr_e( "Page details, text, or bullet points:\n- Travel grant details\n- Application requirements", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
+				<?php
+				$is_sub_template = ! is_numeric( $i ) || ! is_numeric( $si );
+				$sub_editor_id   = 'wpfa_custom_nav_sub_content_' . ( $is_sub_template ? '__PIDX_____SIDX__' : preg_replace( '/[^a-z0-9_]/i', '_', (string) $i ) . '_' . preg_replace( '/[^a-z0-9_]/i', '_', (string) $si ) );
+				if ( ! $is_sub_template && 'custom_page' === $type ) {
+					wp_editor(
+						$content,
+						$sub_editor_id,
+						array(
+							'textarea_name' => esc_attr( $prefix ) . '[content]',
+							'textarea_rows' => 4,
+							'media_buttons' => false,
+							'tinymce'       => array(
+								'wpautop' => true,
+							),
+							'quicktags'     => true,
+						)
+					);
+				} else {
+					?>
+					<textarea id="<?php echo esc_attr( $sub_editor_id ); ?>" name="<?php echo esc_attr( $prefix ); ?>[content]" class="wpfaevent-custom-page-content" rows="3" placeholder="<?php esc_attr_e( "Page details, text, or bullet points:\n- Travel grant details\n- Application requirements", 'wpfaevent' ); ?>"><?php echo esc_textarea( $content ); ?></textarea>
+					<?php
+				}
+				?>
 			</div>
 		</div>
 
 		<?php
+	}
+
+	/**
+	 * Render the page picker for an "Existing Page" nav item or sub-item.
+	 *
+	 * A saved page that is no longer published is kept as the selected option, so saving
+	 * the event does not lose it, and a warning tells the organizer it is hidden from the
+	 * public menu until the page is published again.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string         $name         Field name.
+	 * @param string         $select_class Select CSS class.
+	 * @param int            $page_id      Saved page ID.
+	 * @param array<WP_Post> $wp_pages     Published pages.
+	 * @return void
+	 */
+	private function render_nav_page_select( $name, $select_class, $page_id, $wp_pages = array() ) {
+		$unavailable_label   = '';
+		$unavailable_message = '';
+
+		if ( $page_id > 0 && ! Wpfaevent_Main_Navigation_Helper::is_nav_page_available( $page_id ) ) {
+			$page = get_post( $page_id );
+
+			if ( ! $page || 'page' !== $page->post_type ) {
+				/* translators: %d: page ID. */
+				$unavailable_label   = sprintf( __( 'Deleted page (#%d)', 'wpfaevent' ), $page_id );
+				$unavailable_message = __( 'The selected page has been deleted, so this item is hidden from the public menu. Choose another page or remove this item.', 'wpfaevent' );
+			} elseif ( 'trash' === $page->post_status ) {
+				/* translators: %s: page title. */
+				$unavailable_label   = sprintf( __( '%s (in trash)', 'wpfaevent' ), $this->get_nav_page_title( $page ) );
+				$unavailable_message = __( 'The selected page is in the trash, so this item is hidden from the public menu. Restore the page, choose another page, or remove this item.', 'wpfaevent' );
+			} else {
+				/* translators: %s: page title. */
+				$unavailable_label   = sprintf( __( '%s (not published)', 'wpfaevent' ), $this->get_nav_page_title( $page ) );
+				$unavailable_message = __( 'The selected page is no longer published, so this item is hidden from the public menu. Publish the page again, choose another page, or remove this item.', 'wpfaevent' );
+			}
+		}
+		?>
+		<select name="<?php echo esc_attr( $name ); ?>" class="<?php echo esc_attr( $select_class ); ?>">
+			<option value=""><?php esc_html_e( '-- Select Existing Page --', 'wpfaevent' ); ?></option>
+			<?php if ( '' !== $unavailable_label ) : ?>
+				<option value="<?php echo absint( $page_id ); ?>" data-unavailable="1" selected>
+					<?php echo esc_html( $unavailable_label ); ?>
+				</option>
+			<?php endif; ?>
+			<?php foreach ( $wp_pages as $p ) : ?>
+				<option value="<?php echo absint( $p->ID ); ?>" data-title="<?php echo esc_attr( $p->post_title ); ?>" <?php selected( $page_id, $p->ID ); ?>>
+					<?php echo esc_html( $p->post_title ); ?>
+				</option>
+			<?php endforeach; ?>
+		</select>
+		<?php if ( '' !== $unavailable_message ) : ?>
+			<p class="wpfaevent-nav-page-warning" role="alert"><?php echo esc_html( $unavailable_message ); ?></p>
+		<?php endif; ?>
+		<?php
+	}
+
+	/**
+	 * Get a page's title for the navigation page picker.
+	 *
+	 * Falls back to the page ID for untitled pages, and for pages the current user
+	 * cannot read (for example someone else's private page), so their titles are not exposed.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WP_Post $page Page post object.
+	 * @return string
+	 */
+	private function get_nav_page_title( $page ) {
+		if ( ! current_user_can( 'read_post', $page->ID ) ) {
+			/* translators: %d: page ID. */
+			return sprintf( __( 'Unavailable page #%d', 'wpfaevent' ), $page->ID );
+		}
+
+		if ( '' !== trim( $page->post_title ) ) {
+			return $page->post_title;
+		}
+
+		/* translators: %d: page ID. */
+		return sprintf( __( '(no title #%d)', 'wpfaevent' ), $page->ID );
 	}
 
 	/**

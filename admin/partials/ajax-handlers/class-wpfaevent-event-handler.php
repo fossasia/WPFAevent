@@ -129,7 +129,7 @@ class Wpfaevent_Event_Handler {
 		// Validate required fields - must match UI requirements.
 		$required_fields = array(
 			'title'             => $title,
-			'excerpt'           => $excerpt,
+			'excerpt'           => $this->is_blank_description( $excerpt ) ? '' : $excerpt,
 			'start_date'        => $start_date,
 			'location'          => $location,
 			'lead_text'         => $lead_text,
@@ -319,6 +319,11 @@ class Wpfaevent_Event_Handler {
 		$title   = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
 		$excerpt = isset( $_POST['excerpt'] ) ? wp_kses_post( wp_unslash( $_POST['excerpt'] ) ) : '';
 		$content = isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '';
+
+		if ( $this->is_blank_description( $excerpt ) ) {
+			/* translators: %s: Field name */
+			wp_send_json_error( sprintf( esc_html__( 'Missing required field: %s', 'wpfaevent' ), 'excerpt' ) );
+		}
 
 		// Update post - only after image validation passes.
 		$event_data = array(
@@ -543,6 +548,23 @@ class Wpfaevent_Event_Handler {
 		}
 
 		update_post_meta( $post_id, $key, $value );
+	}
+
+	/**
+	 * Check whether a description has no visible text.
+	 *
+	 * The visual editor can send markup such as `<p>&nbsp;</p>` for a field
+	 * that looks empty, so tags, entities and whitespace are ignored.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $description Description HTML.
+	 * @return bool True when nothing would be shown.
+	 */
+	private function is_blank_description( $description ) {
+		$text = html_entity_decode( wp_strip_all_tags( $description ), ENT_QUOTES, 'UTF-8' );
+
+		return '' === (string) preg_replace( '/[\s\x{00A0}]+/u', '', $text );
 	}
 
 	/**
