@@ -372,7 +372,7 @@ class Wpfaevent_Calendar {
 		$title        = get_the_title( $event_id );
 		$external_url = esc_url_raw( get_post_meta( $event_id, 'wpfa_event_url', true ) );
 		$url          = $external_url ? $external_url : get_permalink( $event_id );
-		$description  = self::get_event_description( $event_id, $post );
+		$description  = post_password_required( $post ) ? '' : self::get_event_description( $event_id, $post );
 		$location     = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_location', true ) );
 
 		return array(

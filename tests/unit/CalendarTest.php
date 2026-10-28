@@ -170,4 +170,71 @@ class CalendarTest extends WP_UnitTestCase {
 			Wpfaevent_Calendar::get_event_ics_url( $event_id )
 		);
 	}
+
+	/**
+	 * Password-protected event content should not leak into calendar exports.
+	 */
+	public function test_password_protected_event_omits_description_from_calendar_data() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'     => 'wpfa_event',
+				'post_status'   => 'publish',
+				'post_password' => 'secret',
+				'post_content'  => 'Private venue access code',
+			)
+		);
+		update_post_meta( $event_id, 'wpfa_event_start_date', '2026-06-05' );
+
+		$event = Wpfaevent_Calendar::get_event_calendar_data( $event_id );
+		$ics   = Wpfaevent_Calendar::generate_event_ics( $event_id );
+
+		$this->assertIsArray( $event );
+		$this->assertSame( '', $event['description'] );
+		$this->assertStringNotContainsString( 'Private venue access code', $ics );
+		$this->assertStringNotContainsString(
+			'Private venue access code',
+			Wpfaevent_Calendar::get_event_google_calendar_url( $event_id )
+		);
+	}
+
+	/**
+	 * Locked password-protected events should use the password form template.
+	 */
+	public function test_password_protected_event_uses_locked_template() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'     => 'wpfa_event',
+				'post_status'   => 'publish',
+				'post_password' => 'secret',
+			)
+		);
+
+		$this->go_to( get_permalink( $event_id ) );
+
+		$this->assertSame(
+			WPFAEVENT_PATH . 'public/templates/single-wpfa-locked.php',
+			Wpfaevent_Templates::load( 'single.php' )
+		);
+	}
+
+	/**
+	 * Users who can edit a locked event should still get the event template.
+	 */
+	public function test_password_protected_event_uses_event_template_for_editors() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'     => 'wpfa_event',
+				'post_status'   => 'publish',
+				'post_password' => 'secret',
+			)
+		);
+
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
+		$this->go_to( get_permalink( $event_id ) );
+
+		$this->assertSame(
+			WPFAEVENT_PATH . 'public/templates/single-wpfa-event.php',
+			Wpfaevent_Templates::load( 'single.php' )
+		);
+	}
 }
