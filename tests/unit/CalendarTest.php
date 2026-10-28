@@ -216,4 +216,25 @@ class CalendarTest extends WP_UnitTestCase {
 			Wpfaevent_Templates::load( 'single.php' )
 		);
 	}
+
+	/**
+	 * Users who can edit a locked event should still get the event template.
+	 */
+	public function test_password_protected_event_uses_event_template_for_editors() {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'     => 'wpfa_event',
+				'post_status'   => 'publish',
+				'post_password' => 'secret',
+			)
+		);
+
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
+		$this->go_to( get_permalink( $event_id ) );
+
+		$this->assertSame(
+			WPFAEVENT_PATH . 'public/templates/single-wpfa-event.php',
+			Wpfaevent_Templates::load( 'single.php' )
+		);
+	}
 }

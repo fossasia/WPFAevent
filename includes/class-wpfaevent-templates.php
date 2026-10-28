@@ -230,8 +230,8 @@ class Wpfaevent_Templates {
 	 */
 	public static function load( $template ) {
 		// The single templates print post content directly, so show only the
-		// password form until the visitor unlocks the post.
-		if ( is_singular( array( 'wpfa_event', 'wpfa_speaker' ) ) && post_password_required( get_queried_object_id() ) ) {
+		// password form until the visitor unlocks the post. Editors are exempt.
+		if ( is_singular( array( 'wpfa_event', 'wpfa_speaker' ) ) && Wpfaevent_Protected_Content::is_locked( get_queried_object_id() ) ) {
 			$locked = WPFAEVENT_PATH . 'public/templates/single-wpfa-locked.php';
 
 			return file_exists( $locked ) ? $locked : $template;
