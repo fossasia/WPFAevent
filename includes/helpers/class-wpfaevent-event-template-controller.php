@@ -796,10 +796,16 @@ class Wpfaevent_Event_Template_Controller {
 			);
 		}
 
-		if ( '' !== $post_excerpt ) {
-			$about_content = $post_excerpt;
-		} elseif ( '' === $about_content ) {
+		// post_content is the single source for the event description (#369):
+		// a stored excerpt (usually an import-era copy of the description)
+		// must never override it. The excerpt remains only as a last-resort
+		// fallback for legacy events that have no content at all.
+		if ( '' === $about_content ) {
 			$about_content = $post_content;
+		}
+
+		if ( '' === $about_content ) {
+			$about_content = $post_excerpt;
 		}
 
 		if ( '' === $event_lead && '' !== $about_content ) {

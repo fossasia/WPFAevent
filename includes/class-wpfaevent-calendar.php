@@ -778,10 +778,12 @@ class Wpfaevent_Calendar {
 	 * @return string
 	 */
 	private static function get_event_description( $event_id, $post ) {
+		// post_content is the canonical event description (#369); the lead
+		// text and a stored excerpt are only fallbacks.
 		$sources = array(
-			$post->post_excerpt,
-			get_post_meta( $event_id, 'wpfa_event_lead_text', true ),
 			$post->post_content,
+			get_post_meta( $event_id, 'wpfa_event_lead_text', true ),
+			$post->post_excerpt,
 		);
 
 		foreach ( $sources as $source ) {

@@ -36,6 +36,42 @@ class EventHandlerDescriptionTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Call the private request description reader.
+	 *
+	 * @param string|null $content Sanitized content field value.
+	 * @param string|null $excerpt Sanitized legacy excerpt field value.
+	 * @return string
+	 */
+	private function request_description( $content, $excerpt ) {
+		$handler = new Wpfaevent_Event_Handler();
+		$method  = new ReflectionMethod( $handler, 'request_description' );
+		$method->setAccessible( true );
+
+		return $method->invoke( $handler, $content, $excerpt );
+	}
+
+	/**
+	 * The description is read from the canonical content field (#369).
+	 */
+	public function test_description_comes_from_content_field() {
+		$this->assertSame( '<p>From content.</p>', $this->request_description( '<p>From content.</p>', '<p>From excerpt.</p>' ) );
+	}
+
+	/**
+	 * The legacy excerpt field is still accepted as a fallback.
+	 */
+	public function test_legacy_excerpt_field_is_still_accepted() {
+		$this->assertSame( '<p>Legacy description.</p>', $this->request_description( null, '<p>Legacy description.</p>' ) );
+	}
+
+	/**
+	 * No submitted description resolves to an empty string.
+	 */
+	public function test_description_defaults_to_empty_string() {
+		$this->assertSame( '', $this->request_description( null, null ) );
+	}
+
+	/**
 	 * Any visible text counts as a description.
 	 */
 	public function test_visible_text_is_not_blank() {
