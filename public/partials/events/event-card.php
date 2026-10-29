@@ -36,8 +36,15 @@ $event_all_day     = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Eve
 $event_place       = get_post_meta( $event_id, 'wpfa_event_location', true );
 $event_lead_text   = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_lead_text', true ) );
 $event_excerpt     = trim( (string) get_post_field( 'post_excerpt', $event_id ) );
+$post_content      = trim( (string) get_post_field( 'post_content', $event_id ) );
 $event_description = $event_lead_text ? $event_lead_text : get_the_excerpt( $event_id );
-$featured_img_url  = get_the_post_thumbnail_url( $event_id, 'large' );
+if ( ! $event_lead_text && '' !== $event_excerpt && $event_excerpt === $post_content ) {
+	// The stored excerpt is only an import-era copy of the description
+	// (#369): build the teaser from the canonical post_content so edits
+	// made in either editor are reflected here.
+	$event_description = wp_trim_words( wp_strip_all_tags( $post_content ), 55, '…' );
+}
+$featured_img_url = get_the_post_thumbnail_url( $event_id, 'large' );
 if ( ! $featured_img_url ) {
 	$featured_img_url = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
 }
@@ -129,7 +136,7 @@ $is_bookmarked       = class_exists( 'Wpfaevent_User_Preferences_Service' ) && W
 	data-end-date="<?php echo esc_attr( $event_end_date ); ?>"
 	data-place="<?php echo esc_attr( $event_place ); ?>"
 	data-track="<?php echo esc_attr( $track_slugs ); ?>"
-	data-description="<?php echo esc_attr( $event_excerpt ); ?>"
+	data-description="<?php echo esc_attr( $post_content ); ?>"
 	data-lead-text="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_lead_text', true ) ); ?>"
 	data-registration-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_registration_link', true ) ); ?>"
 	data-cfs-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_cfs_link', true ) ); ?>"
@@ -218,7 +225,7 @@ $is_bookmarked       = class_exists( 'Wpfaevent_User_Preferences_Service' ) && W
 					data-date="<?php echo esc_attr( $event_date ); ?>"
 					data-end-date="<?php echo esc_attr( $event_end_date ); ?>"
 					data-place="<?php echo esc_attr( $event_place ); ?>"
-					data-description="<?php echo esc_attr( $event_excerpt ); ?>"
+					data-description="<?php echo esc_attr( $post_content ); ?>"
 					data-lead-text="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_lead_text', true ) ); ?>"
 					data-registration-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_registration_link', true ) ); ?>"
 					data-cfs-link="<?php echo esc_attr( get_post_meta( $event_id, 'wpfa_event_cfs_link', true ) ); ?>"

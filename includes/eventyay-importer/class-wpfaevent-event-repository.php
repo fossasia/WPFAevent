@@ -71,9 +71,22 @@ class Wpfaevent_Event_Repository {
 			'post_type'    => 'wpfa_event',
 			'post_status'  => $post_status,
 			'post_content' => wp_kses_post( $description ),
-			'post_excerpt' => wp_kses_post( $description ),
 		);
-		$created        = false;
+		// post_content is the single source for the event description (#369).
+		// On update, clear a stored excerpt only when it is an import-era copy
+		// of the description; a hand-written excerpt is left untouched.
+		if ( $existing_id ) {
+			$existing_excerpt = trim( (string) get_post_field( 'post_excerpt', $existing_id ) );
+			if ( '' !== $existing_excerpt ) {
+				$existing_content = trim( (string) get_post_field( 'post_content', $existing_id ) );
+				if ( $existing_content === $existing_excerpt || trim( wp_kses_post( $description ) ) === $existing_excerpt ) {
+					$post_data['post_excerpt'] = '';
+				}
+			}
+		} else {
+			$post_data['post_excerpt'] = '';
+		}
+		$created = false;
 
 		if ( $existing_id ) {
 			$post_data['ID'] = $existing_id;

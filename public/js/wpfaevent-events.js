@@ -861,7 +861,7 @@ const wpfaEvents = (function () {
 		// Validate required fields - using ACTUAL form field names
 		const requiredFields = [
 			'title',
-			'excerpt',
+			'content',
 			'start_date',
 			'location',
 			'registration_link',
@@ -871,7 +871,7 @@ const wpfaEvents = (function () {
 		requiredFields.forEach((field) => {
 			const value = formData.get(field) || '';
 			const isBlank =
-				field === 'excerpt'
+				field === 'content'
 					? isBlankDescription(value)
 					: value.trim() === '';
 
@@ -967,7 +967,7 @@ const wpfaEvents = (function () {
 		// Validate required fields - using ACTUAL form field names
 		const requiredFields = [
 			'title',
-			'excerpt',
+			'content',
 			'start_date',
 			'location',
 			'registration_link',
@@ -977,7 +977,7 @@ const wpfaEvents = (function () {
 		requiredFields.forEach((field) => {
 			const value = formData.get(field) || '';
 			const isBlank =
-				field === 'excerpt'
+				field === 'content'
 					? isBlankDescription(value)
 					: value.trim() === '';
 
