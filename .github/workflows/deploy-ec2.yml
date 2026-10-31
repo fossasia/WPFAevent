@@ -48,11 +48,20 @@ jobs:
         run: |
           set -euo pipefail
 
+          if ! [[ "$EC2_PORT" =~ ^[0-9]+$ ]] || (( 10#$EC2_PORT < 1 || 10#$EC2_PORT > 65535 )); then
+            echo "EC2_PORT must be a number between 1 and 65535."
+            exit 1
+          fi
+          EC2_PORT=$((10#$EC2_PORT))
+
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
 
           printf '%s\n' "$EC2_SSH_KEY" > "$HOME/.ssh/deploy_key"
           chmod 600 "$HOME/.ssh/deploy_key"
+
+          PLUGIN_PATH_B64=$(printf '%s' "$PLUGIN_PATH" | base64 --wrap=0)
+          DEPLOY_BRANCH_B64=$(printf '%s' "$DEPLOY_BRANCH" | base64 --wrap=0)
 
           HOST_KEY='ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILdNcDk+KwyrSlAOGF1P39S+2JqJqCfJccU/AMAUVbQX'
 
@@ -72,9 +81,12 @@ jobs:
             -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
             "$EC2_USER@$EC2_HOST" \
-            "PLUGIN_PATH='$PLUGIN_PATH' DEPLOY_BRANCH='$DEPLOY_BRANCH' bash -s" <<'REMOTE'
+            "PLUGIN_PATH_B64='$PLUGIN_PATH_B64' DEPLOY_BRANCH_B64='$DEPLOY_BRANCH_B64' bash -s" <<'REMOTE'
 
           set -eu
+
+          PLUGIN_PATH=$(printf '%s' "$PLUGIN_PATH_B64" | base64 --decode)
+          DEPLOY_BRANCH=$(printf '%s' "$DEPLOY_BRANCH_B64" | base64 --decode)
 
           echo "Checking deployment directory..."
 
