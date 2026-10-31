@@ -49,12 +49,6 @@ Add the contents of `wpfaevent-deploy-key.pub` as a new line in
 `~/.ssh/authorized_keys` for the EC2 deployment user. Test that the private key
 can connect before adding it to GitHub.
 
-On the EC2 instance, obtain the SSH host fingerprint:
-
-```bash
-ssh-keygen -l -f /etc/ssh/ssh_host_ed25519_key.pub | awk '{print $2}'
-```
-
 Do not commit either private key or any real server address to this repository.
 
 ## 4. Create the GitHub production environment
@@ -76,7 +70,6 @@ Add these environment variables:
 - `EC2_PORT`
 - `EC2_PLUGIN_PATH`
 - `EC2_DEPLOY_BRANCH`
-- `EC2_HOST_FINGERPRINT`
 
 Typical values:
 
@@ -85,7 +78,6 @@ Typical values:
 - `EC2_PORT=22`
 - `EC2_PLUGIN_PATH=/var/www/html/wp-content/plugins/event-plugin`
 - `EC2_DEPLOY_BRANCH=main`
-- `EC2_HOST_FINGERPRINT=SHA256:...` (the value printed in step 3)
 
 ## 5. Allow the GitHub runner to reach SSH
 
