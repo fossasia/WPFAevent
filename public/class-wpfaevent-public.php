@@ -644,6 +644,7 @@ class Wpfaevent_Public {
 			'wpfaeventPublic',
 			array(
 				'speakerPlaceholderAlt' => __( 'Speaker photo placeholder', 'wpfaevent' ),
+				'themeType'             => function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ? 'block' : 'classic',
 				'ajaxUrl'               => admin_url( 'admin-ajax.php' ),
 				'nonce'                 => wp_create_nonce( 'wpfa_bookmark_nonce' ),
 				'isLoggedIn'            => is_user_logged_in(),

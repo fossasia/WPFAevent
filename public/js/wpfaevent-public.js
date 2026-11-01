@@ -30,6 +30,80 @@
 	 */
 
 	$(function () {
+		$(document).on(
+			'click',
+			'.wpfa-event-template .nav-links-main a, .wpfa-event-template .wpfa-event-section-nav a',
+			function (event) {
+				if (
+					event.isDefaultPrevented() ||
+					event.button !== 0 ||
+					event.metaKey ||
+					event.ctrlKey ||
+					event.shiftKey ||
+					event.altKey ||
+					(this.target && this.target !== '_self') ||
+					this.hasAttribute('download')
+				) {
+					return;
+				}
+
+				const url = new URL(this.href, window.location.href);
+				if (
+					url.origin !== window.location.origin ||
+					url.pathname !== window.location.pathname ||
+					url.search !== window.location.search ||
+					!url.hash
+				) {
+					return;
+				}
+
+				let target;
+				try {
+					target = document.getElementById(
+						decodeURIComponent(url.hash.slice(1))
+					);
+				} catch {
+					return;
+				}
+				if (!target) {
+					return;
+				}
+
+				const reducedMotion = window.matchMedia(
+					'(prefers-reduced-motion: reduce)'
+				).matches;
+				const settings = window.wpfaeventPublic || {};
+				const scrollRoot =
+					settings.themeType === 'block'
+						? document.documentElement
+						: document.scrollingElement || document.documentElement;
+				if (
+					!reducedMotion &&
+					window.getComputedStyle(scrollRoot).scrollBehavior ===
+						'smooth'
+				) {
+					return;
+				}
+
+				event.preventDefault();
+				if (window.location.hash !== url.hash) {
+					window.history.pushState(null, '', url.hash);
+				}
+				target.scrollIntoView({
+					behavior: reducedMotion ? 'instant' : 'smooth',
+				});
+				if (!target.hasAttribute('tabindex') && target.tabIndex < 0) {
+					target.setAttribute('tabindex', '-1');
+					target.addEventListener(
+						'blur',
+						() => target.removeAttribute('tabindex'),
+						{ once: true }
+					);
+				}
+				target.focus({ preventScroll: true });
+			}
+		);
+
 		$('.wpfa-event-featured-speakers').each(function () {
 			const $group = $(this);
 			const $grid = $group.find('.wpfa-featured-speakers-grid').first();
