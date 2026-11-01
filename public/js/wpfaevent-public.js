@@ -47,7 +47,12 @@
 					return;
 				}
 
-				const url = new URL(this.href, window.location.href);
+				let url;
+				try {
+					url = new URL(this.href, window.location.href);
+				} catch {
+					return;
+				}
 				if (
 					url.origin !== window.location.origin ||
 					url.pathname !== window.location.pathname ||

@@ -92,6 +92,25 @@ class EventHeaderNavigationTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'Event overview', $output );
 	}
 
+
+	/**
+	 * A locked event must not disclose its custom menu to an anonymous visitor.
+	 */
+	public function test_password_protected_event_keeps_global_header_until_unlocked() {
+		$event_id = $this->create_navigation_event();
+		wp_update_post( array( 'ID' => $event_id, 'post_password' => 'navigation-secret' ) );
+		$this->go_to( get_permalink( $event_id ) );
+		$this->assertTrue( post_password_required( $event_id ) );
+		$event_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
+		ob_start();
+		include WPFAEVENT_PATH . 'public/partials/header.php';
+		$output = ob_get_clean();
+
+		$this->assertStringNotContainsString( 'Event overview', $output );
+		$this->assertStringNotContainsString( 'Event sessions', $output );
+		$this->assertStringContainsString( 'Upcoming Events', $output );
+	}
+
 	/**
 	 * A configured menu whose pages are hidden does not expose global links.
 	 */

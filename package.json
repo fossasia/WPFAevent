@@ -23,6 +23,7 @@
 	],
 	"scripts": {
 		"lint": "eslint .",
+		"test:navigation": "node --test tests/js/navigation.test.cjs",
 		"lint:fix": "eslint . --fix",
 		"format": "prettier --write \"**/*.{js,json}\"",
 		"phpcs": "composer phpcs",
