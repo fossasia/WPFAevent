@@ -50,3 +50,6 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
+
+      - name: Run navigation behavior regressions
+        run: npm run test:navigation

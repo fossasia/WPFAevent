@@ -136,6 +136,7 @@ class Wpfaevent_Main_Navigation_Helper {
 	 */
 	public static function render_custom_nav_items( $items, $event_id = 0 ) {
 		$current_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+		$parent_url  = $event_id > 0 && null !== self::get_current_custom_page( $event_id ) ? get_permalink( $event_id ) : '';
 
 		foreach ( (array) $items as $item ) {
 			if ( ! is_array( $item ) || empty( $item['text'] ) ) {
@@ -152,6 +153,9 @@ class Wpfaevent_Main_Navigation_Helper {
 				foreach ( $item['items'] as $sub ) {
 					if ( is_array( $sub ) && ! empty( $sub['text'] ) ) {
 						$sub_href = ! empty( $sub['href'] ) ? (string) $sub['href'] : '';
+						if ( $parent_url && 0 === strpos( $sub_href, '#' ) ) {
+							$sub_href = $parent_url . $sub_href;
+						}
 						if ( $event_id > 0 && 0 === strpos( $sub_href, '?custom_page=' ) ) {
 							$event_permalink = get_permalink( $event_id );
 							if ( $event_permalink ) {
@@ -191,6 +195,9 @@ class Wpfaevent_Main_Navigation_Helper {
 				<?php
 			} else {
 				$href = ! empty( $item['href'] ) ? (string) $item['href'] : '';
+				if ( $parent_url && 0 === strpos( $href, '#' ) ) {
+					$href = $parent_url . $href;
+				}
 				if ( $event_id > 0 && 0 === strpos( $href, '?custom_page=' ) ) {
 					$event_permalink = get_permalink( $event_id );
 					if ( $event_permalink ) {
@@ -222,15 +229,19 @@ class Wpfaevent_Main_Navigation_Helper {
 	 * @return bool
 	 */
 	public static function is_url_active( $url, $current_uri ) {
-		$url_path  = trim( (string) wp_parse_url( (string) $url, PHP_URL_PATH ), '/' );
-		$curr_path = trim( (string) wp_parse_url( (string) $current_uri, PHP_URL_PATH ), '/' );
-
-		if ( '' === $url_path || $url_path !== $curr_path ) {
+		$url_host = wp_parse_url( (string) $url, PHP_URL_HOST );
+		if ( $url_host && 0 !== strcasecmp( $url_host, (string) wp_parse_url( home_url(), PHP_URL_HOST ) ) ) {
 			return false;
 		}
 
-		$url_q  = (string) wp_parse_url( (string) $url, PHP_URL_QUERY );
-		$curr_q = (string) wp_parse_url( (string) $current_uri, PHP_URL_QUERY );
+		$url_path  = trim( (string) wp_parse_url( (string) $url, PHP_URL_PATH ), '/' );
+		$curr_path = trim( (string) wp_parse_url( (string) $current_uri, PHP_URL_PATH ), '/' );
+		$url_q     = (string) wp_parse_url( (string) $url, PHP_URL_QUERY );
+		$curr_q    = (string) wp_parse_url( (string) $current_uri, PHP_URL_QUERY );
+
+		if ( $url_path !== $curr_path || ( '' === $url_path && '' === $url_q ) ) {
+			return false;
+		}
 
 		$url_params  = array();
 		$curr_params = array();

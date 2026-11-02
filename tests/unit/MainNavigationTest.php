@@ -150,7 +150,8 @@ class MainNavigationTest extends WP_UnitTestCase {
 	 * Test is_url_active URL matching.
 	 */
 	public function test_is_url_active() {
-		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::is_url_active( 'http://example.com/events/', '/events/' ) );
+		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::is_url_active( home_url( '/events/' ), '/events/' ) );
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::is_url_active( 'https://other.example/events/', '/events/' ) );
 		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::is_url_active( '/events/?filter=past', '/events/?filter=past' ) );
 		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::is_url_active( '/events/?foo=1&bar=2', '/events/?bar=2&foo=1' ) );
 		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::is_url_active( '/events/', '/events/?filter=past' ) );

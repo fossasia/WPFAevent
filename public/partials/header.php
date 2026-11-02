@@ -64,6 +64,11 @@ $events_url         = apply_filters( 'wpfaevent_upcoming_events_url', $default_e
 $events_url         = apply_filters( 'wpfaevent_events_url', $events_url );
 $past_events_url    = apply_filters( 'wpfaevent_past_events_url', home_url( '/events/?filter=past' ) );
 $coc_url            = $coc_page_id ? get_permalink( $coc_page_id ) : home_url( '/code-of-conduct/' );
+
+$navigation_event_id   = (int) get_queried_object_id();
+$show_event_navigation = is_singular( 'wpfa_event' ) && (
+	! post_password_required( $navigation_event_id ) || current_user_can( 'edit_post', $navigation_event_id )
+);
 ?>
 
 <header class="nav" role="banner">
@@ -75,17 +80,21 @@ $coc_url            = $coc_page_id ? get_permalink( $coc_page_id ) : home_url( '
 			<div class="nav-links-main">
 				<?php
 				if ( class_exists( 'Wpfaevent_Main_Navigation_Helper' ) ) {
-					Wpfaevent_Main_Navigation_Helper::render_navigation(
-						array(
-							'events_url'            => $events_url,
-							'past_events_url'       => $past_events_url,
-							'coc_url'               => $coc_url,
-							'is_events_active'      => (bool) $is_events_active,
-							'is_past_events_active' => (bool) $is_past_events_active,
-							'is_coc_active'         => (bool) $is_coc_active,
-						),
-						isset( $event_id ) ? (int) $event_id : 0
-					);
+					if ( $show_event_navigation && isset( $event_data['wpfa_event_nav_items'] ) && is_array( $event_data['wpfa_event_nav_items'] ) ) {
+						Wpfaevent_Main_Navigation_Helper::render_custom_nav_items( $event_data['wpfa_event_nav_items'], $navigation_event_id );
+					} else {
+						Wpfaevent_Main_Navigation_Helper::render_navigation(
+							array(
+								'events_url'            => $events_url,
+								'past_events_url'       => $past_events_url,
+								'coc_url'               => $coc_url,
+								'is_events_active'      => (bool) $is_events_active,
+								'is_past_events_active' => (bool) $is_past_events_active,
+								'is_coc_active'         => (bool) $is_coc_active,
+							),
+							isset( $event_id ) ? (int) $event_id : 0
+						);
+					}
 				} else {
 					?>
 					<a href="<?php echo esc_url( $events_url ); ?>" class="<?php echo esc_attr( trim( 'nav-link-upcoming ' . $is_events_active ) ); ?>" data-nav="upcoming"><?php esc_html_e( 'Upcoming Events', 'wpfaevent' ); ?></a>
