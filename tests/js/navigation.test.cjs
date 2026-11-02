@@ -68,7 +68,7 @@ function clickNavigation({ theme = 'classic', nativeSmooth = false, reduced = fa
     const link = { href, target: '', hasAttribute: () => false, ...linkOverrides };
     // On the unfixed source no navigation handler is registered, so default navigation remains.
     if (handler) handler.call(link, event);
-    return { prevented, scrolls, focuses, history, roots, attributes, blur: listeners.get('blur') };
+    return { prevented, scrolls, focuses, history, roots, hash: window.location.hash, attributes, blur: listeners.get('blur') };
 }
 
 for (const theme of ['classic', 'block']) {
@@ -105,6 +105,7 @@ for (const theme of ['classic', 'block']) {
         assert.deepEqual(result.scrolls, ['smooth']);
         assert.deepEqual(result.focuses, [true]);
         assert.deepEqual(result.history, []);
+        assert.equal(result.hash, '#details');
     });
     test(theme + ': reduced motion overrides native smooth behavior', () => {
         const result = clickNavigation({ theme, nativeSmooth: true, reduced: true });

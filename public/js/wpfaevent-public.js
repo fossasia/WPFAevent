@@ -105,7 +105,8 @@
 					try {
 						window.history.pushState(null, '', url.hash);
 					} catch {
-						// A rejected history update must not prevent navigation.
+						// Preserve linkable sections if the browser rejects pushState.
+						window.location.hash = url.hash;
 					}
 				}
 				target.scrollIntoView({
