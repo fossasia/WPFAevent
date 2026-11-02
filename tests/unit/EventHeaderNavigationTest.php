@@ -79,9 +79,9 @@ class EventHeaderNavigationTest extends WP_UnitTestCase {
 	public function test_custom_page_header_qualifies_event_anchors() {
 		$event_id             = $this->create_navigation_event();
 		$url                  = add_query_arg( 'custom_page', 'travel', get_permalink( $event_id ) );
-		$previous_request_uri = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : null;
+		$previous_request_uri = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Preserve the test request verbatim for restoration.
 		$this->go_to( $url );
-		$_GET['custom_page']     = 'travel';
+		$_GET['custom_page']    = 'travel';
 		$_SERVER['REQUEST_URI'] = wp_make_link_relative( $url );
 		try {
 			$event_data = Wpfaevent_Event_Template_Controller::get_event_template_data( $event_id );
