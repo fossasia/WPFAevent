@@ -231,13 +231,12 @@ class Wpfaevent_Main_Navigation_Helper {
 	public static function is_url_active( $url, $current_uri ) {
 		$url_path  = trim( (string) wp_parse_url( (string) $url, PHP_URL_PATH ), '/' );
 		$curr_path = trim( (string) wp_parse_url( (string) $current_uri, PHP_URL_PATH ), '/' );
+		$url_q     = (string) wp_parse_url( (string) $url, PHP_URL_QUERY );
+		$curr_q    = (string) wp_parse_url( (string) $current_uri, PHP_URL_QUERY );
 
-		if ( '' === $url_path || $url_path !== $curr_path ) {
+		if ( $url_path !== $curr_path || ( '' === $url_path && '' === $url_q ) ) {
 			return false;
 		}
-
-		$url_q  = (string) wp_parse_url( (string) $url, PHP_URL_QUERY );
-		$curr_q = (string) wp_parse_url( (string) $current_uri, PHP_URL_QUERY );
 
 		$url_params  = array();
 		$curr_params = array();
