@@ -229,6 +229,11 @@ class Wpfaevent_Main_Navigation_Helper {
 	 * @return bool
 	 */
 	public static function is_url_active( $url, $current_uri ) {
+		$url_host = wp_parse_url( (string) $url, PHP_URL_HOST );
+		if ( $url_host && 0 !== strcasecmp( $url_host, (string) wp_parse_url( home_url(), PHP_URL_HOST ) ) ) {
+			return false;
+		}
+
 		$url_path  = trim( (string) wp_parse_url( (string) $url, PHP_URL_PATH ), '/' );
 		$curr_path = trim( (string) wp_parse_url( (string) $current_uri, PHP_URL_PATH ), '/' );
 		$url_q     = (string) wp_parse_url( (string) $url, PHP_URL_QUERY );

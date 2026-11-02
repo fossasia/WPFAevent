@@ -9,12 +9,14 @@ const source = fs.readFileSync(path.join(__dirname, '../../public/js/wpfaevent-p
 // Run the shipped script. Only event registration and browser side effects are substituted.
 function clickNavigation({ theme = 'classic', nativeSmooth = false, reduced = false,
     href = 'https://example.test/event/#details', current = 'https://example.test/event/',
-    event: eventOverrides = {}, link: linkOverrides = {}, tabindex } = {}) {
+    event: eventOverrides = {}, link: linkOverrides = {}, tabindex, historyFails = false,
+    otherRootSmooth = false, missingScrollingElement = false } = {}) {
     let handler;
     let prevented = false;
     const scrolls = [];
     const focuses = [];
     const history = [];
+    const roots = [];
     const attributes = new Map(tabindex === undefined ? [] : [['tabindex', tabindex]]);
     const listeners = new Map();
     const target = {
@@ -27,14 +29,22 @@ function clickNavigation({ theme = 'classic', nativeSmooth = false, reduced = fa
         focus: options => focuses.push(options.preventScroll),
     };
     const document = {
-        documentElement: {}, scrollingElement: {},
+        documentElement: { name: 'document' }, scrollingElement: missingScrollingElement ? null : { name: 'scrolling' },
         getElementById: id => id === 'details' ? target : null,
     };
     const window = {
         location: new URL(current), wpfaeventPublic: { themeType: theme },
         matchMedia: () => ({ matches: reduced }),
-        getComputedStyle: () => ({ scrollBehavior: nativeSmooth ? 'smooth' : 'auto' }),
-        history: { pushState: (state, title, url) => history.push(url) },
+        getComputedStyle: element => {
+            roots.push(element.name);
+            const expected = theme === 'block' || missingScrollingElement
+                ? document.documentElement : document.scrollingElement;
+            return { scrollBehavior: (element === expected ? nativeSmooth : otherRootSmooth) ? 'smooth' : 'auto' };
+        },
+        history: { pushState: (state, title, url) => {
+            if (historyFails) throw new Error('History update rejected');
+            history.push(url);
+        } },
     };
     const collection = {
         length: 0,
@@ -58,7 +68,7 @@ function clickNavigation({ theme = 'classic', nativeSmooth = false, reduced = fa
     const link = { href, target: '', hasAttribute: () => false, ...linkOverrides };
     // On the unfixed source no navigation handler is registered, so default navigation remains.
     if (handler) handler.call(link, event);
-    return { prevented, scrolls, focuses, history, attributes, blur: listeners.get('blur') };
+    return { prevented, scrolls, focuses, history, roots, attributes, blur: listeners.get('blur') };
 }
 
 for (const theme of ['classic', 'block']) {
@@ -77,6 +87,24 @@ for (const theme of ['classic', 'block']) {
         assert.equal(result.prevented, false);
         assert.deepEqual(result.scrolls, []);
         assert.deepEqual(result.history, []);
+        assert.deepEqual(result.focuses, [true]);
+        assert.equal(result.attributes.get('tabindex'), '-1');
+        assert.deepEqual(result.roots, [theme === 'block' ? 'document' : 'scrolling']);
+        result.blur();
+        assert.equal(result.attributes.has('tabindex'), false);
+    });
+    test(theme + ': ignores smooth CSS on the other root', () => {
+        const result = clickNavigation({ theme, otherRootSmooth: true });
+        assert.equal(result.prevented, true);
+        assert.deepEqual(result.scrolls, ['smooth']);
+        assert.deepEqual(result.roots, [theme === 'block' ? 'document' : 'scrolling']);
+    });
+    test(theme + ': scrolls and focuses if history rejects the update', () => {
+        const result = clickNavigation({ theme, historyFails: true });
+        assert.equal(result.prevented, true);
+        assert.deepEqual(result.scrolls, ['smooth']);
+        assert.deepEqual(result.focuses, [true]);
+        assert.deepEqual(result.history, []);
     });
     test(theme + ': reduced motion overrides native smooth behavior', () => {
         const result = clickNavigation({ theme, nativeSmooth: true, reduced: true });
@@ -84,6 +112,13 @@ for (const theme of ['classic', 'block']) {
         assert.deepEqual(result.scrolls, ['instant']);
     });
 }
+
+test('classic root falls back to the document element when needed', () => {
+    const result = clickNavigation({ missingScrollingElement: true, nativeSmooth: true });
+    assert.equal(result.prevented, false);
+    assert.deepEqual(result.roots, ['document']);
+    assert.deepEqual(result.focuses, [true]);
+});
 
 test('preserves an existing target tabindex', () => {
     const result = clickNavigation({ tabindex: '0' });

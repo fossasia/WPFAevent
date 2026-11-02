@@ -112,6 +112,9 @@ class EventHeaderNavigationTest extends WP_UnitTestCase {
 		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::is_url_active( $url, '/?wpfa_event=other&custom_page=travel' ) );
 		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::is_url_active( $url, '/?wpfa_event=navigation-event&custom_page=other' ) );
 		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::is_url_active( $url, '/?custom_page=travel' ) );
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::is_url_active( 'https://other.example/?wpfa_event=navigation-event&custom_page=travel', '/?custom_page=travel&wpfa_event=navigation-event' ) );
+		$this->assertFalse( Wpfaevent_Main_Navigation_Helper::is_url_active( '//other.example/?wpfa_event=navigation-event&custom_page=travel', '/?custom_page=travel&wpfa_event=navigation-event' ) );
+		$this->assertTrue( Wpfaevent_Main_Navigation_Helper::is_url_active( '/?wpfa_event=navigation-event&custom_page=travel', '/?custom_page=travel&wpfa_event=navigation-event' ) );
 		foreach ( array( '', '#about', '/', 'http://example.org/' ) as $empty_target ) {
 			$this->assertFalse( Wpfaevent_Main_Navigation_Helper::is_url_active( $empty_target, '/' ) );
 		}

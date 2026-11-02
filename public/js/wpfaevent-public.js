@@ -74,6 +74,16 @@
 					return;
 				}
 
+				if (!target.hasAttribute('tabindex') && target.tabIndex < 0) {
+					target.setAttribute('tabindex', '-1');
+					target.addEventListener(
+						'blur',
+						() => target.removeAttribute('tabindex'),
+						{ once: true }
+					);
+				}
+				target.focus({ preventScroll: true });
+
 				const reducedMotion = window.matchMedia(
 					'(prefers-reduced-motion: reduce)'
 				).matches;
@@ -92,20 +102,15 @@
 
 				event.preventDefault();
 				if (window.location.hash !== url.hash) {
-					window.history.pushState(null, '', url.hash);
+					try {
+						window.history.pushState(null, '', url.hash);
+					} catch {
+						// A rejected history update must not prevent navigation.
+					}
 				}
 				target.scrollIntoView({
 					behavior: reducedMotion ? 'instant' : 'smooth',
 				});
-				if (!target.hasAttribute('tabindex') && target.tabIndex < 0) {
-					target.setAttribute('tabindex', '-1');
-					target.addEventListener(
-						'blur',
-						() => target.removeAttribute('tabindex'),
-						{ once: true }
-					);
-				}
-				target.focus({ preventScroll: true });
 			}
 		);
 
