@@ -62,6 +62,21 @@ class CalendarTest extends WP_UnitTestCase {
 		return $params;
 	}
 
+
+	/**
+	 * Read the complete unfolded event URL property.
+	 *
+	 * @param string $ics Calendar content.
+	 * @return string
+	 */
+	private function calendar_url( $ics ) {
+		$unfolded = str_replace( "\r\n ", '', $ics );
+		$matched  = preg_match( '/(?:^|\r\n)URL:([^\r\n]*)/', $unfolded, $matches );
+		$this->assertSame( 1, $matched );
+
+		return $matches[1];
+	}
+
 	/**
 	 * All-day exports should use date-only values with an exclusive end date.
 	 */
@@ -82,7 +97,7 @@ class CalendarTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'SUMMARY:FOSS\, Asia\; Event \\\\ Test\nNext', $ics );
 		$this->assertStringContainsString( 'DESCRIPTION:Line one\nLine two\, with\; chars \\\\ here', $ics );
 		$this->assertStringContainsString( 'LOCATION:Singapore\, Hall A', $ics );
-		$this->assertStringContainsString( 'URL:https://example.test/events/fossasia?x=1,2', $ics );
+		$this->assertSame( 'https://example.test/events/fossasia?x=1,2', $this->calendar_url( $ics ) );
 	}
 
 
@@ -93,9 +108,8 @@ class CalendarTest extends WP_UnitTestCase {
 		$event        = $this->all_day_event();
 		$event['url'] = "https://example.test/events;a=1?x=1,2&name=caf%C3%A9\r\nX-INJECTED:bad";
 		$ics          = Wpfaevent_Calendar::build_event_ics_content( $event );
-		$unfolded     = str_replace( "\r\n ", '', $ics );
 
-		$this->assertStringContainsString( 'URL:https://example.test/events;a=1?x=1,2&name=caf%C3%A9X-INJECTED:bad', $unfolded );
+		$this->assertSame( 'https://example.test/events;a=1?x=1,2&name=caf%C3%A9X-INJECTED:bad', $this->calendar_url( $ics ) );
 		$this->assertStringNotContainsString( "\r\nX-INJECTED:", $ics );
 	}
 
@@ -108,7 +122,7 @@ class CalendarTest extends WP_UnitTestCase {
 		$ics          = Wpfaevent_Calendar::build_event_ics_content( $event );
 
 		$this->assertStringContainsString( "\r\n ", $ics );
-		$this->assertStringContainsString( 'URL:' . $event['url'], str_replace( "\r\n ", '', $ics ) );
+		$this->assertSame( $event['url'], $this->calendar_url( $ics ) );
 	}
 
 	/**
