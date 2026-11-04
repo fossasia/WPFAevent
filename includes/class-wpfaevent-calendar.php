@@ -290,7 +290,7 @@ class Wpfaevent_Calendar {
 		}
 
 		if ( ! empty( $event['url'] ) ) {
-			$lines[] = self::text_property( 'URL', $event['url'] );
+			$lines[] = self::fold_ical_line( 'URL:' . self::sanitize_ical_token( $event['url'] ) );
 		}
 
 		$lines[] = 'END:VEVENT';

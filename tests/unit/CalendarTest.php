@@ -82,7 +82,33 @@ class CalendarTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'SUMMARY:FOSS\, Asia\; Event \\\\ Test\nNext', $ics );
 		$this->assertStringContainsString( 'DESCRIPTION:Line one\nLine two\, with\; chars \\\\ here', $ics );
 		$this->assertStringContainsString( 'LOCATION:Singapore\, Hall A', $ics );
-		$this->assertStringContainsString( 'URL:https://example.test/events/fossasia?x=1\,2', $ics );
+		$this->assertStringContainsString( 'URL:https://example.test/events/fossasia?x=1,2', $ics );
+	}
+
+
+	/**
+	 * URI properties preserve reserved punctuation and reject line injection.
+	 */
+	public function test_ics_url_preserves_uri_punctuation_without_injected_lines() {
+		$event        = $this->all_day_event();
+		$event['url'] = "https://example.test/events;a=1?x=1,2&name=caf%C3%A9\r\nX-INJECTED:bad";
+		$ics          = Wpfaevent_Calendar::build_event_ics_content( $event );
+		$unfolded     = str_replace( "\r\n ", '', $ics );
+
+		$this->assertStringContainsString( 'URL:https://example.test/events;a=1?x=1,2&name=caf%C3%A9X-INJECTED:bad', $unfolded );
+		$this->assertStringNotContainsString( "\r\nX-INJECTED:", $ics );
+	}
+
+	/**
+	 * Long URI values are folded without changing the unfolded URL.
+	 */
+	public function test_ics_url_folding_preserves_the_uri() {
+		$event        = $this->all_day_event();
+		$event['url'] = 'https://example.test/events?names=' . str_repeat( 'one,two;three/', 12 );
+		$ics          = Wpfaevent_Calendar::build_event_ics_content( $event );
+
+		$this->assertStringContainsString( "\r\n ", $ics );
+		$this->assertStringContainsString( 'URL:' . $event['url'], str_replace( "\r\n ", '', $ics ) );
 	}
 
 	/**
