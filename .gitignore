@@ -27,4 +27,3 @@ clover.xml
 .env.local
 .env.*.local
 !.env.example
-
