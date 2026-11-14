@@ -8,7 +8,9 @@ RUN apk add --no-cache \
     subversion \
     mariadb-client \
     libzip-dev \
-    && docker-php-ext-install mysqli pdo pdo_mysql zip
+    libxml2-dev \
+    oniguruma-dev \
+    && docker-php-ext-install mysqli pdo pdo_mysql zip dom mbstring xml xmlwriter
 
 # Configure MariaDB client to connect to local development MySQL without SSL errors
 RUN mkdir -p /etc/my.cnf.d && \

@@ -194,62 +194,30 @@ Event timezone behavior is deterministic:
 
 ### Option 1: Docker Setup (Recommended)
 
-The easiest way to get up and running with a complete local WordPress environment (WordPress, MySQL, WP-CLI auto-installer, and test runner) is using Docker Compose.
+Docker Compose provides a reproducible environment for running automated checks, PHPUnit test suites, and an optional full local WordPress environment.
 
-#### Prerequisites
+#### Prerequisites & Runtime Specifications
 
 - [Docker Engine](https://docs.docker.com/engine/install/) (20.10+)
 - [Docker Compose](https://docs.docker.com/compose/install/) (v2+)
+- **PHP Runtime:** PHP 8.2 CLI / Apache with extensions `mysqli`, `pdo`, `pdo_mysql`, `zip`, `dom`, `mbstring`, `xml`, `xmlwriter`
+- **Database:** MySQL 8.0 (bound to `127.0.0.1` for local machine security)
+- **Test Framework:** PHPUnit with WordPress test suite (`WP_VERSION` defaults to `latest`, configurable)
+- **Composer:** Composer 2.x
 
-#### 1. Configure Environment (Optional)
+#### 1. Fast Checks & PHPUnit Tests (Default Workflow)
 
-Copy the example environment file:
-```bash
-cp .env.example .env
-```
-
-Default credentials and ports:
-- **WordPress URL:** `http://localhost:8080`
-- **WordPress Admin User:** `admin`
-- **WordPress Admin Password:** `admin`
-- **WordPress Admin Email:** `admin@example.local`
-- **Database Port:** `3306`
-
-#### 2. Start the Environment
-
-From the plugin root directory, start the containers:
-```bash
-docker compose up -d
-```
-
-This starts:
-- **`db`**: MySQL 8.0 database configured with health checks.
-- **`wordpress`**: WordPress with PHP 8.2 and Apache, mounting your working plugin directory directly to `/var/www/html/wp-content/plugins/wpfaevent` for live code changes.
-- **`wp-cli`**: Automatically waits for MySQL and WordPress to initialize, installs WordPress core, sets the permalink structure to `/%postname%/`, and activates the `wpfaevent` plugin.
-
-You can monitor initialization progress by streaming logs:
-```bash
-docker compose logs -f wp-cli
-```
-
-Once initialized, open:
-- **Site Frontend:** [http://localhost:8080](http://localhost:8080)
-- **Admin Dashboard:** [http://localhost:8080/wp-admin](http://localhost:8080/wp-admin) (Username: `admin`, Password: `admin`)
-- **Plugin Settings:** Navigate to **Settings → Event Plugin** in the WordPress Admin
-
-#### 3. Run Tests & Quality Checks via Docker
-
-The Docker configuration provides an isolated `test` container pre-configured with PHP 8.2, Composer, and the required test libraries:
+You do **not** need to start a full WordPress website to run tests or code quality checks. The isolated `test` container automatically manages Composer dependencies, bootstraps an isolated `wordpress_test` database, and caches test libraries in `test_cache`:
 
 ```bash
-# Run PHPUnit tests (automatically bootstraps the test database on first run)
+# Run PHPUnit test suite (auto-bootstraps test database on first run)
 docker compose run --rm test
 
 # Run a specific test suite
 docker compose run --rm test composer test -- --testsuite Unit
 docker compose run --rm test composer test -- --testsuite Integration
 
-# Check WordPress Coding Standards (PHPCS)
+# Run WordPress Coding Standards (PHPCS)
 docker compose run --rm test composer phpcs
 
 # Auto-fix coding standard violations (PHPCBF)
@@ -257,31 +225,51 @@ docker compose run --rm test composer phpcbf
 
 # Run static analysis (PHPStan)
 docker compose run --rm test composer phpstan
+
+# Pin a specific WordPress version for tests (optional, defaults to latest)
+WP_VERSION=6.4 docker compose run --rm test
 ```
 
-#### 4. Run WP-CLI Commands via Docker
+#### 2. Optional: Full WordPress Site (Manual Testing)
 
-You can run any WP-CLI command against your local site container:
+If you need a running WordPress instance to test admin pages, Gutenberg blocks, or frontend templates in your browser, opt-in to the `site` profile:
 
 ```bash
-docker compose run --rm wp-cli wp <command>
+# 1. Copy the example configuration (optional)
+cp .env.example .env
+
+# 2. Start the site and database
+docker compose --profile site up -d
+
+# 3. Stream initialization logs until WordPress is ready
+docker compose --profile site logs -f wp-cli
+```
+
+Once initialized:
+- **Site Frontend:** [http://localhost:8080](http://localhost:8080)
+- **Admin Dashboard:** [http://localhost:8080/wp-admin](http://localhost:8080/wp-admin) (Username: `admin`, Password set via `WP_ADMIN_PASSWORD` in `.env`, defaults to `admin`)
+- **Plugin Settings:** Navigate to **Settings → Event Plugin**
+
+To run WP-CLI commands against the local site container:
+```bash
+docker compose --profile site run --rm wp-cli wp <command>
 
 # Example: Check active plugins
-docker compose run --rm wp-cli wp plugin list
+docker compose --profile site run --rm wp-cli wp plugin list
 
 # Example: Run Eventyay import
-docker compose run --rm wp-cli wp wpfa import
+docker compose --profile site run --rm wp-cli wp wpfa import
 ```
 
-#### 5. Stopping and Resetting
+#### 3. Security, Caches & Troubleshooting
 
-```bash
-# Stop containers without losing data
-docker compose down
-
-# Stop and wipe database/WordPress volumes for a completely fresh start
-docker compose down -v
-```
+- **Local Network Isolation:** Exposed ports (`8080`, `3306`) bind strictly to `127.0.0.1` by default to prevent LAN access.
+- **Credential Protection:** Access to `.env` files and `debug.log` is blocked by Apache security configurations and `.htaccess`. Debug logging is disabled by default (`WORDPRESS_DEBUG_LOG=0`).
+- **Port Conflicts:** If `8080` or `3306` is already in use on your host, change `WORDPRESS_PORT` or `DB_PORT` in `.env`.
+- **Resetting the Environment:** To stop all containers and wipe test/database volumes for a clean start:
+  ```bash
+  docker compose --profile site down -v
+  ```
 
 ---
 

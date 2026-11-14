@@ -18,7 +18,7 @@
 		"phpcbf": "phpcbf",
 		"phpcs": "phpcs",
 		"phpstan": "phpstan analyse --memory-limit=2048M",
-		"setup-tests": "bash bin/install-wp-tests.sh wordpress_test ${WP_DB_USER:-wp_test} ${WP_DB_PASS:-test_password} ${WP_DB_HOST:-127.0.0.1}",
+		"setup-tests": "bash bin/install-wp-tests.sh wordpress_test ${WP_DB_USER:-wp_test} ${WP_DB_PASS:-test_password} ${WP_DB_HOST:-127.0.0.1} ${WP_VERSION:-latest}",
 		"test": "vendor/bin/phpunit"
 	},
 	"scripts-descriptions": {

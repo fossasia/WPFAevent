@@ -7,42 +7,47 @@ services:
       - --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
+      MYSQL_ROOT_HOST: "%"
       MYSQL_DATABASE: ${DB_NAME:-wordpress_dev}
       MYSQL_USER: ${DB_USER:-wordpress}
       MYSQL_PASSWORD: ${DB_PASSWORD:-wordpress_pass}
     ports:
-      - "${DB_PORT:-3306}:3306"
+      - "127.0.0.1:${DB_PORT:-3306}:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD:-root_password} --silent"]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 15s
 
-  # 2. WordPress Web Application (PHP 8.2 + Apache)
+  # 2. WordPress Web Application (PHP 8.2 + Apache) - Optional local manual testing
   wordpress:
+    profiles: ["site"]
     image: wordpress:php8.2-apache
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "${WORDPRESS_PORT:-8080}:80"
+      - "127.0.0.1:${WORDPRESS_PORT:-8080}:80"
     environment:
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_NAME: ${DB_NAME:-wordpress_dev}
       WORDPRESS_DB_USER: ${DB_USER:-wordpress}
       WORDPRESS_DB_PASSWORD: ${DB_PASSWORD:-wordpress_pass}
-      WORDPRESS_DEBUG: 1
-      WORDPRESS_DEBUG_LOG: 1
+      WORDPRESS_DEBUG: ${WORDPRESS_DEBUG:-1}
+      WORDPRESS_DEBUG_LOG: ${WORDPRESS_DEBUG_LOG:-0}
+      WP_URL: ${WP_URL:-http://localhost:${WORDPRESS_PORT:-8080}}
     volumes:
       - wp_data:/var/www/html
       - ./:/var/www/html/wp-content/plugins/wpfaevent
+      - ./docker/security.conf:/etc/apache2/conf-enabled/security.conf:ro
 
-  # 3. WP-CLI Auto-installer (runs once on startup)
+  # 3. WP-CLI Auto-installer (runs once on startup when site profile is active)
   wp-cli:
+    profiles: ["site"]
     image: wordpress:cli
     user: "33:33"
     working_dir: /var/www/html
@@ -56,7 +61,8 @@ services:
       WORDPRESS_DB_NAME: ${DB_NAME:-wordpress_dev}
       WORDPRESS_DB_USER: ${DB_USER:-wordpress}
       WORDPRESS_DB_PASSWORD: ${DB_PASSWORD:-wordpress_pass}
-      WP_URL: ${WP_URL:-http://localhost:8080}
+      WORDPRESS_PORT: ${WORDPRESS_PORT:-8080}
+      WP_URL: ${WP_URL:-http://localhost:${WORDPRESS_PORT:-8080}}
       WP_TITLE: ${WP_TITLE:-WPFA Event Dev}
       WP_ADMIN_USER: ${WP_ADMIN_USER:-admin}
       WP_ADMIN_PASSWORD: ${WP_ADMIN_PASSWORD:-admin}
@@ -80,6 +86,8 @@ services:
       WP_DB_HOST: db
       WP_DB_USER: root
       WP_DB_PASS: ${DB_ROOT_PASSWORD:-root_password}
+      WP_TEST_DB_NAME: wordpress_test
+      WP_VERSION: ${WP_VERSION:-latest}
     volumes:
       - ./:/app
       - ./docker/test-entrypoint.sh:/usr/local/bin/test-entrypoint.sh:ro
