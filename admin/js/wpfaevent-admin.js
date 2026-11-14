@@ -2,8 +2,6 @@
 	'use strict';
 
 	$(function () {
-		const $importForm = $('#wpfaevent-import-events-form');
-		const $updateForm = $('#wpfaevent-update-events-form');
 		const sponsorGroupOrderForm = document.getElementById(
 			'wpfaevent-sponsor-group-order-form'
 		);
@@ -157,19 +155,6 @@
 			}
 		);
 
-		function showImportNotice(message) {
-			const $container = $('.wrap').first();
-			const $existingNotices = $container.find(
-				'.notice.wpfaevent-import-notice'
-			);
-			const $notice = $('<div/>', {
-				class: 'notice notice-error is-dismissible wpfaevent-import-notice',
-			}).append($('<p/>').text(message));
-
-			$existingNotices.remove();
-			$container.prepend($notice);
-		}
-
 		const $eventyayImportForm = $('.wpfaevent-eventyay-import-form');
 
 		if ($eventyayImportForm.length) {
@@ -224,196 +209,6 @@
 
 				setTimeout(poll, 3000);
 			}
-		}
-
-		if ($importForm.length || $updateForm.length) {
-			const $form = $importForm.length ? $importForm : $updateForm;
-			const rawReturnPage = $form
-				.find('input[name="wpfaevent_eventyay_return_page"]')
-				.val();
-			const returnPage = /^[a-zA-Z0-9_-]+$/.test(rawReturnPage || '')
-				? rawReturnPage
-				: 'wpfaevent-import-events';
-
-			$form.on('submit', function (e) {
-				e.preventDefault();
-
-				const nonce = $form.find('input[name="_wpnonce"]').val();
-				if (!nonce) {
-					showImportNotice(
-						'Security validation failed: Nonce missing.'
-					);
-					return;
-				}
-
-				// Initialize stats
-				let fetched = 0;
-				let created = 0;
-				let updated = 0;
-				let skipped = 0;
-
-				// Show overlay
-				const $overlay = $('#wpfaevent-import-progress-overlay');
-				const $title = $('#wpfaevent-progress-title');
-				const $bar = $('#wpfaevent-progress-bar');
-				const $status = $('#wpfaevent-progress-status');
-				const $details = $('#wpfaevent-progress-details');
-
-				$overlay.css('display', 'flex');
-				$title.text('Syncing with Eventyay');
-				$bar.css('width', '0%');
-				$status.text('Connecting to Eventyay...');
-				$details.text('');
-
-				// Fetch all events first
-				$.ajax({
-					url: ajaxurl,
-					type: 'POST',
-					data: {
-						action: 'wpfaevent_import_get_events',
-						nonce,
-					},
-					success(response) {
-						if (!response.success) {
-							saveSummaryAndRedirect(
-								'error',
-								response.data.message ||
-									'Failed to fetch events from the endpoint.',
-								returnPage,
-								nonce
-							);
-							return;
-						}
-
-						const events = response.data.events;
-						if (!events || !events.length) {
-							saveSummaryAndRedirect(
-								'error',
-								'No Eventyay events were returned by the configured endpoint.',
-								returnPage,
-								nonce
-							);
-							return;
-						}
-
-						fetched = events.length;
-						$status.text(
-							'Found ' + fetched + ' event(s). Starting sync...'
-						);
-						processNextEvent(events, 0);
-					},
-					error(xhr) {
-						let errorMsg =
-							'Failed to fetch events from Eventyay endpoint.';
-						if (
-							xhr.responseJSON &&
-							xhr.responseJSON.data &&
-							xhr.responseJSON.data.message
-						) {
-							errorMsg = xhr.responseJSON.data.message;
-						}
-						saveSummaryAndRedirect(
-							'error',
-							errorMsg,
-							returnPage,
-							nonce
-						);
-					},
-				});
-
-				function processNextEvent(events, index) {
-					if (index >= events.length) {
-						$status.text('Finalizing sync...');
-						$bar.css('width', '100%');
-						const message =
-							'Fetched ' +
-							fetched +
-							' Eventyay event(s). Created ' +
-							created +
-							', updated ' +
-							updated +
-							', skipped ' +
-							skipped +
-							'.';
-						saveSummaryAndRedirect(
-							'success',
-							message,
-							returnPage,
-							nonce
-						);
-						return;
-					}
-
-					const event = events[index];
-					const percent = Math.round((index / events.length) * 100);
-					$bar.css('width', percent + '%');
-
-					const eventTitle = getEventTitle(event);
-					$status.text(
-						'Importing ' +
-							(index + 1) +
-							' of ' +
-							events.length +
-							': ' +
-							eventTitle
-					);
-					$details.text(
-						'Saving event details, location, and dates...'
-					);
-
-					$.ajax({
-						url: ajaxurl,
-						type: 'POST',
-						data: {
-							action: 'wpfaevent_import_single_event',
-							nonce,
-							event: JSON.stringify(event),
-						},
-						success(response) {
-							if (response.success) {
-								const res = response.data;
-								created += res.created || 0;
-								updated += res.updated || 0;
-								skipped += res.skipped || 0;
-							} else {
-								skipped++;
-							}
-							setTimeout(function () {
-								processNextEvent(events, index + 1);
-							}, 300);
-						},
-						error() {
-							skipped++;
-							setTimeout(function () {
-								processNextEvent(events, index + 1);
-							}, 300);
-						},
-					});
-				}
-
-				function saveSummaryAndRedirect(
-					type,
-					message,
-					targetPage,
-					summaryNonce
-				) {
-					$.ajax({
-						url: ajaxurl,
-						type: 'POST',
-						data: {
-							action: 'wpfaevent_import_save_summary',
-							nonce: summaryNonce,
-							type,
-							message,
-						},
-						complete() {
-							window.location.href =
-								'edit.php?post_type=wpfa_event&page=' +
-								encodeURIComponent(targetPage);
-						},
-					});
-				}
-			});
 		}
 
 		// Featured Speakers Manual Ordering
@@ -740,6 +535,96 @@
 		// that is needed for the saved navigation to follow the new order.
 		// Sub-items only sort within their own dropdown because their field
 		// names carry the parent item's index.
+		function getNavEditorSettings(editorId) {
+			let mceConfig = {
+				wpautop: true,
+				plugins:
+					'charmap colorpicker hr lists paste tabfocus textcolor wordpress wpautoresize wpeditimage wpgallery wplink wptextpattern',
+				toolbar1:
+					'formatselect bold italic bullist numlist blockquote alignleft aligncenter alignright link unlink wp_more spellchecker dfw',
+			};
+			if (
+				window.tinyMCEPreInit &&
+				window.tinyMCEPreInit.mceInit &&
+				window.tinyMCEPreInit.mceInit.wpfa_nav_editor_base
+			) {
+				mceConfig = $.extend(
+					{},
+					window.tinyMCEPreInit.mceInit.wpfa_nav_editor_base,
+					{
+						selector: '#' + editorId,
+						body_class: editorId + ' post-type-wpfa_event',
+					}
+				);
+			}
+			return {
+				tinymce: mceConfig,
+				quicktags: true,
+				mediaButtons: false,
+			};
+		}
+
+		function initNavEditor(id) {
+			if (!window.wp || !window.wp.editor || !id) {
+				return;
+			}
+			const textarea = document.getElementById(id);
+			if (!textarea) {
+				return;
+			}
+			if (window.tinymce && window.tinymce.get(id)) {
+				return;
+			}
+			window.wp.editor.initialize(id, getNavEditorSettings(id));
+		}
+
+		function removeEditorsInElement($element) {
+			const ids = [];
+			if (
+				!window.wp ||
+				!window.wp.editor ||
+				!$element ||
+				!$element.length
+			) {
+				return ids;
+			}
+			$element
+				.find('textarea.wpfaevent-custom-page-content, .wp-editor-area')
+				.each(function () {
+					const id = this.id;
+					const tinymce = window.tinymce || window.tinyMCE;
+					if (id && tinymce && tinymce.get(id)) {
+						const editor = tinymce.get(id);
+						const isCodeTab =
+							(typeof editor.isHidden === 'function' &&
+								editor.isHidden()) ||
+							$('#wp-' + id + '-wrap').hasClass('html-active');
+						const codeValue = isCodeTab ? this.value : null;
+
+						window.wp.editor.remove(id);
+
+						if (codeValue !== null) {
+							this.value = codeValue;
+						}
+						ids.push(id);
+					}
+				});
+			return ids;
+		}
+
+		function restoreEditors(ids) {
+			if (!window.wp || !window.wp.editor || !ids || !ids.length) {
+				return;
+			}
+			ids.forEach(function (id) {
+				initNavEditor(id);
+			});
+		}
+
+		// Items are submitted in DOM order, so reordering the cards is all
+		// that is needed for the saved navigation to follow the new order.
+		// Sub-items only sort within their own dropdown because their field
+		// names carry the parent item's index.
 		function initNavSortables() {
 			if (!$.fn.sortable) {
 				return;
@@ -748,6 +633,18 @@
 				axis: 'y',
 				forcePlaceholderSize: true,
 				placeholder: 'wpfaevent-nav-sortable-placeholder',
+				start(e, ui) {
+					ui.item.data(
+						'wpfa-editor-ids',
+						removeEditorsInElement(ui.item)
+					);
+				},
+				stop(e, ui) {
+					const ids = ui.item.data('wpfa-editor-ids');
+					if (ids && ids.length) {
+						restoreEditors(ids);
+					}
+				},
 			};
 			$('#wpfaevent-nav-items-container')
 				.not('.ui-sortable')
@@ -806,11 +703,13 @@
 			if (!$target.length) {
 				return;
 			}
+			const editorIds = removeEditorsInElement($item);
 			if (movingUp) {
 				$item.insertBefore($target);
 			} else {
 				$item.insertAfter($target);
 			}
+			restoreEditors(editorIds);
 			// Moving the node in the DOM drops focus; keep it on the button
 			// so the item can be moved several steps from the keyboard.
 			this.focus();
@@ -835,6 +734,7 @@
 			if (!container) {
 				return;
 			}
+			removeEditorsInElement($(container));
 			const defaultTmpl = document.getElementById(
 				'wpfaevent-nav-default-template'
 			);
@@ -856,6 +756,7 @@
 			if (!window.confirm(confirmMsg)) {
 				return;
 			}
+			removeEditorsInElement($('#wpfaevent-nav-items-container'));
 			$('#wpfaevent-nav-items-container').empty();
 		});
 
@@ -897,6 +798,13 @@
 						name.replace(/\$\{navIndex\}/g, String(nextIdx))
 					);
 				}
+				const id = field.getAttribute('id');
+				if (id) {
+					field.setAttribute(
+						'id',
+						id.replace(/\$\{navIndex\}/g, String(nextIdx))
+					);
+				}
 			});
 			container.appendChild(clone);
 			initNavSortables();
@@ -917,6 +825,15 @@
 			$card
 				.find('.wpfaevent-nav-dropdown-row')
 				.toggleClass('wpfaevent-nav-row-hidden', val !== 'dropdown');
+
+			if (val === 'custom_page') {
+				const textarea = $card.find(
+					'.wpfaevent-nav-custom-page-row textarea.wpfaevent-custom-page-content'
+				)[0];
+				if (textarea && textarea.id) {
+					initNavEditor(textarea.id);
+				}
+			}
 		});
 
 		$(document).on('change', '.wpfaevent-subitem-type-select', function () {
@@ -931,6 +848,15 @@
 			$block
 				.find('.wpfaevent-sub-custom-row')
 				.toggleClass('wpfaevent-nav-row-hidden', val !== 'custom_page');
+
+			if (val === 'custom_page') {
+				const textarea = $block.find(
+					'.wpfaevent-sub-custom-row textarea.wpfaevent-custom-page-content'
+				)[0];
+				if (textarea && textarea.id) {
+					initNavEditor(textarea.id);
+				}
+			}
 		});
 
 		$(document).on('change', '.wpfaevent-nav-page-select', function () {
@@ -951,14 +877,32 @@
 			}
 		});
 
+		// Only warn while the unavailable page is still the one selected.
+		$(document).on(
+			'change',
+			'.wpfaevent-nav-page-select, .wpfaevent-sub-page-select',
+			function () {
+				const unavailable = !!$(this)
+					.find('option:selected')
+					.data('unavailable');
+				$(this)
+					.siblings('.wpfaevent-nav-page-warning')
+					.toggleClass('wpfaevent-nav-row-hidden', !unavailable);
+			}
+		);
+
 		$(document).on('click', '.wpfaevent-remove-card-btn', function (e) {
 			e.preventDefault();
-			$(this).closest('.wpfaevent-meta-card').remove();
+			const $card = $(this).closest('.wpfaevent-meta-card');
+			removeEditorsInElement($card);
+			$card.remove();
 		});
 
 		$(document).on('click', '.wpfaevent-remove-subitem-btn', function (e) {
 			e.preventDefault();
-			$(this).closest('.wpfaevent-nav-subitem-block').remove();
+			const $block = $(this).closest('.wpfaevent-nav-subitem-block');
+			removeEditorsInElement($block);
+			$block.remove();
 		});
 
 		$(document).on('click', '.wpfaevent-add-subitem-btn', function (e) {
@@ -1002,6 +946,15 @@
 							.replace(/__SIDX__/g, String(nextSubIdx))
 					);
 				}
+				const id = field.getAttribute('id');
+				if (id) {
+					field.setAttribute(
+						'id',
+						id
+							.replace(/__PIDX__/g, String(pIdx))
+							.replace(/__SIDX__/g, String(nextSubIdx))
+					);
+				}
 			});
 			const subitemsList = $card.find('.wpfaevent-nav-subitems-list')[0];
 			if (subitemsList) {
@@ -1009,74 +962,46 @@
 			}
 			$card.attr('data-next-sub-index', String(nextSubIdx + 1));
 		});
-	});
 
-	function getEventTitle(event) {
-		if (!event) {
-			return 'Unnamed Event';
-		}
-
-		// Helper to extract string from localized object/array
-		function getStringValue(val) {
-			if (typeof val === 'string' && val.trim() !== '') {
-				return val.trim();
-			}
-			if (val && typeof val === 'object') {
-				const preferredKeys = [
-					'en',
-					'default',
-					'value',
-					'name',
-					'title',
-				];
-				for (let i = 0; i < preferredKeys.length; i++) {
-					const key = preferredKeys[i];
-					if (
-						typeof val[key] === 'string' &&
-						val[key].trim() !== ''
-					) {
-						return val[key].trim();
-					}
-				}
-				for (const key in val) {
-					if (Object.prototype.hasOwnProperty.call(val, key)) {
-						if (
-							typeof val[key] === 'string' &&
-							val[key].trim() !== ''
-						) {
-							return val[key].trim();
+		$('form#post').on('submit', function () {
+			const tinymce = window.tinymce || window.tinyMCE;
+			if (tinymce) {
+				const codeValues = {};
+				const editors = tinymce.editors;
+				if (editors) {
+					const editorList = Array.isArray(editors)
+						? editors
+						: Object.values(editors);
+					editorList.forEach(function (editor) {
+						if (!editor || !editor.id) {
+							return;
 						}
-					}
+						const isCodeTab =
+							(typeof editor.isHidden === 'function' &&
+								editor.isHidden()) ||
+							$('#wp-' + editor.id + '-wrap').hasClass(
+								'html-active'
+							);
+						if (isCodeTab) {
+							const textarea = document.getElementById(editor.id);
+							if (textarea) {
+								codeValues[editor.id] = textarea.value;
+							}
+						}
+					});
 				}
+
+				if (typeof tinymce.triggerSave === 'function') {
+					tinymce.triggerSave();
+				}
+
+				Object.keys(codeValues).forEach(function (id) {
+					const textarea = document.getElementById(id);
+					if (textarea) {
+						textarea.value = codeValues[id];
+					}
+				});
 			}
-			return null;
-		}
-
-		const name = getStringValue(event.name);
-		if (name) {
-			return name;
-		}
-
-		const title = getStringValue(event.title);
-		if (title) {
-			return title;
-		}
-
-		if (typeof event.slug === 'string' && event.slug.trim() !== '') {
-			return event.slug.trim();
-		}
-
-		if (
-			typeof event.identifier === 'string' &&
-			event.identifier.trim() !== ''
-		) {
-			return event.identifier.trim();
-		}
-
-		if (typeof event.code === 'string' && event.code.trim() !== '') {
-			return event.code.trim();
-		}
-
-		return 'Unnamed Event';
-	}
+		});
+	});
 })(jQuery);
