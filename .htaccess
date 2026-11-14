@@ -1,0 +1,8 @@
+# Deny direct access to sensitive configuration, logs, and dotfiles
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "^(composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml.*|phpstan\.neon.*)$">
+    Require all denied
+</FilesMatch>
