@@ -1,0 +1,26 @@
+FROM php:8.2-cli-alpine
+
+# Install system dependencies & PHP extensions required by WordPress tests & Composer
+RUN apk add --no-cache \
+    bash \
+    curl \
+    git \
+    subversion \
+    mariadb-client \
+    libzip-dev \
+    && docker-php-ext-install mysqli pdo pdo_mysql zip
+
+# Configure MariaDB client to connect to local development MySQL without SSL errors
+RUN mkdir -p /etc/my.cnf.d && \
+    printf "[client]\nssl=0\nskip-ssl-verify-server-cert\n" > /etc/my.cnf.d/skip-ssl.cnf
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+COPY docker/test-entrypoint.sh /usr/local/bin/test-entrypoint.sh
+RUN chmod +x /usr/local/bin/test-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/test-entrypoint.sh"]
+CMD ["composer", "test"]

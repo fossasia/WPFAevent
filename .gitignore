@@ -21,3 +21,10 @@ phpstan.neon
 coverage/
 clover.xml
 .claude/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+

@@ -192,6 +192,101 @@ Event timezone behavior is deterministic:
 
 ## Local Development
 
+### Option 1: Docker Setup (Recommended)
+
+The easiest way to get up and running with a complete local WordPress environment (WordPress, MySQL, WP-CLI auto-installer, and test runner) is using Docker Compose.
+
+#### Prerequisites
+
+- [Docker Engine](https://docs.docker.com/engine/install/) (20.10+)
+- [Docker Compose](https://docs.docker.com/compose/install/) (v2+)
+
+#### 1. Configure Environment (Optional)
+
+Copy the example environment file:
+```bash
+cp .env.example .env
+```
+
+Default credentials and ports:
+- **WordPress URL:** `http://localhost:8080`
+- **WordPress Admin User:** `admin`
+- **WordPress Admin Password:** `admin`
+- **WordPress Admin Email:** `admin@example.local`
+- **Database Port:** `3306`
+
+#### 2. Start the Environment
+
+From the plugin root directory, start the containers:
+```bash
+docker compose up -d
+```
+
+This starts:
+- **`db`**: MySQL 8.0 database configured with health checks.
+- **`wordpress`**: WordPress with PHP 8.2 and Apache, mounting your working plugin directory directly to `/var/www/html/wp-content/plugins/wpfaevent` for live code changes.
+- **`wp-cli`**: Automatically waits for MySQL and WordPress to initialize, installs WordPress core, sets the permalink structure to `/%postname%/`, and activates the `wpfaevent` plugin.
+
+You can monitor initialization progress by streaming logs:
+```bash
+docker compose logs -f wp-cli
+```
+
+Once initialized, open:
+- **Site Frontend:** [http://localhost:8080](http://localhost:8080)
+- **Admin Dashboard:** [http://localhost:8080/wp-admin](http://localhost:8080/wp-admin) (Username: `admin`, Password: `admin`)
+- **Plugin Settings:** Navigate to **Settings → Event Plugin** in the WordPress Admin
+
+#### 3. Run Tests & Quality Checks via Docker
+
+The Docker configuration provides an isolated `test` container pre-configured with PHP 8.2, Composer, and the required test libraries:
+
+```bash
+# Run PHPUnit tests (automatically bootstraps the test database on first run)
+docker compose run --rm test
+
+# Run a specific test suite
+docker compose run --rm test composer test -- --testsuite Unit
+docker compose run --rm test composer test -- --testsuite Integration
+
+# Check WordPress Coding Standards (PHPCS)
+docker compose run --rm test composer phpcs
+
+# Auto-fix coding standard violations (PHPCBF)
+docker compose run --rm test composer phpcbf
+
+# Run static analysis (PHPStan)
+docker compose run --rm test composer phpstan
+```
+
+#### 4. Run WP-CLI Commands via Docker
+
+You can run any WP-CLI command against your local site container:
+
+```bash
+docker compose run --rm wp-cli wp <command>
+
+# Example: Check active plugins
+docker compose run --rm wp-cli wp plugin list
+
+# Example: Run Eventyay import
+docker compose run --rm wp-cli wp wpfa import
+```
+
+#### 5. Stopping and Resetting
+
+```bash
+# Stop containers without losing data
+docker compose down
+
+# Stop and wipe database/WordPress volumes for a completely fresh start
+docker compose down -v
+```
+
+---
+
+### Option 2: Manual Setup (Without Docker)
+
 1. Install WordPress locally (e.g., using LocalWP, Docker, or WP-CLI).
 2. Place this plugin in `wp-content/plugins/`.
 3. Activate it and navigate to **Settings → Event Plugin**.
@@ -227,6 +322,30 @@ Contributions are welcome!
 * Follow **WordPress PHP coding standards**
 
 ### Development commands
+
+Commands can be run either inside the Docker container or directly on your host machine:
+
+#### Via Docker (No local PHP/Composer setup needed)
+
+```bash
+# Run the test suite (auto-bootstraps test environment on first run)
+docker compose run --rm test
+
+# Run specific test suites
+docker compose run --rm test composer test -- --testsuite Unit
+docker compose run --rm test composer test -- --testsuite Integration
+
+# Run code style checks (PHPCS)
+docker compose run --rm test composer phpcs
+
+# Auto-fix code style violations (PHPCBF)
+docker compose run --rm test composer phpcbf
+
+# Run static analysis (PHPStan)
+docker compose run --rm test composer phpstan
+```
+
+#### On Host Machine (Direct)
 
 ```bash
 # Install dev dependencies

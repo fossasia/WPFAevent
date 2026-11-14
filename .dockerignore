@@ -1,0 +1,13 @@
+.git
+.github
+.cursor
+node_modules
+vendor
+tmp
+coverage
+.phpunit.result.cache
+*.log
+.env
+.env.*
+!.env.example
+
