@@ -319,7 +319,11 @@ if ( $is_event_schedule ) {
 		);
 
 		foreach ( $filtered_schedule_items as $filtered_schedule_item ) {
-			$day_key = ! empty( $filtered_schedule_item['date_label'] ) ? $filtered_schedule_item['date_label'] : __( 'TBD', 'wpfaevent' );
+			if ( empty( $filtered_schedule_item['date_label'] ) || 'TBD' === $filtered_schedule_item['date_label'] || __( 'TBD', 'wpfaevent' ) === $filtered_schedule_item['date_label'] ) {
+				continue;
+			}
+
+			$day_key = $filtered_schedule_item['date_label'];
 
 			if ( ! isset( $visible_session_groups[ $day_key ] ) ) {
 				$visible_session_groups[ $day_key ] = array();
@@ -449,6 +453,9 @@ $schedule_filter_reset_url = add_query_arg( $schedule_filter_reset_args, $schedu
 			<div class="wpfa-schedule-head">
 				<div>
 					<?php if ( $is_event_schedule && $selected_event_title ) : ?>
+						<p class="wpfa-event-kicker">
+							<a href="<?php echo esc_url( get_permalink( $selected_event_id ) ); ?>">&larr; <?php esc_html_e( 'Back to event page', 'wpfaevent' ); ?></a>
+						</p>
 						<h1><?php echo esc_html( $selected_event_title ); ?></h1>
 						<p><?php esc_html_e( 'Event schedule grouped by session date.', 'wpfaevent' ); ?></p>
 					<?php else : ?>

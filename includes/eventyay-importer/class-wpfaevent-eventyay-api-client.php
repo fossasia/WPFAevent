@@ -448,6 +448,7 @@ class Wpfaevent_Eventyay_API_Client {
 					'expand'    => 'speakers,track,submission_type,slots.room',
 					'lang'      => 'en',
 					'page_size' => absint( apply_filters( 'wpfaevent_eventyay_program_import_page_size', 50 ) ),
+					'state'     => 'confirmed',
 				),
 				$url
 			)
