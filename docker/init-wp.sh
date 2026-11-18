@@ -46,7 +46,8 @@ while ! mkdir "$LOCK_DIR" 2>/dev/null; do
     fi
     sleep 2
 done
-trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT INT TERM
+trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
+trap 'exit 1' INT TERM
 
 echo "Checking if WordPress is already installed..."
 if wp core is-installed --path=/var/www/html 2>/dev/null; then

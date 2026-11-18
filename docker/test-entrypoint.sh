@@ -32,17 +32,21 @@ if [[ ( "$1" == "composer" && "$2" == "test"* ) || "$1" == *"phpunit"* ]]; then
         fi
         sleep 2
     done
-    trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT INT TERM
+    trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
+    trap 'exit 1' INT TERM
 
     DB_READY=0
     if [ -f "/tmp/wordpress-tests-lib/includes/functions.php" ] && \
+       [ -f "/tmp/.wp-version" ] && \
+       [ "$(cat /tmp/.wp-version 2>/dev/null)" = "${WP_VERSION:-6.4}" ] && \
        mariadb -h "$WP_DB_HOST" -u "$WP_DB_USER" --password="$WP_DB_PASS" -e "USE ${TEST_DB};" >/dev/null 2>&1; then
         DB_READY=1
     fi
 
     if [ "$DB_READY" -eq 0 ]; then
-        echo "WordPress test suite or database not ready. Bootstrapping test environment..."
+        echo "WordPress test suite or database not ready (target WP ${WP_VERSION:-6.4}). Bootstrapping test environment..."
         composer setup-tests
+        echo "${WP_VERSION:-6.4}" > /tmp/.wp-version 2>/dev/null || true
     fi
 
     rmdir "$LOCK_DIR" 2>/dev/null || true
