@@ -6,24 +6,39 @@ JavaScript tooling is optional. Run npm commands only when `package.json` is pre
 
 ## Setup
 
-- composer install
-- npm install              # if JavaScript tooling is needed
+- Direct / Host: `composer install` (`npm install` if JavaScript tooling is needed)
+- Docker: No local PHP/MySQL required; `docker compose run --rm test` runs tools in an isolated PHP 8.2 container.
 
 ## Run the tests
 
-- composer test                               # full PHPUnit suite
-- composer test -- --testsuite Unit           # unit tests only
-- composer test -- --testsuite Integration    # integration tests only (needs local WP test env)
-- composer setup-tests                        # bootstrap the local WordPress test DB (bin/install-wp-tests.sh)
+- Direct / Host:
+  - `composer test`                               # full PHPUnit suite
+  - `composer test -- --testsuite Unit`           # unit tests only
+  - `composer test -- --testsuite Integration`    # integration tests only (needs local WP test env)
+  - `composer setup-tests`                        # bootstrap the local WordPress test DB (bin/install-wp-tests.sh)
+- Docker:
+  - `docker compose run --rm test`                               # auto-bootstraps test DB and runs PHPUnit
+  - `docker compose run --rm test composer test -- --testsuite Unit`
+  - `docker compose run --rm test composer test -- --testsuite Integration`
 
 ## Lint & static analysis
 
-- composer phpcs            # WordPress Coding Standards (phpcs.xml)
-- composer phpcbf           # auto-fix PHPCS violations
-- composer phpstan          # static analysis (phpstan.neon.dist)
-- npm run lint              # ESLint (only if package.json is present)
-- npm run format            # Prettier (only if package.json is present)
-- npm run check             # lint + phpcs + phpstan (only if package.json is present)
+- Direct / Host:
+  - `composer phpcs`            # WordPress Coding Standards (phpcs.xml)
+  - `composer phpcbf`           # auto-fix PHPCS violations
+  - `composer phpstan`          # static analysis (phpstan.neon.dist)
+  - `npm run lint`              # ESLint (only if package.json is present)
+  - `npm run format`            # Prettier (only if package.json is present)
+  - `npm run check`             # lint + phpcs + phpstan (only if package.json is present)
+- Docker:
+  - `docker compose run --rm test composer phpcs`
+  - `docker compose run --rm test composer phpcbf`
+  - `docker compose run --rm test composer phpstan`
+
+## Local WordPress Environment (Optional)
+
+- Start local WordPress & DB: `docker compose --profile site up -d` (accessible at `http://localhost:8080`)
+- Stop and reset: `docker compose --profile site down -v`
 
 ## Where things live
 
