@@ -41,19 +41,17 @@ while ! mkdir "$LOCK_DIR" 2>/dev/null; do
     echo "Another initialization process is currently running. Waiting..."
     retries=$((retries + 1))
     if [ "$retries" -ge "$MAX_RETRIES" ]; then
-        echo "Error: Timed out waiting for initialization lock." >&2
+        echo "Error: Timed out waiting for initialization lock ($LOCK_DIR). If stale, remove it." >&2
         exit 1
     fi
     sleep 2
 done
-trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
+trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT INT TERM
 
 echo "Checking if WordPress is already installed..."
 if wp core is-installed --path=/var/www/html 2>/dev/null; then
     echo "WordPress is already installed."
     wp plugin activate wpfaevent --path=/var/www/html
-    rmdir "$LOCK_DIR" 2>/dev/null || true
-    trap - EXIT
     exit 0
 fi
 
@@ -72,9 +70,6 @@ wp rewrite structure '/%postname%/' --path=/var/www/html
 
 echo "Activating wpfaevent plugin..."
 wp plugin activate wpfaevent --path=/var/www/html
-
-rmdir "$LOCK_DIR" 2>/dev/null || true
-trap - EXIT
 
 echo "=================================================="
 echo " WordPress is ready: ${SITE_URL}"

@@ -17,7 +17,7 @@ if [ ! -f "/app/vendor/autoload.php" ]; then
 fi
 
 # If running composer test or phpunit, ensure WordPress test suite and database are initialized
-if [ "$1" = "composer" ] && [ "$2" = "test" ] || [ "$1" = "vendor/bin/phpunit" ]; then
+if [[ ( "$1" == "composer" && "$2" == "test"* ) || "$1" == *"phpunit"* ]]; then
     TEST_DB="${WP_TEST_DB_NAME:-wordpress_test}"
 
     # Serialize bootstrap to prevent concurrent test runs from conflicting
@@ -27,18 +27,17 @@ if [ "$1" = "composer" ] && [ "$2" = "test" ] || [ "$1" = "vendor/bin/phpunit" ]
         echo "Another container is initializing the test environment. Waiting..."
         retries=$((retries + 1))
         if [ "$retries" -ge 30 ]; then
-            echo "Timed out waiting for test bootstrap lock." >&2
+            echo "Error: Timed out waiting for test bootstrap lock ($LOCK_DIR)." >&2
             exit 1
         fi
         sleep 2
     done
-    trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
+    trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT INT TERM
 
     DB_READY=0
-    if [ -f "/tmp/wordpress-tests-lib/includes/functions.php" ]; then
-        if mariadb -h "$WP_DB_HOST" -u "$WP_DB_USER" -p"$WP_DB_PASS" -e "USE ${TEST_DB};" >/dev/null 2>&1; then
-            DB_READY=1
-        fi
+    if [ -f "/tmp/wordpress-tests-lib/includes/functions.php" ] && \
+       mariadb -h "$WP_DB_HOST" -u "$WP_DB_USER" --password="$WP_DB_PASS" -e "USE ${TEST_DB};" >/dev/null 2>&1; then
+        DB_READY=1
     fi
 
     if [ "$DB_READY" -eq 0 ]; then
@@ -47,7 +46,7 @@ if [ "$1" = "composer" ] && [ "$2" = "test" ] || [ "$1" = "vendor/bin/phpunit" ]
     fi
 
     rmdir "$LOCK_DIR" 2>/dev/null || true
-    trap - EXIT
+    trap - EXIT INT TERM
 fi
 
 exec "$@"
