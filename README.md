@@ -202,7 +202,7 @@ Docker Compose provides a reproducible environment for running automated checks,
 - [Docker Compose](https://docs.docker.com/compose/install/) (v2+)
 - **PHP Runtime:** PHP 8.2 CLI / Apache with extensions `mysqli`, `pdo`, `pdo_mysql`, `zip`, `dom`, `mbstring`, `xml`, `xmlwriter`
 - **Database:** MySQL 8.0 (bound to `127.0.0.1` for local machine security)
-- **Test Framework:** PHPUnit with WordPress test suite (`WP_VERSION` defaults to `latest`, configurable)
+- **Test Framework:** PHPUnit with WordPress test suite (`WP_VERSION` defaults to `6.4`, configurable)
 - **Composer:** Composer 2.x
 
 #### 1. Fast Checks & PHPUnit Tests (Default Workflow)

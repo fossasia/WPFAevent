@@ -87,7 +87,7 @@ services:
       WP_DB_USER: root
       WP_DB_PASS: ${DB_ROOT_PASSWORD:-root_password}
       WP_TEST_DB_NAME: wordpress_test
-      WP_VERSION: ${WP_VERSION:-latest}
+      WP_VERSION: ${WP_VERSION:-6.4}
     volumes:
       - ./:/app
       - ./docker/test-entrypoint.sh:/usr/local/bin/test-entrypoint.sh:ro
