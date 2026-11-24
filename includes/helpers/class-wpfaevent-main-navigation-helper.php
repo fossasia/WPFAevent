@@ -243,6 +243,72 @@ class Wpfaevent_Main_Navigation_Helper {
 	}
 
 	/**
+	 * Check whether a WordPress page picked for an "Existing Page" item can be shown.
+	 *
+	 * Only published pages are linked; drafts, private, trashed and deleted pages are not.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $page_id Page post ID.
+	 * @return bool
+	 */
+	public static function is_nav_page_available( $page_id ) {
+		$page_id = absint( $page_id );
+
+		return $page_id > 0 && 'page' === get_post_type( $page_id ) && 'publish' === get_post_status( $page_id );
+	}
+
+	/**
+	 * Resolve "Existing Page" items to their pages' current addresses.
+	 *
+	 * The address stored when the event was saved goes stale when the page's slug
+	 * changes, so it is replaced by the page's current permalink on every render.
+	 * Items with no page selected or whose page is no longer published are dropped,
+	 * as are dropdowns left empty.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array<int, array<string, mixed>> $items Saved navigation items.
+	 * @return array<int, array<string, mixed>> Navigation items ready to render.
+	 */
+	public static function resolve_page_nav_items( $items ) {
+		$resolved = array();
+
+		foreach ( (array) $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			if ( isset( $item['type'] ) && 'dropdown' === $item['type'] ) {
+				$item['items'] = ! empty( $item['items'] ) && is_array( $item['items'] )
+					? self::resolve_page_nav_items( $item['items'] )
+					: array();
+
+				if ( ! empty( $item['items'] ) ) {
+					$resolved[] = $item;
+				}
+				continue;
+			}
+
+			if ( isset( $item['type'] ) && 'page' === $item['type'] ) {
+				if ( empty( $item['page_id'] ) || ! self::is_nav_page_available( (int) $item['page_id'] ) ) {
+					continue;
+				}
+
+				$permalink = get_permalink( (int) $item['page_id'] );
+				if ( ! $permalink ) {
+					continue;
+				}
+				$item['href'] = $permalink;
+			}
+
+			$resolved[] = $item;
+		}
+
+		return $resolved;
+	}
+
+	/**
 	 * Retrieve a custom page from an event's navigation by slug.
 	 *
 	 * @since 1.0.0

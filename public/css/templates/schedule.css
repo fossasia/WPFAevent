@@ -56,6 +56,27 @@
 	min-width: 0;
 }
 
+.wpfaevent .wpfa-schedule .wpfa-event-kicker,
+.wpfaevent .wpfa-schedule-head .wpfa-event-kicker {
+	color: var(--event-primary, #d95700);
+	font-size: 0.95rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	margin: 0 0 8px;
+	text-transform: uppercase;
+}
+
+.wpfaevent .wpfa-schedule .wpfa-event-kicker a,
+.wpfaevent .wpfa-schedule-head .wpfa-event-kicker a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.wpfaevent .wpfa-schedule .wpfa-event-kicker a:hover,
+.wpfaevent .wpfa-schedule-head .wpfa-event-kicker a:hover {
+	text-decoration: underline;
+}
+
 .wpfaevent .wpfa-schedule-head h1 {
 	margin: 0 0 8px;
 }

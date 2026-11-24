@@ -146,7 +146,6 @@ class Wpfaevent {
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-speaker-repository.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-api-client.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-eventyay-post-manager.php';
-		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-admin-settings-renderer.php';
 		require_once plugin_dir_path( __FILE__ ) . 'eventyay-importer/class-wpfaevent-ajax-controller.php';
 
 		// Admin and Public classes.
@@ -317,11 +316,8 @@ class Wpfaevent {
 		$plugin_footer_handler = new Wpfaevent_Footer_Handler();
 		$this->loader->add_action( 'wp_ajax_wpfa_update_footer_text', $plugin_footer_handler, 'ajax_update_footer_text' );
 
-		// Register AJAX handler for Eventyay sync and chunked imports.
+		// Register Eventyay import status handler.
 		$eventyay_ajax_controller = new Wpfaevent_AJAX_Controller();
-		$this->loader->add_action( 'wp_ajax_wpfaevent_import_get_events', $eventyay_ajax_controller, 'ajax_import_get_events' );
-		$this->loader->add_action( 'wp_ajax_wpfaevent_import_single_event', $eventyay_ajax_controller, 'ajax_import_single_event' );
-		$this->loader->add_action( 'wp_ajax_wpfaevent_import_save_summary', $eventyay_ajax_controller, 'ajax_import_save_summary' );
 		$this->loader->add_action( 'wp_ajax_wpfaevent_import_status', $eventyay_ajax_controller, 'ajax_import_status' );
 
 		// Register AJAX handler for dashboard JSON:API sync.

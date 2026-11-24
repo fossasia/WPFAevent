@@ -518,4 +518,99 @@ class JSONAPIParserTest extends WP_UnitTestCase {
 		$this->assertSame( 'The active importer uses the parser. More details follow.', get_post_field( 'post_content', $result['id'] ) );
 		$this->assertSame( 'The active importer uses the parser. More details follow.', get_post_field( 'post_excerpt', $result['id'] ) );
 	}
+
+	/**
+	 * Verify that is_eventyay_confirmed_session only accepts confirmed state or scheduled sessions.
+	 */
+	public function test_is_eventyay_confirmed_session() {
+		$parser = new Wpfaevent_JSONAPI_Parser();
+
+		$this->assertTrue(
+			$parser->is_eventyay_confirmed_session(
+				array(
+					'title' => 'Confirmed Talk',
+					'state' => 'confirmed',
+				)
+			)
+		);
+
+		$this->assertFalse(
+			$parser->is_eventyay_confirmed_session(
+				array(
+					'title' => 'Accepted Talk',
+					'state' => 'accepted',
+				)
+			)
+		);
+
+		$this->assertFalse(
+			$parser->is_eventyay_confirmed_session(
+				array(
+					'title' => 'Draft Talk',
+					'state' => 'draft',
+				)
+			)
+		);
+
+		$this->assertFalse(
+			$parser->is_eventyay_confirmed_session(
+				array(
+					'title' => 'Unscheduled Talk',
+				)
+			)
+		);
+
+		$this->assertTrue(
+			$parser->is_eventyay_confirmed_session(
+				array(
+					'title'     => 'Scheduled Talk without state',
+					'starts_at' => '2026-03-15T10:00:00Z',
+				)
+			)
+		);
+	}
+
+	/**
+	 * Submissions payload normalization should only import confirmed sessions.
+	 */
+	public function test_normalize_eventyay_submissions_payload_filters_unconfirmed_sessions() {
+		$parser      = new Wpfaevent_JSONAPI_Parser();
+		$submissions = array(
+			array(
+				'id'        => '101',
+				'title'     => 'Confirmed Session',
+				'state'     => 'confirmed',
+				'starts_at' => '2026-03-15T10:00:00Z',
+				'ends_at'   => '2026-03-15T10:30:00Z',
+				'speakers'  => array(
+					array(
+						'name' => 'Jane Doe',
+					),
+				),
+			),
+			array(
+				'id'       => '102',
+				'title'    => 'Accepted Unconfirmed Session',
+				'state'    => 'accepted',
+				'speakers' => array(
+					array(
+						'name' => 'John Smith',
+					),
+				),
+			),
+		);
+
+		$result = $parser->normalize_eventyay_submissions_payload(
+			$submissions,
+			array(
+				'base_url'       => 'https://eventyay.example',
+				'organizer_slug' => 'test-organizer',
+			),
+			'test-event'
+		);
+
+		$this->assertSame( 1, $result['session_count'] );
+		$this->assertCount( 1, $result['sessions'] );
+		$this->assertSame( 'Confirmed Session', $result['sessions'][0]['title'] );
+	}
 }
