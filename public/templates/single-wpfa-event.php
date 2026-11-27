@@ -364,6 +364,22 @@ if ( $show_ticket_widget ) {
 			<?php include WPFAEVENT_PATH . 'public/partials/event-section-nav.php'; ?>
 		<?php endif; ?>
 
+		<?php if ( $show_about && '' !== trim( $about_content ) ) : ?>
+			<section id="about" class="wpfa-event-section wpfa-event-about" aria-labelledby="wpfa-event-about-title">
+				<div class="container">
+					<div class="wpfa-event-section-layout">
+						<header class="wpfa-event-section-label">
+							<p><?php esc_html_e( 'Overview', 'wpfaevent' ); ?></p>
+							<h2 id="wpfa-event-about-title"><?php esc_html_e( 'About this event', 'wpfaevent' ); ?></h2>
+						</header>
+						<div class="wpfa-event-rich-text" itemprop="description">
+							<?php echo wp_kses_post( wpautop( $about_content ) ); ?>
+						</div>
+					</div>
+				</div>
+			</section>
+		<?php endif; ?>
+
 		<?php if ( $show_ticket_section ) : ?>
 			<section id="tickets" class="wpfa-event-section wpfa-event-tickets" aria-labelledby="wpfa-event-tickets-title">
 				<div class="container">
@@ -419,22 +435,6 @@ if ( $show_ticket_widget ) {
 								</a>
 							</p>
 						<?php endif; ?>
-					</div>
-				</div>
-			</section>
-		<?php endif; ?>
-
-		<?php if ( $show_about && '' !== trim( $about_content ) ) : ?>
-			<section id="about" class="wpfa-event-section wpfa-event-about" aria-labelledby="wpfa-event-about-title">
-				<div class="container">
-					<div class="wpfa-event-section-layout">
-						<header class="wpfa-event-section-label">
-							<p><?php esc_html_e( 'Overview', 'wpfaevent' ); ?></p>
-							<h2 id="wpfa-event-about-title"><?php esc_html_e( 'About this event', 'wpfaevent' ); ?></h2>
-						</header>
-						<div class="wpfa-event-rich-text" itemprop="description">
-							<?php echo wp_kses_post( wpautop( $about_content ) ); ?>
-						</div>
 					</div>
 				</div>
 			</section>

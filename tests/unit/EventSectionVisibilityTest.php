@@ -60,6 +60,27 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Overview precedes Tickets when both sections are present.
+	 */
+	public function test_event_page_renders_overview_before_tickets() {
+		wp_update_post(
+			array(
+				'ID'           => $this->event_id,
+				'post_content' => 'Event overview content.',
+			)
+		);
+		update_post_meta( $this->event_id, 'wpfa_event_ticket_widget_url', 'https://eventyay.com/e/test-event' );
+
+		$output          = $this->render_event_template();
+		$overview_offset = strpos( $output, '<section id="about"' );
+		$tickets_offset  = strpos( $output, '<section id="tickets"' );
+
+		$this->assertNotFalse( $overview_offset );
+		$this->assertNotFalse( $tickets_offset );
+		$this->assertLessThan( $tickets_offset, $overview_offset );
+	}
+
+	/**
 	 * Linked speaker posts bring the speakers section back.
 	 */
 	public function test_event_page_renders_speakers_section_when_speakers_are_linked() {
