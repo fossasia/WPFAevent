@@ -69,6 +69,35 @@ class Wpfaevent_Event_Navigation_Helper {
 	}
 
 	/**
+	 * Check whether both section links appear in the saved menu with Tickets first.
+	 *
+	 * @param array<int, array<string, mixed>> $navigation_items Resolved custom menu items.
+	 * @return bool Whether Overview should follow Tickets.
+	 */
+	public static function tickets_precede_overview( $navigation_items ) {
+		$hrefs = array();
+		foreach ( $navigation_items as $item ) {
+			if ( empty( $item['text'] ) ) {
+				continue;
+			}
+
+			$links = isset( $item['type'] ) && 'dropdown' === $item['type'] && ! empty( $item['items'] ) && is_array( $item['items'] )
+				? $item['items']
+				: array( $item );
+			foreach ( $links as $link ) {
+				if ( ! empty( $link['text'] ) && ! empty( $link['href'] ) && is_string( $link['href'] ) ) {
+					$hrefs[] = self::normalize_href( $link['href'] );
+				}
+			}
+		}
+
+		$tickets_position  = array_search( '#tickets', $hrefs, true );
+		$overview_position = array_search( '#about', $hrefs, true );
+
+		return false !== $tickets_position && false !== $overview_position && $tickets_position < $overview_position;
+	}
+
+	/**
 	 * Determine whether a navigation target should be shown.
 	 *
 	 * @since 1.0.0

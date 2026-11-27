@@ -1075,14 +1075,16 @@ class Wpfaevent_Event_Template_Controller {
 			'custom_sections'            => $custom_sections,
 		);
 
-		$default_nav_items = class_exists( 'Wpfaevent_Event_Navigation_Helper' ) ? Wpfaevent_Event_Navigation_Helper::build_nav_items( $wpfa_event_nav_context ) : array();
-		$custom_nav        = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
+		$default_nav_items        = class_exists( 'Wpfaevent_Event_Navigation_Helper' ) ? Wpfaevent_Event_Navigation_Helper::build_nav_items( $wpfa_event_nav_context ) : array();
+		$custom_nav               = get_post_meta( $event_id, 'wpfa_event_custom_navigation', true );
+		$overview_follows_tickets = false;
 		if ( is_array( $custom_nav ) && ! empty( $custom_nav ) ) {
 			// A configured custom menu is never swapped for the defaults, even if hiding
 			// unavailable pages leaves it empty.
-			$wpfa_event_nav_items = class_exists( 'Wpfaevent_Main_Navigation_Helper' )
+			$wpfa_event_nav_items     = class_exists( 'Wpfaevent_Main_Navigation_Helper' )
 				? Wpfaevent_Main_Navigation_Helper::resolve_page_nav_items( $custom_nav )
 				: $custom_nav;
+			$overview_follows_tickets = class_exists( 'Wpfaevent_Event_Navigation_Helper' ) && Wpfaevent_Event_Navigation_Helper::tickets_precede_overview( $wpfa_event_nav_items );
 		} else {
 			$wpfa_event_nav_items = $default_nav_items;
 		}
@@ -1137,6 +1139,7 @@ class Wpfaevent_Event_Template_Controller {
 			'visible_exhibitors'                       => $visible_exhibitors,
 			'first_schedule'                           => $first_schedule,
 			'wpfa_event_nav_items'                     => $wpfa_event_nav_items,
+			'overview_follows_tickets'                 => $overview_follows_tickets,
 			'default_nav_items'                        => $default_nav_items,
 			'show_about'                               => $show_about,
 			'show_speakers'                            => $show_speakers,
@@ -1236,6 +1239,7 @@ class Wpfaevent_Event_Template_Controller {
 			'visible_exhibitors'                       => array(),
 			'first_schedule'                           => array(),
 			'wpfa_event_nav_items'                     => array(),
+			'overview_follows_tickets'                 => false,
 			'default_nav_items'                        => array(),
 			'show_about'                               => false,
 			'show_speakers'                            => false,

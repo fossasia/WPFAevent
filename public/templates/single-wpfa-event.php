@@ -46,6 +46,7 @@ $visible_exhibitors                = $event_data['visible_exhibitors'];
 $first_schedule                    = $event_data['first_schedule'];
 $wpfa_event_nav_items              = $event_data['wpfa_event_nav_items'];
 $show_about                        = $event_data['show_about'];
+$overview_follows_tickets          = $event_data['overview_follows_tickets'];
 $show_speakers                     = $event_data['show_speakers'];
 $show_schedule                     = $event_data['show_schedule'];
 $show_sponsors                     = $event_data['show_sponsors'];
@@ -364,20 +365,8 @@ if ( $show_ticket_widget ) {
 			<?php include WPFAEVENT_PATH . 'public/partials/event-section-nav.php'; ?>
 		<?php endif; ?>
 
-		<?php if ( $show_about && '' !== trim( $about_content ) ) : ?>
-			<section id="about" class="wpfa-event-section wpfa-event-about" aria-labelledby="wpfa-event-about-title">
-				<div class="container">
-					<div class="wpfa-event-section-layout">
-						<header class="wpfa-event-section-label">
-							<p><?php esc_html_e( 'Overview', 'wpfaevent' ); ?></p>
-							<h2 id="wpfa-event-about-title"><?php esc_html_e( 'About this event', 'wpfaevent' ); ?></h2>
-						</header>
-						<div class="wpfa-event-rich-text" itemprop="description">
-							<?php echo wp_kses_post( wpautop( $about_content ) ); ?>
-						</div>
-					</div>
-				</div>
-			</section>
+		<?php if ( $show_about && ! $overview_follows_tickets ) : ?>
+			<?php include WPFAEVENT_PATH . 'public/partials/event-overview.php'; ?>
 		<?php endif; ?>
 
 		<?php if ( $show_ticket_section ) : ?>
@@ -438,6 +427,10 @@ if ( $show_ticket_widget ) {
 					</div>
 				</div>
 			</section>
+		<?php endif; ?>
+
+		<?php if ( $show_about && $overview_follows_tickets ) : ?>
+			<?php include WPFAEVENT_PATH . 'public/partials/event-overview.php'; ?>
 		<?php endif; ?>
 
 		<?php if ( $has_speakers ) : ?>

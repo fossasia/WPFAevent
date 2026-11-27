@@ -60,9 +60,13 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Overview precedes Tickets when both sections are present.
+	 * Overview precedes Tickets unless the saved custom menu puts Tickets first.
+	 *
+	 * @dataProvider event_section_order_provider
+	 * @param array $custom_navigation Saved custom menu items.
+	 * @param bool  $tickets_first     Whether Tickets should precede Overview.
 	 */
-	public function test_event_page_renders_overview_before_tickets() {
+	public function test_event_page_renders_overview_and_tickets_in_order( $custom_navigation, $tickets_first ) {
 		wp_update_post(
 			array(
 				'ID'           => $this->event_id,
@@ -70,6 +74,9 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 			)
 		);
 		update_post_meta( $this->event_id, 'wpfa_event_ticket_widget_url', 'https://eventyay.com/e/test-event' );
+		if ( ! empty( $custom_navigation ) ) {
+			update_post_meta( $this->event_id, 'wpfa_event_custom_navigation', Wpfaevent_Meta_Event::sanitize_custom_navigation( $custom_navigation ) );
+		}
 
 		$output          = $this->render_event_template();
 		$overview_offset = strpos( $output, '<section id="about"' );
@@ -77,7 +84,36 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 
 		$this->assertNotFalse( $overview_offset );
 		$this->assertNotFalse( $tickets_offset );
-		$this->assertLessThan( $tickets_offset, $overview_offset );
+		$this->assertSame( $tickets_first, $tickets_offset < $overview_offset );
+	}
+
+	/**
+	 * Cases for the default and saved custom section order.
+	 *
+	 * @return array Test cases.
+	 */
+	public function event_section_order_provider() {
+		$overview = array(
+			'text' => 'Overview',
+			'href' => '#about',
+		);
+		$tickets  = array(
+			'text' => 'Tickets',
+			'href' => '#tickets',
+		);
+		$dropdown = array(
+			'text'  => 'Event details',
+			'type'  => 'dropdown',
+			'items' => array( $tickets, $overview ),
+		);
+
+		return array(
+			'default'                => array( array(), false ),
+			'saved overview first'   => array( array( $overview, $tickets ), false ),
+			'saved tickets first'    => array( array( $tickets, $overview ), true ),
+			'saved dropdown order'   => array( array( $dropdown ), true ),
+			'no saved overview link' => array( array( $tickets ), false ),
+		);
 	}
 
 	/**
