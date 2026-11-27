@@ -198,9 +198,10 @@ $header_vars = array(
 								),
 							);
 						}
-						$image_url = get_the_post_thumbnail_url( $event_id, 'medium' );
+						$image_url    = get_the_post_thumbnail_url( $event_id, 'medium' );
+						$logo_cleared = Wpfaevent_Meta_Event::is_event_logo_cleared( $event_id );
 						if ( ! $image_url ) {
-							$image_url = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
+							$image_url = Wpfaevent_Meta_Event::resolve_event_logo_url( $event_id );
 						}
 						if ( ! $image_url ) {
 							$image_url = get_post_meta( $event_id, 'wpfa_event_header_image_url', true );
@@ -226,7 +227,7 @@ $header_vars = array(
 								wp_cache_set( $event_id, $settings_data, 'wpfaevent_event_settings' );
 							}
 
-							if ( ! empty( $settings_data['event_logo_url'] ) ) {
+							if ( ! $logo_cleared && ! empty( $settings_data['event_logo_url'] ) ) {
 								$image_url = $settings_data['event_logo_url'];
 							} elseif ( ! empty( $settings_data['event_header_image_url'] ) ) {
 								$image_url = $settings_data['event_header_image_url'];

@@ -432,18 +432,12 @@ class Wpfaevent_Event_Template_Controller {
 		$event_url                  = $event_url ? esc_url_raw( $event_url ) : '';
 		$event_header_image_url     = get_post_meta( $event_id, 'wpfa_event_header_image_url', true );
 		$event_header_image_url     = $event_header_image_url ? esc_url_raw( $event_header_image_url ) : '';
-		$event_logo_url             = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
-		$event_logo_url             = $event_logo_url ? esc_url_raw( $event_logo_url ) : '';
+		$event_logo_url             = Wpfaevent_Meta_Event::resolve_event_logo_url( $event_id, $site_settings['event_logo_url'] ?? '' );
 		$ticket_widget_url          = get_post_meta( $event_id, 'wpfa_event_ticket_widget_url', true );
 		$ticket_widget_url          = $ticket_widget_url ? esc_url_raw( $ticket_widget_url ) : '';
 
 		if ( ! $event_header_image_url && ! empty( $site_settings['event_header_image_url'] ) ) {
 			$event_header_image_url = esc_url_raw( $site_settings['event_header_image_url'] );
-		}
-
-		// An explicitly cleared logo must not fall back to its imported value.
-		if ( ! metadata_exists( 'post', $event_id, 'wpfa_event_logo_url' ) && ! empty( $site_settings['event_logo_url'] ) ) {
-			$event_logo_url = esc_url_raw( $site_settings['event_logo_url'] );
 		}
 
 		if ( ! $ticket_widget_url && ! empty( $site_settings['ticket_widget_url'] ) ) {

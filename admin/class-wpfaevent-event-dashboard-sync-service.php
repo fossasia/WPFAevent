@@ -166,6 +166,10 @@ class Wpfaevent_Event_Dashboard_Sync_Service {
 			return $write_result;
 		}
 
+		if ( $logo_overwritten ) {
+			Wpfaevent_Meta_Event::save_event_logo_url( $event_id, $media['event_logo_url'] );
+		}
+
 		return array(
 			'updated'          => true,
 			'logo_overwritten' => $logo_overwritten,

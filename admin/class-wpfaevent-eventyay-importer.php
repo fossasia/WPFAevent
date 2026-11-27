@@ -3510,7 +3510,7 @@ class Wpfaevent_Eventyay_Importer {
 			unset( $dashboard_settings['event_header_image_url'] );
 		}
 
-		if ( $event_logo_url ) {
+		if ( $event_logo_url && ! Wpfaevent_Meta_Event::is_event_logo_cleared( $event_id ) ) {
 			$dashboard_settings['event_logo_url'] = esc_url_raw( $event_logo_url );
 		} else {
 			unset( $dashboard_settings['event_logo_url'] );

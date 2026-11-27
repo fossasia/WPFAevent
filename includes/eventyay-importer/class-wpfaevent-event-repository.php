@@ -131,7 +131,9 @@ class Wpfaevent_Event_Repository {
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_url', $event_url );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_registration_link', $event_url );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_header_image_url', $event_header_url );
-		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_logo_url', $event_logo_url );
+		if ( ! Wpfaevent_Meta_Event::is_event_logo_cleared( $saved_id ) ) {
+			$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_logo_url', $event_logo_url );
+		}
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_ticket_widget_url', $ticket_widget_url );
 		$this->update_or_delete_post_meta( $saved_id, 'wpfa_event_languages', $languages );
 
