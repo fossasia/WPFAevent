@@ -38,12 +38,9 @@
 
 .wpfaevent .wpfa-event-logo-mark {
 	align-items: center;
-	background: rgba(255, 255, 255, 0.96);
-	border-radius: var(--event-radius);
 	display: inline-flex;
 	margin-bottom: 18px;
 	max-width: min(420px, 100%);
-	padding: 12px 16px;
 }
 
 .wpfaevent .wpfa-event-logo-mark img {
@@ -1296,7 +1293,6 @@
 
 	.wpfaevent .wpfa-event-logo-mark {
 		max-width: 100%;
-		padding: 10px 12px;
 	}
 
 	.wpfaevent .wpfa-event-logo-mark img {

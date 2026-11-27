@@ -441,7 +441,8 @@ class Wpfaevent_Event_Template_Controller {
 			$event_header_image_url = esc_url_raw( $site_settings['event_header_image_url'] );
 		}
 
-		if ( ! $event_logo_url && ! empty( $site_settings['event_logo_url'] ) ) {
+		// An explicitly cleared logo must not fall back to its imported value.
+		if ( ! metadata_exists( 'post', $event_id, 'wpfa_event_logo_url' ) && ! empty( $site_settings['event_logo_url'] ) ) {
 			$event_logo_url = esc_url_raw( $site_settings['event_logo_url'] );
 		}
 
