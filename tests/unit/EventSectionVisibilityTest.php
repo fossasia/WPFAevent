@@ -60,6 +60,77 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Overview precedes Tickets unless the selected menu puts Tickets first.
+	 *
+	 * @dataProvider event_section_order_provider
+	 * @param array $custom_navigation    Saved custom menu items.
+	 * @param bool  $tickets_first        Whether Tickets should precede Overview.
+	 * @param array $dashboard_navigation Saved site-wide dashboard menu items.
+	 */
+	public function test_event_page_renders_overview_and_tickets_in_order( $custom_navigation, $tickets_first, $dashboard_navigation = array() ) {
+		wp_update_post(
+			array(
+				'ID'           => $this->event_id,
+				'post_content' => 'Event overview content.',
+			)
+		);
+		update_post_meta( $this->event_id, 'wpfa_event_ticket_widget_url', 'https://eventyay.com/e/test-event' );
+		if ( ! empty( $custom_navigation ) ) {
+			update_post_meta( $this->event_id, 'wpfa_event_custom_navigation', Wpfaevent_Meta_Event::sanitize_custom_navigation( $custom_navigation ) );
+		}
+		$store = new Wpfaevent_Eventyay_Dashboard_Store();
+		if ( ! empty( $dashboard_navigation ) ) {
+			$this->assertFileDoesNotExist( $store->get_dashboard_json_path( 'navigation.json' ) );
+			$this->assertNotWPError( $store->write_dashboard_json_file( 'navigation.json', $dashboard_navigation ) );
+		}
+
+		try {
+			$output = $this->render_event_template();
+		} finally {
+			if ( ! empty( $dashboard_navigation ) ) {
+				wp_delete_file( $store->get_dashboard_json_path( 'navigation.json' ) );
+			}
+		}
+		$overview_offset = strpos( $output, '<section id="about"' );
+		$tickets_offset  = strpos( $output, '<section id="tickets"' );
+
+		$this->assertNotFalse( $overview_offset );
+		$this->assertNotFalse( $tickets_offset );
+		$this->assertSame( $tickets_first, $tickets_offset < $overview_offset );
+	}
+
+	/**
+	 * Cases for the default, dashboard, and saved custom section order.
+	 *
+	 * @return array Test cases.
+	 */
+	public function event_section_order_provider() {
+		$overview = array(
+			'text' => 'Overview',
+			'href' => '#about',
+		);
+		$tickets  = array(
+			'text' => 'Tickets',
+			'href' => '#tickets',
+		);
+		$dropdown = array(
+			'text'  => 'Event details',
+			'type'  => 'dropdown',
+			'items' => array( $tickets, $overview ),
+		);
+
+		return array(
+			'default'                    => array( array(), false ),
+			'saved overview first'       => array( array( $overview, $tickets ), false ),
+			'saved tickets first'        => array( array( $tickets, $overview ), true ),
+			'saved dropdown order'       => array( array( $dropdown ), true ),
+			'no saved overview link'     => array( array( $tickets ), false ),
+			'dashboard tickets first'    => array( array(), true, array( $tickets, $overview ) ),
+			'custom overrides dashboard' => array( array( $overview, $tickets ), false, array( $tickets, $overview ) ),
+		);
+	}
+
+	/**
 	 * Linked speaker posts bring the speakers section back.
 	 */
 	public function test_event_page_renders_speakers_section_when_speakers_are_linked() {

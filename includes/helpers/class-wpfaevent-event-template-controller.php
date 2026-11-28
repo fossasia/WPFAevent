@@ -1087,6 +1087,8 @@ class Wpfaevent_Event_Template_Controller {
 			$wpfa_event_nav_items = $default_nav_items;
 		}
 
+		$overview_follows_tickets = class_exists( 'Wpfaevent_Event_Navigation_Helper' ) && Wpfaevent_Event_Navigation_Helper::tickets_precede_overview( $wpfa_event_nav_items );
+
 		$site_logo_url = get_option( 'wpfa_site_logo_url', '' );
 		if ( empty( $site_logo_url ) ) {
 			$site_logo_url = defined( 'WPFAEVENT_URL' ) ? WPFAEVENT_URL . 'assets/images/logo.png' : '';
@@ -1137,6 +1139,7 @@ class Wpfaevent_Event_Template_Controller {
 			'visible_exhibitors'                       => $visible_exhibitors,
 			'first_schedule'                           => $first_schedule,
 			'wpfa_event_nav_items'                     => $wpfa_event_nav_items,
+			'overview_follows_tickets'                 => $overview_follows_tickets,
 			'default_nav_items'                        => $default_nav_items,
 			'show_about'                               => $show_about,
 			'show_speakers'                            => $show_speakers,
@@ -1236,6 +1239,7 @@ class Wpfaevent_Event_Template_Controller {
 			'visible_exhibitors'                       => array(),
 			'first_schedule'                           => array(),
 			'wpfa_event_nav_items'                     => array(),
+			'overview_follows_tickets'                 => false,
 			'default_nav_items'                        => array(),
 			'show_about'                               => false,
 			'show_speakers'                            => false,
