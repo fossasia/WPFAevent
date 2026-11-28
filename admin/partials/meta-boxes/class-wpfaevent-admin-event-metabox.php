@@ -1279,7 +1279,8 @@ class Wpfaevent_Admin_Event_Metabox {
 		}
 
 		if ( isset( $_POST['wpfa_event_logo_url'] ) && is_string( $_POST['wpfa_event_logo_url'] ) ) {
-			$raw_logo_url = sanitize_text_field( wp_unslash( $_POST['wpfa_event_logo_url'] ) );
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized as a URL below to retain encoded characters.
+			$raw_logo_url = trim( wp_unslash( $_POST['wpfa_event_logo_url'] ) );
 			$logo_url     = esc_url_raw( $raw_logo_url );
 			$previous_url = isset( $_POST['wpfa_event_previous_logo_url'] ) && is_string( $_POST['wpfa_event_previous_logo_url'] )
 				? esc_url_raw( wp_unslash( $_POST['wpfa_event_previous_logo_url'] ) )

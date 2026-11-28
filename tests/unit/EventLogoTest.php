@@ -88,6 +88,24 @@ class EventLogoTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * An unchanged imported URL keeps its percent-encoded characters.
+	 */
+	public function test_untouched_encoded_logo_remains_a_dashboard_fallback() {
+		$encoded_logo = 'https://example.org/logo%20blue.png?label=Open%2BSource';
+		$this->assertNotWPError(
+			$this->store->write_dashboard_json_file(
+				$this->settings_file,
+				array( 'event_logo_url' => $encoded_logo )
+			)
+		);
+
+		$this->save_metabox_logo( $encoded_logo, $encoded_logo );
+
+		$this->assertFalse( metadata_exists( 'post', $this->event_id, 'wpfa_event_logo_url' ) );
+		$this->assertSame( $encoded_logo, $this->template_logo() );
+	}
+
+	/**
 	 * Clearing a displayed logo removes only the logo from the event and listings.
 	 */
 	public function test_metabox_removal_hides_logo_from_both_listings_and_preserves_header() {
