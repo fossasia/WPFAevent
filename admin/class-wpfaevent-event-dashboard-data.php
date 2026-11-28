@@ -91,11 +91,13 @@ class Wpfaevent_Event_Dashboard_Data {
 			$speakers_list = $this->get_dashboard_speakers( $speakers );
 		}
 
-		$site_logo_url = get_option( 'wpfa_site_logo_url', '' );
-		$assets        = $this->get_event_assets(
+		$site_logo_url  = get_option( 'wpfa_site_logo_url', '' );
+		$event_logo_url = Wpfaevent_Meta_Event::resolve_event_logo_url( $event_id, $site_settings['event_logo_url'] ?? '' );
+		$assets         = $this->get_event_assets(
 			$event_id,
 			$site_settings,
-			$site_logo_url
+			$site_logo_url,
+			$event_logo_url
 		);
 
 		$event_speaker_ids    = class_exists( 'Wpfaevent_Event_Speaker_Relation_Manager' ) ? Wpfaevent_Event_Speaker_Relation_Manager::get_event_speaker_ids( $event_id ) : array();
@@ -187,7 +189,7 @@ class Wpfaevent_Event_Dashboard_Data {
 				'eventyay_api_url' => ! empty( $site_settings['eventyay_api_url'] ) ? esc_url_raw( $site_settings['eventyay_api_url'] ) : '',
 				'reg_button_text'  => ! empty( $site_settings['reg_button_text'] ) ? sanitize_text_field( $site_settings['reg_button_text'] ) : '',
 				'reg_button_link'  => ! empty( $site_settings['reg_button_link'] ) ? esc_url_raw( $site_settings['reg_button_link'] ) : '',
-				'event_logo_url'   => ! empty( $site_settings['event_logo_url'] ) ? esc_url_raw( $site_settings['event_logo_url'] ) : '',
+				'event_logo_url'   => $event_logo_url,
 				'hero_image_url'   => ! empty( $site_settings['hero_image_url'] ) ? esc_url_raw( $site_settings['hero_image_url'] ) : '',
 			),
 			'speakers'   => $speakers_list,
@@ -498,17 +500,18 @@ class Wpfaevent_Event_Dashboard_Data {
 	 * @param int    $event_id      Event post ID.
 	 * @param array  $site_settings Site settings JSON.
 	 * @param string $site_logo_url Global site logo URL.
+	 * @param string $event_logo_url Resolved event logo URL.
 	 * @return array<int, array<string, string>>
 	 * @phpstan-param array<string, mixed> $site_settings
 	 */
-	private function get_event_assets( $event_id, $site_settings, $site_logo_url ) {
+	private function get_event_assets( $event_id, $site_settings, $site_logo_url, $event_logo_url ) {
 		$featured_image_url = get_the_post_thumbnail_url( $event_id, 'large' );
 		$featured_image_id  = get_post_thumbnail_id( $event_id );
 		$assets             = array(
 			array(
 				'label'  => __( 'Event logo', 'wpfaevent' ),
-				'url'    => ! empty( $site_settings['event_logo_url'] ) ? esc_url_raw( $site_settings['event_logo_url'] ) : '',
-				'source' => ! empty( $site_settings['event_logo_url'] ) ? __( 'Dashboard settings', 'wpfaevent' ) : '',
+				'url'    => $event_logo_url,
+				'source' => '' !== $event_logo_url ? __( 'Event settings', 'wpfaevent' ) : '',
 			),
 			array(
 				'label'  => __( 'Header image', 'wpfaevent' ),

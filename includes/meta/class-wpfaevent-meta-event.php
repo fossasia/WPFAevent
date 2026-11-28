@@ -26,6 +26,59 @@ class Wpfaevent_Meta_Event {
 	private static $post_type = 'wpfa_event';
 
 	/**
+	 * Protected marker for an intentional logo removal.
+	 */
+	private const LOGO_CLEARED_META = '_wpfa_event_logo_cleared';
+
+	/**
+	 * Determine whether an editor explicitly removed the event logo.
+	 *
+	 * @param int $event_id Event post ID.
+	 * @return bool
+	 */
+	public static function is_event_logo_cleared( $event_id ) {
+		return '1' === get_post_meta( $event_id, self::LOGO_CLEARED_META, true );
+	}
+
+	/**
+	 * Resolve the event's local logo or the legacy dashboard fallback.
+	 *
+	 * @param int   $event_id Event post ID.
+	 * @param mixed $fallback Legacy dashboard logo URL.
+	 * @return string
+	 */
+	public static function resolve_event_logo_url( $event_id, $fallback = '' ) {
+		$logo = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
+		$logo = is_string( $logo ) ? esc_url_raw( $logo ) : '';
+		if ( '' !== $logo ) {
+			return $logo;
+		}
+
+		if ( self::is_event_logo_cleared( $event_id ) ) {
+			return '';
+		}
+
+		return is_string( $fallback ) ? esc_url_raw( $fallback ) : '';
+	}
+
+	/**
+	 * Save an explicitly edited logo, including an intentional removal.
+	 *
+	 * @param int    $event_id Event post ID.
+	 * @param string $url      Sanitized URL or an empty string to remove it.
+	 * @return void
+	 */
+	public static function save_event_logo_url( $event_id, $url ) {
+		if ( '' === $url ) {
+			update_post_meta( $event_id, self::LOGO_CLEARED_META, '1' );
+			delete_post_meta( $event_id, 'wpfa_event_logo_url' );
+		} else {
+			update_post_meta( $event_id, 'wpfa_event_logo_url', $url );
+			delete_post_meta( $event_id, self::LOGO_CLEARED_META );
+		}
+	}
+
+	/**
 	 * Registers all event meta fields.
 	 *
 	 * @since 1.0.0

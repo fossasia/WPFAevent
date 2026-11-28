@@ -127,17 +127,19 @@ class Wpfaevent_Admin_Event_Metabox {
 			$start_time = get_post_meta( $post->ID, 'wpfa_event_time', true );
 		}
 
-		$timezone   = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_timezone( $post->ID ) : wp_timezone_string();
-		$all_day    = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_all_day( $post->ID ) : false;
-		$location   = get_post_meta( $post->ID, 'wpfa_event_location', true );
-		$url        = get_post_meta( $post->ID, 'wpfa_event_url', true );
-		$header_url = get_post_meta( $post->ID, 'wpfa_event_header_image_url', true );
-		$logo_url   = get_post_meta( $post->ID, 'wpfa_event_logo_url', true );
-		$widget_url = get_post_meta( $post->ID, 'wpfa_event_ticket_widget_url', true );
-		$lead_text  = get_post_meta( $post->ID, 'wpfa_event_lead_text', true );
-		$reg_link   = get_post_meta( $post->ID, 'wpfa_event_registration_link', true );
-		$cfs_link   = get_post_meta( $post->ID, 'wpfa_event_cfs_link', true );
-		$speakers   = $this->get_event_speaker_ids( $post->ID );
+		$timezone      = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_timezone( $post->ID ) : wp_timezone_string();
+		$all_day       = class_exists( 'Wpfaevent_Meta_Event' ) ? Wpfaevent_Meta_Event::get_event_all_day( $post->ID ) : false;
+		$location      = get_post_meta( $post->ID, 'wpfa_event_location', true );
+		$url           = get_post_meta( $post->ID, 'wpfa_event_url', true );
+		$header_url    = get_post_meta( $post->ID, 'wpfa_event_header_image_url', true );
+		$logo_store    = new Wpfaevent_Eventyay_Dashboard_Store();
+		$logo_settings = $logo_store->read_dashboard_json_file( 'site-settings-' . absint( $post->ID ) . '.json', array() );
+		$logo_url      = Wpfaevent_Meta_Event::resolve_event_logo_url( $post->ID, isset( $logo_settings['event_logo_url'] ) ? $logo_settings['event_logo_url'] : '' );
+		$widget_url    = get_post_meta( $post->ID, 'wpfa_event_ticket_widget_url', true );
+		$lead_text     = get_post_meta( $post->ID, 'wpfa_event_lead_text', true );
+		$reg_link      = get_post_meta( $post->ID, 'wpfa_event_registration_link', true );
+		$cfs_link      = get_post_meta( $post->ID, 'wpfa_event_cfs_link', true );
+		$speakers      = $this->get_event_speaker_ids( $post->ID );
 
 		?>
 		<table class="form-table">
@@ -198,6 +200,7 @@ class Wpfaevent_Admin_Event_Metabox {
 			<tr>
 				<th><label for="wpfa_event_logo_url"><?php esc_html_e( 'Event Logo URL', 'wpfaevent' ); ?></label></th>
 				<td>
+					<input type="hidden" name="wpfa_event_previous_logo_url" value="<?php echo esc_attr( $logo_url ); ?>">
 					<input type="url" id="wpfa_event_logo_url" name="wpfa_event_logo_url" value="<?php echo esc_attr( $logo_url ); ?>" class="regular-text" placeholder="https://">
 					<p class="description"><?php esc_html_e( 'Imported from Eventyay logo or shop banner image settings when available.', 'wpfaevent' ); ?></p>
 				</td>
@@ -1258,7 +1261,6 @@ class Wpfaevent_Admin_Event_Metabox {
 			'wpfa_event_registration_link',
 			'wpfa_event_cfs_link',
 			'wpfa_event_header_image_url',
-			'wpfa_event_logo_url',
 			'wpfa_event_ticket_widget_url',
 		);
 
@@ -1266,13 +1268,25 @@ class Wpfaevent_Admin_Event_Metabox {
 			if ( isset( $_POST[ $field ] ) ) {
 				$raw_value = sanitize_text_field( wp_unslash( $_POST[ $field ] ) );
 
-				if ( in_array( $field, array( 'wpfa_event_url', 'wpfa_event_registration_link', 'wpfa_event_cfs_link', 'wpfa_event_header_image_url', 'wpfa_event_logo_url', 'wpfa_event_ticket_widget_url' ), true ) ) {
+				if ( in_array( $field, array( 'wpfa_event_url', 'wpfa_event_registration_link', 'wpfa_event_cfs_link', 'wpfa_event_header_image_url', 'wpfa_event_ticket_widget_url' ), true ) ) {
 					$value = esc_url_raw( $raw_value );
 				} else {
 					$value = $raw_value;
 				}
 
 				update_post_meta( $post_id, $field, $value );
+			}
+		}
+
+		if ( isset( $_POST['wpfa_event_logo_url'] ) && is_string( $_POST['wpfa_event_logo_url'] ) ) {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized as a URL below to retain encoded characters.
+			$raw_logo_url = trim( wp_unslash( $_POST['wpfa_event_logo_url'] ) );
+			$logo_url     = esc_url_raw( $raw_logo_url );
+			$previous_url = isset( $_POST['wpfa_event_previous_logo_url'] ) && is_string( $_POST['wpfa_event_previous_logo_url'] )
+				? esc_url_raw( wp_unslash( $_POST['wpfa_event_previous_logo_url'] ) )
+				: '';
+			if ( $logo_url !== $previous_url && ( '' !== $logo_url || '' === $raw_logo_url ) ) {
+				Wpfaevent_Meta_Event::save_event_logo_url( $post_id, $logo_url );
 			}
 		}
 

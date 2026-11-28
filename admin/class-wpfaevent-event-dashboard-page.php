@@ -457,7 +457,7 @@ class Wpfaevent_Event_Dashboard_Page {
 		$event_id = isset( $_POST['event_id'] ) ? absint( wp_unslash( $_POST['event_id'] ) ) : 0;
 		$field    = isset( $_POST['field'] ) ? sanitize_text_field( wp_unslash( $_POST['field'] ) ) : '';
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized later in update_dashboard_field based on field type.
-		$value = isset( $_POST['value'] ) ? wp_unslash( $_POST['value'] ) : '';
+		$value = isset( $_POST['value'] ) ? wp_unslash( $_POST['value'] ) : ( 'wpfa_event_logo_url' === $field ? null : '' );
 		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
 
 		if ( ! $event_id || ! wp_verify_nonce( $nonce, 'wpfaevent_edit_event_dashboard_' . $event_id ) ) {
@@ -516,6 +516,15 @@ class Wpfaevent_Event_Dashboard_Page {
 		// 1. Sanitize and validate
 		switch ( $field ) {
 			case 'wpfa_event_logo_url':
+				if ( ! is_string( $value ) ) {
+					return new WP_Error( 'invalid_logo_url', __( 'Please enter a valid logo URL.', 'wpfaevent' ) );
+				}
+				$formatted_value = esc_url_raw( $value );
+				if ( '' === $formatted_value && '' !== trim( $value ) ) {
+					return new WP_Error( 'invalid_logo_url', __( 'Please enter a valid logo URL.', 'wpfaevent' ) );
+				}
+				$display_value = esc_url( $value );
+				break;
 			case 'wpfa_event_header_image_url':
 			case 'wpfa_event_registration_link':
 			case 'wpfa_event_url':
@@ -571,7 +580,7 @@ class Wpfaevent_Event_Dashboard_Page {
 					'post_content' => $formatted_value,
 				)
 			);
-		} else {
+		} elseif ( 'wpfa_event_logo_url' !== $field ) {
 			update_post_meta( $event_id, $field, $formatted_value );
 		}
 
@@ -609,6 +618,9 @@ class Wpfaevent_Event_Dashboard_Page {
 			if ( is_wp_error( $write_result ) ) {
 				return $write_result;
 			}
+		}
+		if ( 'wpfa_event_logo_url' === $field ) {
+			Wpfaevent_Meta_Event::save_event_logo_url( $event_id, $formatted_value );
 		}
 
 		return array(

@@ -38,8 +38,9 @@ $event_lead_text   = sanitize_text_field( get_post_meta( $event_id, 'wpfa_event_
 $event_excerpt     = trim( (string) get_post_field( 'post_excerpt', $event_id ) );
 $event_description = $event_lead_text ? $event_lead_text : get_the_excerpt( $event_id );
 $featured_img_url  = get_the_post_thumbnail_url( $event_id, 'large' );
+$logo_cleared      = Wpfaevent_Meta_Event::is_event_logo_cleared( $event_id );
 if ( ! $featured_img_url ) {
-	$featured_img_url = get_post_meta( $event_id, 'wpfa_event_logo_url', true );
+	$featured_img_url = Wpfaevent_Meta_Event::resolve_event_logo_url( $event_id );
 }
 if ( ! $featured_img_url ) {
 	$featured_img_url = get_post_meta( $event_id, 'wpfa_event_header_image_url', true );
@@ -65,7 +66,7 @@ if ( ! $featured_img_url ) {
 		wp_cache_set( $event_id, $settings_data, 'wpfaevent_event_settings' );
 	}
 
-	if ( ! empty( $settings_data['event_logo_url'] ) ) {
+	if ( ! $logo_cleared && ! empty( $settings_data['event_logo_url'] ) ) {
 		$featured_img_url = $settings_data['event_logo_url'];
 	} elseif ( ! empty( $settings_data['event_header_image_url'] ) ) {
 		$featured_img_url = $settings_data['event_header_image_url'];
