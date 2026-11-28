@@ -60,13 +60,14 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Overview precedes Tickets unless the saved custom menu puts Tickets first.
+	 * Overview precedes Tickets unless the selected menu puts Tickets first.
 	 *
 	 * @dataProvider event_section_order_provider
-	 * @param array $custom_navigation Saved custom menu items.
-	 * @param bool  $tickets_first     Whether Tickets should precede Overview.
+	 * @param array $custom_navigation    Saved custom menu items.
+	 * @param bool  $tickets_first        Whether Tickets should precede Overview.
+	 * @param array $dashboard_navigation Saved site-wide dashboard menu items.
 	 */
-	public function test_event_page_renders_overview_and_tickets_in_order( $custom_navigation, $tickets_first ) {
+	public function test_event_page_renders_overview_and_tickets_in_order( $custom_navigation, $tickets_first, $dashboard_navigation = array() ) {
 		wp_update_post(
 			array(
 				'ID'           => $this->event_id,
@@ -77,8 +78,19 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 		if ( ! empty( $custom_navigation ) ) {
 			update_post_meta( $this->event_id, 'wpfa_event_custom_navigation', Wpfaevent_Meta_Event::sanitize_custom_navigation( $custom_navigation ) );
 		}
+		$store = new Wpfaevent_Eventyay_Dashboard_Store();
+		if ( ! empty( $dashboard_navigation ) ) {
+			$this->assertFileDoesNotExist( $store->get_dashboard_json_path( 'navigation.json' ) );
+			$this->assertNotWPError( $store->write_dashboard_json_file( 'navigation.json', $dashboard_navigation ) );
+		}
 
-		$output          = $this->render_event_template();
+		try {
+			$output = $this->render_event_template();
+		} finally {
+			if ( ! empty( $dashboard_navigation ) ) {
+				wp_delete_file( $store->get_dashboard_json_path( 'navigation.json' ) );
+			}
+		}
 		$overview_offset = strpos( $output, '<section id="about"' );
 		$tickets_offset  = strpos( $output, '<section id="tickets"' );
 
@@ -88,7 +100,7 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Cases for the default and saved custom section order.
+	 * Cases for the default, dashboard, and saved custom section order.
 	 *
 	 * @return array Test cases.
 	 */
@@ -108,11 +120,13 @@ class EventSectionVisibilityTest extends WP_UnitTestCase {
 		);
 
 		return array(
-			'default'                => array( array(), false ),
-			'saved overview first'   => array( array( $overview, $tickets ), false ),
-			'saved tickets first'    => array( array( $tickets, $overview ), true ),
-			'saved dropdown order'   => array( array( $dropdown ), true ),
-			'no saved overview link' => array( array( $tickets ), false ),
+			'default'                    => array( array(), false ),
+			'saved overview first'       => array( array( $overview, $tickets ), false ),
+			'saved tickets first'        => array( array( $tickets, $overview ), true ),
+			'saved dropdown order'       => array( array( $dropdown ), true ),
+			'no saved overview link'     => array( array( $tickets ), false ),
+			'dashboard tickets first'    => array( array(), true, array( $tickets, $overview ) ),
+			'custom overrides dashboard' => array( array( $overview, $tickets ), false, array( $tickets, $overview ) ),
 		);
 	}
 

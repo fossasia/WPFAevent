@@ -69,9 +69,9 @@ class Wpfaevent_Event_Navigation_Helper {
 	}
 
 	/**
-	 * Check whether both section links appear in the saved menu with Tickets first.
+	 * Check whether both section links appear in the selected menu with Tickets first.
 	 *
-	 * @param array<int, array<string, mixed>> $navigation_items Resolved custom menu items.
+	 * @param array<int, array<string, mixed>> $navigation_items Resolved menu items.
 	 * @return bool Whether Overview should follow Tickets.
 	 */
 	public static function tickets_precede_overview( $navigation_items ) {
